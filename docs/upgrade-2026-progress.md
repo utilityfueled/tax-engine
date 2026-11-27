@@ -15,6 +15,37 @@ the latest application revision, exact-source runs and open dependencies. The
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
 
+## November 27 commercial EV second-year depreciation
+
+`18b582a5a` implements the private 2026 second-year Form 4562 worksheet for
+the same ordinary listed work van placed in service in 2025. It matches the
+filed Form 8936 Schedule A basis and credit, filed class election, actual
+half-year convention, prior depreciation and both year-specific original
+domestic-use ledgers. A completed 2026 year is required. A $25,000 original
+basis and $6,000 filed credit yield $3,800 first-year depreciation, $6,080
+second-year depreciation and $9,120 remaining basis. The round-up example
+verifies posted Schedule A line 21 separately from exact ledger basis.
+Independent engineering review reproduced and then cleared the chronology,
+domestic-use and rounding defects. All 62 exact focused tests and eight
+static checks passed, including 10,294 spec lines. The latest combined
+unit and coverage checks are running. Canonical attribution, qualified
+human review and filing qualification remain open.
+[IRS Publication 946](https://www.irs.gov/publications/p946) ·
+[2025 Schedule A (Form 8936)](https://www.irs.gov/pub/irs-prior/f8936sa--2025.pdf) ·
+[26 USC §1016](https://uscode.house.gov/us/usc/t26/s1016/).
+
+## November 27 guided commercial EV owner and cash ledger
+
+`4b8d002f1` links the saved VIN to the original owner and one confirmed
+primary cash Schedule C ledger. The guided review shows the original
+business reference and receipts, advertising, office and supply amounts.
+The match survives save and reopen. Changes to the actual owner, business,
+vehicle, source reference or exact ledger amount require fresh confirmation.
+Independent review checked that ordinary Schedule C header invalidation
+and personal credit controls still apply. All 33 exact focused tests and
+eight static checks passed, including 10,289 spec lines. Vehicle eligibility,
+basis, depreciation, AMT and current credit evidence still gate calculation.
+
 ## November 27 verified 2025 carryback for the 2026 commercial EV credit
 
 `183535fb2` uses a filed 2025 ordinary §38 workpaper for the same single
@@ -30,8 +61,10 @@ Independent engineering review reproduced a conflicting prior-joint case
 that admitted the $400 carryback before the fix. The corrected focused suite
 passed 255 tests in the exact tree. All eight exact static checks passed,
 including 10,288 spec lines and the offline AI artifact check. The qualified
-human review, amendment and filing gates remain in place. The combined
-unit, coverage and browser checks are running.
+human review, amendment and filing gates remain in place. Exact unit and
+coverage each passed 31,381 tests with 83 skips and 88.72% branches. The
+remaining browser and recovery checks wait for the earlier local runner
+to close the browser port.
 [26 USC §39](https://uscode.house.gov/us/usc/t26/s39/) ·
 [IRS Form 3800 instructions](https://www.irs.gov/instructions/i3800).
 

@@ -886,3 +886,17 @@ which workpapers must be available. Verify the §108 attribute reduction
 ordering before accepting an unused-credit case with an excluded debt
 discharge. [26 USC §39](https://uscode.house.gov/us/usc/t26/s39/) ·
 [IRS Form 3800 instructions](https://www.irs.gov/instructions/i3800).
+
+For the continuing-asset case, assume the same ordinary 7,200-pound work
+van entered service in 2025. The filed 2025 workpapers include the verified
+$6,000 credit, a timely five-year class election out of bonus, no §179 and
+the ordinary half-year 200% GDS method. The actual yearly mileage logs show
+100% qualified U.S. business use for the same vehicle, with no disposition
+or other basis changes through the close of 2026. Independently verify the
+2025 allowed and allowable depreciation, the 2026 opening and closing basis,
+and Form 4562 lines 26(h) and 28. For the posted-value check, compare an
+original exact basis of $10,001.50, filed line 21 of $10,002 and filed line
+26 of $3,001. Derive the exact second-year deduction and the final reported
+whole-dollar amount. [IRS Publication 946](https://www.irs.gov/publications/p946) ·
+[2025 Schedule A (Form 8936)](https://www.irs.gov/pub/irs-prior/f8936sa--2025.pdf) ·
+[26 USC §1016](https://uscode.house.gov/us/usc/t26/s1016/).

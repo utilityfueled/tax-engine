@@ -3,9 +3,9 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "1cd975b3786a52a1333dd467b6c5bf8de4b54d37",
-    "latestScopedApplicationCommit": "183535fb25e1559d4acbb62d208e32c4b30e1a4d",
+    "latestScopedApplicationCommit": "18b582a5a95fadfe9a5022c5e13249485b5bd13b",
     "latestCombinedCandidateCommit": "1cd975b3786a52a1333dd467b6c5bf8de4b54d37",
-    "latestScopedChecksEvidenceKey": "activeContinuation.nov27CommercialVehicleCarryback",
+    "latestScopedChecksEvidenceKey": "activeContinuation.nov27CommercialVehicleSecondYear",
     "nov27PaymentReceiptsAndForm8863EvidenceKey": "activeContinuation.nov27PaymentReceiptsAndForm8863",
     "nov27OhioPennsylvaniaPensionEvidenceKey": "activeContinuation.nov27OhioPennsylvaniaPension",
     "nov27PennsylvaniaNonresidentAndAotcEvidenceKey": "activeContinuation.nov27PennsylvaniaNonresidentAndAotc",
@@ -194,6 +194,33 @@
     ]
   },
   "activeContinuation": {
+    "nov27CommercialVehicleSecondYear": {
+      "commit": "18b582a5a95fadfe9a5022c5e13249485b5bd13b",
+      "verifiedTree": "473b68de0a670001c4b3f1af9e5ae5df32b5d4e0",
+      "primarySources": ["https://www.irs.gov/publications/p946", "https://www.irs.gov/pub/irs-prior/f8936sa--2025.pdf", "https://uscode.house.gov/us/usc/t26/s1016/"],
+      "exactFocusedTestsPassed": 62,
+      "repositorySpecReferencesValidated": 10294,
+      "exactTreeChecksPassed": ["typecheck", "contracts", "web-types", "spec", "inventory", "lint", "build", "offline-eval"],
+      "independentEngineeringReviewPassed": true,
+      "verifiedDepreciation2025": "3800",
+      "exactDepreciation2026": "6080",
+      "basisAfterDepreciation2026": "9120",
+      "latestLocalFullUnitAndCoverage": "running",
+      "canonicalAttributionSupported": false,
+      "qualifiedHumanReviewPassed": false,
+      "filingQualified": false
+    },
+    "nov27GuidedCommercialVehicleLedger": {
+      "commit": "4b8d002f1cd621214071778592f5fe66c3dee70e",
+      "verifiedTree": "de172054c9308da26422fe36b3138cc4bb71888f",
+      "exactFocusedTestsPassed": 33,
+      "repositorySpecReferencesValidated": 10289,
+      "exactTreeChecksPassed": ["typecheck", "contracts", "web-types", "spec", "inventory", "lint", "build", "offline-eval"],
+      "independentEngineeringReviewPassed": true,
+      "guidedOwnerCashLedgerLinked": true,
+      "guidedCalculationSourceBindingComplete": false,
+      "filingQualified": false
+    },
     "nov27CommercialVehicleCarryback": {
       "commit": "183535fb25e1559d4acbb62d208e32c4b30e1a4d",
       "verifiedTree": "7c60a77ec1113572f5e4ad49f429d64ad84a02a4",
@@ -206,7 +233,11 @@
       "unusedCurrentCredit": "684",
       "eligible2025Carryback": "400",
       "potential2027Carryforward": "284",
-      "combinedReleaseChecks": "running",
+      "exactUnitTestsPassed": 31381,
+      "exactUnitTestsSkipped": 83,
+      "exactCoverageBranchPercent": 88.72,
+      "exactCoverageExitCode": 0,
+      "browserAndRecoveryChecks": "waiting for previous local runner",
       "qualifiedHumanReviewPassed": false,
       "filingQualified": false
     },
