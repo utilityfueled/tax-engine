@@ -30,6 +30,31 @@ function semantic(value: unknown, year: number, key = ""): unknown {
 export function w2FederalEconomicIdentity(w2: Record<string, unknown>, year: number): string {
   return stable(semantic(w2, year));
 }
+
+/** Reject ambiguous copies before any federal aggregation, with or without row packets. */
+export function assertDistinctFederalW2Originals({ taxpayer, w2s }: W2StateLocalSourceContext): void {
+  if (taxpayer.taxYear !== 2026 || w2s.length < 2) return;
+  const joint = taxpayer.filingStatus === "married_filing_jointly" && taxpayer.spouse !== undefined;
+  const originals = new Map<string, Set<TaxYearInput["w2s"][number]["accountHolder"]>>();
+  for (const { employer, militaryService, ...w2 } of w2s) {
+    const identity = w2FederalEconomicIdentity({
+      ...w2,
+      employer: { name: employer.name, ein: employer.ein },
+      militaryService: militaryService?.activeDuty || militaryService?.combatOrHazardousDutyPay ? militaryService : undefined,
+    }, taxpayer.taxYear);
+    const owner = joint ? w2.accountHolder : "primary";
+    const priorOwners = originals.get(identity);
+    if (!priorOwners) {
+      originals.set(identity, new Set([owner]));
+      continue;
+    }
+    if (!owner || priorOwners.has(undefined) || priorOwners.has(owner)) {
+      throw new Error("Compare and reconcile indistinguishable W-2 originals before totaling federal wages and withholding.");
+    }
+    priorOwners.add(owner);
+  }
+}
+
 function checkCount(mode: string, count: number): void {
   if (!(mode === "none" && count === 0 || mode === "single" && count === 1 || mode === "multiple" && count === 2)) error("actual none/single/multiple reporting must match complete zero/one/two printed rows");
 }

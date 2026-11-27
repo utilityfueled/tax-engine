@@ -28,6 +28,27 @@ lines:
     description: "Copied state pages do not create federal economic income"
     formula: "An indistinguishable copied W2 federal original with altered scalar state row must reject."
     testRef: "tests/engine/w2-state-local-independent.test.ts::independent W2 rejects duplicate federal economic source with altered state row"
+  - line: "2026-duplicate-federal-original"
+    description: "Hold indistinguishable W-2 originals before federal wages and withholding are totaled"
+    formula: |
+      For 2026, compare every canonical W-2, including those with no state or
+      local source packet. Compare normalized federal original facts without
+      using state or local rows as a second federal original. Compare employer
+      name and EIN independently of supplemental address, and treat inactive
+      service metadata without affirmative combat pay like omitted service
+      metadata. Retain affirmative military facts in the comparison. Hold
+      equal facts for the same recipient or when an unassigned joint recipient
+      leaves the originals ambiguous. Preserve distinguishable originals for
+      the same employer, and matching federal facts for the two explicitly
+      identified recipients on a joint return. Preserve historical 2025 and
+      independent state and local source validation.
+    irsRef: "https://www.irs.gov/pub/irs-dft/f1040--dft.pdf, Form 1040 (2026 draft) lines 1a and 25a; https://www.irs.gov/instructions/i1040gi"
+    testRef: "tests/engine/federal-w2-source-year.test.ts::holds indistinguishable canonical W-2 originals for a 2026 return"
+    testRefs:
+      - "tests/engine/federal-w2-source-year.test.ts::holds 2026 W-2 copies with supplemental metadata differences"
+      - "tests/engine/federal-w2-source-year.test.ts::preserves affirmative military facts in 2026 W-2 comparison"
+      - "tests/engine/federal-w2-source-year.test.ts::counts different W-2 originals for the same employer and both identified joint recipients"
+      - "tests/engine/federal-w2-source-year.test.ts::keeps historical canonical 2025 W-2 admission"
   - line: "independent-private"
     description: "Source commitments keep private identifiers out of published projections"
     formula: "Output includes SHA256 and actual row positions/amounts, without raw owner/EIN/stateID/locality identity."

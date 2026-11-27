@@ -1,5 +1,5 @@
 import { calculateForm2210InvestmentElectionSources } from './forms/form-2210-investment-election.js';
-import { assertW2StateLocalSources } from "./forms/w2-state-local.js";
+import { assertDistinctFederalW2Originals, assertW2StateLocalSources } from "./forms/w2-state-local.js";
 import { getFutureScheduleK1SourceIssue } from "./assert-statement-year.js";
 import { buildForm2210OwnerSourceContext } from './forms/form-2210-owner-source.js';
 import { calculateMarketplaceActualPaidRepayment, type MarketplaceActualPaidAdjustment } from "./forms/marketplace-actual-paid-repayment.js";
@@ -349,6 +349,7 @@ function calculateFederalTaxReturn(input: TaxYearInput, context?: { asOfDate?: s
       throw new Error(`${formName} source year ${mismatch.taxYear} must match the ${returnYear} return`);
     }
   }
+  assertDistinctFederalW2Originals(input);
   const mismatchedSsa = input.formSSA1099?.find(original =>
     original.sourceTaxYear !== undefined && original.sourceTaxYear !== returnYear,
   );
