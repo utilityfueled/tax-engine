@@ -232,7 +232,7 @@ lines:
       tax and withholding, and $75,120 in worldwide Schedule SP eligibility
       income. The same above-$70,244 wage floor still proves zero federal EITC
       without a federal return: ordinary positive interest cannot lower AGI.
-      Hold the nonresident cohort, dependent-care, childless
+      Hold dependent-care, childless
       EITC, estimated balance, government unemployment and prepayment methods
       when combined with this new source. Require complete ordinary completion
       facts. Preserve pending final 2026 PA form, mapping and filing gates.
@@ -261,8 +261,7 @@ lines:
       SP eligibility income are each $75,120, and $2,306 withholding covers the
       $2,306 reported PA tax. Schedule A is not required for this $120 original.
       The annual sole-interest method does not combine cash dividends or other
-      special source or payment methods. Continue to hold the separate
-      nonresident personal-interest source method and final 2026 filing gates.
+      special source or payment methods. Preserve final 2026 filing gates.
     sources:
       - "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u303s"
       - "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/interest"
@@ -270,7 +269,30 @@ lines:
     testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 full-year resident bank interest transfers the complete current original"
     testRefs:
       - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 full-year resident bank interest holds %s"
-      - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 bank interest holds the nonresident source method and preserves the statutory exclusion"
+  - line: "full-year-nonresident-personal-bank-interest"
+    description: "Exclude a verified 2026 ordinary bank-interest original from PA taxable income for a full-year nonresident"
+    formula: |
+      Apply the same complete original, dated personal bank-credit ledger,
+      primary owner, single high-wage and ordinary completion checks. Require
+      one confirmed domicile period outside PA covering the entire tax year
+      with a reconciled full-year nonresident declaration, abode and presence.
+      Hold statutory nonresidents domiciled in PA, two-period methods, other
+      investment originals, and special sources and payments. Ordinary
+      personal deposits have no PA source for this nonresident. Preserve all
+      verified credits in the Schedule A review calculation as the
+      nonresidency reduction, with zero PA-40 line 2 and no change to wages or
+      withholding. Include the excluded interest once in worldwide Schedule
+      SP eligibility income. With $75,000 in worldwide wages, $9,000 of PA
+      compensation and $120 of verified bank credits, PA tax and withholding
+      remain $276 and Schedule SP eligibility income is $75,120. Preserve
+      final 2026 attachment, mapping and filing gates.
+    sources:
+      - "https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter103/s103.16.html"
+      - "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/interest"
+      - "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/tax-forgiveness"
+    testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 full-year nonresident bank interest excludes the complete original from PA taxable income"
+    testRefs:
+      - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 full-year nonresident bank interest holds %s"
   - line: "part-year-personal-cash-dividend"
     description: "Allocate one complete 2026 Box 1a cash-dividend original for a resident moving into Pennsylvania"
     formula: |

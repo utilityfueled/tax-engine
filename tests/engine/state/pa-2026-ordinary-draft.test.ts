@@ -56,7 +56,8 @@ const unsupportedBankInterest: Array<[string, (f: ReturnType<typeof pa2026Ordina
  ['a changed Box 1 amount', f => { f.input.form1099Int[0].interestIncome = '121'; }, /credits.*reconcile original Box1/i],
  ['positive withheld tax', f => { f.input.form1099Int[0].federalWithheld = '1'; }, /Box 1.*known-zero/i],
  ['insufficient actual withholding', f => {
-  f.input.w2s[0].stateTaxWithheld = f.input.w2s[0].stateTaxWithheld === '2306' ? '2305' : '1197';
+  const w2 = f.input.w2s[0];
+  w2.stateTaxWithheld = new Decimal(w2.stateTaxWithheld ?? '0').minus(1).toFixed();
  }, /withholding must cover/i],
  ['multiple current bank originals', f => {
   const [original] = f.input.form1099Int;
@@ -104,12 +105,43 @@ it.each(unsupportedBankInterest)('PA2026 full-year resident bank interest holds 
  expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources)).toThrow(expected);
 });
 
-it('PA2026 bank interest holds the nonresident source method and preserves the statutory exclusion', () => {
+it('PA2026 full-year nonresident bank interest excludes the complete original from PA taxable income', () => {
  const f = pa2026OrdinaryBankInterestFixture('nonresident');
- const income = calculatePAResidencySources(f.input, f.input.paResidencySources);
- expect(income.reportedInterest.toFixed()).toBe('0');
- expect(income.excludedNonPAInterest.toFixed()).toBe('120');
- expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources)).toThrow(/nonresident.*bank interest/i);
+ const facts = confirmGuidedPAOrdinaryReturnFacts(f.input, { ...f.facts, sourceFactsConfirmed: null });
+ const completion = confirmGuidedPAOrdinaryReturnCompletionSources(f.input, { ...f.sources, sourceFactsConfirmed: null }, facts);
+ const before = JSON.stringify(f.input);
+ const r = calculatePA2026OrdinaryDraft(f.input, buildGuidedPAOrdinaryReturnFacts(f.input, facts), buildGuidedPAOrdinaryReturnCompletionSources(f.input, completion, facts));
+ expect(r.pa.residencyStatus).toBe('nonresident');
+ expect(r.pa.scheduleA.line1.toFixed()).toBe('120');
+ expect(r.pa.scheduleA.reductionAdjustments.map(row => [row.description, row.amount.toFixed()])).toEqual([['Non-Residency Period Interest', '120']]);
+ expect(r.pa.scheduleA.line16.toFixed()).toBe('0');
+ expect(r.pa.pa40.interest.toFixed()).toBe('0');
+ expect(r.pa.pa40.totalPATaxableIncome.toFixed()).toBe('9000');
+ expect(r.pa.pa40.taxLiability.toFixed()).toBe('276');
+ expect(r.pa.pa40.stateWithholding.toFixed()).toBe('276');
+ expect(r.pa.pa40.totalAmountDue.toFixed()).toBe('0');
+ expect(r.pa.scheduleSP.eligibilityIncome.toFixed()).toBe('75120');
+ expect(r.dependencyProof.federalEarnedIncomeCredit.toFixed()).toBe('0');
+ expect(r.readiness).toMatchObject({ filingEligible: false, fullFederalCalculated: false });
+ expect(r.readiness.blockers).toContain('final-2026-forms-unqualified');
+ expect(JSON.stringify(f.input)).toBe(before);
+});
+
+it.each(unsupportedBankInterest)('PA2026 full-year nonresident bank interest holds %s', (_scenario, change, expected) => {
+ const f = pa2026OrdinaryBankInterestFixture('nonresident');
+ change(f);
+ if (f.input.form1099Int.length) f.input.paResidencySources.interest[0].original = structuredClone(f.input.form1099Int[0]);
+ rebindPA2026Draft(f);
+ expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources)).toThrow(expected);
+});
+
+it('PA2026 full-year nonresident bank interest holds a statutory nonresident domiciled in Pennsylvania', () => {
+ const f = pa2026OrdinaryBankInterestFixture('nonresident');
+ const residency = f.input.paResidencySources.residency;
+ residency.domicilePeriods[0].state = 'PA';
+ residency.domicilePeriods[0].daysInPA = 30;
+ expect(calculatePAResidencySources(f.input, f.input.paResidencySources).residencyStatus).toBe('nonresident');
+ expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources)).toThrow(/full-year nonresident bank interest.*outside Pennsylvania/i);
 });
 
 it('PA2026 full-year resident bank interest holds a Pennsylvania statutory resident domiciled elsewhere', () => {
@@ -148,7 +180,7 @@ it('PA2026 part-year cash dividend replays one complete original and its dated c
  expect(JSON.stringify(f.input)).toBe(before);
 });
 
-function interestAndDividends(withholding: string, status: 'part_year' | 'resident' = 'part_year') {
+function interestAndDividends(withholding: string, status: 'part_year' | 'resident' | 'nonresident' = 'part_year') {
  const f = pa2026OrdinaryCashDividendFixture(status);
  const bank = pa2026OrdinaryBankInterestFixture(status);
  f.input.form1099Int = bank.input.form1099Int;
@@ -161,6 +193,11 @@ function interestAndDividends(withholding: string, status: 'part_year' | 'reside
 it('PA2026 full-year resident bank interest holds additional investment originals', () => {
  const f = interestAndDividends('2310', 'resident');
  expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources)).toThrow(/full-year resident bank interest.*investment source/i);
+});
+
+it('PA2026 full-year nonresident bank interest holds additional investment originals', () => {
+ const f = interestAndDividends('276', 'nonresident');
+ expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources)).toThrow(/full-year nonresident bank interest.*investment source/i);
 });
 
 type CashDividendFixture = ReturnType<typeof pa2026OrdinaryCashDividendFixture>;
