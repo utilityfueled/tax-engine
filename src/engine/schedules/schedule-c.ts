@@ -1,4 +1,5 @@
 import {assertScheduleCPassengerResult} from './schedule-c-passenger-first-year-sources.js';
+import { calculateScheduleCSection45WSecondYear } from './schedule-c-section45w-second-year-sources.js';
 import { calculateScheduleCSection45WFirstYear } from './schedule-c-section45w-first-year-sources.js';
 /**
  * Schedule C — Profit or Loss From Business (Sole Proprietorship)
@@ -186,12 +187,17 @@ function calculateStandardMileage(input: TaxYearInput, business: ScheduleCInput 
 export function calculateScheduleC(
   input: TaxYearInput,
   scheduleCInput: ScheduleCInput | undefined = input.scheduleC?.professionalWagering !== undefined
-    || input.scheduleC?.standardMileage !== undefined || input.scheduleC?.sourceFacts?.section45WFirstYear !== undefined ? input.scheduleC : undefined,
-  options: { dependentCareBenefitsAdjustment?: Decimal } = {},
+    || input.scheduleC?.standardMileage !== undefined || input.scheduleC?.sourceFacts?.section45WFirstYear !== undefined
+    || input.scheduleC?.sourceFacts?.section45WSecondYear !== undefined ? input.scheduleC : undefined,
+  options: { dependentCareBenefitsAdjustment?: Decimal; section45WSecondYearAsOfDate?: string } = {},
 ): ScheduleCResult {
   assertStatementYear("Form 1099-NEC", input.form1099Nec, input.taxpayer.taxYear);
   const audit = new AuditTrail();
-  const section45W = calculateScheduleCSection45WFirstYear(input, scheduleCInput, options.dependentCareBenefitsAdjustment);
+  const secondYearSection45W = calculateScheduleCSection45WSecondYear(input, scheduleCInput, {
+    asOfDate: options.section45WSecondYearAsOfDate,
+    careBenefitAdjustment: options.dependentCareBenefitsAdjustment,
+  });
+  const section45W = secondYearSection45W ?? calculateScheduleCSection45WFirstYear(input, scheduleCInput, options.dependentCareBenefitsAdjustment);
   const wagering = calculateProfessionalWagering(input, scheduleCInput, options.dependentCareBenefitsAdjustment, audit);
   const mileage = calculateStandardMileage(input, scheduleCInput);
   const sources = calculateScheduleCSourceFacts(input, scheduleCInput);
@@ -268,7 +274,8 @@ export function calculateScheduleC(
     "13",
     "Depreciation and section 179 expense deduction",
     depreciationAndSection179Deduction,
-    section45W ? "Verified Section 45W vehicle depreciation from the sole Form 4562 asset" : form4562 ? "Form 4562 Line 22" : "Validated manual Schedule C depreciation amount",
+    secondYearSection45W ? "Verified second-year depreciation from the continuing Form 4562 asset"
+      : section45W ? "Verified Section 45W vehicle depreciation from the sole Form 4562 asset" : form4562 ? "Form 4562 Line 22" : "Validated manual Schedule C depreciation amount",
     section45W ? { "Verified Form 4562 listed property depreciation": section45W.line28 } : form4562
       ? { "Form 4562 Line 22": form4562.line22 }
       : { "Validated manual Schedule C depreciation amount": d(expenses.depreciation) }

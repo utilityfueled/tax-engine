@@ -10,6 +10,7 @@ import { MortgageInsurancePrepaidSourcesSchema } from "./mortgage-insurance-prep
 import {PassengerAutoParentSourcesSchema} from './passenger-auto-parent-sources.js';
 import {calculateScheduleCPassengerSources} from '@/engine/schedules/schedule-c-passenger-first-year-sources.js';
 import { ScheduleCSection45WFirstYearSchema } from './schedule-c-section45w-first-year.js';
+import { ScheduleCSection45WSecondYearSchema } from './schedule-c-section45w-second-year.js';
 import { Section45WCurrentCreditSchema } from './section45w-current-credit.js';
 import { OhioReturnHeaderSourcesSchema } from './ohio-return-header-sources.js';
 import { OhioSchoolDistrictFactsSchema } from './ohio-school-district.js';
@@ -3719,6 +3720,7 @@ export const Form8829Schema = z.object({
 /** Actual source records; blanks remain unknown until the Schedule C source calculator validates them. */
 export const ScheduleCSourceFactsSchema = z.object({
   section45WFirstYear: ScheduleCSection45WFirstYearSchema.optional(),
+  section45WSecondYear: ScheduleCSection45WSecondYearSchema.optional(),
   passengerFirstYear:PassengerAutoParentSourcesSchema.optional(),
   depreciation:z.object({sourceTaxYear:z.number().int().optional(),sourceReference:z.string().optional(),sourceFactsConfirmed:z.boolean().nullable().optional(),
     fullCalendarYearConfirmed:z.boolean().nullable().optional(),allAssetsForThisBusinessConfirmed:z.boolean().nullable().optional(),noOtherActivityAssetsConfirmed:z.boolean().nullable().optional(),noOtherDepreciationOrAmortizationConfirmed:z.boolean().nullable().optional(),notDeductedElsewhereConfirmed:z.boolean().nullable().optional(),

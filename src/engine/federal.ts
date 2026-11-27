@@ -373,6 +373,12 @@ function calculateFederalTaxReturn(input: TaxYearInput, context?: { asOfDate?: s
   }
   if (claimOfRightStage(input)) return calculateFederalTaxForSources(input);
   const claim = calculateClaimOfRightSources(input);
+  if (input.scheduleC?.sourceFacts?.section45WSecondYear !== undefined) {
+    if (claim || (input as FederalInputWithOhioSchoolProof)[ohioSchoolScheduleAPaymentProof]) {
+      throw new Error("Second-year Section 45W depreciation requires separately reconciled staged tax-base computations for this return.");
+    }
+    return calculateFederalTaxForSources(input, context?.asOfDate ?? currentLocalCivilDate());
+  }
   if (!claim) return compareAutomaticReitCashDeduction(input, calculateFederalTaxForSources(input));
   if (input.form7206?.plans?.some(plan => plan.marketplaceCoverage === true)) throw new Error("Repaid earlier-year income with Marketplace worksheets needs a separate method");
   if (claim.eligibleAmount.isZero()) return { ...calculateFederalTaxForSources(input), claimOfRight: { ...claim, method: "not_deductible" } };
@@ -437,7 +443,7 @@ function compareAutomaticReitCashDeduction(input: TaxYearInput, itemized: TaxRet
   return { ...winner, allLines: [...winner.allLines, ...audit.getLines()] };
 }
 
-function calculateFederalTaxForSources(input: TaxYearInput): TaxReturnResult {
+function calculateFederalTaxForSources(input: TaxYearInput, section45WSecondYearAsOfDate?: string): TaxReturnResult {
   const section45WCurrentRequested = input.form8936?.commercialCleanVehicleCurrentCredit !== undefined;
   if (section45WCurrentRequested && (input.netOperatingLoss || input.form172 || input.scheduleJ
     || claimOfRightStage(input) || input.form2210?.calculationMethod === "annualized")) {
@@ -472,6 +478,15 @@ function calculateFederalTaxForSources(input: TaxYearInput): TaxReturnResult {
   if (input.form982AttributeSources && !input.form982NolSources) throw new Error("COD later attributes require actual complete original debt and NOL sources");
   if (input.form982NolSources) calculateCodNolReduction(input);
   const marketplace = input.form7206?.plans?.some(plan => plan.marketplaceCoverage === true && plan.premiumTaxCreditInvolved === true);
+  if (input.scheduleC?.sourceFacts?.section45WSecondYear !== undefined) {
+    const historicalNol = [input.priorYear?.nolCarryforward, input.priorYear?.excessBusinessLossNOL].some(amount => !d(amount).isZero());
+    if (section45WSecondYearAsOfDate === undefined || marketplace || input.netOperatingLoss || input.form172 || historicalNol
+      || input.scheduleJ || input.codExclusion || input.form982NolSources || input.qofDispositionFacts
+      || input.form2210?.calculationMethod === "annualized") {
+      throw new Error("Second-year Section 45W depreciation requires separately reconciled staged tax-base computations for this return.");
+    }
+    return calculateFederalTaxCore(input, undefined, undefined, undefined, section45WSecondYearAsOfDate);
+  }
   if (!marketplace) return calculateFederalTaxWithNol(input);
   if (section45WCurrentRequested) throw new Error("Current Section 45W credit requires separately reconciled Marketplace health deduction and premium credit computations.");
   if (![2025,2026].includes(input.taxpayer.taxYear)) throw new Error("Marketplace health coordination supports actual2025 and2026 sources.");
@@ -656,11 +671,11 @@ type NolReturnContext = { stage: "income" | "alternative-income"; deduction: Dec
   | { stage: "final"; deduction: Decimal; modified: false; worksheet: NetOperatingLossReturnResult };
 function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext | undefined, hypothetical: undefined, nol: NolReturnContext & { stage: "income" }): NolIncomeContext;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext | undefined, hypothetical: undefined, nol: NolReturnContext & { stage: "alternative-income" }): NolAlternativeIncomeContext;
-function calculateFederalTaxCore(input: TaxYearInput, marketplace: (MarketplaceContext & { stage: "final" | "full-repayment" | "actual-cash" | "actual-paid" }) | undefined, hypothetical?: undefined, nol?: NolReturnContext & { stage: "final" }): TaxReturnResult;
+function calculateFederalTaxCore(input: TaxYearInput, marketplace: (MarketplaceContext & { stage: "final" | "full-repayment" | "actual-cash" | "actual-paid" }) | undefined, hypothetical?: undefined, nol?: NolReturnContext & { stage: "final" }, section45WSecondYearAsOfDate?: string): TaxReturnResult;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace: undefined, hypothetical: ForeignTaxHypotheticalRequest): ForeignTaxHypotheticalContext;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext & { stage: "worksheet-w" | "maximum" | "ordered" }, hypothetical?: undefined, nol?: NolReturnContext & { stage: "final" }): MarketplaceInterim;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceContext & { stage: "final" | "full-repayment" | "actual-cash" | "actual-paid" }): TaxReturnResult;
-function calculateFederalTaxCore(sourceInput: TaxYearInput, marketplace?: MarketplaceContext, hypothetical?: ForeignTaxHypotheticalRequest, nol?: NolReturnContext): TaxReturnResult | MarketplaceInterim | ForeignTaxHypotheticalContext | NolIncomeContext | NolAlternativeIncomeContext {
+function calculateFederalTaxCore(sourceInput: TaxYearInput, marketplace?: MarketplaceContext, hypothetical?: ForeignTaxHypotheticalRequest, nol?: NolReturnContext, section45WSecondYearAsOfDate?: string): TaxReturnResult | MarketplaceInterim | ForeignTaxHypotheticalContext | NolIncomeContext | NolAlternativeIncomeContext {
   validateForeignTaxDeductionScope(sourceInput);
   const ordered = marketplace?.ordered;
   const calculateOrdered = (kind: MarketplaceOrderedKind) => !ordered?.kinds.includes(kind) || ordered.calculating === kind || ordered[kind] !== undefined;
@@ -1733,6 +1748,7 @@ function calculateFederalTaxCore(sourceInput: TaxYearInput, marketplace?: Market
   // Schedule C: Self-employment income (net profit)
   const schedC = calculateScheduleC(input, input.scheduleC, {
     dependentCareBenefitsAdjustment: careBenefitSources.scheduleCAdjustment,
+    section45WSecondYearAsOfDate,
   });
   const section45WCurrentCredit = prepareSection45WCurrentYearCredit(input, schedC);
   if (section45WCurrentCredit && hypothetical?.purpose === "foreign-deduction-carryover") {
@@ -3394,6 +3410,14 @@ function calculateFederalTaxCore(sourceInput: TaxYearInput, marketplace?: Market
     }
   }
   const { qbiDeduction, form8995Result, form8995AResult } = qbiCalculation;
+  if (section45WSecondYearAsOfDate !== undefined && (
+    form8995AResult || qbiSources.some(source => !("id" in source) || source.id !== "scheduleC") || hasReitPtpSource
+    || input.qbiLossSources || input.qbiDeductionAllocations || !releasedPriorQualifiedRentalLoss.isZero()
+    || input.priorYear?.qbiAggregationElections.length || !d(input.priorYear?.qbiLossCarryforward).isZero()
+    || !d(input.priorYear?.activeQbiLossCarryforward).isZero()
+  )) {
+    throw new Error("Second-year Section 45W depreciation requires a separately reconciled Section 199A computation for this return.");
+  }
   if (section45WCurrentCredit && form8995AResult) {
     throw new Error("Current Section 45W credit requires separate actual Section 199A basis, wages and activity classification for Form 8995-A.");
   }

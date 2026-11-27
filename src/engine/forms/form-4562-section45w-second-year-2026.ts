@@ -33,7 +33,7 @@ const mileage = z.strictObject({
   completeForApplicablePeriodConfirmed: z.literal(true),
 });
 
-const workpaperSchema = z.strictObject({
+export const Section45WSecondYearWorkpaperSchema = z.strictObject({
   taxYear: z.literal(2026),
   priorReturn: z.strictObject({
     ...original, taxYear: z.literal(2025), filingStatus: z.literal("single"), taxpayerReference: reference,
@@ -71,7 +71,7 @@ const workpaperSchema = z.strictObject({
   }),
 });
 
-type Workpaper = z.input<typeof workpaperSchema>;
+type Workpaper = z.input<typeof Section45WSecondYearWorkpaperSchema>;
 
 interface WorkpaperResult {
   tableBasisAfterCredit: Decimal;
@@ -88,7 +88,7 @@ export function calculateSection45WSecondYearDepreciation2026(input: Workpaper, 
   const fail = (reason: string): never => { throw new Error(`2026 Section 45W depreciation ${reason}.`); };
   const asOfDate = observation?.asOfDate;
   if (!asOfDate || !isActualDate(asOfDate) || asOfDate < "2027-01-01") return fail("requires a completed 2026 calendar year as of the observation date");
-  const parsed = workpaperSchema.safeParse(input);
+  const parsed = Section45WSecondYearWorkpaperSchema.safeParse(input);
   if (!parsed.success) return fail("requires the complete originals for one continuing ordinary listed work van");
 
   const { priorReturn, originalAsset, filedClaim, filedClassElection, priorDepreciation, currentAsset } = parsed.data;

@@ -1,0 +1,48 @@
+form: "Schedule C"
+fullName: "Canonical 2026 Schedule C for one continuing 2025 commercial clean vehicle"
+taxYear: 2026
+reviewStatus: "independent-review-pending"
+irsReference: "https://www.irs.gov/instructions/i1040sc"
+notes: |
+  Line 13 uses the verified allowed second-year listed-property depreciation.
+  The 2025 credit changes the original depreciable basis and creates no
+  current credit on this path. For current Form 6251 line 2l, reconcile equal
+  regular and AMT bases for qualifying section 168 property elected out of
+  the special allowance. For Form 8995, compute ordinary qualified business
+  income after the attributed expense and self-employment tax deduction.
+  https://www.irs.gov/instructions/i6251
+  https://www.irs.gov/instructions/i8995
+  https://uscode.house.gov/us/usc/t26/s168/
+  https://www.irs.gov/pub/irs-pdf/p946.pdf
+lines:
+  - line: "13"
+    description: "Attribute one continuing vehicle to the original owner's 2026 cash activity"
+    formula: |
+      Match the original and retained annual Form 4562 asset to the actual
+      primary Single taxpayer's original Schedule C activity, EIN/header
+      where reported, receipts and complete cash ledger with a separately
+      verified full-year participation record. Admit one privately calculated second-
+      year vehicle deduction. Verify the observed full 2026 calendar year
+      with the trusted calculation context on or before the runtime's civil
+      date, and confirm the filed 2025 original before that observation. Reject explicit Form 2210 facts that contradict
+      the filed Single full-calendar-year return or current calendar year.
+      The current return must have no competing depreciation, vehicle
+      or general business credit, separately staged tax base or other QBI source.
+    testRef: "tests/engine/federal-section45w-second-year-2026.test.ts::uses the retained vehicle once after the actual closed year"
+  - line: "AMT-and-QBI"
+    description: "Verify annual AMT equality and ordinary QBI before using the reconciled expense"
+    formula: |
+      Match the original 2025 and retained 2026 asset sources to the actual
+      AMT worksheet by original asset, VIN and placed-in-service date. Check equality of the 2025 post-credit AMT table basis,
+      2025 allowed/allowable AMT depreciation and 2026 opening AMT basis with
+      their exact regular-tax amounts. Confirm section 168 eligibility from
+      original evidence and no intervening AMT basis change. Use the usual
+      Form 8995 path for this actual ordinary nonpassive business.
+    testRef: "tests/engine/federal-section45w-second-year-2026.test.ts::holds unreconciled annual AMT, taxable activity and duplicate claim sources"
+  - line: "QBI-source-identity"
+    description: "Match each nonzero QBI amount to the admitted Schedule C trade"
+    formula: |
+      Hold a different QBI source even when zero Schedule C QBI leaves only
+      one source in the final Form 8995 computation. Continue to admit the
+      verified sole trade when it breaks even and no separate QBI exists.
+    testRef: "tests/engine/federal-section45w-second-year-2026.test.ts::holds an unrelated QBI source even when the vehicle trade breaks even"
