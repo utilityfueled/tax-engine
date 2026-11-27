@@ -3,9 +3,10 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "183535fb25e1559d4acbb62d208e32c4b30e1a4d",
-    "latestScopedApplicationCommit": "8ed5027281dfb29d6b435d7d1648650d0da162b2",
-    "latestCombinedCandidateCommit": "a1d7cb0bcb80ee9275667d2d5aa1613f025d504b",
-    "latestScopedChecksEvidenceKey": "activeContinuation.nov27GuidedCommercialWorkpaper",
+    "latestScopedApplicationCommit": "b5efb12bcbde7e18468202e7f983984e92e973b8",
+    "latestCombinedCandidateCommit": "b5efb12bcbde7e18468202e7f983984e92e973b8",
+    "latestScopedChecksEvidenceKey": "activeContinuation.nov27Form8863PrivateTransfer",
+    "nov27GuidedCommercialWorkpaperEvidenceKey": "activeContinuation.nov27GuidedCommercialWorkpaper",
     "nov27DeductionBrowserYearEvidenceKey": "activeContinuation.nov27DeductionBrowserYear",
     "latestOfflineAiEvidenceKey": "activeContinuation.nov27OfflineAiQualificationRecheck",
     "latestLocalArm64CapacityEvidenceKey": "activeContinuation.nov27LocalArm64CapacityRecheck",
@@ -197,6 +198,39 @@
     ]
   },
   "activeContinuation": {
+    "nov27Form8863PrivateTransfer": {
+      "commit": "b5efb12bcbde7e18468202e7f983984e92e973b8",
+      "verifiedTree": "b9a77153528bb5fd0eccd4d415dba012da21a6f0",
+      "exactArchiveSha256": "dac4a0122fb6fc3bee02b0fddb36006c609c27365ef90231ee278e4ccf160382",
+      "primarySource": "https://www.irs.gov/pub/irs-prior/f8863--2026.pdf",
+      "exactTransfers": {
+        "form8863Line8": "500",
+        "form8863Line19": "750"
+      },
+      "targetedRedAssertionsBeforeImplementation": 2,
+      "strictPypdfReopen": {
+        "reviewMarkedPages": 2,
+        "populatedFields": 2,
+        "confirmedZeroRetained": true,
+        "identityFieldsPopulated": false
+      },
+      "exactFocusedTestsPassed": 494,
+      "exactTreeChecksPassed": [
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
+      "repositorySpecReferencesValidated": 10308,
+      "independentEngineeringReviewPassed": true,
+      "publicReviewQualified": false,
+      "filingQualified": false,
+      "combinedLocalChecks": "running"
+    },
     "nov27GuidedCommercialWorkpaper": {
       "commit": "8ed5027281dfb29d6b435d7d1648650d0da162b2",
       "verifiedTree": "2e2237114e4d1e84c3cf2b231428e0fdcb12190c",

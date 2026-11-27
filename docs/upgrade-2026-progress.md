@@ -8,12 +8,30 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `183535fb2` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. `f5493bdc8` passed unit and coverage checks and had three stale browser assertions. The corrected exact candidate `a1d7cb0b` is running. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `183535fb2` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. `f5493bdc8` passed unit and coverage checks and had three stale browser assertions. Corrected candidate `a1d7cb0b` and its private Form 8863 successor `b5efb12b` are being checked. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
+
+## November 27 private Form 8863 transfer proof
+
+`b5efb12b` uses the existing source-bound 2026 AOTC workpaper to fill
+exactly two fields in the pinned final Form 8863. The synthetic $2,500
+credit phases down by one half. Independent engineering review confirmed
+$500 on line 8, which transfers to Form 1040 or 1040-SR line 29, and $750
+on line 19, which transfers to Schedule 3 line 3. A zero liability limit
+preserves an explicit zero on line 19. The independent PDF reader reopened
+both review-marked pages and found only those two populated fields.
+Template drift, stale source records and inconsistent transfers are rejected.
+[Final IRS Form 8863](https://www.irs.gov/pub/irs-prior/f8863--2026.pdf).
+
+The exact scope passed 494 focused tests and eight static checks, including
+10,308 spec references. The PDF reader uses a bounded process and a
+mode-0600 synthetic fixture removed at suite cleanup. The Form 8863
+review and filing registries remain gated pending the related annual form
+family and independent human review.
 
 ## November 27 guided commercial vehicle and deduction browser evidence
 
