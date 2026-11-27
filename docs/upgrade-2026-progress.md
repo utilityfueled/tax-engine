@@ -12,11 +12,11 @@ spec references, inventory, scoped lint and the browser source manifest.
 The guided Form 1098 replay held a blank lender and projected the actual name
 after correction. A clean archive with an offline frozen installation passed
 all eight static checks, the production web build and 237 tests across the
-three new calculation and billing areas. The full unit run passed 31,198 tests
-with 81 existing skips. All 15 official sample files matched their recorded
-hashes. Chromium verified a standalone self-host backup restores
-original file bytes and private saved answers after deletion and reload. The
-owned test listener closed after the check.
+three new calculation and billing areas. Unit and coverage runs each passed
+31,198 tests with 81 existing skips. Branch coverage was 88.64%. All 15 official
+sample files matched their recorded hashes. A standalone self-host rehearsal in
+Chromium restored the original file bytes and private saved answers after
+deletion and reload. The test listener closed after the check.
 [IRS Schedule A line 8b](https://www.irs.gov/instructions/i1040sca) ·
 [Current CI](https://github.com/utilityfueled/tax-engine/actions/runs/45987981813) ·
 [Current AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45987981913) ·
@@ -42,6 +42,10 @@ Branch coverage reached 88.64% against the 85% gate. Both reruns used the
 established five-worker limit and local fixture listeners.
 The earlier parallel attempt hit timing failures and could not open a loopback
 TLS listener in the sandbox. The previous Docker job for `64ca11a71` passed.
+Chromium passed 654 cases in nine standard windows with five existing skips.
+The suite verified listener cleanup. The first archived browser invocation
+stopped because the public sample files were absent. The successful rerun
+used all 15 samples with verified hashes.
 The current Linux browser and image requirements remain open.
 [Current CI](https://github.com/utilityfueled/tax-engine/actions/runs/45986784006) ·
 [Current AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45986784302) ·
