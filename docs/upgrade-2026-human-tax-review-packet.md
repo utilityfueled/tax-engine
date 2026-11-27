@@ -726,3 +726,27 @@ deduction's line reference for the final 2026 form separately.
 [IRC §55](https://uscode.house.gov/us/usc/119-142/t26/s55/) ·
 [Draft 2026 instructions](https://www.irs.gov/pub/irs-dft/i6251--dft.pdf#page=10) ·
 [Final 2025 instructions](https://www.irs.gov/pub/irs-pdf/i6251.pdf#page=9).
+
+## November 27 Form 8919 and Form 8962 transfer review
+
+For 2026 Form 8919 Reason G, assume the worker filed Form SS-8 before
+filing the return and has received no reply. The worker shows $600 of
+claimed wages tied to a MISC Box 3 original, and the same statement
+appears as active other income. Identify the records needed to classify
+and report the amount once. Compare an unrelated payer's same-amount
+statement and a receipt with no amount attributed to the wage row.
+Confirm which distinctions need primary source evidence. The internal
+review PDF holds the potential duplicate and waits for reconciliation.
+[Final 2026 Form 8919](https://www.irs.gov/pub/irs-pdf/f8919.pdf).
+
+For Form 8962, use a single filer in the contiguous United States with
+$18,000 of household income, twelve eligible months, $600 monthly
+enrollment premiums, and a $200 monthly benchmark. For advance payments
+of $500 or $0 per month, derive the reported amounts and verify the
+candidate outputs of $3,978 excess and $2,022 net credit. Also trace an
+equal-amount case after annual reconciliation. Confirm the transfers or
+zero stop instruction against the final form. Check the alternative-marriage
+instructions and verify capped 2025 repayment on line 29. Record the date
+and revision used in the signed worksheet.
+[2026 draft](https://www.irs.gov/pub/irs-dft/f8962--dft.pdf#page=2) ·
+[Final 2025 Form 8962](https://www.irs.gov/pub/irs-pdf/f8962.pdf).

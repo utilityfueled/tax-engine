@@ -1,5 +1,50 @@
 # 2026 upgrade implementation evidence
 
+## November 27 draft Form 8962 repayment transfer
+
+`aa2d431bc` aligns the ordinary and alternative-marriage Form 8962
+audits with the 2026 draft. Positive repayment moves from line 27 to
+Schedule 2 line 1a. Positive net credit moves from line 26 to Schedule 3
+line 9. Equal amounts record zero on line 26 and stop. Draft lines 28
+and 29 are reserved. The four final marketplace health source validators
+verify the year-specific row and reject duplicate or contradictory rows.
+Fixtures verify $3,978 of 2026 ordinary repayment and $375 of capped
+repayment through line 29 in 2025. The 2026 mapping is draft-only.
+
+Four regression checks failed before correction. The affected 26-file
+run passed 239 tests. The independent review ran 47 tests and identified
+the helper's missing inventory entry. The entry was generated against the
+tracked archive. The final seven-file run passed 108 tests, and type
+checking, lint and spec validation passed. The separate working-tree
+inventory edit is outside the commit.
+[2026 IRS draft](https://www.irs.gov/pub/irs-dft/f8962--dft.pdf#page=2) ·
+[Final 2025 form](https://www.irs.gov/pub/irs-pdf/f8962.pdf) ·
+[Shared audit spec](../spec/federal/form-8962-repayment-audit.yaml) ·
+[Exact Web CI](https://github.com/utilityfueled/tax-engine/actions/runs/45952099100).
+
+## November 27 Form 8919 pending SS-8 original income
+
+`0f3e3e35b` holds the disabled 2026 Reason G review PDF when a Form
+1099 explicitly supplies part of the firm's wages and active income from
+that kind of statement could still count the same amount. The guard uses
+the existing year, recipient and payer identity rules for NEC compensation
+and MISC Box 3. It preserves different sources, withholding-only entries
+and originals recorded only as receipts. Explicit wage amounts must use
+exact cents and their Decimal sum cannot exceed the firm row. Form 8919
+line 6 carries qualifying wages. The final official blank was already pinned.
+
+The original overlap and a one-cent overage each produced a PDF before
+the fixes and now hold. All 42 focused tests passed, plus type checking,
+scoped lint and spec validation. The independent engineering rerun passed
+31 tests spanning the 2026 candidate and archived 2025 renderer. The
+exact archive passed 31,131 tests in both the unit and coverage runs,
+with 81 existing skips and 88.62% branch coverage. The initial attempt
+needed OS loopback enabled for the synthetic database fixture. The review
+candidate and filing exports remain disabled.
+[Final Form 8919](https://www.irs.gov/pub/irs-pdf/f8919.pdf) ·
+[Source spec](../spec/federal/form-8919-2026-template.yaml) ·
+[Exact Web CI](https://github.com/utilityfueled/tax-engine/actions/runs/45950986070).
+
 ## November 27 confirmed Ohio school header preview
 
 `a9a74d149` removes one duplicate federal calculation from the confirmed

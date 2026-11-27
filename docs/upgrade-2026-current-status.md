@@ -9,6 +9,18 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `aa2d431bc` records draft 2026 Form 8962 repayment at line 27,
+  with line 26 for net credit or an equal-amount zero. Four marketplace
+  source validators check the year-specific audit rows. The focused run
+  passed 239 tests and the final scoped rerun passed 108. Final 2026
+  qualification remains open. [Form 8962 evidence](upgrade-2026-progress.md#november-27-draft-form-8962-repayment-transfer).
+
+- `0f3e3e35b` holds the disabled 2026 Form 8919 Reason G review when
+  original wages could still appear as other Form 1099 income or the
+  attributed source amounts exceed the firm row. All 42 focused tests
+  and an independent 31-test engineering rerun passed. Filing remains
+  unqualified. [Reason G evidence](upgrade-2026-progress.md#november-27-form-8919-pending-ss-8-original-income).
+
 - `a9a74d149` removes one duplicate federal calculation from the
   confirmed Ohio school header preview. Both school adapters and the
   independent Schedule A path still run. All 128 focused tests passed.

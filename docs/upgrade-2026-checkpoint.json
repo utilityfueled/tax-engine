@@ -2,9 +2,11 @@
   "resume": {
     "asOf": "2026-11-27",
     "branch": "main",
-    "applicationCommit": "a9a74d1498371e957248343eb915ee72850f3268",
-    "latestScopedApplicationCommit": "a9a74d1498371e957248343eb915ee72850f3268",
+    "applicationCommit": "aa2d431bcb5d629fc62244c606111487a473148c",
+    "latestScopedApplicationCommit": "aa2d431bcb5d629fc62244c606111487a473148c",
     "latestCombinedCandidateCommit": "a9a74d1498371e957248343eb915ee72850f3268",
+    "form8962DraftRepaymentEvidenceKey": "activeContinuation.nov27Form8962DraftRepayment",
+    "form8919ReasonGEvidenceKey": "activeContinuation.nov27Form8919ReasonG",
     "form8919ReviewPdfEvidenceKey": "activeContinuation.nov27Form8919ReviewPdf",
     "confirmedOhioSchoolHeaderEvidenceKey": "activeContinuation.nov27ConfirmedOhioSchoolHeader",
     "form8919SourceInventoryEvidenceKey": "activeContinuation.nov26Form8919SourceInventory",
@@ -164,6 +166,33 @@
     ]
   },
   "activeContinuation": {
+    "nov27Form8962DraftRepayment": {
+      "commit": "aa2d431bcb5d629fc62244c606111487a473148c",
+      "officialDraftSource": "https://www.irs.gov/pub/irs-dft/f8962--dft.pdf#page=2",
+      "historicalSource": "https://www.irs.gov/pub/irs-pdf/f8962.pdf",
+      "preCorrectionControlsFailed": 4,
+      "focusedTestsPassed": 239,
+      "independentEngineeringTestsPassed": 47,
+      "finalScopedTestsPassed": 108,
+      "inventoryExactCheckPassed": true,
+      "amd64WebRun": 45952099100,
+      "ciRun": 45952099150,
+      "dockerRun": 45952099182,
+      "fullLocalRun": "Exact clean-archive checks in progress.",
+      "filingQualified": false
+    },
+    "nov27Form8919ReasonG": {
+      "commit": "0f3e3e35b017590592442083bc6daf6cfaaf7aba",
+      "officialSource": "https://www.irs.gov/pub/irs-pdf/f8919.pdf",
+      "preCorrectionControlsFailed": 2,
+      "focusedTestsPassed": 42,
+      "independentEngineeringTestsPassed": 31,
+      "amd64WebRun": 45950986070,
+      "ciRun": 45950985922,
+      "dockerRun": 45950985863,
+      "fullLocalRun": "Exact clean-archive checks in progress. The initial sandbox run could not bind the existing loopback fixture.",
+      "publicExportAndFilingQualified": false
+    },
     "nov27ConfirmedOhioSchoolHeader": {
       "commit": "a9a74d1498371e957248343eb915ee72850f3268",
       "focusedTestsPassed": 128,
