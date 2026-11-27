@@ -8,7 +8,7 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `1746edc42` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `85645fdcb` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
@@ -22,8 +22,19 @@ when a known institution changes. It preserves the other schools' receipt
 answers, prior claims, and equivalent formatting. A saved-reopen regression
 confirmed that the revised school cannot reach canonical input with the old
 receipt answers. Independent engineering review, all 58 pinned targeted
-tests, nine spec references and the web typecheck passed. The exact combined
-suite is queued behind `1746edc42`. [Draft Form 8863 instructions](https://www.irs.gov/pub/irs-dft/i8863--dft.pdf).
+tests, nine spec references and the web typecheck passed. The exact archive
+passed all 11 local checks. Both unit runs passed 31,312 tests with
+83 skips and 88.67% branch coverage.
+Chromium passed 654 cases with 5 skips, and encrypted
+standalone recovery passed. A desktop probe saved a replacement school,
+reopened with the changed school's receipt answers cleared, and confirmed
+that the other school's receipts and prior claim count survived. The
+canonical bridge held until the applicable receipts and the listed-school
+EIN matched. The listeners closed. The first
+coverage run exhausted scratch space while writing HTML. It passed all tests,
+and the unchanged command was rerun after releasing generated cache files.
+Manifest SHA-256
+`0e3e35d48ce5b3199a5c1f72979f218a219079218cd4819d841d14f7158a9e21`. [Draft Form 8863 instructions](https://www.irs.gov/pub/irs-dft/i8863--dft.pdf).
 
 ## November 27 Pennsylvania nonresident interest and AOTC expense confirmation
 

@@ -2,7 +2,7 @@
   "resume": {
     "asOf": "2026-11-27",
     "branch": "main",
-    "applicationCommit": "1746edc4267ac3fa885e2d15e83e0e039c8f62ea",
+    "applicationCommit": "85645fdcbca8045e19ab2884e3b19f3bddf5b9b4",
     "latestScopedApplicationCommit": "85645fdcbca8045e19ab2884e3b19f3bddf5b9b4",
     "latestCombinedCandidateCommit": "85645fdcbca8045e19ab2884e3b19f3bddf5b9b4",
     "nov27OhioPennsylvaniaPensionEvidenceKey": "activeContinuation.nov27OhioPennsylvaniaPension",
@@ -60,7 +60,7 @@
     "pinnedSelfHostSchemaEvidenceKey": "activeContinuation.nov26PinnedSelfHostSchema",
     "ohioOrdinaryCashDividendEvidenceKey": "activeContinuation.nov26OhioCashDividend",
     "pennsylvaniaAnnualCashDividendEvidenceKey": "activeContinuation.nov26PaAnnualCashDividend",
-    "latestExactLocalVerificationEvidenceKey": "activeContinuation.nov27PennsylvaniaNonresidentAndAotcExact",
+    "latestExactLocalVerificationEvidenceKey": "activeContinuation.nov27AotcInstitutionExact",
     "paPartYearDividendEvidenceKey": "activeContinuation.nov26PAPartYearCashDividend",
     "currentCombinedAndArmEvidenceKey": "activeContinuation.nov26CombinedEvAiAndArm64",
     "evChargerEvidenceKey": "activeContinuation.nov26PersonalEvCharger",
@@ -109,7 +109,7 @@
     "householdUpkeepEvidenceKey": "activeContinuation.nov25HouseholdUpkeepPrecision",
     "verificationCommit": "cd6e64b972869264f35234e64267c88f36778860",
     "generatedInventoryCommit": "26983a3c48380a3c1ead47a86dbe3977dd02f6bd",
-    "latestLocalChecksEvidenceKey": "activeContinuation.nov27PennsylvaniaNonresidentAndAotcExact",
+    "latestLocalChecksEvidenceKey": "activeContinuation.nov27AotcInstitutionExact",
     "vehicleStatementEvidenceKey": "activeContinuation.nov25Form1098Vli",
     "vehicleRefundEvidenceKey": "activeContinuation.nov25Form1098VliCashRefund",
     "vehicleInterestCreditEvidenceKey": "activeContinuation.nov25Form1098VliInterestCredit",
@@ -182,7 +182,7 @@
     "pensionTaxableAmountEvidenceKey": "activeContinuation.nov24ReportedPensionTaxableAmount",
     "completeLocalBaselineEvidenceKey": "activeContinuation.nov24ExactLocalBaselineAndCurrentRuns",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
-    "unitCoverageEvidenceKey": "activeContinuation.nov27PennsylvaniaNonresidentAndAotcExact",
+    "unitCoverageEvidenceKey": "activeContinuation.nov27AotcInstitutionExact",
     "remaining": [
       "Both strict Linux browser gates and current image evidence remain open. See activeContinuation.nov27OhioBusinessAndEquityResidency for the current e075fceaf run IDs. The earlier ARM64 strict browser step failed on nine Ohio deadlines. Verified 46005900143 held the active concurrency lease and exact e075fceaf run 46014076098 was pending behind it. Keep both runs in place.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
@@ -298,13 +298,52 @@
         "browserSourceAuditSha256": "adffe2ea772540a0829c344bbf07eefb12d9543b02be92c2f486990c7511ce0e"
       }
     },
+    "nov27AotcInstitutionExact": {
+      "commit": "85645fdcbca8045e19ab2884e3b19f3bddf5b9b4",
+      "archiveSha256": "280a9d098d495c9e580c4db22929531eb1e0eaaedf425c05f6bdf63b62ed6abd",
+      "localManifestSha256": "0e3e35d48ce5b3199a5c1f72979f218a219079218cd4819d841d14f7158a9e21",
+      "requiredLocalChecksPassed": 11,
+      "unitPassed": 31312,
+      "unitSkips": 83,
+      "branchCoveragePercent": 88.67,
+      "chromiumPassed": 654,
+      "chromiumSkipped": 5,
+      "chromiumWindows": 9,
+      "browserSummarySha256": "6248e28c6bd2fafd8a9e28b094800bd3e2ab7614bf293a3c4bb79950c31f987d",
+      "standaloneReceiptSha256": "662954728f9f20255c7ca05333c496d3e4d3a2cdeacaf4b8ee67f441e20bb0fa",
+      "standalonePassed": true,
+      "localListenersClosed": true,
+      "firstCoverageReportStorageExhausted": true,
+      "firstCoverageAttemptLogSha256": "89e8d6b37562797bbe50383283dbdadec9e2cf328dbc4b0e868b62e06abb657d",
+      "aotcSchoolBrowserPassed": true,
+      "aotcSchoolProbeLogSha256": "c454124f80cf34bcd8b1787f11e053961515995311ce8e8485d71b5fb9299cc1",
+      "aotcSchoolProbeSourceSha256": "084d653525bcc9c878eea3f4f46bd95ff93cc185bfd6adc40ef4c1b486f45636",
+      "remoteWorkflows": {
+        "CI": {
+          "id": 46041206904,
+          "status": "queued",
+          "conclusion": null
+        },
+        "Web": {
+          "id": 46041207034,
+          "status": "queued",
+          "conclusion": null
+        },
+        "Docker": {
+          "id": 46041206849,
+          "status": "queued",
+          "conclusion": null
+        }
+      }
+    },
     "nov27AotcInstitution": {
       "commit": "85645fdcbca8045e19ab2884e3b19f3bddf5b9b4",
       "focusedSpecReferencesPassed": 9,
       "pinnedNodeFocusedTestsPassed": 58,
       "webTypecheckPassed": true,
       "engineeringReviewPassed": true,
-      "combinedVerification": "queued-after-1746edc42"
+      "combinedVerification": "passed",
+      "exactEvidenceKey": "activeContinuation.nov27AotcInstitutionExact"
     },
     "nov27PennsylvaniaNonresidentAndAotcExact": {
       "commit": "1746edc4267ac3fa885e2d15e83e0e039c8f62ea",
