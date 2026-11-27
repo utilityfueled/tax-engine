@@ -63,6 +63,14 @@ function savedMortgageLine8a(year: 2025 | 2026, method: "highest_balance" | "len
   return scheduleA?.lines.find(line => line.form === "Sched A" && line.line === "8a")?.value.toFixed();
 }
 
+function unreportedMortgageSchedule(year: 2025 | 2026, lenderName: string, interestPaid: string) {
+  const input = reportedMortgageInput(year, [mortgageLoan({
+    form1098SourceId: undefined, lenderName, interestPaid,
+    balance: { method: "highest_balance", amount: "100000", sourceReference: "Actual annual maximum" },
+  })]);
+  return calculateScheduleA(input, new Decimal("100000"), "single", year === 2026 ? FEDERAL_2026_CONSTANTS : getConstants(2025));
+}
+
 describe("Pub936 actual mortgage sources", () => {
   it.each([2025, 2026] as const)("holds saved %i linked highest balance below actual Box 2 before rounding", year => {
     for (const amount of ["750000", "899999.99"]) {
@@ -93,6 +101,33 @@ describe("Pub936 actual mortgage sources", () => {
   ] as const)("holds 2026 reported interest for %s", (_label, overrides, statementAccount, diagnostic) => {
     const input = reportedMortgageInput(2026, [mortgageLoan(overrides)], [statementAccount]);
     expect(() => calculateScheduleA(input, new Decimal("100000"), "single", FEDERAL_2026_CONSTANTS)).toThrow(diagnostic);
+  });
+  it("holds positive 2026 unreported interest with a whitespace-only lender", () => {
+    expect(() => unreportedMortgageSchedule(2026, " \t ", "4000")).toThrow(/line 8b.*actual lender/i);
+    expect(() => unreportedMortgageSchedule(2026, " \t ", "0.50")).toThrow(/line 8b.*actual lender/i);
+  });
+  it("preserves unreported interest for a named lender, known zero and historical inputs", () => {
+    const line8b = (year: 2025 | 2026, lenderName: string, interest: string) => unreportedMortgageSchedule(year, lenderName, interest)
+      .lines.find(line => line.form === "Sched A" && line.line === "8b")?.value.toFixed();
+    expect(line8b(2026, " Actual lender ", "4000")).toBe("4000");
+    expect(line8b(2026, " \t ", "0")).toBe("0");
+    expect(line8b(2026, " \t ", "0.49")).toBe("0");
+    expect(line8b(2025, " \t ", "4000")).toBe("4000");
+  });
+  it("holds unnamed 2026 interest that increases the combined deduction despite zero line 8b", () => {
+    const balance = { method: "highest_balance", amount: "100000", sourceReference: "Actual annual maximum" };
+    const reported = mortgageLoan({ interestPaid: "1000.01", balance });
+    const unreported = mortgageLoan({
+      sourceId: "loan-two", form1098SourceId: undefined, interestPaid: "0.49", lenderName: " \t ", balance,
+    });
+    const calculate = (loans: ReturnType<typeof mortgageLoan>[]) => calculateHomeMortgageInterest(reportedMortgageInput(2026, loans));
+    expect(calculate([reported]).line8a.toFixed()).toBe("1000");
+    expect(calculate([unreported]).line8b.toFixed()).toBe("0");
+    const named = calculate([reported, { ...unreported, lenderName: "Actual other lender" }]);
+    expect(named.line8a.toFixed()).toBe("1001");
+    expect(named.line8b.toFixed()).toBe("0");
+    expect(() => calculate([reported, unreported])).toThrow(/line 8b.*actual lender/i);
+    expect(calculate([reported, { ...unreported, interestPaid: "0.48" }]).line8a.toFixed()).toBe("1000");
   });
   it("distinguishes actual 2026 accounts from the same lender and borrower", () => {
     const first = mortgageLoan({

@@ -143,6 +143,7 @@ export function calculateHomeMortgageInterest(input: HomeMortgageInterestInput):
   }
   let grandfathered = ZERO, old = ZERO, newer = ZERO, reportedInterest = ZERO, unreportedInterest = ZERO, reportedPoints = ZERO, unreportedPoints = ZERO, excludedSourceInterest = ZERO;
   let taxableInterestRecovery = ZERO, additionalTaxableInterestRecovery = ZERO;
+  let unnamedUnreportedInterest = ZERO;
   const sourceDeductions: HomeMortgageInterestResult["sourceDeductions"] = [];
   const unreportedLenders: HomeMortgageInterestResult["unreportedLenders"] = [];
   if (!facts) {
@@ -229,7 +230,13 @@ export function calculateHomeMortgageInterest(input: HomeMortgageInterestInput):
         grandfathered = grandfathered.plus(category.grandfathered); old = old.plus(category.old); newer = newer.plus(category.newer);
         excludedSourceInterest = excludedSourceInterest.plus(excluded);
       }
-      if (loan.form1098SourceId) reportedInterest = reportedInterest.plus(interest); else unreportedInterest = unreportedInterest.plus(interest);
+      if (loan.form1098SourceId) reportedInterest = reportedInterest.plus(interest);
+      else {
+        unreportedInterest = unreportedInterest.plus(interest);
+        if (year === 2026 && interest.gt(0) && !loan.lenderName.trim()) {
+          unnamedUnreportedInterest = unnamedUnreportedInterest.plus(interest);
+        }
+      }
       if (loan.points.method === "completed_amortization" && point.unreported.gt(0)) {
         if (point.retainedPool === undefined) unboundCompletedPoints = true;
         else {
@@ -283,6 +290,10 @@ export function calculateHomeMortgageInterest(input: HomeMortgageInterestInput):
   const apply = (value: Decimal) => round ? roundDollar(roundDollar(value).times(ratio)) : value.times(ratio);
   const mortgageInterest = apply(printedInterest), deductiblePoints = apply(reportedPoints.plus(unreportedPoints));
   const line8b = apply(unreportedInterest), line8c = apply(unreportedPoints), line8a = mortgageInterest.minus(line8b).plus(deductiblePoints.minus(line8c));
+  if (year === 2026 && unnamedUnreportedInterest.gt(0)
+    && (line8b.gt(0) || mortgageInterest.gt(apply(totalInterest.minus(unnamedUnreportedInterest))))) {
+    throw new Error("Schedule A line 8b source requires the actual lender name before including its interest in the deduction");
+  }
   const values: Array<[string, Decimal, string]> = [["1", grandfathered, "Actual grandfathered average debt"], ["2", old, "Actual older acquisition average debt"], ["3", line3, "Older acquisition statutory limit"], ["4", line4, "max(1,3)"], ["5", line5, "1+2"], ["6", line6, "min(4,5)"]];
   if (!skipNew) values.push(["7", newer, "Actual newer acquisition average debt"], ["8", line8, "New acquisition statutory limit"], ["9", line9, "max(6,8)"], ["10", line10, "6+7"]);
   values.push(["11", limit, skipNew ? "Line6; skip7-10" : "min(9,10)"], ["12", totalDebt, "All qualified debt categories"], ["13", printedInterest, "Actual interest on qualified debt, excluding points and insurance"], ["14", ratio, "min(1,11/12), rounded to3decimals"], ["15", mortgageInterest, "13*14"], ["16", printedInterest.minus(mortgageInterest), "13-15"]);

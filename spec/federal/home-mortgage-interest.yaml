@@ -16,9 +16,25 @@ lines:
     testRef: "tests/engine/forms/home-mortgage-interest.test.ts::holds explicit Form 1098 years outside the historical federal return year"
   - line: "2026-reported-source-identity"
     description: "Bind the actual lender and statement for reported 2026 mortgage deductions"
-    formula: "Require a matching lender name with non-whitespace content and a nonblank statement source ID. If either the original Form1098 or the loan worksheet supplies an account reference, require both sources to supply the same nonblank reference after trimming surrounding whitespace. Both may omit the account reference for a single linked statement from that lender. Preserve omissions and leave the unreported and prior-year paths unchanged."
+    formula: "Require a matching lender name with non-whitespace content and a nonblank statement source ID on the linked 2026 Form1098 path. If either the original Form1098 or the loan worksheet supplies an account reference, require both sources to supply the same nonblank reference after trimming surrounding whitespace. Both may omit the account reference for a single linked statement from that lender."
     irsRef: "https://www.irs.gov/instructions/i1098 (Recipient/Lender and Account Number); Schedule A instructions line 8a"
     testRef: "tests/engine/forms/home-mortgage-interest.test.ts::reconciles actual 2026 lender, statement and singleton account identity"
+  - line: "2026-unreported-lender"
+    description: "Require the actual recipient of qualified unreported mortgage interest"
+    formula: >-
+      In 2026, sum positive qualified unreported interest missing an actual
+      lender name. Hold when that sum is positive and either line 8b is
+      positive or the sum raises the combined interest deduction. Compare
+      combined interest with and without the unnamed amount using the same
+      debt percentage and rounding. A zero line 8b and no change to the
+      combined deduction preserve the existing output, as do historical years.
+      Seller-financed reporting retains its separate address and taxpayer ID
+      requirements.
+    irsRef: "https://www.irs.gov/instructions/i1040sca (Schedule A line 8b)"
+    testRef: "tests/engine/forms/home-mortgage-interest.test.ts::holds positive 2026 unreported interest with a whitespace-only lender"
+    testRefs:
+      - "tests/engine/forms/home-mortgage-interest.test.ts::preserves unreported interest for a named lender, known zero and historical inputs"
+      - "tests/engine/forms/home-mortgage-interest.test.ts::holds unnamed 2026 interest that increases the combined deduction despite zero line 8b"
   - line: "2026-reported-account-distinction"
     description: "Distinguish multiple 2026 Form1098 statement accounts from the same lender"
     formula: "Require a nonblank and distinct actual account reference on both linked sources for each statement from the same lender. Group lender names and detect duplicate account references without regard to case and surrounding whitespace, consistent with guided intake. This is a supported-source requirement because the parsed Form1098 lacks independent payer-of-record identity and worksheet payment roles cannot establish different borrowers. The IRS filing rule requires an account number for multiple accounts reported for the same payer or borrower."
