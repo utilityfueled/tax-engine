@@ -195,7 +195,7 @@ export function calculateHomeMortgageInterest(input: HomeMortgageInterestInput):
             throw new Error("Mortgage Form1098 loan account reference is incomplete or mismatched");
           }
           // Form1098 has no payer-of-record identity to corroborate the worksheet payment role.
-          const lender = form.lender.trim().toLowerCase();
+          const lender = form.lender.trim().toLowerCase().replace(/\s+/gu, " ");
           const accounts = reportedAccounts.get(lender) ?? new Set<string | undefined>();
           const accountKey = account?.toLowerCase();
           if (accounts.size > 0 && (accountKey === undefined || accounts.has(undefined) || accounts.has(accountKey))) {

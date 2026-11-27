@@ -6,7 +6,7 @@ import { Form1098Schema, TaxYearInputSchema } from "@/models/inputs";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { buildGuidedMortgageInputs, distinctMortgageLoansConfirmation } from "@/lib/guided-mortgage-worksheet";
 import { emptyDeductionData, loadGuidedFlowState, saveGuidedFlowState, updateSectionData, validateSection, type GuidedFlowState } from "@/lib/guided-interview-flow";
-import { completeMortgageSource, completeW2Entry, startCompleteInterview } from "./complete-facts";
+import { completeMortgageSource, completeMortgageWorksheet, completeW2Entry, startCompleteInterview } from "./complete-facts";
 
 function facts() {
   return { ...emptyDeductionData, method: "itemized" as const, mortgageInterest: "40000.10",
@@ -27,6 +27,36 @@ function reopen(state: GuidedFlowState): GuidedFlowState {
 }
 
 describe("actual guided mortgage worksheet", () => {
+  it("holds a 2026 same-account copy when only lender spacing differs", () => {
+    const first = { ...completeMortgageSource, lender: "Synthetic First Bank", accountReference: "loan 123", mortgageAcquisitionDate: null,
+      mortgageInterest: "100.10", interestPaidByReturnAmount: "100.10" };
+    const copy = { ...first, lender: "Synthetic  First Bank" };
+    function returnWithStatements(year: 2025 | 2026, rows: (typeof first)[], total: string) {
+      const state = startCompleteInterview({ filingStatus: "single", incomeTypes: [], lifeEvents: ["bought-home"], stateCode: null });
+      const mortgageEntries = rows.map(entry => ({ ...entry, sourceTaxYear: String(year) }));
+      const root = { ...completeMortgageWorksheet, sourceTaxYear: String(year), distinctMortgageLoansSourceReference: "Synthetic original loan records" };
+      const mortgageWorksheet = { ...root, distinctMortgageLoansConfirmation: distinctMortgageLoansConfirmation(root, mortgageEntries) };
+      return reopen(updateSectionData({ ...state, taxYear: year }, "deductions", {
+        ...emptyDeductionData, method: "itemized", mortgageEntries, mortgageInterest: total, mortgageWorksheet,
+      }));
+    }
+
+    const duplicate = returnWithStatements(2026, [first, copy], "200.20");
+    expect(buildTaxInputFromGuidedData(duplicate)).toBeNull();
+    expect(validateSection(duplicate, "deductions").fieldErrors?.mortgageWorksheet).toMatch(/duplicate mortgage statements/i);
+    expect(duplicate.sectionData.deductions?.mortgageEntries?.map(entry => [entry.lender, entry.mortgageInterest]))
+      .toEqual([[first.lender, "100.10"], [copy.lender, "100.10"]]);
+
+    const separate = { ...copy, accountReference: "loan 456" };
+    for (const year of [2025, 2026] as const) {
+      const original = buildTaxInputFromGuidedData(returnWithStatements(year, [first], "100.10"));
+      expect(original?.form1098?.[0]).toMatchObject({ lender: first.lender, mortgageInterestReceived: "100.1", outstandingMortgagePrincipal: "250000" });
+      const valid = buildTaxInputFromGuidedData(returnWithStatements(year, [first, separate], "200.20"));
+      expect(valid?.form1098?.map(entry => [entry.lender, entry.loanAccountReference, entry.mortgageInterestReceived]))
+        .toEqual([[first.lender, first.accountReference, "100.1"], [separate.lender, separate.accountReference, "100.1"]]);
+    }
+  });
+
   it("holds two statements for the same transferred mortgage after reopening", () => {
     const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: ["bought-home"], stateCode: null });
     state.sectionData["income-w2"] = { entries: [{ ...completeW2Entry, wages: "100000", federalWithheld: "10000", socialSecurityWages: "100000", socialSecurityWithheld: "6200", medicareWages: "100000", medicareWithheld: "1450" }] };

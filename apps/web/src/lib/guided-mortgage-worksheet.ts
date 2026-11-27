@@ -4,7 +4,7 @@ import { mortgagePrepaidSource, mortgagePrepaidParentValues, mortgagePrepaidDraf
 import { Form1098Schema, MortgageInterestWorksheetSchema } from "@/models/inputs";
 import { calculateHomeMortgageInterest, type HomeMortgageInterestInput } from "@/engine/forms/home-mortgage-interest";
 import type { DeductionData, FilingStatus, MortgageEntryData } from "./guided-interview-flow";
-import { isEnteredMortgageStatement, mortgageFactErrors } from "./guided-mortgage-facts";
+import { isEnteredMortgageStatement, mortgageFactErrors, normalizeMortgageReference as normalizedReference } from "./guided-mortgage-facts";
 import { amountError, hasEnteredAmount, isActualDate } from "./guided-required-facts";
 import { guidedSourceValuesSnapshot } from "./guided-source-confirmation";
 import { parseGuidedCurrency } from "./guided-currency";
@@ -57,7 +57,6 @@ function money(value: string | undefined, label: string): string {
 }
 
 type RetainedPointsClaim = { entry: MortgageEntryData; history: NonNullable<MortgageEntryData['pointsHistory']>; amount: Decimal };
-const normalizedReference = (value: string | undefined) => value?.trim().toLowerCase().replace(/\s+/g, ' ');
 
 function hasReconciledSameLenderRefinance(claims: RetainedPointsClaim[]): boolean {
   if (claims.length !== 2) return false;

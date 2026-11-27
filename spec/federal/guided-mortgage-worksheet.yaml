@@ -15,6 +15,17 @@ lines:
     formula: "Preserve Form 1098 year and source identity. Taxpayer interest plus other-return interest must equal Box 1; taxpayer-allocable points plus other-return points must equal Box 6. Every supplied amount is finite nonnegative Decimal, and missing differs from explicit zero."
     irsRef: "Publication 936 Part I; Form 1098 instructions Boxes 1-6"
     testRef: "tests/guided-interview/guided-mortgage-worksheet.test.ts::preserves actual mortgage sources and rejects unknown or conflicting payment shares"
+  - line: "2026-duplicate-lender-formatting"
+    description: "Reconcile 2026 duplicate mortgage originals despite lender name formatting"
+    formula: >-
+      For 2026 compare lender names without differences in case or whitespace.
+      Hold multiple Form 1098 entries for the same lender and account for
+      reconciliation before they can enter the mortgage worksheet, including
+      after a separate-loans confirmation or reopening. Keep entered originals
+      and exact amounts. Distinct accounts and the 2025 intake retain their
+      existing treatment. Preserve the displayed original lender name.
+    irsRef: "Form 1098 instructions, Account number and Box 1; https://www.irs.gov/instructions/i1098"
+    testRef: "tests/guided-interview/guided-mortgage-worksheet.test.ts::holds a 2026 same-account copy when only lender spacing differs"
   - line: "complete-debt-method"
     description: "Use actual selected balance method and complete debt history"
     formula: "Require actual return year, all-home-debt completeness, source reference and confirmation, plus explicit confirmation of no prior-year recoveries for this ordinary path. Highest annual balance or lender average drives the canonical debt limit; never substitute Box 2 or silently reject a fully supported loan merely for exceeding the statutory limit."

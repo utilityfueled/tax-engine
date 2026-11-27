@@ -144,6 +144,23 @@ describe("Pub936 actual mortgage sources", () => {
       expect(() => calculateHomeMortgageInterest(linked([...accounts]))).toThrow(/Form1098.*distinct.*account/i);
     }
   });
+  it("groups 2026 lender formatting differences while preserving exact original linkage", () => {
+    const first = mortgageLoan({
+      interestPaid: "4000", balance: { method: "highest_balance", amount: "100000", sourceReference: "Actual annual maximum" },
+    });
+    const second = { ...first, sourceId: "loan-two", form1098SourceId: "1098-two", lenderName: " SYNTHETIC  mortgage\tlender " };
+    const linked = (accounts: [string | undefined, string | undefined]) => reportedMortgageInput(2026, [
+      { ...first, loanAccountReference: accounts[0] }, { ...second, loanAccountReference: accounts[1] },
+    ], accounts);
+    expect(() => calculateHomeMortgageInterest(linked(["account 01", " ACCOUNT 01 "]))).toThrow(/Form1098.*distinct.*account/i);
+    expect(() => calculateHomeMortgageInterest(linked([undefined, undefined]))).toThrow(/Form1098.*distinct.*account/i);
+
+    const separate = linked(["account 01", "account  01"]);
+    expect(calculateHomeMortgageInterest(separate).line8a.toFixed()).toBe("8000");
+    const [firstForm, secondForm] = separate.form1098;
+    expect(() => calculateHomeMortgageInterest({ ...separate, form1098: [firstForm, { ...secondForm, lender: firstForm.lender }] }))
+      .toThrow(/Form1098.*mismatched/i);
+  });
   it.each([
     ["primary and joint", "joint", ["account-01", "account-01"]],
     ["primary and spouse", "spouse", ["account-01", " ACCOUNT-01 "]],

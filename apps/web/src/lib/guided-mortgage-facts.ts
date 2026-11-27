@@ -85,6 +85,10 @@ export function isEnteredMortgageStatement(entry: MortgageEntryData): boolean {
   return entry.mortgageAcquisitionDate !== "" || Object.values(entry).some(value => value != null && value !== "");
 }
 
+export function normalizeMortgageReference(value: string | undefined): string | undefined {
+  return value?.trim().toLowerCase().replace(/\s+/gu, " ");
+}
+
 /** Ordinary original debt or actual completed category sources; never infer an average from Box 2. */
 export function mortgageFactErrors(entries: MortgageEntryData[], taxYear?: number | null, filingStatus?: FilingStatus | null, sourceWorksheet = false): Record<string, string> {
   const errors: Record<string, string> = {};
@@ -107,8 +111,10 @@ export function mortgageFactErrors(entries: MortgageEntryData[], taxYear?: numbe
     for (const [field, label] of [["lender", "mortgage lender"], ["accountReference", "loan account reference"], ["propertyAddress", "property securing this mortgage"]] as const) {
       if (!entry[field]?.trim()) error(field, `Enter the actual ${label}.`);
     }
-    const loanKey = `${entry.lender?.trim().toLowerCase()}|${entry.accountReference?.trim().toLowerCase()}`;
-    if (entry.accountReference?.trim() && loans.has(loanKey)) error("duplicate", "Reconcile duplicate mortgage statements for the same loan before calculating.");
+    const account = entry.accountReference?.trim().toLowerCase();
+    const loanKey = taxYear === 2026 ? JSON.stringify([normalizeMortgageReference(entry.lender), account])
+      : `${entry.lender?.trim().toLowerCase()}|${account}`;
+    if (account && loans.has(loanKey)) error("duplicate", "Reconcile duplicate mortgage statements for the same loan before calculating.");
     loans.add(loanKey);
     const year = /^20\d{2}$/.test(entry.sourceTaxYear ?? "") ? Number(entry.sourceTaxYear) : undefined;
     if (!year || ![2025, 2026].includes(year) || (taxYear != null && year !== taxYear)) error("year", "Confirm the actual mortgage statement year matches this return.");
