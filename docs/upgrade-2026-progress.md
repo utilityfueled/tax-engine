@@ -1,5 +1,57 @@
 # 2026 upgrade implementation evidence
 
+## November 27 Survivor annuity taxable amount
+
+`52ca8f25d` holds an imported, dated 2025 non-IRA Form 1099-R with
+standalone Code 4 when a positive distribution lacks Box 2a and a
+supported taxable-amount worksheet. The prior federal path used gross
+or gross less Box 5. Checked, unchecked, and unknown Box 2b now leave
+the missing amount unresolved. An explicit Box 2a zero is preserved.
+The worksheet control uses $26,000 of cost, 260 expected payments and
+12 payments in the year. It reports $6,000 gross and $4,800 taxable,
+with the original $125 withheld. The real parsed-return regression
+failed on the predecessor. All 240 focused tests and a separate
+25-test engineering review passed. The existing 2026 source gate and
+separate IRA and combined-code methods retain their existing rules.
+[2025 Form 1040 instructions](https://www.irs.gov/pub/irs-prior/i1040gi--2025.pdf#page=28) ·
+[2025 Form 1099-R instructions](https://www.irs.gov/pub/irs-prior/i1099r--2025.pdf) ·
+[Exact federal CI](https://github.com/utilityfueled/tax-engine/actions/runs/45970500055).
+
+## November 27 Offline AI held-out isolation
+
+`1aea928e3` freezes the canonical 240-case evaluation corpus, including
+nested source and reviewer data. Editable fixture packs are detached.
+Before the fix, two offline regressions reproduced mutable canonical
+data and smoke admission after changing an exported held-out split.
+All 135 focused offline tests and the committed artifact byte-parity
+check passed. Independent engineering review reproduced the 160-case
+smoke selection and replayed 36 canonical preflight records with zero
+transport calls, charges or measurements. Actual human review and
+comparable provider qualification remain open.
+[Exact web verification](https://github.com/utilityfueled/tax-engine/actions/runs/45970791928) ·
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45970792014) ·
+[Exact Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45970791784).
+
+All 11 exact local commands and the offline artifact check passed on
+`1aea928e3`. Unit and coverage each passed 31,165 tests with 81
+existing skips and 88.63% branch coverage. The spec check verified
+10,219 references. Chromium passed 654 cases with five existing skips
+and verified cleanup across nine windows. Fifteen official sample
+checksums passed. Manifest SHA-256
+`cae13ad38b5bce6201037d635c9d84747cc759e1e26fe7e58eb8ac96528b9281`.
+The exact ARM64 recovery run was pending while the earlier source's run
+continued. [Exact ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45974073418).
+
+## November 27 Survivor and AI corpus build recovery
+
+The exact `1aea928e3` standalone macOS ARM64 build restored a synthetic
+encrypted backup into a fresh Chromium profile and reopened the return.
+The guided state, uploaded original PDF and display preference matched.
+All three 12-page review PDFs returned HTTP 200 and omitted the private
+SSN. The rehearsal passed in 7.22 seconds with no skips or retries,
+and its loopback listener closed. Receipt SHA-256
+`ded8196c6fcedc65350afd019c6cfcddb09066170f60da34dad06dca7ee3ac81`.
+
 ## November 27 Ohio Treasury coupon original box evidence
 
 `cfe394be9` requires recorded zeros in seven additional Form 1099-INT

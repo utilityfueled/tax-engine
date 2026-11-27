@@ -9,6 +9,15 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `52ca8f25d` holds federal aggregation when a dated 2025 non-IRA
+  survivor distribution has an unknown taxable amount. Explicit
+  zero and a supported worksheet still work. All 240 focused tests
+  passed. [Survivor annuity evidence](upgrade-2026-progress.md#november-27-survivor-annuity-taxable-amount).
+- `1aea928e3` isolates the canonical AI evaluation corpus from editable
+  exports. All 135 focused offline tests and artifact verification
+  passed. All 11 exact local checks passed, including 31,165 unit
+  tests, 88.63% branch coverage and 654 Chromium cases.
+  [AI corpus evidence](upgrade-2026-progress.md#november-27-offline-ai-held-out-isolation).
 - `cfe394be9` requires seven additional original Form 1099-INT amounts
   for the private Ohio 2026 Treasury coupon draft. The 275 focused tests
   passed. [Ohio Treasury evidence](upgrade-2026-progress.md#november-27-ohio-treasury-coupon-original-box-evidence).
@@ -33,12 +42,15 @@ Use the linked progress sections when investigating individual packages.
   passed. Final 2026 qualification remains open.
   [Ohio worksheet applicability](upgrade-2026-progress.md#november-27-ohio-it-nrc-worksheet-applicability).
 
-The current exact Linux runs are
-[AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45965868287)
-and [ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45965920531).
+Current `1aea928e3` Linux evidence is pending in
+[AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45970791928),
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45970791784)
+and [ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45974073418).
+The [active earlier ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45965920531)
+uses application source `8f9bfc2d8`.
 The standalone macOS build restored its encrypted backup into a fresh
-Chromium profile and reopened the return on `8f9bfc2d8`.
-[Exact portable restore](upgrade-2026-progress.md#november-27-current-state-fix-portable-restore).
+Chromium profile and reopened the return on `1aea928e3`.
+[Exact portable restore](upgrade-2026-progress.md#november-27-survivor-and-ai-corpus-build-recovery).
 The [external actions](upgrade-2026-external-actions.md) record the remaining
 human, form, provider and release decisions.
 
