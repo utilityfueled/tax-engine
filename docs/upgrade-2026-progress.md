@@ -1,5 +1,75 @@
 # 2026 upgrade implementation evidence
 
+## November 27 Exact pension and federal receipts checks
+
+All 11 required local checks passed for the tracked application source
+`c446e38bc`. The unit and coverage runs each passed 31,174 tests with
+81 existing skips and 88.63% branch coverage. The spec check resolved
+10,220 references, the offline AI artifact check passed, and all 15
+official sample hashes matched. Chromium passed 654 cases across all
+nine windows with five existing skips and verified listener cleanup.
+The local manifest SHA-256 is
+`7d8dbabf968e6d0152da5379fe398a1cb86e8a5bf0f4ccf739ff601293e2110e`.
+The strict Linux jobs remain separate. An earlier native run is active
+and the next revision is pending in the same workflow queue.
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45975311502) ·
+[AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45975311337) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45975311418).
+
+## November 27 Pension and federal receipts build recovery
+
+The tracked-only `c446e38bc` standalone build restored a completed
+encrypted workspace backup into a fresh macOS ARM64 Chromium context.
+The single check passed with zero skips and zero retries. It verified
+the decrypted facts, uploaded PDF bytes and display, and all three
+12-page review PDFs. Each review PDF returned HTTP 200 and passed the
+private identifier check. The loopback listener was closed afterward.
+The sanitized receipt SHA-256 is
+`6047f11aeb0f2e05f097986d2e73926ff5b3b1b3faf16a3607e15442f98a19b8`.
+
+## November 27 Early and disability pension taxable amounts
+
+`13e946571` holds a positive, dated 2025 non-IRA original with
+standalone Code 2 or 3 when Box 2a is missing and there is no supported
+taxable-amount method. Three parsed-return regressions reproduced the
+fallback to gross or gross less Box 5. The new cases cover checked,
+unchecked and unknown Box 2b answers. Explicit zero and a supported
+Code 2 worksheet pass. Code 3 retains its existing placement on line
+1h before minimum retirement age and lines 5a and 5b afterward.
+The tests preserve the $125 withheld. All 728 focused tests, 20 spec
+references and a separate 192-test engineering review passed.
+[2025 Form 1040 instructions](https://www.irs.gov/pub/irs-prior/i1040gi--2025.pdf#page=25) ·
+[2025 Form 1099-R instructions](https://www.irs.gov/pub/irs-prior/i1099r--2025.pdf) ·
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45974961842).
+
+The filing review still needs to close a separate Code 3 timing gap.
+In a parsed 2025 original with $6,000 gross and $4,200 taxable,
+omitting the plan timing currently routes $4,200 to line 5b. The
+stored default is indistinguishable from an explicit older false
+answer. Resolving this requires the employer's documented minimum
+retirement date and complete payment evidence for the original.
+A statement that spans both periods needs a gross and taxable
+allocation that reconciles to the original and credits withholding
+once. IRS Publication 575 describes pension treatment beginning the
+day after reaching minimum retirement age. The date of attainment
+still needs an explicit treatment before it can be accepted.
+[Form 1040 line 1h instructions](https://www.irs.gov/instructions/i1040gi) ·
+[IRS Publication 575 disability pension rules](https://www.irs.gov/publications/p575).
+
+## November 27 Federal payment receipt identity
+
+`c446e38bc` preserves an explicit receipt reference in federal payment
+imports and holds 2025 and 2026 when two positive estimate or extension
+rows reuse that reference. The prior importer dropped the reference,
+so a single payment could be credited on both Form 1040 and Schedule 3.
+Two legitimate equal payments with distinct receipts still contribute
+separately. Legacy unbound rows, zero payments and state rows retain
+their behavior. The 2026 annual qualification gate stays closed.
+The real import regression failed before the fix. All 100 package
+tests and 71 Form 1040 spec references passed.
+[IRS Direct Pay confirmations](https://www.irs.gov/payments/direct-pay-help) ·
+[2025 Form 1040 instructions](https://www.irs.gov/pub/irs-prior/i1040gi--2025.pdf).
+
 ## November 27 Survivor annuity taxable amount
 
 `52ca8f25d` holds an imported, dated 2025 non-IRA Form 1099-R with
