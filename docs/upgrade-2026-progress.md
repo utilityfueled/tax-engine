@@ -8,12 +8,27 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `bed42a90f` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `1cd975b37` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
+
+## November 27 combined exact verification
+
+The tracked archive at `1cd975b37` passed all 11 required local
+checks, including both guided fact fixes and the optional ARM64 diagnostic
+code. Both unit runs passed 31,354 cases with 83 skips and
+88.69% branch coverage. Chromium passed 654 cases with
+5 expected skips across 9 windows. Encrypted standalone
+backup, deletion and restoration passed, and all test listeners closed.
+The public npm lookup reported zero advisories for 457 production
+and 550 total locked dependencies.
+Manifest SHA-256 `190663584ca118c1e86c0f8f5edb6256f0d4f829b391589be0fade29d244a174`.
+The ARM64 workflow's separate queue change `750b0c803` passed actionlint
+and its 20 workflow contract checks. Final image and hosted qualification
+remain open.
 
 ## November 27 noncash donation date review
 
@@ -23,7 +38,7 @@ dates, the retained confirmation must match the actual remaining gift.
 The saved-draft tests reproduce the stale answer before the correction and
 verify that a later confirmation applies to the corrected date. All 26
 focused tests, web type checking, 10,270 spec checks and independent
-engineering review passed. The exact full local check sequence is pending.
+engineering review and the combined exact verification passed.
 [IRS Publication 526](https://www.irs.gov/publications/p526) ·
 [26 USC §170(e)](https://uscode.house.gov/us/usc/t26/s170/).
 

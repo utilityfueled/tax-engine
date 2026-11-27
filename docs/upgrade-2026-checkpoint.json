@@ -2,9 +2,9 @@
   "resume": {
     "asOf": "2026-11-27",
     "branch": "main",
-    "applicationCommit": "bed42a90f3b25899a1ad4987f88366e8cbe04208",
+    "applicationCommit": "1cd975b3786a52a1333dd467b6c5bf8de4b54d37",
     "latestScopedApplicationCommit": "1fb0542be1d5f82924c761791984d0d7b547cc3a",
-    "latestCombinedCandidateCommit": "bed42a90f3b25899a1ad4987f88366e8cbe04208",
+    "latestCombinedCandidateCommit": "1cd975b3786a52a1333dd467b6c5bf8de4b54d37",
     "latestScopedChecksEvidenceKey": "activeContinuation.nov27CommercialVehicleBasis",
     "nov27PaymentReceiptsAndForm8863EvidenceKey": "activeContinuation.nov27PaymentReceiptsAndForm8863",
     "nov27OhioPennsylvaniaPensionEvidenceKey": "activeContinuation.nov27OhioPennsylvaniaPension",
@@ -63,7 +63,7 @@
     "pinnedSelfHostSchemaEvidenceKey": "activeContinuation.nov26PinnedSelfHostSchema",
     "ohioOrdinaryCashDividendEvidenceKey": "activeContinuation.nov26OhioCashDividend",
     "pennsylvaniaAnnualCashDividendEvidenceKey": "activeContinuation.nov26PaAnnualCashDividend",
-    "latestExactLocalVerificationEvidenceKey": "activeContinuation.nov27DependentOriginalAndEligibilityExact",
+    "latestExactLocalVerificationEvidenceKey": "activeContinuation.nov27CombinedDependentDonationExact",
     "paPartYearDividendEvidenceKey": "activeContinuation.nov26PAPartYearCashDividend",
     "currentCombinedAndArmEvidenceKey": "activeContinuation.nov26CombinedEvAiAndArm64",
     "evChargerEvidenceKey": "activeContinuation.nov26PersonalEvCharger",
@@ -111,7 +111,7 @@
     "householdUpkeepEvidenceKey": "activeContinuation.nov25HouseholdUpkeepPrecision",
     "verificationCommit": "cd6e64b972869264f35234e64267c88f36778860",
     "generatedInventoryCommit": "26983a3c48380a3c1ead47a86dbe3977dd02f6bd",
-    "latestLocalChecksEvidenceKey": "activeContinuation.nov27DependentOriginalAndEligibilityExact",
+    "latestLocalChecksEvidenceKey": "activeContinuation.nov27CombinedDependentDonationExact",
     "vehicleStatementEvidenceKey": "activeContinuation.nov25Form1098Vli",
     "vehicleRefundEvidenceKey": "activeContinuation.nov25Form1098VliCashRefund",
     "vehicleInterestCreditEvidenceKey": "activeContinuation.nov25Form1098VliInterestCredit",
@@ -184,7 +184,7 @@
     "pensionTaxableAmountEvidenceKey": "activeContinuation.nov24ReportedPensionTaxableAmount",
     "completeLocalBaselineEvidenceKey": "activeContinuation.nov24ExactLocalBaselineAndCurrentRuns",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
-    "unitCoverageEvidenceKey": "activeContinuation.nov27DependentOriginalAndEligibilityExact",
+    "unitCoverageEvidenceKey": "activeContinuation.nov27CombinedDependentDonationExact",
     "remaining": [
       "Both strict Linux browser gates and current image evidence remain open. See activeContinuation.nov27OhioBusinessAndEquityResidency for the current e075fceaf run IDs. The earlier ARM64 strict browser step failed on nine Ohio deadlines. Verified 46005900143 held the active concurrency lease and exact e075fceaf run 46014076098 was pending behind it. Keep both runs in place.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
@@ -383,6 +383,51 @@
       "fullLocalChecks": "passed",
       "exactEvidenceKey": "activeContinuation.nov27DependentOriginalAndEligibilityExact"
     },
+    "nov27CombinedDependentDonationExact": {
+      "commit": "1cd975b3786a52a1333dd467b6c5bf8de4b54d37",
+      "archiveSha256": "0ddce27e3e75ea597db1282a7b10210edd8a6411572bdca40e435a0de236d8f6",
+      "localManifestSha256": "190663584ca118c1e86c0f8f5edb6256f0d4f829b391589be0fade29d244a174",
+      "requiredLocalChecksPassed": 11,
+      "unitPassed": 31354,
+      "unitSkips": 83,
+      "branchCoveragePercent": 88.69,
+      "chromiumPassed": 654,
+      "chromiumSkipped": 5,
+      "chromiumWindows": 9,
+      "browserSummarySha256": "6248e28c6bd2fafd8a9e28b094800bd3e2ab7614bf293a3c4bb79950c31f987d",
+      "standaloneReceiptSha256": "1916dd4963fdcc1c4e11e76ab2cf0c6cab906e2248ea8bc69e66bdf118b89ea3",
+      "standalonePassed": true,
+      "localListenersClosed": true,
+      "npmLockfileAdvisories": {
+        "production": {
+          "dependencies": 457,
+          "advisories": 0,
+          "sha256": "6fcc111dec2dfd70251de6ec8d02da52d1cb895435e6fd58a15b242fda14f111"
+        },
+        "all": {
+          "dependencies": 550,
+          "advisories": 0,
+          "sha256": "de746d7d71ffdaf5af79a33ed1befeab253126887ed0266a0c73a6669acd22c4"
+        }
+      },
+      "remoteWorkflows": {
+        "CI": {
+          "id": 46065135388,
+          "statusAtReadback": "queued",
+          "conclusion": null
+        },
+        "Docker": {
+          "id": 46065135280,
+          "statusAtReadback": "queued",
+          "conclusion": null
+        },
+        "Web": {
+          "id": 46065135331,
+          "statusAtReadback": "queued",
+          "conclusion": null
+        }
+      }
+    },
     "nov27NoncashDonationDateReview": {
       "commit": "1fb0542be1d5f82924c761791984d0d7b547cc3a",
       "focusedPassed": 26,
@@ -390,7 +435,8 @@
       "webTypecheckPassed": true,
       "independentEngineeringReview": "passed",
       "reproducedStaleAnswerBeforeCorrection": true,
-      "fullLocalChecks": "pending",
+      "fullLocalChecks": "passed",
+      "exactEvidenceKey": "activeContinuation.nov27CombinedDependentDonationExact",
       "authorities": [
         "https://www.irs.gov/publications/p526",
         "https://uscode.house.gov/us/usc/t26/s170/"
