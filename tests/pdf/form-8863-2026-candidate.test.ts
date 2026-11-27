@@ -1,15 +1,20 @@
 /** Spec: spec/federal/form-8863-2026-template.yaml. */
+import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { promisify } from "node:util";
 import { PDFCheckBox, PDFDict, PDFDocument, PDFName, PDFRawStream, PDFTextField, decodePDFRawStream } from "pdf-lib";
 import { describe, expect, it } from "vitest";
 import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs.js";
-import { assertPdfExportAllowed, markReviewPdf } from "@/pdf/export-policy.js";
+import { assertPdfExportAllowed, markReviewPdf, REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
 import { assertReviewTemplateBytes, REVIEW_TEMPLATE_PACKS } from "@/pdf/template-registry.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
+import { useTemporaryPdfOutput } from "./temporary-output.js";
 
 const blank = new URL("../../forms/blank/2026/f8863.pdf", import.meta.url);
 const sourceContract = new URL("./sources/form-8863-2026.json", import.meta.url);
+const privatePdfOutput = useTemporaryPdfOutput();
 
 type Location = {
   name: string;
@@ -196,6 +201,56 @@ describe("Final 2026 Form 8863 physical candidate", () => {
       ...actualTransferWorkpapers(fullFactor), form1040Line11a: "80000", creditLimitWorksheetRemainingTax: "3000",
       form8863Line6: "1.000", form8863Line8: "1000", form8863Line19: "1500",
     }).transfers.map(row => row.amount)).toEqual(["1000", "1500"]);
+  });
+
+  it("reopens only the verified private lines 8 and 19 on the pinned final PDF", async () => {
+    const { renderPrivateForm88632026TransferReview } = await import("@/pdf/mappings/2026/form-8863-transfer-review.js");
+    const [candidate, template] = await Promise.all([mapping(), readFile(blank)]);
+    const input = actualAotcReturn();
+    const workpapers = {
+      ...actualTransferWorkpapers(input), creditLimitWorksheetRemainingTax: "3000", form8863Line19: "750",
+    };
+    const bytes = await renderPrivateForm88632026TransferReview(input, workpapers, template);
+    const outputPath = join(privatePdfOutput, "form-8863-transfer.pdf");
+    await writeFile(outputPath, bytes, { flag: "wx", mode: 0o600 });
+    const { stdout: output } = await promisify(execFile)(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? "python3", ["-I", "-B", "-c", [
+      "from sys import argv", "from json import dumps", "from pypdf import PdfReader",
+      "reader = PdfReader(argv[1], strict=True)",
+      "fields = {name: str(field.get('/V', '')) for name, field in reader.get_fields().items()}",
+      "print(dumps({'filled': {name: value for name, value in fields.items() if value not in ('', '/Off')},",
+      "             'pages': [page.extract_text() for page in reader.pages]}))",
+    ].join("\n"), outputPath], { timeout: 4_000, encoding: "utf8" });
+    const reopened = JSON.parse(output) as { filled: Record<string, string>; pages: string[] };
+    expect(reopened.filled).toEqual({ [candidate.fields.line8]: "500", [candidate.fields.line19]: "750" });
+    expect(reopened.pages).toHaveLength(2);
+    expect(reopened.pages.every(page => page.includes(REVIEW_PDF_NOTICE))).toBe(true);
+    for (const privateValue of ["Jane Doe", "123-45-6789", "98-7654321", "Synthetic College", "1 College Street",
+      workpapers.canonicalInputSha256]) {
+      expect(output).not.toContain(privateValue);
+    }
+    expect(() => assertPdfExportAllowed(2026, 2026)).toThrow(/No qualified review/);
+    expect(() => assertPdfExportAllowed(2026, 2026, "filing")).toThrow(/Filing exports are unavailable/);
+  });
+
+  it("preserves a confirmed zero and holds Form 8863 PDF template or source drift", async () => {
+    const { renderPrivateForm88632026TransferReview } = await import("@/pdf/mappings/2026/form-8863-transfer-review.js");
+    const [candidate, template] = await Promise.all([mapping(), readFile(blank)]);
+    const input = actualAotcReturn();
+    const workpapers = {
+      ...actualTransferWorkpapers(input), creditLimitWorksheetRemainingTax: "0", form8863Line19: "0",
+    };
+    const reopened = (await PDFDocument.load(await renderPrivateForm88632026TransferReview(input, workpapers, template))).getForm();
+    expect(reopened.getTextField(candidate.fields.line8).getText()).toBe("500");
+    expect(reopened.getTextField(candidate.fields.line19).getText()).toBe("0");
+    expectNonemptyStream(reopened.getTextField(candidate.fields.line19).acroField.getWidgets()[0].getAppearances()?.normal);
+    await expect(renderPrivateForm88632026TransferReview(input, workpapers, template.subarray(0, -1)).then(() => "unexpected PDF"))
+      .rejects.toThrow(/template revision/);
+    await expect(renderPrivateForm88632026TransferReview(input, {
+      ...workpapers, canonicalInputSha256: "0".repeat(64),
+    }, template).then(() => "unexpected PDF")).rejects.toThrow(/canonical|stale|changed/i);
+    await expect(renderPrivateForm88632026TransferReview(input, {
+      ...workpapers, form8863Line8: "501",
+    }, template).then(() => "unexpected PDF")).rejects.toThrow(/line 8/);
   });
 
   it("retains diagnostic values and appearances after save", async () => {

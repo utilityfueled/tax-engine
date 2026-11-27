@@ -68,6 +68,21 @@ lines:
       three or more places. Other rounded representations are outside this
       method and are held even if the two reported transfer amounts agree.
     testRef: "tests/pdf/form-8863-2026-candidate.test.ts::binds transfers to the exact reported line 6 factor"
+  - line: "private-physical-aotc-transfers"
+    description: "Reopen the confirmed AOTC transfer amounts on the pinned final 2026 Form 8863"
+    formula: >-
+      Run the existing exact original-bound AOTC projection. On the pinned
+      final 2026 blank, set only line 8 and line 19 to the corresponding
+      whole-dollar amounts. Leave all other widgets blank or unchecked and
+      place the review notice on both pages.
+      The proof remains private and unavailable to public review and filing.
+    testRef: "tests/pdf/form-8863-2026-candidate.test.ts::reopens only the verified private lines 8 and 19 on the pinned final PDF"
+  - line: "held-private-physical-aotc-transfers"
+    description: "Preserve a known zero while holding unsupported physical sources"
+    formula: >-
+      Write a confirmed zero to the applicable transfer field. Reject changed
+      template bytes, stale canonical sources or changed amounts before rendering.
+    testRef: "tests/pdf/form-8863-2026-candidate.test.ts::preserves a confirmed zero and holds Form 8863 PDF template or source drift"
   - line: "closed-exports"
     description: "Keep public review and filing disabled"
     formula: "The physical map has no route or export registration. Neither the 2025 nor the 2026 qualified template registry accepts these bytes."
