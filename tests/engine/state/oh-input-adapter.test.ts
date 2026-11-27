@@ -654,6 +654,22 @@ describe("Ohio Input Adapter — Filing Status", () => {
 // ---------------------------------------------------------------------------
 
 describe("Ohio Input Adapter — buildOhioResidentReturnInput", () => {
+  it("holds unbound dated Code 3 retirement classification despite a supplied Ohio federal result", () => {
+    const taxInput = makeTaxInput({
+      form1099R: [make1099R({
+        taxYear: 2025,
+        accountHolder: "primary",
+        grossDistribution: "6000",
+        taxableAmount: "4200",
+        distributionCode: "3",
+        disabilityPensionBeforeMinimumRetirementAge: true,
+      })],
+    });
+
+    expect(() => buildOhioResidentReturnInput(taxInput, makeFederalResult()))
+      .toThrow(/Code 3.*(?:timing|payment period|source)/i);
+  });
+
   it("extracts federal AGI from federal result", () => {
     const taxInput = makeTaxInput();
     const fedResult = makeFederalResult({ agi: new Decimal(75000) });

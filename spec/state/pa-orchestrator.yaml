@@ -470,6 +470,7 @@ lines:
           - otherwise: EXEMPT from PA tax, do not add gross to SP nontaxable income
         - Qualified Roth (Q/T/B): EXEMPT from PA tax, do not add gross to SP nontaxable income
         - Code 3 disability:
+          - for a positive standalone non-IRA original dated 2025 or 2026, verify the bound employer plan dates against the current owner and original before applying the wage flag
           - if disabilityPensionBeforeMinimumRetirementAge = true: add taxable amount to Class 1 compensation
           - otherwise: EXEMPT from PA tax, do not add gross to SP nontaxable income
         - Code 1/2/J/S (early/taxable): add taxable amount to Class 1 (employer) or Class 2 (IRA)
@@ -531,6 +532,8 @@ lines:
       - "Multiple 1099-Rs with mixed codes: each handled independently"
       - "Qualified Roth (qualifiedRothDistribution flag): exempt"
     testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator exempts normal 1099-R distributions (code 7)"
+    testRefs:
+      - "tests/engine/state/pa-orchestrator.test.ts::holds unbound dated Code 3 retirement classification in the Pennsylvania return"
 
   - line: "map-business"
     description: "Map Schedule C / Schedule F / K-1 to PA Class 4 business income"

@@ -264,6 +264,9 @@ lines:
       qualifying income for each spouse. When the engine receives those
       spouse-level amounts, it determines eligibility directly from them;
       otherwise it falls back to a caller-provided boolean flag.
+      A typed Ohio return must validate bound employer timing against the
+      current owner and original for a positive standalone non-IRA Code 3
+      source dated 2025 or 2026 before using its wage flag.
     edgeCases:
       - "Non-MFJ filers get $0"
       - "2025 MAGI exactly $750,000 does NOT qualify even if MAGI less exemptions is below the ceiling"
@@ -272,6 +275,8 @@ lines:
       - "Explicit spouse-level qualifying income below $500 for either spouse disqualifies the credit even if the boolean flag is true"
       - "Explicit spouse-level qualifying income of exactly $500 for each spouse qualifies"
     testRef: "tests/engine/state/oh-schedule-credits.test.ts::OH Schedule of Credits Line 12 - joint filing credit"
+    testRefs:
+      - "tests/engine/state/oh-input-adapter.test.ts::holds unbound dated Code 3 retirement classification despite a supplied Ohio federal result"
 
   - line: "13"
     description: "Earned income credit"

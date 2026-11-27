@@ -5,6 +5,7 @@ import { calculateForm1099R, getForm1099RTaxabilitySource } from "@/engine/forms
 import { parseInput } from "@/ingest/loader.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
+import { disabilityPensionSource } from "../fixtures/form1099r-disability-source.js";
 
 type Statement = NonNullable<TaxYearInput["form1099R"]>[number];
 
@@ -14,21 +15,30 @@ const scenarios = [
 ];
 
 function parsed(scenario: (typeof scenarios)[number], overrides: Partial<Statement> = {}) {
+  const original = {
+    taxYear: 2025 as const,
+    payer: "Fictional qualified employer retirement annuity",
+    payerTin: "112345678",
+    accountReference: "Synthetic annuity account",
+    accountHolder: "primary" as const,
+    distributionCode: scenario.code,
+    iraSepSimple: false,
+    grossDistribution: "6000",
+    taxableAmountNotDetermined: true,
+    federalWithheld: "125",
+  };
+  const primary = { ...simpleW2Fixture.taxpayer.primary, dateOfBirth: scenario.dateOfBirth };
+  const taxableAmount = overrides.taxableAmount;
+  const timing = scenario.code === "3" && taxableAmount === "4200" ? disabilityPensionSource(
+    { ...original, taxableAmount, taxableAmountNotDetermined: overrides.taxableAmountNotDetermined },
+    primary, overrides.disabilityPensionBeforeMinimumRetirementAge ? "2025-07-31" : "2025-08-02",
+  ) : undefined;
   return parseInput({
     ...simpleW2Fixture,
-    taxpayer: {
-      ...simpleW2Fixture.taxpayer,
-      primary: { ...simpleW2Fixture.taxpayer.primary, dateOfBirth: scenario.dateOfBirth },
-    },
+    taxpayer: { ...simpleW2Fixture.taxpayer, primary },
     form1099R: [{
-      taxYear: 2025,
-      payer: "Fictional qualified employer retirement annuity",
-      accountHolder: "primary",
-      distributionCode: scenario.code,
-      iraSepSimple: false,
-      grossDistribution: "6000",
-      taxableAmountNotDetermined: true,
-      federalWithheld: "125",
+      ...original,
+      ...(timing && { disabilityPensionSource: timing }),
       ...overrides,
     }],
   });

@@ -2456,6 +2456,21 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       expect(result.pa40.taxLiability.toNumber()).toBe(0);
     });
 
+    it("holds unbound dated Code 3 retirement classification in the Pennsylvania return", () => {
+      expect(() => calculatePAReturn(makeInput({
+        form1099R: [{
+          taxYear: 2025,
+          payer: "Employer Disability Plan",
+          accountHolder: "primary",
+          grossDistribution: "6000",
+          taxableAmount: "4200",
+          distributionCode: "3",
+          iraSepSimple: false,
+          disabilityPensionBeforeMinimumRetirementAge: false,
+        }],
+      }))).toThrow(/Code 3.*(?:timing|payment period|source)/i);
+    });
+
     it("PA orchestrator taxes disability pensions before minimum retirement age as compensation", () => {
       const result = calculatePAReturn(makeInput({
         form1099R: [{

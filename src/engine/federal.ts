@@ -51,6 +51,7 @@ import { readForm8880AnnualSources } from "@/models/form-8880-sources.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import { getConstants, type FilingStatus } from "@/models/constants.js";
 import { assertFederalPaymentSources } from "./forms/federal-payment-date-sources.js";
+import { assertCode3DisabilityPensionSources } from "./forms/form-1099-r-disability-source.js";
 import { d, sum, zeroFloor, min, roundDollar } from "@/utils/decimal.js";
 import { sumSourceMoney } from "@/utils/sum-source-money.js";
 import { sumSourceMoneyRatios } from "@/utils/sum-source-money-ratios.js";
@@ -286,6 +287,7 @@ function calculateFederalTaxBeforeOhioSchoolScheduleA(input: TaxYearInput, conte
 
 /** Spec: claim-of-right.yaml. Pub525 compares each method's tax for the year of repayment. */
 function calculateFederalTaxReturn(input: TaxYearInput, context?: { asOfDate?: string }): TaxReturnResult {
+  assertCode3DisabilityPensionSources(input, context?.asOfDate);
   const form8919ReceiptDate = input.form8919?.reasonANecSource?.determinationReceivedDate;
   if (form8919ReceiptDate !== undefined && context?.asOfDate !== undefined) {
     const { asOfDate } = context;

@@ -1,0 +1,56 @@
+form: "Form 1099-R Employer Disability Pension Timing"
+fullName: "Whole-period employer disability pension payments before or after minimum retirement age"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p525"
+lines:
+  - line: "2025-2026-code-3-placement"
+    description: "Bind positive taxable standalone non-IRA Code 3 distributions to the documented payment period"
+    formula: >-
+      Require the actual employer plan reference, confirmed disability pension
+      type, minimum retirement date and the first and last actual payment dates
+      covering the entire original 2025 or 2026 statement. A single payment
+      uses the same first and last date. Match the statement year, payer, payer
+      TIN, account, recipient and birth date, the recorded Box 2b state and
+      non-IRA classification, and the amounts in Boxes 1, 2a and 4 to the
+      current original. Compare amounts exactly, preserving blank Box 2a and
+      unknown Box 2b. A checked Box 2b leaves Box 2a unconfirmed, including a
+      printed zero. Hold undetermined amounts unless the entire period is after
+      attainment and the existing Simplified Method is supported and bound
+      to the same statement and worksheet inputs. Require the documented annuity
+      starting date on or before the first actual payment it covers and a positive
+      payment count for a positive gross distribution. A completed worksheet
+      replaces a printed Box 2a if Box 2b is checked under the existing
+      method. Hold missing or stale evidence even
+      if a saved legacy placement flag is present. A whole period
+      strictly before the stated retirement date is wages on Form 1040 line 1h.
+      A whole period beginning on or after the following civil day is reported
+      on lines 5a and 5b under ordinary pension reporting. Hold the attainment
+      date, straddling payment periods, unmatched dates and unsupported
+      taxability methods. Normalize the existing flag for downstream consumers
+      and credit Box 4 once. Validate the retained owner and normalized
+      placement again at calculation entry. Hold a payment period ending
+      after the calculation observation date. Use today if no date is supplied.
+      Treat before-age taxable amounts
+      as earned income for the federal earned income credit. Apply any
+      independently validated public safety officer premiums through the
+      existing direct annual method. Keep the
+      narrower guided 2026 single-payment-before-retirement and no-election
+      boundary, 2025 guided and 2026 annual qualification gates, and legacy
+      undated treatment.
+    sources:
+      - "https://www.irs.gov/instructions/i1040gi"
+      - "https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf"
+      - "https://www.irs.gov/publications/p525"
+      - "https://www.irs.gov/publications/p575"
+      - "https://www.irs.gov/instructions/i1099r"
+    testRef: "tests/engine/federal-pension-disability-source.test.ts::holds missing payment timing despite any saved placement flag"
+    testRefs:
+      - "tests/engine/federal-pension-disability-source.test.ts::reports sourced disability pensions before and beginning the day after minimum retirement"
+      - "tests/engine/federal-pension-disability-source.test.ts::holds equality mixed payment periods and stale original evidence"
+      - "tests/engine/federal-pension-disability-source.test.ts::holds a typed return whose owner changed after import"
+      - "tests/engine/federal-pension-disability-source.test.ts::carries only the sourced wage payment into earned income"
+      - "tests/engine/federal-pension-disability-source.test.ts::preserves the bound after-retirement Simplified Method and original box states"
+      - "tests/engine/federal-pension-disability-source.test.ts::holds calculation before the documented payment was received"
+      - "tests/engine/federal-pension-disability-source.test.ts::keeps confirmed zero and undated legacy placements"
+      - "tests/guided-interview/guided-disability-pension-2026.test.ts::projects a documented 2026 Code 3 disability pension as wages"
+      - "tests/engine/federal.test.ts::Form 1040 Lines 1h and 5b - retired public safety officer premiums use separate joint-return owner caps"

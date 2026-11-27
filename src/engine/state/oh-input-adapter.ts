@@ -4,6 +4,7 @@ import { readOhioReciprocalWageSource } from './oh-reciprocal-wage-source.js';
 import {roundDollar} from '@/utils/decimal.js';
 import {buildOhioPaymentSource} from './oh-payment-source.js';
 import { calculateW2StateLocalSources } from '@/engine/forms/w2-state-local.js';
+import { assertCode3DisabilityPensionSources } from '@/engine/forms/form-1099-r-disability-source.js';
 import type {OhioPaymentFacts} from '@/models/ohio-payments.js';
 import type {OhioResidencyFacts} from "@/models/ohio-residency.js";
 import {assertCurrentOhioFederalResult, buildOhioResidencySource, sameOhioFederalAdapterMaterial} from "./oh-residency-source.js";
@@ -753,6 +754,7 @@ export function buildOhioResidentReturnInput(
   overlay: OhioOverlayInput = {},
   currentFederal?: OhioCurrentFederalCalculation,
 ): OhioResidentReturnInput {
+  assertCode3DisabilityPensionSources(taxInput);
   // Spec: form-2555-all-foreign-capital-loss.yaml state-composition.
   if (taxInput.form2555?.sourceMapping?.rows.some(row => row.allForeignCapitalLoss !== undefined)) throw new Error("Ohio all-foreign capital loss requires its separate state source method");
   if (taxInput.scheduleC?.professionalWagering) {

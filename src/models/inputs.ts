@@ -52,6 +52,11 @@ import { EicSeparatedSpouseSourcesSchema } from "@/models/eic-separated-spouse-s
 import { RoyaltyPropertySourcesSchema } from "@/models/royalty-property-sources.js";
 import { EicDisallowanceSourcesSchema } from "@/models/eic-disallowance-sources.js";
 import { Form8862SourcesSchema } from "@/models/form-8862-sources.js";
+import {
+  code3DisabilityPensionOwnerMatches,
+  needsCode3DisabilityPensionSource,
+  readCode3DisabilityPensionPlacement,
+} from "@/engine/forms/form-1099-r-disability-source.js";
 
 // Custom Zod type for decimal strings (validated as numbers, stored as strings for Decimal.js)
 const decimal = z.string().regex(/^-?\d+(\.\d+)?$/, "Must be a decimal number");
@@ -1193,6 +1198,40 @@ const Form1099RQcdSourceSchema = z.object({
   currentDeductedContributions: decimal.optional(),
 }).strict();
 
+const form1099RSimplifiedMethodShape = {
+  simplifiedMethodCostInPlan: decimal.optional(), // Worksheet line 1
+  simplifiedMethodPlanIdentifier: z.string().trim().min(1).optional(),
+  simplifiedMethodExpectedPayments: z.number().int().positive().optional(), // Worksheet line 3
+  simplifiedMethodAnnuityStartingDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  simplifiedMethodPrimaryAnnuitantAgeAtStartingDate: z.number().int().min(0).max(120).optional(), // Table 1 or 2
+  simplifiedMethodSecondaryAnnuitantAgeAtStartingDate: z.number().int().min(0).max(120).optional(), // Joint-life Table 2
+  simplifiedMethodPaymentsReceivedThisYear: z.number().int().min(0).optional(), // Worksheet line 5
+  simplifiedMethodPriorYearRecovered: decimal.optional(), // Worksheet line 6
+};
+
+const Form1099RDisabilityPensionSourceSchema = z.strictObject({
+  original: z.strictObject({
+    taxYear: z.union([z.literal(2025), z.literal(2026)]),
+    payer: z.string().trim().min(1),
+    payerTin: z.string().trim().min(1),
+    accountReference: z.string().trim().min(1),
+    accountHolder: z.enum(["primary", "spouse"]),
+    ownerFingerprint: z.string().regex(/^[a-f0-9]{64}$/u),
+    ownerBirthDate: z.string(),
+    grossDistribution: decimal,
+    taxableAmount: decimal.optional(),
+    taxableAmountNotDetermined: z.boolean().optional(),
+    federalWithheld: decimal,
+  }),
+  simplifiedMethod: z.strictObject(form1099RSimplifiedMethodShape).optional(),
+  planReference: z.string().trim().min(1),
+  employerDisabilityPensionConfirmed: z.literal(true),
+  allPaymentsCoveredConfirmed: z.literal(true),
+  minimumRetirementDate: z.string(),
+  firstPaymentDate: z.string(),
+  lastPaymentDate: z.string(),
+});
+
 export const Form1099RSchema = z.object({
   taxYear: z.number().int().optional(), // Preserve actual source year; ordinary basis binding requires an exact match.
   trumpAccount: z.boolean().optional(), // Actual2026 Box7c; absence is unknown.
@@ -1224,14 +1263,7 @@ export const Form1099RSchema = z.object({
   localTaxWithheld: optionalDecimal, // Engine-modeled school district withholding / Local withholding carried to NYC or Yonkers lines 73/74
   locality: z.string().optional(), // Locality name for local withholding
   employeeContributions: optionalDecimalInput, // Box 5, defaulted below for legacy intake
-  simplifiedMethodCostInPlan: decimal.optional(), // Simplified Method worksheet line 1
-  simplifiedMethodPlanIdentifier: z.string().trim().min(1).optional(), // Validated identifier for a specific annuity contract when one payer issues multiple Simplified Method plans
-  simplifiedMethodExpectedPayments: z.number().int().positive().optional(), // Simplified Method worksheet line 3
-  simplifiedMethodAnnuityStartingDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(), // Simplified Method annuity starting date
-  simplifiedMethodPrimaryAnnuitantAgeAtStartingDate: z.number().int().min(0).max(120).optional(), // Simplified Method age used for Table 1
-  simplifiedMethodSecondaryAnnuitantAgeAtStartingDate: z.number().int().min(0).max(120).optional(), // Simplified Method combined-age Table 2 input for 1998+ joint-life annuities
-  simplifiedMethodPaymentsReceivedThisYear: z.number().int().min(0).optional(), // Simplified Method worksheet line 5
-  simplifiedMethodPriorYearRecovered: decimal.optional(), // Simplified Method worksheet line 6
+  ...form1099RSimplifiedMethodShape,
   retiredPublicSafetyOfficerInsurancePremiums: optionalDecimal, // Validated accident, health, or long-term care premiums paid directly from an eligible retirement plan
   distributionCode: z.string().optional(), // Box 7
   qualifiedLumpSumReporting: z.enum(["ordinary_pension", "form_4972"]).optional(), // Actual reporting choice for a potentially eligible Code A distribution
@@ -1242,9 +1274,18 @@ export const Form1099RSchema = z.object({
   qualifiedDomesticRelationsOrderExceptionApplies: z.boolean().default(false), // Validated Form 5329 exception 06 for a non-IRA qualified-plan distribution paid under a QDRO
   terminalIllnessExceptionApplies: z.boolean().default(false), // Validated Form 5329 exception 20 for a non-IRA qualified-plan code 1 distribution made to a terminally ill individual
   iraSepSimple: z.boolean().optional(), // IRA/SEP/SIMPLE checkbox; absence is unknown.
-  disabilityPensionBeforeMinimumRetirementAge: z.boolean().default(false), // Validated Form 1040 Line 1 reroute for code 3 disability pensions
+  disabilityPensionBeforeMinimumRetirementAge: z.boolean().default(false), // Derived from current Code 3 payment sources, or a legacy preview flag.
+  disabilityPensionSource: Form1099RDisabilityPensionSourceSchema.optional(),
   militaryPensionOrSurvivorBenefit: z.boolean().default(false), // Validated NJ exclusion for U.S. military pensions and survivor benefits
 }).superRefine((value, ctx) => {
+  if (needsCode3DisabilityPensionSource(value)) {
+    try {
+      readCode3DisabilityPensionPlacement(value);
+    } catch (error) {
+      if (!(error instanceof Error)) throw error;
+      ctx.addIssue({ code: "custom", path: ["disabilityPensionSource"], message: error.message });
+    }
+  }
   const distributionCodes = getNormalizedDistributionCodes(value.distributionCode);
   const hasAnySimplifiedMethodInput =
     value.simplifiedMethodCostInPlan !== undefined
@@ -1596,6 +1637,14 @@ export const Form1099RSchema = z.object({
     }
   }
 }).overwrite(value => {
+  if (value.disabilityPensionSource) {
+    const { lastPaymentDate, minimumRetirementDate } = value.disabilityPensionSource;
+    // Source validation has already established that the full period falls on one side.
+    return {
+      ...value, employeeContributions: value.employeeContributions ?? "0",
+      disabilityPensionBeforeMinimumRetirementAge: lastPaymentDate < minimumRetirementDate,
+    };
+  }
   // The 2026 primary Code 1 IRA source needs to distinguish reported zero from omission.
   if (value.employeeContributions !== undefined || (value.taxYear === 2026 && value.accountHolder === "primary"
     && value.iraSepSimple && value.distributionCode?.trim() === "1")) return value;
@@ -7096,6 +7145,15 @@ export const TaxYearInputSchema = z.object({
     illinois: IllinoisStateReturnInputSchema.optional(),
   }).optional(),
 }).superRefine((value, ctx) => {
+  value.form1099R?.forEach((form, index) => {
+    if (form.disabilityPensionSource !== undefined && !code3DisabilityPensionOwnerMatches(form, value.taxpayer)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["form1099R", index, "disabilityPensionSource"],
+        message: "Form 1099-R Code 3 payment evidence must match the actual owner and return year.",
+      });
+    }
+  });
   if (value.form8880) {
     const { taxYear, filingStatus, spouse } = value.taxpayer;
     try {

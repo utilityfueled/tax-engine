@@ -13,6 +13,11 @@ import type { Form1099R, TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d, sum } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
+import {
+  assertCode3DisabilityPensionPlacement,
+  isDatedCode3DisabilityStatement,
+  needsCode3DisabilityPensionSource,
+} from "./form-1099-r-disability-source.js";
 
 export interface SimplifiedMethodPayerCarryforward {
   payer: string;
@@ -393,6 +398,11 @@ export function calculateForm1099R(
         ? "2025 Form 1099-R pension with checked Box 2b and missing Box 2a requires a supported taxable-amount worksheet"
         : "2025 Form 1099-R pension with unchecked Box 2b and missing Box 2a requires the actual taxable amount or a supported taxable-amount worksheet");
     }
+  }
+  for (const form of forms) {
+    if (!needsCode3DisabilityPensionSource(form)
+      && !(isDatedCode3DisabilityStatement(form) && resolveTaxableAmountBeforeQcdSource(form).amount.gt(0))) continue;
+    assertCode3DisabilityPensionPlacement(form);
   }
   const audit = new AuditTrail();
   const iraForms = forms.filter(isIraForm1099RDistribution);

@@ -64,6 +64,7 @@ export function matchesGuidedDisabilityPensionOriginal(
 
 export function buildGuidedDisabilityPensionSource(
   worksheet: GuidedDisabilityPensionWorksheet | undefined, original: GuidedDisabilityPensionOriginal | undefined,
+  returnOwnerFingerprint?: string,
 ) {
   if (!original) {
     throw new Error(worksheet ? guidedDisabilityPensionOriginalError : "This worksheet covers one primary taxpayer’s 2026 employer disability pension on a nonjoint return. Complete the statement facts or use separate retirement review.");
@@ -85,5 +86,21 @@ export function buildGuidedDisabilityPensionSource(
   if (worksheet.publicSafetyOfficerExclusionElected !== false) {
     throw new Error("Confirm whether you are electing the retired public safety officer insurance premium exclusion for this pension.");
   }
-  return { distributionDate: paymentDate, disabilityPensionBeforeMinimumRetirementAge: true as const };
+  const { sourceTaxYear: _sourceTaxYear, ...statement } = original;
+  return {
+    distributionDate: paymentDate,
+    disabilityPensionBeforeMinimumRetirementAge: true as const,
+    disabilityPensionSource: {
+      original: {
+        ...statement, taxYear: 2026 as const, accountHolder: "primary" as const, taxableAmountNotDetermined: false as const,
+        ownerFingerprint: returnOwnerFingerprint ?? original.ownerFingerprint,
+      },
+      planReference: worksheet.planReference.trim(),
+      employerDisabilityPensionConfirmed: true as const,
+      allPaymentsCoveredConfirmed: true as const,
+      minimumRetirementDate,
+      firstPaymentDate: paymentDate,
+      lastPaymentDate: paymentDate,
+    },
+  };
 }

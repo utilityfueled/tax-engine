@@ -18,8 +18,11 @@ lines:
       the worksheet, including older saved copies. An affirmative answer
       requires separate review of the eligible plan, qualified premiums and
       election because Box 2a does not reflect the exclusion. With an
-      explicit negative answer, project the disability wage classification,
-      original payment date, Box 2a and withholding without inference. Hold unknown,
+      explicit negative answer, pass the bound placement evidence to the
+      common Form 1099-R source validator. After reconciling the saved guided
+      owner, bind the packet to the canonical return owner name and identifier,
+      including the middle initial when the return carries it. Project the disability wage
+      classification, original payment date, Box 2a and withholding. Hold unknown,
       late or mixed payments and competing retirement worksheets. A source
       outside the guided cohort requires separate review. Keep the
       annual calculation and public export gates in place.
@@ -32,5 +35,6 @@ lines:
     testRef: "tests/guided-interview/guided-disability-pension-2026.test.ts::projects a documented 2026 Code 3 disability pension as wages"
     testRefs:
       - "tests/guided-interview/guided-disability-pension-2026.test.ts::holds unknown or stale Code 3 disability pension records"
+      - "tests/guided-interview/guided-disability-pension-2026.test.ts::binds the documented guided owner to the canonical middle initial"
       - "tests/guided-interview/guided-disability-pension-2026.test.ts::requires an explicit public safety officer election answer for the saved Code 3 worksheet"
       - "tests/apps/web/retirement-source-interactions.test.tsx::collects and reopens a 2026 Code 3 disability pension worksheet"

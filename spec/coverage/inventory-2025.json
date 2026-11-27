@@ -3832,6 +3832,25 @@
       ]
     },
     {
+      "key": "federal/form-1099-r-disability-source",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/publications/p525",
+      "specPath": "spec/federal/form-1099-r-disability-source.yaml",
+      "enginePath": "src/engine/forms/form-1099-r-disability-source.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-1099-sa",
       "jurisdiction": "federal",
       "taxYear": 2025,

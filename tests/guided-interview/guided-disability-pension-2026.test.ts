@@ -48,15 +48,40 @@ it("projects a documented 2026 Code 3 disability pension as wages", () => {
   const state = draft();
   expect(validateSection(state, "income-retirement").status).toBe("complete");
   const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
+  const { sourceTaxYear: _sourceTaxYear, ...original } = worksheet.original;
   expect(input.form1099R?.[0]).toMatchObject({
     taxYear: 2026, distributionCode: "3", distributionDate: "2026-07-31", disabilityPensionBeforeMinimumRetirementAge: true,
     grossDistribution: "12000.45", taxableAmount: "9000.25", federalWithheld: "900.15",
+    disabilityPensionSource: {
+      original: { ...original, taxYear: 2026, accountHolder: "primary" },
+      employerDisabilityPensionConfirmed: true, allPaymentsCoveredConfirmed: true,
+      minimumRetirementDate: worksheet.minimumRetirementDate,
+      firstPaymentDate: worksheet.paymentDate, lastPaymentDate: worksheet.paymentDate,
+    },
   });
   const federal = calculateFederalTax(input);
   expect(federal.allLines.find(line => line.form === "1040" && line.line === "1h")?.value.toFixed()).toBe("9000.25");
   expect(federal.pensionDistributionsTaxable.toFixed()).toBe("0");
   expect(federal.totalWithholding.toFixed()).toBe("900.15");
   expect(federal.form5329?.line4.toFixed() ?? "0").toBe("0");
+});
+
+it("binds the documented guided owner to the canonical middle initial", () => {
+  const namedOwner = { ...personal, middleName: "Synthetic" };
+  const savedOwnerFingerprint = iraEducationOwnerFingerprint(namedOwner);
+  if (!savedOwnerFingerprint) throw new Error("Missing synthetic guided identity");
+  const state = draft({
+    ...statement, code3DisabilitySource: { ...worksheet, original: { ...worksheet.original, ownerFingerprint: savedOwnerFingerprint } },
+  });
+  state.sectionData["personal-info"] = namedOwner;
+  expect(validateSection(state, "income-retirement").status).toBe("complete");
+  const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
+  expect(input.taxpayer.primary.firstName).toBe(`${personal.firstName} S`);
+  expect(input.form1099R?.[0]?.disabilityPensionSource?.original.ownerFingerprint)
+    .toBe(iraEducationOwnerFingerprint(input.taxpayer.primary));
+  expect(calculateFederalTax(input).totalWages.toFixed()).toBe("9000.25");
+  const edited = updateSectionData(state, "personal-info", { ...namedOwner, middleName: "Second" });
+  expect(buildTaxInputFromGuidedData(edited)).toBeNull();
 });
 
 it("requires an explicit public safety officer election answer for the saved Code 3 worksheet", () => {

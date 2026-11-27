@@ -14,25 +14,35 @@ import { calculateForm1099C } from "@/engine/forms/form-1099-c.js";
 import { calculateForm982 } from "@/engine/forms/form-982.js";
 import { getConstants } from "@/models/constants.js";
 import { partialPersonalLegacyNolZeroPoolInput } from "../fixtures/cod-zero-minimum-tax-credit-bound.js";
+import { disabilityPensionSource } from "../fixtures/form1099r-disability-source.js";
 
 const d = (n: number | string) => new Decimal(n);
 
 describe("Retired public safety officer premium exclusions on joint returns", () => {
   const fixture = { ...simpleW2Fixture, taxpayer: complexMFJFixture.taxpayer };
-  const disability = {
+  const disabilityStatement = {
     payer: "City Disability Plan",
+    payerTin: "112345678",
+    accountReference: "Synthetic city disability plan",
     taxYear: 2025,
     accountHolder: "primary" as const,
     grossDistribution: "10000.00",
     taxableAmount: "10000.00",
     taxableAmountNotDetermined: false,
+    federalWithheld: "0",
     iraSepSimple: false,
     distributionCode: "3",
     disabilityPensionBeforeMinimumRetirementAge: true,
     retiredPublicSafetyOfficerInsurancePremiums: "2500.00",
   };
+  const disability = {
+    ...disabilityStatement,
+    disabilityPensionSource: disabilityPensionSource(
+      disabilityStatement, fixture.taxpayer.primary, "2025-07-31",
+    ),
+  };
   const pension = {
-    ...disability,
+    ...disabilityStatement,
     payer: "County Retirement Plan",
     accountHolder: "spouse" as const,
     distributionCode: "7",

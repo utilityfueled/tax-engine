@@ -356,8 +356,10 @@ lines:
       unknown Box 2b answers. Do not infer the taxable amount from Box 1 or
       Box 5. Preserve explicit zero, federal withholding, and the separate
       Code 3 placement of admitted amounts before minimum retirement age on
-      line 1h and at or after it on lines 5a and 5b. The guard does not change
-      the existing eligibility to use a worksheet or the other code paths.
+      line 1h and starting the following day on lines 5a and 5b, using the
+      bound placement evidence in form-1099-r-disability-source.yaml.
+      Preserve the existing valid Simplified Method after retirement when
+      its actual worksheet inputs match the current original and timing proof.
     irsRef: >-
       2025 Form 1040 instructions, line 1h and lines 5a and 5b
       (https://www.irs.gov/pub/irs-prior/i1040gi--2025.pdf#page=25);

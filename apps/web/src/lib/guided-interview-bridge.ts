@@ -559,9 +559,19 @@ export function buildRetirementInputs(entries: RetirementEntryData[] | undefined
     .filter(isStartedRetirement)
     .map(entry => {
       const source = retirementSourceInput(entry);
-      if (entry.code3DisabilitySource !== undefined) return { ...source, ...buildGuidedDisabilityPensionSource(
-        entry.code3DisabilitySource, guidedDisabilityPensionOriginal(entry, ownerBirthDate, guidedIraEducationOwnerFingerprint(basisContext?.personal)),
-      ) };
+      if (entry.code3DisabilitySource !== undefined) {
+        const personal = basisContext?.personal;
+        const returnOwnerFingerprint = guidedIraEducationOwnerFingerprint(personal && {
+          firstName: combineGivenNameWithMiddleInitial(personal.firstName, personal.middleName),
+          lastName: personal.lastName,
+          ssn: personal.ssn,
+        });
+        return { ...source, ...buildGuidedDisabilityPensionSource(
+          entry.code3DisabilitySource,
+          guidedDisabilityPensionOriginal(entry, ownerBirthDate, guidedIraEducationOwnerFingerprint(personal)),
+          returnOwnerFingerprint,
+        ) };
+      }
       const distributionDate = guidedCode1IraAgeFacts(entry, ownerBirthDate)?.distributionDate;
       return distributionDate === undefined ? source : { ...source, distributionDate };
     });
