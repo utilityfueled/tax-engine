@@ -71,6 +71,50 @@ function calculateAotc(state: GuidedFlowState) {
 }
 
 describe("guided AOTC prior-claim history", () => {
+  it("holds a replacement 2026 AOTC school until its own receipts and eligibility are confirmed", () => {
+    const start = startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2"], lifeEvents: [], stateCode: null });
+    const state = withOriginalWages({ ...start, taxYear: 2026 }, "2026");
+    const [firstSchool] = completeAocEligibility.institutions;
+    const secondSchool = { ...firstSchool, name: "Second College", address: "80 School Rd", ein: "23-4567890" };
+    const student = { ...completeAocEligibility, name: "Jordan Example", qualifiedExpenses: "4000", priorYearsClaimed: "3" };
+    const incompleteSecond = { name: "", address: "", ein: "", receivedCurrentYear1098T: true, receivedPriorYear1098TWithBox7: false };
+    const initial = updateSectionData(state, "credits", { ...emptyCreditsData, education: {
+      ...emptyCreditsData.education, ...completeEducationClaimant, aotcClaimantFactsTaxYear: 2026,
+      aocStudents: [{ ...student, institutions: [firstSchool, incompleteSecond] }],
+    } });
+    const complete = { ...student, institutions: [firstSchool, secondSchool] };
+    const entered = replaceStudents(initial, [complete]);
+    expect(buildTaxInputFromGuidedData(entered)?.educationExpenses?.aocStudents[0].institutions).toEqual(complete.institutions);
+
+    const replacement = { ...firstSchool, name: "Replacement College", ein: "98-7654321" };
+    const changed = { ...complete, institutionEin: replacement.ein, institutions: [replacement, secondSchool] };
+    const revised = reopen(replaceStudents(entered, [changed]));
+    expect(buildTaxInputFromGuidedData(revised)).toBeNull();
+    const pending = creditsFor(revised).education.aocStudents[0];
+    expect(pending).toMatchObject({ institutionEin: replacement.ein, priorYearsClaimed: "3", enrolledAtLeastHalfTime: true,
+      institutionEligible: null, expensesEligibilityConfirmed: null, form1098TRequirementMet: null,
+      institutions: [{ ...replacement, receivedCurrentYear1098T: null, receivedPriorYear1098TWithBox7: null }, secondSchool],
+    });
+    expect(validateSection(revised, "credits").fieldErrors?.["student-0-institutions"]).toMatch(/both Form 1098-T receipt answers/i);
+
+    const actual = { ...replacement, receivedCurrentYear1098T: false, receivedPriorYear1098TWithBox7: true };
+    const confirmed = reopen(replaceStudents(revised, [{ ...pending, institutions: [actual, secondSchool],
+      institutionEligible: true, expensesEligibilityConfirmed: true, form1098TRequirementMet: true }]));
+    expect(buildTaxInputFromGuidedData(confirmed)?.educationExpenses?.aocStudents[0]).toMatchObject({
+      institutions: [actual, secondSchool], priorYearsClaimed: 3, qualifiedExpenses: "4000",
+    });
+
+    const reviewed = replaceStudents(entered, [{ ...complete, sourceFactsConfirmed: true }]);
+    const firstFormatted = { ...firstSchool, name: " Synthetic  College ", address: firstSchool.address.toUpperCase(), ein: "123456789" };
+    const formatted = reopen(replaceStudents(reviewed, [{ ...complete, institutionEin: firstFormatted.ein, institutions: [secondSchool, firstFormatted] }]));
+    expect(creditsFor(formatted).education.aocStudents[0].sourceFactsConfirmed).toBe(true);
+    expect(buildTaxInputFromGuidedData(formatted)).not.toBeNull();
+
+    const historical = educationInterview();
+    const historicalEdit = reopen(replaceStudents(historical.state, [{ ...historical.first, institutionEin: replacement.ein, institutions: [replacement] }]));
+    expect(calculateAotc(historicalEdit)).toBe("2500");
+  });
+
   it("holds the revised 2026 AOTC expense after saving and reopening", () => {
     const starting = startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2"], lifeEvents: [], stateCode: null });
     const starting2026 = withOriginalWages({ ...starting, taxYear: 2026 }, "2026");

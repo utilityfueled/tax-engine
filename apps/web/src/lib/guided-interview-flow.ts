@@ -2271,15 +2271,20 @@ function hsaPayrollW2Originals(entries: W2EntryData[] | undefined, owner: HsaAcc
   }).sort();
 }
 
-function aotcStudentSources(student: EducationStudentData, compareExactExpenses = false) {
+function aotcStudentSources(student: EducationStudentData, compare2026Sources = false) {
   const { name: _name, studentTaxId: _tin, priorYearsClaimed: _history,
     requiresPriorYearsConfirmation: _historyPending, qualifiedExpenses, ...sources } = student;
   const text = qualifiedExpenses.trim();
-  if (compareExactExpenses && text) {
-    const amount = parseGuidedDisplayAmount(text);
-    return { ...sources, qualifiedExpenses: amount.isFinite() ? amount.toFixed() : text };
-  }
-  return { ...sources, qualifiedExpenses: text.replaceAll(",", "") };
+  if (!compare2026Sources) return { ...sources, qualifiedExpenses: text.replaceAll(",", "") };
+  const amount = parseGuidedDisplayAmount(text);
+  return {
+    ...sources,
+    qualifiedExpenses: text && amount.isFinite() ? amount.toFixed() : text,
+    institutionEin: educationTin(student.institutionEin),
+    institutions: student.institutions?.map(school => JSON.stringify([
+      educationInstitutionIdentity(school), school.receivedCurrentYear1098T, school.receivedPriorYear1098TWithBox7,
+    ])).sort(),
+  };
 }
 
 function educationTin(value: string | undefined): string {
@@ -2312,7 +2317,7 @@ function invalidateEducationClaimantYearSources() {
   };
 }
 
-function clearLlcInstitutionReceipts(institution: EducationInstitutionData): EducationInstitutionData {
+function clearEducationInstitutionReceipts(institution: EducationInstitutionData): EducationInstitutionData {
   return { ...institution, receivedCurrentYear1098T: null, receivedPriorYear1098TWithBox7: null };
 }
 
@@ -2325,7 +2330,7 @@ function clearLlcStudentQualifications(student: EducationLlcStudentData): Educat
     expensesEligibilityConfirmed: null,
     form1098TRequirementMet: null,
     courseEligibilityConfirmed: null,
-    institutions: student.institutions?.map(clearLlcInstitutionReceipts),
+    institutions: student.institutions?.map(clearEducationInstitutionReceipts),
   };
 }
 
@@ -2341,12 +2346,12 @@ function llcStudentTin(student: EducationLlcStudentData): string {
   return educationTin(student.studentTaxId);
 }
 
-function llcInstitutionIdentity(institution: EducationInstitutionData): string {
+function educationInstitutionIdentity(institution: EducationInstitutionData): string {
   const normalizeText = (text: string) => text.trim().toLowerCase().replace(/\s+/g, " ");
   return JSON.stringify([educationTin(institution.ein), normalizeText(institution.name), normalizeText(institution.address)]);
 }
 
-function llcSourceCounts(identities: string[]): Map<string, number> {
+function educationSourceCounts(identities: string[]): Map<string, number> {
   const counts = new Map<string, number>();
   for (const identity of identities) counts.set(identity, (counts.get(identity) ?? 0) + 1);
   return counts;
@@ -2358,8 +2363,8 @@ function invalidateEditedLlcSources(previous: CreditsData | undefined, next: Cre
   if (!previousStudents?.length || !next || !currentStudents?.length) return next;
 
   const previousByTin = new Map(previousStudents.map(student => [llcStudentTin(student), student]));
-  const previousStudentCounts = llcSourceCounts(previousStudents.map(llcStudentTin));
-  const currentStudentCounts = llcSourceCounts(currentStudents.map(llcStudentTin));
+  const previousStudentCounts = educationSourceCounts(previousStudents.map(llcStudentTin));
+  const currentStudentCounts = educationSourceCounts(currentStudents.map(llcStudentTin));
   const removedStudent = [...previousByTin.keys()].some(tin => !currentStudentCounts.has(tin));
   // Match source records across reordering and clear answers when duplicates make their origin ambiguous.
   const students = currentStudents.map(student => {
@@ -2371,8 +2376,8 @@ function invalidateEditedLlcSources(previous: CreditsData | undefined, next: Cre
       return clearLlcStudentQualifications(student);
     }
 
-    const previousSchools = llcSourceCounts((former.institutions ?? []).map(llcInstitutionIdentity));
-    const currentSchools = llcSourceCounts((student.institutions ?? []).map(llcInstitutionIdentity));
+    const previousSchools = educationSourceCounts((former.institutions ?? []).map(educationInstitutionIdentity));
+    const currentSchools = educationSourceCounts((student.institutions ?? []).map(educationInstitutionIdentity));
     if (previousSchools.size !== currentSchools.size
       || [...currentSchools].some(([identity, count]) => previousSchools.get(identity) !== count)) {
       return {
@@ -2382,9 +2387,9 @@ function invalidateEditedLlcSources(previous: CreditsData | undefined, next: Cre
         form1098TRequirementMet: null,
         courseEligibilityConfirmed: null,
         institutions: student.institutions?.map(institution => {
-          const identity = llcInstitutionIdentity(institution);
+          const identity = educationInstitutionIdentity(institution);
           return previousSchools.get(identity) === currentSchools.get(identity)
-            ? institution : clearLlcInstitutionReceipts(institution);
+            ? institution : clearEducationInstitutionReceipts(institution);
         }),
       };
     }
@@ -2392,6 +2397,26 @@ function invalidateEditedLlcSources(previous: CreditsData | undefined, next: Cre
       ? { ...student, expensesEligibilityConfirmed: null } : student;
   });
   return { ...next, education: { ...next.education, llcStudents: students } };
+}
+
+function invalidateEditedAotcInstitutions(former: EducationStudentData, student: EducationStudentData): EducationStudentData {
+  const previous = former.institutions ?? [];
+  const previousSchools = educationSourceCounts(previous.map(educationInstitutionIdentity));
+  const currentSchools = educationSourceCounts((student.institutions ?? []).map(educationInstitutionIdentity));
+  function identityCountChanged(institution: EducationInstitutionData) {
+    const identity = educationInstitutionIdentity(institution);
+    return previousSchools.get(identity) !== currentSchools.get(identity);
+  }
+  if (!previous.some(school => school.name.trim() && school.address.trim()
+    && /^\d{9}$/u.test(educationTin(school.ein)) && identityCountChanged(school))) return student;
+
+  return {
+    ...student,
+    institutionEligible: null,
+    expensesEligibilityConfirmed: null,
+    form1098TRequirementMet: null,
+    institutions: student.institutions?.map(school => identityCountChanged(school) ? clearEducationInstitutionReceipts(school) : school),
+  };
 }
 
 function aotcClaimantOriginals(education: EducationCreditData) {
@@ -2432,19 +2457,21 @@ function retainAotcSources(previous: CreditsData | undefined, next: CreditsData 
   const previousStudents = previous?.education?.aocStudents;
   if (!previousStudents?.length || !next?.education?.aocStudents.length) return next;
   const studentTin = (entry: EducationStudentData) => educationTin(entry.studentTaxId);
-  const currentYearExpenses = taxYear === 2026;
+  const compare2026Sources = taxYear === 2026;
   const studentSourcesChanged = (before: EducationStudentData, after: EducationStudentData) =>
-    guidedSourceValuesChanged(aotcStudentSources(before, currentYearExpenses), aotcStudentSources(after, currentYearExpenses));
+    guidedSourceValuesChanged(aotcStudentSources(before, compare2026Sources), aotcStudentSources(after, compare2026Sources));
   const students = next.education.aocStudents.map((student, index) => {
     const former = previousStudents[index];
     const tin = studentTin(student);
     if (!former) return student;
     if (studentTin(former) === tin) {
-      const editedExpenses = currentYearExpenses && /^\d{9}$/u.test(tin)
+      const reviewChangedOriginals = compare2026Sources && /^\d{9}$/u.test(tin);
+      const editedExpenses = reviewChangedOriginals
         && typeof former.expensesEligibilityConfirmed === "boolean"
         && hasEnteredAmount(former.qualifiedExpenses) && parseGuidedDisplayAmount(former.qualifiedExpenses).gte(0)
         && guidedAmountChanged(former.qualifiedExpenses, student.qualifiedExpenses);
-      const current = editedExpenses ? { ...student, expensesEligibilityConfirmed: null } : student;
+      const withCurrentExpenses = editedExpenses ? { ...student, expensesEligibilityConfirmed: null } : student;
+      const current = reviewChangedOriginals ? invalidateEditedAotcInstitutions(former, withCurrentExpenses) : withCurrentExpenses;
       const confirmation = current.sourceFactsConfirmed === undefined ? former.sourceFactsConfirmed : current.sourceFactsConfirmed;
       if (confirmation === undefined) return current;
       return { ...current, sourceFactsConfirmed: studentSourcesChanged(former, current) ? null : confirmation };

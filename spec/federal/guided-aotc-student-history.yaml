@@ -29,6 +29,20 @@ lines:
       formatting, and 2025 behavior are unchanged.
     irsRef: "2026 draft Form 8863 instructions, Qualified Education Expenses and Part III line 27; https://www.irs.gov/pub/irs-dft/i8863--dft.pdf"
     testRef: "tests/guided-interview/guided-aotc-student-history.test.ts::holds the revised 2026 AOTC expense after saving and reopening"
+  - line: "2026-edited-student-institution"
+    description: "Reconfirm 2026 AOTC education facts after replacing a known institution"
+    formula: >-
+      Compare the student's previously identified schools by normalized name,
+      address, and EIN, including the count of matching school records. If a
+      known school's identity changes, clear affected schools' current- and
+      prior-year Form 1098-T receipt answers and the student's related
+      institution, expense, and receipt-requirement answers. Preserve unchanged
+      school receipts, edited originals, qualification facts unrelated to that
+      edit, and prior-claim history. Equivalent formatting and reordering keep
+      confirmations. Initial source entry and 2025 behavior are unchanged. Hold
+      guided calculation after reopening until the affected facts are answered.
+    irsRef: "2026 draft Form 8863 instructions, Form 1098-T and Part III lines 22 and 27; https://www.irs.gov/pub/irs-dft/i8863--dft.pdf"
+    testRef: "tests/guided-interview/guided-aotc-student-history.test.ts::holds a replacement 2026 AOTC school until its own receipts and eligibility are confirmed"
   - line: "saved-replay"
     description: "Preserve applicable and pending student history"
     formula: "Preserve the same student's answers across TIN formatting, unrelated edits, remaining-row shifts and saved-interview replay. A prior-claim or source review stays pending after replay. A replacement row for the same student that omits the existing source-review status inherits it. Changing a substantive student source revokes its explicit review; formatting a currency value or editing an independent claim count does not. When an older saved row already requires its claim history reviewed, also require review of its student sources. Retain the unversioned prefilled-zero and retirement-code checks and existing EIC source evidence. Explicitly reselect the count and confirm actual student sources to restore the ordinary Form 8863 path."
