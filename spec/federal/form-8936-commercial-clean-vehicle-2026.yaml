@@ -1,0 +1,51 @@
+form: "Form 8936 Schedule A"
+fullName: "2026 qualified commercial clean vehicle credit, private road battery-electric vehicle computation"
+taxYear: 2026
+reviewStatus: "independent-review-pending"
+retrievedAt: "2026-11-27"
+irsReference: "https://www.irs.gov/instructions/i8936"
+notes: |
+  IRC 45W applies through the acquisition cutoff in P.L. 119-21 section 70503.
+  https://uscode.house.gov/us/usc/t26/s45W/
+  https://www.congress.gov/119/plaws/publ21/PLAW-119publ21.pdf
+  https://www.irs.gov/credits-deductions/commercial-clean-vehicle-credit
+  This private tentative-credit computation is limited to primary-taxpayer
+  sole-proprietor depreciable road battery-electric vehicles acquired for the
+  taxpayer's own business use, never for resale, and used only in that business
+  primarily in the United States. Require demonstrable qualified manufacturer,
+  actual VIN, motor vehicle treatment under Title II of the Clean Air Act,
+  gross vehicle weight under 14,000 pounds and at least 7 kWh of externally
+  rechargeable battery capacity. No prior 30D or 45W claim, section
+  179 deduction, mixed use, elective payment, comparison safe harbor, or draft
+  form field qualification is supported. Missing or unsupported original facts
+  require review, with no assumptions supplied by the calculator.
+lines:
+  - line: "acquisition-and-service"
+    description: "Actual contract, payment and possession dates"
+    formula: |
+      Use the later of the documented binding-written-contract date and actual
+      vehicle payment date as acquisition. Confirm the payment was made. Neither
+      date may follow documented possession in 2026. The acquisition must occur
+      on or after January 1, 2023 under P.L. 117-169 section 13403(c) and on or
+      before September 30, 2025. Known acquisition outside that window yields zero.
+    testRef: "tests/engine/forms/form-8936-commercial-clean-vehicle-2026.test.ts::distinguishes timely, late, and inconsistent original dates"
+  - line: "tentative-per-vehicle"
+    description: "Schedule A Part V tentative commercial credit"
+    formula: |
+      Compare 30% of actual reconciled pre-credit vehicle tax basis, the positive excess
+      of actual vehicle purchase price over the source-backed price of a vehicle
+      of comparable size and use powered solely by gasoline or diesel, and
+      $7,500. The smaller amount is the tentative vehicle credit. The private
+      calculation keeps Decimal precision through aggregation. Use the actual
+      confirmed zero section 179 deduction. Compare source records separately
+      for each physical VIN, including VINs claimed in other vehicle cohorts.
+    testRef: "tests/engine/forms/form-8936-commercial-clean-vehicle-2026.test.ts::computes the smallest statutory amount from original inputs without rounding"
+  - line: "total-tentative-commercial-credit"
+    description: "Sum of eligible tentative credits before Form 3800"
+    formula: |
+      Sum the tentative vehicle amounts. This is a general business credit.
+      Existing Form 3800 limitation and reconciliation gates must be satisfied
+      before taking any return benefit. This calculation grants no credit
+      carryforward or filing output. Reduction of tax basis by a claimed 45W
+      credit requires separate asset reconciliation.
+    testRef: "tests/engine/forms/form-8936-commercial-clean-vehicle-2026.test.ts::aggregates distinct sources through canonical serialization and holds repeated VINs"

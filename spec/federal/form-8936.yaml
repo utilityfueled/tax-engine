@@ -151,6 +151,20 @@ lines:
     notes: "The cutoff is based on acquisition date, not placement-in-service date."
     testRef: "tests/engine/forms/form-8936.test.ts::Form 8936 new vehicle acquired after September 30, 2025 is disqualified"
 
+  - line: "19-commercial-2026"
+    description: "Project verified grandfathered commercial clean vehicle credit separately from personal credits"
+    formula: >-
+      Evaluate the confirmed 2026 direct commercial original under IRC section
+      45W. Report its exact tentative amount in the private Form 8936 Part V
+      audit. A positive amount requires Form 3800 attribution before a federal
+      calculation can use it. Section 30D and section 25E personal amounts
+      are calculated independently and cannot include the commercial VIN.
+    irsRef: "26 USC 45W; IRS Commercial Clean Vehicle Credit; draft 2026 Form 8936 Part V lines 19 to 21"
+    notes: "No filing mapping or final Form 3800 attribution is established. Keep existing 2025 vehicle inputs intact."
+    testRef: "tests/engine/forms/form-8936.test.ts::projects the verified 2026 commercial original into the Part V audit and requires Form 3800"
+    testRefs:
+      - "tests/engine/forms/form-8936.test.ts::holds a commercial original outside 2026 or shared with a personal claim"
+
   - line: "18"
     description: "Previously owned clean vehicle credit (nonrefundable)"
     formula: "Lesser of total used vehicle credits or (tax liability minus other credits excluding previously owned)"

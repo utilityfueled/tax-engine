@@ -14,8 +14,10 @@
 import Decimal from "decimal.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import type { FilingStatus, YearConstants } from "@/models/constants.js";
+import type { CommercialCleanVehicle2026Source } from "@/models/inputs.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d, roundDollar, zeroFloor } from "@/utils/decimal.js";
+import { calculateCommercialCleanVehicleCredit2026 } from "./form-8936-commercial-clean-vehicle-2026.js";
 
 export interface VehicleSourceFacts {
   owner?: "primary" | "spouse";
@@ -67,6 +69,8 @@ export interface Form8936Input {
     personalUsePercentage: Decimal | string;
     creditTransferredToDealer: boolean;
   }>;
+  /** Direct, original 2026 §45W facts for the tentative Part V amount. */
+  commercialCleanVehicles?: CommercialCleanVehicle2026Source[];
   /** Prior-year AGI for lesser-of-two-years MAGI check */
   priorYearAgi?: Decimal | string;
   /** Foreign earned income exclusion (Form 2555) — current year */
@@ -105,6 +109,7 @@ export interface Form8936Result {
   priorYearMagiKnown: boolean;
   tentativeNewVehicleCredit: Decimal;
   tentativePreviouslyOwnedCredit: Decimal;
+  tentativeCommercialCleanVehicleCredit?: Decimal;
   businessInvestmentCredit: Decimal;
   requiresForm3800: boolean;
   transferredNewVehicleCreditRepayment: Decimal;
@@ -143,8 +148,27 @@ function isAcquiredAfterCleanVehicleCutoff(dateAcquired: string): boolean {
 export function calculateForm8936(input: Form8936Input): Form8936Result {
   const taxYear = input.taxYear ?? 2025;
   if (taxYear !== 2025 && taxYear !== 2026) throw new Error("Unsupported Form 8936 tax year");
-  if (taxYear === 2026 || [...input.newCleanVehicles,...input.previouslyOwnedCleanVehicles].some(vehicle=>vehicle.datePlacedInService !== undefined)) {
-    return calculateFromSourceFacts(input,taxYear);
+  const personalClaims = [...input.newCleanVehicles, ...input.previouslyOwnedCleanVehicles];
+  const commercial = input.commercialCleanVehicles?.length ? calculateCommercialCleanVehicleCredit2026({
+    taxYear,
+    vehicles: input.commercialCleanVehicles,
+    otherClaimVins: personalClaims.flatMap(vehicle => vehicle.vin === undefined ? [] : [vehicle.vin]),
+  }) : undefined;
+  if (taxYear === 2026 || personalClaims.some(vehicle => vehicle.datePlacedInService !== undefined)) {
+    const result = calculateFromSourceFacts(input, taxYear);
+    if (!commercial) return result;
+
+    const audit = new AuditTrail();
+    audit.merge(result.lines);
+    audit.merge(commercial.lines);
+    audit.record("Form 8936", "19", "Tentative commercial clean vehicle credit", commercial.tentativeCredit,
+      "Sum the verified direct qualified commercial clean vehicle amounts from Schedule A Part V before applying Form 3800.");
+    return {
+      ...result,
+      tentativeCommercialCleanVehicleCredit: commercial.tentativeCredit,
+      requiresForm3800: result.requiresForm3800 || commercial.tentativeCredit.gt(0),
+      lines: audit.getLines(),
+    };
   }
   const audit = new AuditTrail();
   const { constants: cv } = input;

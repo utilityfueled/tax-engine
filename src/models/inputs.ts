@@ -4640,9 +4640,50 @@ export const PreviouslyOwnedCleanVehicleSchema = z.preprocess(sourceFactPresence
   creditTransferredToDealer: z.boolean().default(false),
 }));
 
+const commercialCleanVehicleSourceReference = z.string().refine(reference => reference.trim().length > 0);
+const commercialCleanVehicleSourcePrice = nonnegativeDollarsAndCents.refine(amount => d(amount).gt(0));
+
+export const CommercialCleanVehicle2026SourceSchema = z.strictObject({
+  owner: z.literal("primary"),
+  vin: z.string().refine(vin => /^[A-HJ-NPR-Z0-9]{17}$/i.test(vin.trim())),
+  bindingContractDate: z.iso.date(),
+  bindingContractReference: commercialCleanVehicleSourceReference,
+  bindingWrittenContractConfirmed: z.literal(true),
+  paymentDate: z.iso.date(),
+  paymentReference: commercialCleanVehicleSourceReference,
+  vehiclePaymentMadeConfirmed: z.literal(true),
+  datePlacedInService: z.iso.date().refine(date => date.startsWith("2026-")),
+  placedInServiceReference: commercialCleanVehicleSourceReference,
+  purchaseInvoiceReference: commercialCleanVehicleSourceReference,
+  purchasePrice: commercialCleanVehicleSourcePrice,
+  /** Original reconciled tax basis before the commercial credit reduction. */
+  taxBasis: nonnegativeDollarsAndCents,
+  taxBasisConfirmed: z.literal(true),
+  section179Expense: nonnegativeDollarsAndCents.refine(amount => d(amount).isZero()),
+  comparableVehiclePriceReference: commercialCleanVehicleSourceReference,
+  comparableVehiclePrice: commercialCleanVehicleSourcePrice,
+  gasolineOrDieselOnlyComparableSizeAndUseConfirmed: z.literal(true),
+  acquiredForOwnUseNotResaleConfirmed: z.literal(true),
+  soleProprietorBusinessUseOnlyConfirmed: z.literal(true),
+  depreciableConfirmed: z.literal(true),
+  mainlyUsedInUnitedStatesConfirmed: z.literal(true),
+  qualifiedManufacturerConfirmed: z.literal(true),
+  manufacturedPrimarilyForPublicRoadUseConfirmed: z.literal(true),
+  motorVehicleUnderCleanAirActTitleIIConfirmed: z.literal(true),
+  batteryElectricOnlyConfirmed: z.literal(true),
+  rechargeableFromExternalElectricSourceConfirmed: z.literal(true),
+  grossVehicleWeightRatingPounds: z.number().int().positive().lt(14000),
+  batteryCapacityKwh: z.number().gte(7),
+  priorSection30DOr45WClaimed: z.literal(false),
+}).refine(source => source.bindingContractDate <= source.datePlacedInService && source.paymentDate <= source.datePlacedInService, {
+  path: ["datePlacedInService"], message: "The actual contract and payment cannot follow possession.",
+});
+export type CommercialCleanVehicle2026Source = z.infer<typeof CommercialCleanVehicle2026SourceSchema>;
+
 export const Form8936Schema = z.object({
   newCleanVehicles: z.array(NewCleanVehicleSchema).default([]),
   previouslyOwnedCleanVehicles: z.array(PreviouslyOwnedCleanVehicleSchema).default([]),
+  commercialCleanVehicles: z.array(CommercialCleanVehicle2026SourceSchema).optional(),
   /** Prior-year AGI for the lesser-of-two-years MAGI check */
   priorYearAgi: optionalDecimalInput,
   priorYearFilingStatus: FilingStatusSchema.optional(),

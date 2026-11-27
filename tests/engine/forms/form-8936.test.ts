@@ -8,6 +8,8 @@ import { describe, expect, it } from "vitest";
 import { calculateForm8936, type Form8936Input } from "@/engine/forms/form-8936.js";
 import { getConstants } from "@/models/constants.js";
 import type { FilingStatus } from "@/models/constants.js";
+import { Form8936Schema } from "@/models/inputs.js";
+import { commercialCleanVehicle2026Source } from "../../fixtures/form-8936-commercial-clean-vehicle.js";
 
 const constants2025 = getConstants(2025).cleanVehicleCredit;
 
@@ -696,6 +698,29 @@ describe("Form 8936 verified year transition", () => {
     const transfers=["1","2","3"].map(prefix=>verifiedNew({vin:`${prefix}ABCDEFGH23456789`,creditTransferredToDealer:true,creditTransferredAmount:"7500"}));
     expect(()=>calculateForm8936(current({newCleanVehicles:transfers}))).toThrow(/two/);
     expect(calculateForm8936(current({filingStatus:"married_filing_jointly",newCleanVehicles:[transfers[0],transfers[1],{...transfers[2],owner:"spouse"}]})).transferredCreditRepayment.toString()).toBe("0");
+  });
+});
+
+describe("Form 8936 commercial clean vehicle transition", () => {
+  const original = { commercialCleanVehicles: [commercialCleanVehicle2026Source] };
+
+  it("projects the verified 2026 commercial original into the Part V audit and requires Form 3800", () => {
+    const parsed = Form8936Schema.parse(original);
+    const result = calculateForm8936(makeInput({ ...parsed, taxYear: 2026, agi: "900000" }));
+    expect(result.tentativeCommercialCleanVehicleCredit?.toFixed()).toBe("6000");
+    expect(result.lines.find(line => line.form === "Form 8936" && line.line === "19")?.value.toFixed()).toBe("6000");
+    expect(result.totalNewVehicleCredit.toFixed()).toBe("0");
+    expect(result.totalPreviouslyOwnedCredit.toFixed()).toBe("0");
+    expect(result.requiresForm3800).toBe(true);
+  });
+
+  it("holds a commercial original outside 2026 or shared with a personal claim", () => {
+    expect(() => calculateForm8936({ ...makeInput({ taxYear: 2025 }), ...original }))
+      .toThrow(/commercial.*2026/i);
+    expect(() => calculateForm8936({
+      ...makeInput({ taxYear: 2026 }), ...original,
+      newCleanVehicles: [newVehicle({ vin: commercialCleanVehicle2026Source.vin })],
+    })).toThrow(/vin/i);
   });
 });
 
