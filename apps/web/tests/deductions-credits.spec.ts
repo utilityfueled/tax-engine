@@ -165,11 +165,10 @@ test.describe("Deductions section — layout and defaults", () => {
     await expect(page.getByText(/most filers take the standard deduction/i)).toBeVisible();
   });
 
-  test("standard deduction callout shows amount for Single filing status", async ({ page }) => {
-    // Single filer should see the standard deduction amount callout
-    await expect(page.getByText(/base standard deduction before/i)).toBeVisible();
-    // The amount should be a formatted USD value (e.g. "$15,000" or similar)
-    await expect(page.locator(".guided-deduction-standard-callout")).toBeVisible();
+  test("shows the exact 2025 Single base standard deduction and its eligibility qualification", async ({ page }) => {
+    await expect(page.getByRole("combobox", { name: "Tax year for this interview", exact: true })).toHaveValue("2025");
+    await expect(page.locator(".guided-deduction-standard-callout")).toHaveText(
+      "Base standard deduction is $15,750 before age, blindness, dependency and other eligibility adjustments.");
   });
 
   test("deduction method radiogroup has standard and itemized options", async ({ page }) => {
@@ -185,11 +184,33 @@ test.describe("Deductions section — layout and defaults", () => {
     await expect(page.getByRole("radio", { name: /^itemize deductions/i })).not.toBeChecked();
   });
 
-  test("standard deduction radio shows filing-status-based amount in label", async ({ page }) => {
-    const standardRadioLabel = page.locator(".guided-option-card").filter({ hasText: /standard deduction/i });
-    // Should include a dollar amount in the label (e.g. "$15,000")
-    await expect(standardRadioLabel.getByText(/\$/)).toBeVisible();
+  test("keeps the standard deduction option descriptive and uses one amount callout", async ({ page }) => {
+    const standardRadio = page.getByRole("radio", { name: /^standard deduction/i });
+    const standardRadioLabel = page.locator(".guided-option-card").filter({ has: standardRadio });
+    await expect(standardRadio).toBeChecked();
     await expect(standardRadioLabel.getByText(/no receipts needed/i)).toBeVisible();
+    await expect(standardRadioLabel).not.toContainText(/\$/u);
+    await expect(page.getByText("$15,750", { exact: true })).toHaveCount(1);
+    await expect(page.locator(".guided-deduction-standard-callout").getByText("$15,750", { exact: true })).toBeVisible();
+  });
+
+  test("updates the base standard deduction when the selected year changes and reopens", async ({ page }) => {
+    const year = page.getByRole("combobox", { name: "Tax year for this interview", exact: true });
+    const callout = page.locator(".guided-deduction-standard-callout");
+    await expect(callout).toContainText("$15,750");
+
+    await year.selectOption("");
+    await expect(callout).toHaveCount(0);
+    await page.reload();
+    await expect(year).toHaveValue("");
+    await expect(callout).toHaveCount(0);
+
+    await year.selectOption("2026");
+    await expect(callout).toContainText("$16,100");
+    await expect(page.getByRole("status").filter({ hasText: /2026 rules and filing forms are not yet qualified/i })).toBeVisible();
+    await page.reload();
+    await expect(year).toHaveValue("2026");
+    await expect(callout).toContainText("$16,100");
   });
 
   test("itemize deductions radio shows Schedule A description", async ({ page }) => {
@@ -367,7 +388,7 @@ test.describe("Deductions section — itemized deductions", () => {
 });
 
 test.describe("Deductions section — MFJ filing status", () => {
-  test("MFJ filer sees higher standard deduction amount", async ({ page }) => {
+  test("shows the exact 2025 joint base standard deduction and keeps it separate from the radio", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: /start your tax return/i }).click();
     await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+/i);
@@ -389,7 +410,8 @@ test.describe("Deductions section — MFJ filing status", () => {
     await page.getByRole("button", { name: /start my return/i }).click();
 
     await expect(page.getByText(/let's start with the basics/i)).toBeVisible({ timeout: 5000 });
-  await page.getByRole("combobox", { name: "Tax year for this interview", exact: true }).selectOption("2025");
+    const year = page.getByRole("combobox", { name: "Tax year for this interview", exact: true });
+    await year.selectOption("2025");
 
     // Navigate to deductions
     await skipSection(page);
@@ -397,12 +419,13 @@ test.describe("Deductions section — MFJ filing status", () => {
 
     await expect(page.getByText(/standard or itemized deduction/i)).toBeVisible({ timeout: 5000 });
 
-    // MFJ standard deduction should be displayed (higher than Single)
-    await expect(page.getByText(/base standard deduction before/i)).toBeVisible();
-
-    // The standard deduction radio label should show the MFJ amount
-    const standardRadioLabel = page.locator(".guided-option-card").filter({ hasText: /standard deduction/i });
-    await expect(standardRadioLabel.getByText(/\$/)).toBeVisible();
+    await expect(year).toHaveValue("2025");
+    await expect(page.locator(".guided-deduction-standard-callout")).toHaveText(
+      "Base standard deduction is $31,500 before age, blindness, dependency and other eligibility adjustments.");
+    const standardRadio = page.getByRole("radio", { name: /^standard deduction/i });
+    const standardRadioLabel = page.locator(".guided-option-card").filter({ has: standardRadio });
+    await expect(standardRadio).toBeChecked();
+    await expect(standardRadioLabel).not.toContainText(/\$/u);
   });
 });
 
