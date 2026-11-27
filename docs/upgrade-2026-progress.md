@@ -8,12 +8,62 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `e4ea3f10c` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `134de4dc5` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
+
+## November 27 Ohio reciprocity, AI dispatch and personal charger credits
+
+`a2a12d1c9` applies the existing Ohio residency declaration check to
+full-year Pennsylvania wage reciprocity. The canonical draft previously
+returned a $1,000 refund for either conflicting Ohio resident declaration.
+Both conflicts now hold. An explicit Ohio nonresident declaration and an
+omitted declaration both retain the draft refund when actual domicile and
+wage evidence agree. All 793 tests across 23 Ohio suites, 34 scoped spec
+references, inventory, types, lint and the browser source audit passed.
+[Ohio R.C. 5747.05(A)(2)](https://codes.ohio.gov/ohio-revised-code/section-5747.05).
+
+`99a16ee3c` checks the effective model price after the application obtains
+its billing reservation and immediately before transport. A mocked Gemini
+request originally sent after midnight at the old $0.004365 price. The
+corrected application releases the unsent hold once and falls back. If
+cancellation arrives during release, the application propagates it after
+release. A separate January request crossing midnight within the same
+price period used the $0.00873 price for the identical reported use. The
+cutoff and cancellation regressions failed before correction. All 83
+focused tests passed with mocked providers and isolated PostgreSQL 16.14,
+including 20 existing ledger tests. Types, lint, 25 spec references and
+the staged browser source audit passed. The database stopped normally.
+[Google Gemini pricing](https://ai.google.dev/gemini-api/docs/pricing#gemini-3.8-flash).
+
+`dab209b26` rechecks existing approval, plan, capability and model
+windows and the effective price after writing the evaluation journal and
+before dispatching transport. A closed gate records a typed unsent attempt
+with no additional request, cost or hold. The default millisecond clock
+requires the approval and plan expiry to reach the next observable
+millisecond. Explicit finer clocks retain exact comparisons, and existing
+journal replays remain valid. The before-and-after regressions used no
+live requests. All 80 tests across six offline suites, 25 scoped spec
+references, engine and CLI typechecks, scoped lint and evaluation artifact
+synchronization passed. [Google Gemini pricing](https://ai.google.dev/gemini-api/docs/pricing#gemini-3.8-flash).
+
+`134de4dc5` extends the 2026 personal Form 8911 calculation and guided
+Credits worksheet to individually documented and separately invoiced
+charging ports. Each port records its own actual service date, eligible
+tract and exact basis. The engine applies the 30% calculation and $1,000
+cap per item, then applies the return tax limitation once. Material
+changes revoke confirmation, duplicate originals hold, and shared or
+unconfirmed costs require review. Three regressions failed before the
+implementation. All 204 focused tests across five suites, nine scoped
+spec lines, both typechecks, scoped lint and the staged browser source
+audit passed. Independent review reran 15 focused tests. The finite
+calculation retains the single-port input and leaves filing qualification
+open. [26 U.S.C. § 30C](https://uscode.house.gov/us/usc/119-118/t26/s30C/) ·
+[IRS Form 8911 instructions](https://www.irs.gov/instructions/i8911) ·
+[IRS Publication 6027](https://www.irs.gov/pub/irs-access/p6027_accessible.pdf).
 
 ## November 27 payment, wage, retirement and review PDF source reconciliation
 
@@ -74,6 +124,32 @@ qualified from these sources. [IRS Form 1040](https://www.irs.gov/pub/irs-pdf/f1
 [Pennsylvania annual PA-40](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40.pdf) ·
 [Ohio filing forms](https://tax.ohio.gov/individual/get-a-form) ·
 [Ohio 2026 draft booklet](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf).
+
+## November 27 exact Ohio, AI dispatch and charging port verification
+
+The tracked `134de4dc5` archive passed all 11 required local checks
+and the offline AI artifact check with Node 26.13.1, pypdf
+6.10.0, a frozen offline install and 15 verified sample hashes.
+Unit and coverage each passed 31,251 tests with 81 existing
+skips. Branch coverage was 88.66% against the unchanged 85% gate.
+
+Chromium passed 654 cases across 9 windows,
+with 5 existing skips and listener cleanup. The standalone
+rehearsal backed up a synthetic return, deleted it, restored the original
+document and private facts, and closed its listener. The local manifest
+SHA-256 is `99a0d470a018a5c8eebade8a5bbf5ccdc4a2d654d03fa1fb26c5ccfb5a241690`.
+
+A separate Chromium session on the same standalone build added and saved
+two charger rows, reopened the distinct invoice and service-date entries,
+and removed the second row while preserving the first. The confirmation
+that the costs were separate began unanswered. The listener closed.
+
+The public CI, AMD64 Web and Docker workflows were queued at verification.
+The ARM64 queue held the older active and pending runs, so starting another
+run would have displaced the pending one.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/46023825137) ·
+[AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/46023825170) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/46023825119).
 
 ## November 27 exact payment, wage, 1099-R and review PDF verification
 

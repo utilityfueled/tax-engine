@@ -2,9 +2,9 @@
   "resume": {
     "asOf": "2026-11-27",
     "branch": "main",
-    "applicationCommit": "e4ea3f10c1b46906c87f2a3073bbabd2ab44d329",
-    "latestScopedApplicationCommit": "e4ea3f10c1b46906c87f2a3073bbabd2ab44d329",
-    "latestCombinedCandidateCommit": "e4ea3f10c1b46906c87f2a3073bbabd2ab44d329",
+    "applicationCommit": "134de4dc5461541df6dd2901fffbd44ebf86f775",
+    "latestScopedApplicationCommit": "134de4dc5461541df6dd2901fffbd44ebf86f775",
+    "latestCombinedCandidateCommit": "134de4dc5461541df6dd2901fffbd44ebf86f775",
     "previousArm64StrictBrowserEvidenceKey": "activeContinuation.nov27Arm64StrictBrowserResult",
     "ohioBusinessAndEquityResidencyEvidenceKey": "activeContinuation.nov27OhioBusinessAndEquityResidency",
     "schedule1AVehicleLoanIdentityEvidenceKey": "activeContinuation.nov27Schedule1AVehicleLoanIdentity",
@@ -54,7 +54,7 @@
     "pinnedSelfHostSchemaEvidenceKey": "activeContinuation.nov26PinnedSelfHostSchema",
     "ohioOrdinaryCashDividendEvidenceKey": "activeContinuation.nov26OhioCashDividend",
     "pennsylvaniaAnnualCashDividendEvidenceKey": "activeContinuation.nov26PaAnnualCashDividend",
-    "latestExactLocalVerificationEvidenceKey": "activeContinuation.nov27ReceiptAndRetirementExact",
+    "latestExactLocalVerificationEvidenceKey": "activeContinuation.nov27OhAiAndEvExact",
     "paPartYearDividendEvidenceKey": "activeContinuation.nov26PAPartYearCashDividend",
     "currentCombinedAndArmEvidenceKey": "activeContinuation.nov26CombinedEvAiAndArm64",
     "evChargerEvidenceKey": "activeContinuation.nov26PersonalEvCharger",
@@ -103,7 +103,7 @@
     "householdUpkeepEvidenceKey": "activeContinuation.nov25HouseholdUpkeepPrecision",
     "verificationCommit": "cd6e64b972869264f35234e64267c88f36778860",
     "generatedInventoryCommit": "26983a3c48380a3c1ead47a86dbe3977dd02f6bd",
-    "latestLocalChecksEvidenceKey": "activeContinuation.nov27ReceiptAndRetirementExact",
+    "latestLocalChecksEvidenceKey": "activeContinuation.nov27OhAiAndEvExact",
     "vehicleStatementEvidenceKey": "activeContinuation.nov25Form1098Vli",
     "vehicleRefundEvidenceKey": "activeContinuation.nov25Form1098VliCashRefund",
     "vehicleInterestCreditEvidenceKey": "activeContinuation.nov25Form1098VliInterestCredit",
@@ -176,7 +176,7 @@
     "pensionTaxableAmountEvidenceKey": "activeContinuation.nov24ReportedPensionTaxableAmount",
     "completeLocalBaselineEvidenceKey": "activeContinuation.nov24ExactLocalBaselineAndCurrentRuns",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
-    "unitCoverageEvidenceKey": "activeContinuation.nov27ReceiptAndRetirementExact",
+    "unitCoverageEvidenceKey": "activeContinuation.nov27OhAiAndEvExact",
     "remaining": [
       "Both strict Linux browser gates and current image evidence remain open. See activeContinuation.nov27OhioBusinessAndEquityResidency for the current e075fceaf run IDs. The earlier ARM64 strict browser step failed on nine Ohio deadlines. Verified 46005900143 held the active concurrency lease and exact e075fceaf run 46014076098 was pending behind it. Keep both runs in place.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
@@ -186,6 +186,53 @@
     ]
   },
   "activeContinuation": {
+    "nov27OhioReciprocityAndAiDispatch": {
+      "ohioReciprocity": {
+        "commit": "a2a12d1c95428cd6f2dbf6f111361bc3bc71e14d",
+        "canonicalConflictingDeclarationsFailedBeforeFix": 2,
+        "focusedTestsPassed": 793,
+        "scopedSuitesPassed": 23,
+        "specLinesValidated": 34,
+        "inventoryTypesLintAndDiffPassed": true,
+        "browserSourceAuditSha256": "ff79b1d1a315d2ba8b5f7dbf1c3478b19f7dd5374b2242500efa4f11eedb45c4",
+        "source": "https://codes.ohio.gov/ohio-revised-code/section-5747.05"
+      },
+      "applicationAiCutoff": {
+        "commit": "99a16ee3c67a5db175b2c4b278d00be69ada6dfd",
+        "cutoffAndCancellationRegressionsFailedBeforeFix": true,
+        "focusedTestsPassed": 83,
+        "actualLocalPostgresLedgerTestsPassed": 20,
+        "localPostgresVersion": "16.14",
+        "isolatedPostgresStopped": true,
+        "specLinesValidated": 25,
+        "engineWebTypesAndScopedLintPassed": true,
+        "independentReviewCancellationFindingAddressed": true,
+        "browserSourceAuditSha256": "13d428d277135d907ac991de86eda499105aa77039f231fb592b88ed5c0ca2de",
+        "source": "https://ai.google.dev/gemini-api/docs/pricing#gemini-3.8-flash"
+      },
+      "evaluationAiDispatch": {
+        "commit": "dab209b26faa9bfb6d96b29de0782f8f094a0a82",
+        "cutoffAndExpiryRegressionsFailedBeforeFix": true,
+        "focusedOfflineTestsPassed": 80,
+        "scopedSuitesPassed": 6,
+        "specLinesValidated": 25,
+        "rootCliTypesScopedLintAndOfflineArtifactsPassed": true,
+        "independentReviewDefaultClockFindingAddressed": true,
+        "paidProviderCalls": 0
+      },
+      "personalChargingPorts": {
+        "commit": "134de4dc5461541df6dd2901fffbd44ebf86f775",
+        "regressionsFailedBeforeFix": 3,
+        "focusedTestsPassed": 204,
+        "scopedSuitesPassed": 5,
+        "specLinesValidated": 9,
+        "rootWebTypesAndScopedLintPassed": true,
+        "existingScopedLintWarnings": 10,
+        "independentReviewTestsPassed": 15,
+        "browserSourceAuditSha256": "7eb6652581da799e3bf9ac65834c0b1daaf1c89d905a729777020552fba925a4",
+        "sources": ["https://uscode.house.gov/us/usc/119-118/t26/s30C/", "https://www.irs.gov/instructions/i8911", "https://www.irs.gov/pub/irs-access/p6027_accessible.pdf"]
+      }
+    },
     "nov27FederalPaymentAndWageSources": {
       "federalPayments": {
         "commit": "4edd269442121a6df8cc5a1f77f18895f22b2d96",
@@ -244,6 +291,66 @@
         "scopedLintExistingWarnings": 4,
         "browserSourceAuditSha256": "adffe2ea772540a0829c344bbf07eefb12d9543b02be92c2f486990c7511ce0e"
       }
+    },
+    "nov27OhAiAndEvExact": {
+      "commit": "134de4dc5461541df6dd2901fffbd44ebf86f775",
+      "archiveSha256": "b6e663a6e9b7b6c27a2330b0a673ea03443168e737d74aa68aebb3d676d3b875",
+      "requiredLocalChecksPassed": 11,
+      "nodeVersion": "26.13.1",
+      "pypdfVersion": "6.10.0",
+      "officialSampleHashesVerified": 15,
+      "unitPassed": 31251,
+      "coveragePassed": 31251,
+      "existingSkipsEach": 81,
+      "branchCoveragePercent": 88.66,
+      "isolatedProductionWebBuildPassed": true,
+      "offlineEvaluationArtifactsPassed": true,
+      "browserPassed": 654,
+      "browserSkipped": 5,
+      "browserWindows": 9,
+      "browserListenerClosed": true,
+      "browserSummarySha256": "6248e28c6bd2fafd8a9e28b094800bd3e2ab7614bf293a3c4bb79950c31f987d",
+      "browserSourceBuildSha256": "10636cc9f2baf7754f69c5151580441fea943221e33fd91546907c6d8f875d5d",
+      "standaloneRecoveryPassed": true,
+      "standaloneReceiptSha256": "0ceaedb9f8a2bec702249e6faa7eae257329ff1e231d2634056d8aba9fddd2f3",
+      "standaloneListenerClosed": true,
+      "localManifestSha256": "99a0d470a018a5c8eebade8a5bbf5ccdc4a2d654d03fa1fb26c5ccfb5a241690",
+      "guidedChargerChromium": {
+        "separateRowsAdded": true,
+        "independentConfirmationRequired": true,
+        "reopenedOriginals": true,
+        "restoredSinglePortAfterRemove": true,
+        "listenerClosed": true,
+        "receiptSha256": "2b8b219dcc7e047827e159962015470a463040c9f64de021a6e26bba3fde8637"
+      },
+      "remoteWorkflows": {
+        "ci": {
+          "id": 46023825137,
+          "status": "queued",
+          "conclusion": null
+        },
+        "docker": {
+          "id": 46023825119,
+          "status": "queued",
+          "conclusion": null
+        },
+        "amd64Web": {
+          "id": 46023825170,
+          "status": "queued",
+          "conclusion": null
+        }
+      },
+      "arm64LeasesAtVerification": [
+        {
+          "id": 46005900143,
+          "status": "in_progress"
+        },
+        {
+          "id": 46014076098,
+          "status": "pending"
+        }
+      ],
+      "hostedCybersecurityRehearsalsDeferredByOwner": true
     },
     "nov27ReceiptAndRetirementExact": {
       "commit": "e4ea3f10c1b46906c87f2a3073bbabd2ab44d329",
