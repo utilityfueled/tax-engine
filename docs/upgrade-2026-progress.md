@@ -17,10 +17,20 @@ the helper's missing inventory entry. The entry was generated against the
 tracked archive. The final seven-file run passed 108 tests, and type
 checking, lint and spec validation passed. The separate working-tree
 inventory edit is outside the commit.
+
+The exact combined archive passed all 11 local checks and the offline
+AI artifact check. Both unit and coverage runs passed 31,132 tests with
+81 existing skips, and branch coverage reached 88.63%. Spec validation
+resolved all 10,213 references. Managed Chromium passed 654 cases across
+all nine windows with five existing skips and confirmed cleanup. Node
+26.13.1, pypdf 6.10.0 and all 15 sample-document hashes were verified.
+AMD64 Web and native ARM64 recovery remained queued without a runner
+at the last check.
 [2026 IRS draft](https://www.irs.gov/pub/irs-dft/f8962--dft.pdf#page=2) ·
 [Final 2025 form](https://www.irs.gov/pub/irs-pdf/f8962.pdf) ·
 [Shared audit spec](../spec/federal/form-8962-repayment-audit.yaml) ·
-[Exact Web CI](https://github.com/utilityfueled/tax-engine/actions/runs/45952099100).
+[Exact Web CI](https://github.com/utilityfueled/tax-engine/actions/runs/45952099100) ·
+[ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45955785929).
 
 ## November 27 Form 8919 pending SS-8 original income
 
@@ -39,7 +49,9 @@ scoped lint and spec validation. The independent engineering rerun passed
 31 tests spanning the 2026 candidate and archived 2025 renderer. The
 exact archive passed 31,131 tests in both the unit and coverage runs,
 with 81 existing skips and 88.62% branch coverage. The initial attempt
-needed OS loopback enabled for the synthetic database fixture. The review
+needed OS loopback enabled for the synthetic database fixture. All 11
+required local checks passed. Chromium completed all nine windows with
+654 passes, five existing skips and confirmed cleanup. The review
 candidate and filing exports remain disabled.
 [Final Form 8919](https://www.irs.gov/pub/irs-pdf/f8919.pdf) ·
 [Source spec](../spec/federal/form-8919-2026-template.yaml) ·

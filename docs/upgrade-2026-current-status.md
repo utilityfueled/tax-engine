@@ -11,15 +11,20 @@ Use the linked progress sections when investigating individual packages.
 
 - `aa2d431bc` records draft 2026 Form 8962 repayment at line 27,
   with line 26 for net credit or an equal-amount zero. Four marketplace
-  source validators check the year-specific audit rows. The focused run
-  passed 239 tests and the final scoped rerun passed 108. Final 2026
-  qualification remains open. [Form 8962 evidence](upgrade-2026-progress.md#november-27-draft-form-8962-repayment-transfer).
+  source validators check the year-specific audit rows. All 11 exact
+  local checks passed, including 31,132 unit tests, 88.63% branch coverage
+  and 654 Chromium cases. Final 2026 qualification remains open. Both
+  Linux runs were queued at the last check.
+  [Form 8962 evidence](upgrade-2026-progress.md#november-27-draft-form-8962-repayment-transfer) ·
+  [AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45952099100) ·
+  [ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45955785929).
 
 - `0f3e3e35b` holds the disabled 2026 Form 8919 Reason G review when
   original wages could still appear as other Form 1099 income or the
-  attributed source amounts exceed the firm row. All 42 focused tests
-  and an independent 31-test engineering rerun passed. Filing remains
-  unqualified. [Reason G evidence](upgrade-2026-progress.md#november-27-form-8919-pending-ss-8-original-income).
+  attributed source amounts exceed the firm row. All 11 exact local
+  checks passed, including 31,131 unit tests, 88.62% branch coverage and
+  654 Chromium cases. Filing remains unqualified.
+  [Reason G evidence](upgrade-2026-progress.md#november-27-form-8919-pending-ss-8-original-income).
 
 - `a9a74d149` removes one duplicate federal calculation from the
   confirmed Ohio school header preview. Both school adapters and the
@@ -82,7 +87,7 @@ Use the linked progress sections when investigating individual packages.
   inspection timeouts. The strict gates remain open.
   [ARM64 fix run](https://github.com/utilityfueled/tax-engine/actions/runs/45932508665) ·
   [AMD64 fix run](https://github.com/utilityfueled/tax-engine/actions/runs/45931694869) ·
-  [Current ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45946100698) ·
+  [Superseded ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45946100698) ·
   [Rehearsal evidence](upgrade-2026-progress.md#november-26-self-host-migration-authentication).
 
 - The November 27 source check found no final 2026 release for the
