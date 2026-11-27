@@ -15,6 +15,25 @@ the latest application revision, exact-source runs and open dependencies. The
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
 
+## November 27 commercial EV Schedule C attribution
+
+`75122eee1` carries the verified first-year vehicle depreciation into the
+same canonical Schedule C line 13 once. The source binds the actual
+taxpayer, trade, cash ledger, underlying vehicle evidence, and the prepared
+direct credit. A reopened return with $44,500.25 of receipts and $185 of
+other expenses deducts $19,000 of depreciation and yields $25,315.25 in net
+profit. The existing federal Form 3800 attribution gate still applies.
+Independent engineering review confirmed the new guard for conflicting
+same-business wages and the cash-ledger line 1 audit. Both regressions
+failed before correction. All 91 focused tests and eight exact-tree static
+checks passed, including 10,276 linked spec lines. The first full-suite
+attempts hit the local loopback restriction and the archive fixture's
+free-space floor. After removing reproducible build copies and rerunning
+with local listener access, all 93 tests for those fixtures passed on
+`75122eee1`. The exact full unit and coverage commands are running.
+[Schedule C instructions](https://www.irs.gov/instructions/i1040sc) ·
+[Draft 2026 Schedule C](https://www.irs.gov/pub/irs-dft/f1040sc--dft.pdf).
+
 ## November 27 commercial EV first-year depreciation
 
 `302dc037a` joins the original §45W basis workpaper to private, first-year

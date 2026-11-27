@@ -3,9 +3,9 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "1cd975b3786a52a1333dd467b6c5bf8de4b54d37",
-    "latestScopedApplicationCommit": "302dc037a672282061dea9e64b3fc8a13c0bf5f3",
+    "latestScopedApplicationCommit": "75122eee13832b2dabff99fa57e808531eabdc9c",
     "latestCombinedCandidateCommit": "1cd975b3786a52a1333dd467b6c5bf8de4b54d37",
-    "latestScopedChecksEvidenceKey": "activeContinuation.nov27CommercialVehicleFirstYearDepreciation",
+    "latestScopedChecksEvidenceKey": "activeContinuation.nov27CommercialVehicleScheduleCAttribution",
     "nov27PaymentReceiptsAndForm8863EvidenceKey": "activeContinuation.nov27PaymentReceiptsAndForm8863",
     "nov27OhioPennsylvaniaPensionEvidenceKey": "activeContinuation.nov27OhioPennsylvaniaPension",
     "nov27PennsylvaniaNonresidentAndAotcEvidenceKey": "activeContinuation.nov27PennsylvaniaNonresidentAndAotc",
@@ -194,6 +194,36 @@
     ]
   },
   "activeContinuation": {
+    "nov27CommercialVehicleScheduleCAttribution": {
+      "commit": "75122eee13832b2dabff99fa57e808531eabdc9c",
+      "verifiedTree": "f14505021d8fd5d4f6739130feae7134908a8c69",
+      "primarySources": [
+        "https://www.irs.gov/instructions/i1040sc",
+        "https://www.irs.gov/pub/irs-dft/f1040sc--dft.pdf"
+      ],
+      "focusedTestsPassed": 91,
+      "repositorySpecReferencesValidated": 10276,
+      "exactTreeChecksPassed": [
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
+      "independentEngineeringReviewPassed": true,
+      "reopenedOriginalReceipts": "44500.25",
+      "otherExpenses": "185",
+      "line13Depreciation": "19000",
+      "line31NetProfit": "25315.25",
+      "recoveredLocalFixtureTestsPassed": 93,
+      "exactUnitAndCoverage": "running",
+      "fullFederalForm3800AttributionVerified": false,
+      "qualifiedHumanReviewPassed": false,
+      "filingQualified": false
+    },
     "nov27CommercialVehicleFirstYearDepreciation": {
       "commit": "302dc037a672282061dea9e64b3fc8a13c0bf5f3",
       "verifiedTree": "69555fed05d74bfb9f7a8137e4e2b0f38554c797",
