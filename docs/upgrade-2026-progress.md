@@ -1,5 +1,24 @@
 # 2026 upgrade implementation evidence
 
+## November 27 Actual unreported mortgage lender
+
+`0d3b374ca` requires a named recipient before qualified unreported mortgage
+interest can increase the 2026 deduction. In the mixed-source regression,
+an unnamed `$0.49` previously raised line 8a from `$1,000` to `$1,001` while
+line 8b rounded to zero. The corrected calculation holds that source. A named
+recipient, a sub-dollar amount with zero deductible effect and a 2025 input
+passed their controls. Node 26.13.1 passed 66 focused tests, all 17 mortgage
+spec references, inventory, scoped lint and the browser source manifest.
+The guided Form 1098 replay held a blank lender and projected the actual name
+after correction. A clean archive with an offline frozen installation passed
+all eight static checks, the production web build and 237 tests across the
+three new calculation and billing areas. All 15 official sample files matched
+their recorded hashes.
+[IRS Schedule A line 8b](https://www.irs.gov/instructions/i1040sca) ·
+[Current CI](https://github.com/utilityfueled/tax-engine/actions/runs/45987981813) ·
+[Current AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45987981913) ·
+[Current Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45987981858).
+
 ## November 27 Form 1099-R disability code combinations
 
 `881d5f5c2` rejects invalid 2026 Box 7a disability combinations and a
@@ -14,8 +33,9 @@ direct entry behavior. The guided interview still holds the paired codes for rev
 
 The offline release harness passed 183 tests across native provenance,
 browser recovery observation, CPU diagnostics and archive diagnostics.
-The tracked archive passed all eight static checks. The full unit and coverage
-rerun uses the established five-worker limit and local fixture listeners.
+The tracked archive passed all eight static checks, the production web build
+and 31,195 unit tests with 81 existing skips. The full unit and coverage rerun
+uses the established five-worker limit and local fixture listeners.
 The earlier parallel attempt hit timing failures and could not open a loopback
 TLS listener in the sandbox. The previous Docker job for `64ca11a71` passed.
 The current Linux browser and image requirements remain open.
