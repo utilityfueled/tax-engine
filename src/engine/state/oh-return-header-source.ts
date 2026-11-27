@@ -7,7 +7,7 @@ import {OhioResidencyFactsSchema} from '@/models/ohio-residency.js';
 import {OhioPaymentFactsSchema} from '@/models/ohio-payments.js';
 import {calculateFederalTax} from '@/engine/federal.js';
 import {buildOhioResidentReturnInput} from './oh-input-adapter.js';
-import {readOhioSchoolAdapterMethod,type OhioSourceAdapterInvocation} from './oh-source-adapter-invocation.js';
+import {readConfirmedOhioSchoolHeaderMethod,readOhioSchoolAdapterMethod,type OhioSourceAdapterInvocation} from './oh-source-adapter-invocation.js';
 import {buildOhioPaymentSource} from './oh-payment-source.js';
 import {buildOhioResidentCreditSource} from './oh-resident-credit-source.js';
 import {calculateOhioCanonicalBusinessSource} from './oh-business-source.js';
@@ -65,9 +65,13 @@ function calculateHeader(input:TaxYearInput,raw:unknown,proof?:OhioSourceAdapter
   if(partYearBusiness)calculateOhioCanonicalBusinessSource({taxInput:context,residencyFacts:facts,federalResult:calculateFederalTax(context)});
   if(partYearSchool){
    // The existing complete payroll/domicile/payment validator owns every monetary and source guard.
-   const freshFederal=calculateFederalTax(context);
-   const prior=readOhioSchoolAdapterMethod(context,freshFederal,proof);
-   const method=prior?prior.method:buildOhioResidentReturnInput(context,freshFederal).schoolDistrictSource?.methodVersion;
+   let prior=readConfirmedOhioSchoolHeaderMethod(context,proof);
+   if(!prior){
+    const freshFederal=calculateFederalTax(context);
+    prior=readOhioSchoolAdapterMethod(context,freshFederal,proof)
+      ?? {method:buildOhioResidentReturnInput(context,freshFederal).schoolDistrictSource?.methodVersion};
+   }
+   const {method}=prior;
    if(method!=='oh-2025-sd100-part-year-payroll-sources-v1'||!same(context.ohioSchoolDistrict?.residence.originalAddress,source.residence.originalAddress))return fail('actual school district home and complete current payroll sources must match the header');
   }
   buildOhioPaymentSource(context,paid);

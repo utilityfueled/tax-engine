@@ -5,6 +5,7 @@ import *as federal from '@/engine/federal';
 import *as school from '@/engine/state/oh-sd-100-sources';
 import * as reviewIdentifiers from '@/pdf/redact-review-identifiers';
 import * as ohioAdapter from '@/engine/state/oh-input-adapter';
+import * as ohioHeader from '@/engine/state/oh-return-header-source';
 import {consumeOhioStandaloneSchoolPreviewAdapter,readOhioSchoolAdapterMethod,verifyOhioSchoolScheduleAPayments,withOhioSchoolAdapterInvocation,withOhioStandaloneSchoolPreviewAdapter,withPendingOhioSchoolAdapterInvocation,type OhioSourceAdapterInvocation} from '@/engine/state/oh-source-adapter-invocation';
 import {evaluateGuidedRender}from '@/lib/guided-render-evaluation';
 import {computeGuidedPreviewOutcome} from '@/lib/guided-preview-compute';
@@ -65,9 +66,41 @@ test('Ohio navigation reuses the accepted header school replay', () => {
 });
 
 
-test.each([0,1]as const)('complete current school header replay %s',(which)=>{
- const state=ohio(which),before=structuredClone(state),f=vi.spyOn(federal,'calculateFederalTax'),sd=vi.spyOn(school,'buildOhioSchoolDistrictSource');
- try{const result=evaluateGuidedRender(state);expect(result.preview.metrics?.state).toMatchObject({stateTax:'811',stateRefund:'1189',schoolDistrict:{tax:'500',refund:which===0?'100':'0'}});expect(state).toEqual(before);expect({federal:f.mock.calls.length,school:sd.mock.calls.length}).toEqual({federal:7,school:2});}finally{vi.restoreAllMocks();}
+test.each([0, 1] as const)('complete current school header replay %s', (which) => {
+ const state = ohio(which);
+ const before = structuredClone(state);
+ const calculate = vi.spyOn(federal, 'calculateFederalTax');
+ const schoolSource = vi.spyOn(school, 'buildOhioSchoolDistrictSource');
+ const headerSource = vi.spyOn(ohioHeader, 'calculateOhioReturnHeaderWithSchoolAdapter');
+ const contexts = () => calculate.mock.calls.map(([input]) => input.ohioReturnHeaderSources ? 'header added'
+  : input.ohioSchoolDistrict ? 'school before header' : 'base federal');
+ try {
+  const standalone = computeGuidedPreviewOutcome(state);
+  expect(standalone.metrics?.state).toMatchObject({stateTax: '811', stateRefund: '1189',
+   schoolDistrict: {tax: '500', refund: which === 0 ? '100' : '0'}});
+  expect(schoolSource).toHaveBeenCalledTimes(2);
+  expect(headerSource).toHaveBeenCalledTimes(1);
+  expect(contexts()).toEqual(['base federal', 'school before header', 'school before header', 'school before header',
+   'school before header', 'header added', 'header added']);
+  const originalHeader = headerSource.mock.results[0]?.value;
+  expect(originalHeader).toMatchObject({sourceCommitment: expect.stringMatching(/^[0-9a-f]{64}$/)});
+  calculate.mockClear();
+  schoolSource.mockClear();
+  headerSource.mockClear();
+
+  const result = evaluateGuidedRender(state);
+  expect(result.preview).toEqual(standalone);
+  expect(state).toEqual(before);
+  expect(schoolSource).toHaveBeenCalledTimes(2);
+  expect(headerSource).toHaveBeenCalledTimes(1);
+  expect(headerSource.mock.results[0]?.value).toEqual(originalHeader);
+  expect(contexts()).toEqual(['base federal', 'school before header', 'school before header', 'school before header',
+   'header added', 'header added']);
+ } finally {
+  calculate.mockRestore();
+  schoolSource.mockRestore();
+  headerSource.mockRestore();
+ }
 });
 
 test.each([0, 1] as const)('replays each current parent once during incomplete entry and confirmation %s', (which) => {

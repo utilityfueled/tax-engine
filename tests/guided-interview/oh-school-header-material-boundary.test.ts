@@ -1,9 +1,10 @@
 import {expect,test,vi} from 'vitest';
 import Decimal from 'decimal.js';
-import {calculateFederalTax} from '@/engine/federal';
+import {calculateFederalTax,requiresOhioSchoolScheduleAPaymentProof} from '@/engine/federal';
 import * as adapter from '@/engine/state/oh-input-adapter';
-import {withOhioSchoolAdapterInvocation,readOhioSchoolAdapterMethod} from '@/engine/state/oh-source-adapter-invocation';
+import {readConfirmedOhioSchoolHeaderMethod,readOhioSchoolAdapterMethod,withConfirmedOhioSchoolHeaderAdapter,withOhioSchoolAdapterInvocation} from '@/engine/state/oh-source-adapter-invocation';
 import {schoolPyHeaderPacket} from '../fixtures/oh-school-district-part-year-official-review';
+import {bindSchoolDistrictFixture,schoolDistrictEstimatedFixture} from '../fixtures/oh-school-district-sources';
 const getter=Object.defineProperty({},'known',{enumerable:true,get:()=>1});
 const hidden=Object.defineProperty({},'known',{enumerable:false,value:1});
 const symbolKey={[Symbol('source')]:1};
@@ -34,6 +35,41 @@ test('exact current material preserves key-order equivalence, explicit zero and 
   expect(readOhioSchoolAdapterMethod(p.canonical,{...f,boundary:false},proof)).toBeUndefined();
   expect(readOhioSchoolAdapterMethod(p.canonical,{...f,boundary:'\ud800'},proof)).toBeUndefined();
   expect(readOhioSchoolAdapterMethod(p.canonical,{...f,boundary:'\ufffd'},proof)).toBeUndefined();
+ });
+});
+test('limits the confirmed header shortcut to current producer-owned originals', () => {
+ const { canonical } = schoolPyHeaderPacket();
+ const expectedMethod = { method: 'oh-2025-sd100-part-year-payroll-sources-v1' };
+ const expired = withConfirmedOhioSchoolHeaderAdapter(canonical, proof => {
+  expect(readConfirmedOhioSchoolHeaderMethod(structuredClone(canonical), proof)).toEqual(expectedMethod);
+  const changed = structuredClone(canonical);
+  changed.w2s[0].wages = '49999';
+  expect(readConfirmedOhioSchoolHeaderMethod(changed, proof)).toBeUndefined();
+  const addedOriginal = { ...canonical, additionalMaterial: null };
+  expect(readConfirmedOhioSchoolHeaderMethod(addedOriginal, proof)).toBeUndefined();
+  return proof;
+ });
+ expect(readConfirmedOhioSchoolHeaderMethod(canonical, expired)).toBeUndefined();
+ const federal = calculateFederalTax(canonical);
+ withOhioSchoolAdapterInvocation(canonical, federal, proof => {
+  expect(readOhioSchoolAdapterMethod(canonical, federal, proof)).toEqual(expectedMethod);
+  expect(readConfirmedOhioSchoolHeaderMethod(canonical, proof)).toBeUndefined();
+ });
+});
+test('keeps next-calendar-year school payments on the independent federal path', () => {
+ const current = schoolDistrictEstimatedFixture();
+ const payments = current.ohioSchoolDistrict.payments;
+ const january = payments.paymentRows.find(row => row.date === '2026-01-15');
+ if (!january) throw new Error('Expected the fictional January school payment');
+ payments.paymentRows = [{ ...january, amount: '400', original: { ...january.original, amount: '400' } }];
+ payments.account.estimatedPaymentsCredited = '400';
+ current.deductionElection = 'itemized';
+ bindSchoolDistrictFixture(current);
+ expect(requiresOhioSchoolScheduleAPaymentProof(current)).toBe(true);
+ const federal = calculateFederalTax(current);
+ withConfirmedOhioSchoolHeaderAdapter(current, proof => {
+  expect(readOhioSchoolAdapterMethod(current, federal, proof)).toBeDefined();
+  expect(readConfirmedOhioSchoolHeaderMethod(current, proof)).toBeUndefined();
  });
 });
 test('unsupported capture follows the actual adapter and leaves original fallback authority absent',()=>{

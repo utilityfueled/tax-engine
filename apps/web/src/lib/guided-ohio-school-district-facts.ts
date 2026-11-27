@@ -1,7 +1,7 @@
 /** Spec: state/oh-sd-100-guided.yaml. Native drafts are private source records, never scalar overrides. */
 import {calculateFederalTax} from '@/engine/federal';
 import {buildOhioResidentReturnInput} from '@/engine/state/oh-input-adapter';
-import {withOhioSchoolAdapterInvocation,withPendingOhioSchoolAdapterInvocation,withOhioStandaloneSchoolPreviewAdapter,type OhioSourceAdapterInvocation} from '@/engine/state/oh-source-adapter-invocation';
+import {withConfirmedOhioSchoolHeaderAdapter,withOhioSchoolAdapterInvocation,withPendingOhioSchoolAdapterInvocation,withOhioStandaloneSchoolPreviewAdapter,type OhioSourceAdapterInvocation} from '@/engine/state/oh-source-adapter-invocation';
 import {OhioSchoolDistrictFactsSchema,type OhioSchoolDistrictFacts} from '@/models/ohio-school-district';
 import type {TaxYearInput} from '@/models/inputs';
 import {buildGuidedOhioResidencyFacts,snapshotGuidedOhioOriginals,assertGuidedOhioOriginals,type OhioResidencyDraft} from './guided-ohio-residency-facts';
@@ -167,10 +167,11 @@ export function buildGuidedOhioSchoolScheduleAOriginals(input: TaxYearInput, dat
 function replayGuidedOhioSchoolDistrictFacts<T>(
  input: TaxYearInput, data: OhioSchoolDistrictDraft | undefined, readParents: () => CurrentSchoolParents,
  use: (facts: OhioSchoolDistrictFacts, proof?: OhioSourceAdapterInvocation) => T,
- mode: 'standalone' | 'standalone-preview' | 'header' | 'pending-header',
+ mode: 'standalone' | 'standalone-preview' | 'header' | 'pending-header' | 'confirmed-header',
 ): T {
  const current=readCurrentSchoolOriginals(input,data,readParents);
  if (mode === 'pending-header') return withPendingOhioSchoolAdapterInvocation(current, proof => use(current.ohioSchoolDistrict, proof));
+ if (mode === 'confirmed-header') return withConfirmedOhioSchoolHeaderAdapter(current, proof => use(current.ohioSchoolDistrict, proof));
  if (mode === 'standalone-preview') return withOhioStandaloneSchoolPreviewAdapter(current, proof => use(current.ohioSchoolDistrict, proof));
  const federal=calculateFederalTax(current);
  if (mode === 'header') return withOhioSchoolAdapterInvocation(current, federal, proof => use(current.ohioSchoolDistrict, proof));
@@ -193,12 +194,12 @@ export function withGuidedOhioSchoolDistrictAdapter<T>(
  input: TaxYearInput, data: OhioSchoolDistrictDraft | undefined,
  residencyDraft: OhioResidencyDraft | undefined, paymentDraft: OhioPaymentDraft | undefined,
  prepareHeader: (parents: CurrentSchoolParents) => (district: OhioSchoolDistrictFacts | undefined, proof?: OhioSourceAdapterInvocation) => T,
- pendingRender = false,
+ mode: 'header' | 'pending-header' | 'confirmed-header' = 'header',
 ): T {
  const parents = readCurrentSchoolParents(input,residencyDraft,paymentDraft);
  const completeHeader = prepareHeader(structuredClone(parents));
  if (!data && parents.residency.schoolDistrictStatus !== 'actual_district_sources_required') return completeHeader(undefined);
- return replayGuidedOhioSchoolDistrictFacts(input, data, () => parents, completeHeader, pendingRender ? 'pending-header' : 'header');
+ return replayGuidedOhioSchoolDistrictFacts(input, data, () => parents, completeHeader, mode);
 }
 /** Explicit user action is the only authority to capture current raw private originals. */
 export function confirmGuidedOhioSchoolDistrictFacts(input:TaxYearInput,data:OhioSchoolDistrictDraft|undefined,residencyDraft:OhioResidencyDraft|undefined,paymentDraft:OhioPaymentDraft|undefined):OhioSchoolDistrictDraft{

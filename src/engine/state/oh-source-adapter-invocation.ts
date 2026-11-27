@@ -1,13 +1,18 @@
 /** Spec: state/oh-school-header-same-invocation.yaml. Active synchronous scope only. */
 import Decimal from 'decimal.js';
-import {calculateFederalTax} from '@/engine/federal.js';
+import {calculateFederalTax,requiresOhioSchoolScheduleAPaymentProof} from '@/engine/federal.js';
 import type {TaxYearInput} from '@/models/inputs.js';
 import type {TaxReturnResult} from '@/models/outputs.js';
 import {buildOhioResidentReturnInput} from './oh-input-adapter.js';
 import {exactOhioSchoolArithmetic} from './oh-sd-100-sources.js';
 const brand=Symbol('completed current Ohio school adapter');
 export interface OhioSourceAdapterInvocation{readonly [brand]:true}
-const active=new WeakMap<OhioSourceAdapterInvocation,{material:string;method:string|undefined;standalonePreview?:ReturnType<typeof buildOhioResidentReturnInput>}>();
+const active=new WeakMap<OhioSourceAdapterInvocation,{
+  material:{input:string;federal:string};
+  method:string|undefined;
+  ownsHeaderInput?:boolean;
+  standalonePreview?:ReturnType<typeof buildOhioResidentReturnInput>;
+}>();
 
 /** The pending render owns an isolated, plain canonical record for this adapter call. */
 function immutableSchoolInput(input: TaxYearInput): TaxYearInput | undefined {
@@ -151,10 +156,34 @@ function stable(value:unknown):unknown{
   return descriptor.value===undefined?[]:[[key,stable(descriptor.value)]];
  })];
 }
-const material=(input:TaxYearInput,federal:TaxReturnResult)=>JSON.stringify(stable({input,federal}));
+const canonicalMaterial=(value:unknown)=>JSON.stringify(stable(value));
+const material=(input:TaxYearInput,federal:TaxReturnResult)=>({federal:canonicalMaterial(federal),input:canonicalMaterial(input)});
+function matchesMaterial(previous:ReturnType<typeof material>,input:TaxYearInput,federal:TaxReturnResult) {
+ const current=material(input,federal);
+ return previous.federal===current.federal&&previous.input===current.input;
+}
 /** Calls the actual full adapter; no caller-supplied adapter result or mutable result escapes. */
 export function withOhioSchoolAdapterInvocation<T>(input:TaxYearInput,federal:TaxReturnResult,use:(proof:OhioSourceAdapterInvocation)=>T):T{
  return withCompletedSchoolAdapter(input,federal,use);
+}
+
+/** Only this producer owns the complete calculation before handing the method to the header. */
+export function withConfirmedOhioSchoolHeaderAdapter<T>(input: TaxYearInput, use: (proof: OhioSourceAdapterInvocation) => T): T {
+  const immutable = immutableSchoolInput(input);
+  const owned = immutable && !requiresOhioSchoolScheduleAPaymentProof(immutable) ? immutable : undefined;
+  const current = owned ?? input;
+  return withCompletedSchoolAdapter(current, calculateFederalTax(current), use, { ownsHeaderInput: owned !== undefined });
+}
+
+/** Reuse a completed method only for identical current originals and a live producer-owned calculation. */
+export function readConfirmedOhioSchoolHeaderMethod(input: TaxYearInput, proof: OhioSourceAdapterInvocation | undefined) {
+  const current = proof && active.get(proof);
+  if (!current?.ownsHeaderInput) return undefined;
+  try {
+    return current.material.input === canonicalMaterial(input) ? { method: current.method } : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 /** Run the original first adapter even when current material cannot be owned or reused. */
@@ -165,7 +194,7 @@ export function withOhioStandaloneSchoolPreviewAdapter<T>(input: TaxYearInput, u
   const owned = ordinary ? immutableSchoolInput(input) : undefined;
   const current = owned ?? input;
   const federal = calculateFederalTax(current);
-  return withCompletedSchoolAdapter(current, federal, use, undefined, owned !== undefined);
+  return withCompletedSchoolAdapter(current, federal, use, { standalonePreview: owned !== undefined });
 }
 
 /** The guided caller checks the overlay it built before consuming this one result. */
@@ -176,7 +205,7 @@ export function consumeOhioStandaloneSchoolPreviewAdapter(
   const current = active.get(proof);
   if (!current?.standalonePreview) return undefined;
   try {
-    if (current.material !== material(input, federal)) return undefined;
+    if (!matchesMaterial(current.material, input, federal)) return undefined;
   } catch {
     return undefined;
   }
@@ -189,24 +218,30 @@ export function withPendingOhioSchoolAdapterInvocation<T>(input: TaxYearInput, u
   const current = immutable ?? input;
   const federal = calculateFederalTax(current);
   const currentFederal = immutable ? new CurrentFederalCalculation(immutable, federal, 'pending-header') : undefined;
-  return withCompletedSchoolAdapter(current, federal, use, currentFederal);
+  return withCompletedSchoolAdapter(current, federal, use, { currentFederal });
 }
 
 function withCompletedSchoolAdapter<T>(
   input: TaxYearInput, federal: TaxReturnResult, use: (proof: OhioSourceAdapterInvocation) => T,
-  currentFederal?: OhioCurrentFederalCalculation,
-  standalonePreview = false,
+  options: { currentFederal?: OhioCurrentFederalCalculation; standalonePreview?: boolean; ownsHeaderInput?: boolean } = {},
 ): T {
- const adapted=buildOhioResidentReturnInput(input,federal,undefined,currentFederal);
+ const adapted=buildOhioResidentReturnInput(input,federal,undefined,options.currentFederal);
  const proof=Object.freeze({[brand]:true as const});
  // Unsupported serialization cannot introduce an earlier error or authorize reuse.
- try{active.set(proof,{material:material(input,federal),method:adapted.schoolDistrictSource?.methodVersion,...(standalonePreview&&adapted.schoolDistrictSource?{standalonePreview:adapted}:{})});}catch{/* The original adapter remains the fallback. */}
+ try {
+   active.set(proof, {
+     material: material(input, federal),
+     method: adapted.schoolDistrictSource?.methodVersion,
+     ownsHeaderInput: options.ownsHeaderInput,
+     ...(options.standalonePreview && adapted.schoolDistrictSource ? { standalonePreview: adapted } : {}),
+   });
+ } catch { /* The original adapter remains the fallback. */ }
  try{return use(proof);}finally{active.delete(proof);}
 }
 /** Missing/forged/expired/changed proof falls back to the original full validation at its original position. */
 export function readOhioSchoolAdapterMethod(input:TaxYearInput,federal:TaxReturnResult,proof:OhioSourceAdapterInvocation|undefined):{method:string|undefined}|undefined{
  const current=proof&&active.get(proof);
  if(!current)return undefined;
- try{if(current.material!==material(input,federal))return undefined;}catch{return undefined;}
+ try{if(!matchesMaterial(current.material,input,federal))return undefined;}catch{return undefined;}
  return {method:current.method};
 }

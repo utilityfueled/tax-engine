@@ -4,10 +4,11 @@ source: spec/state/oh-return-header-sources.yaml
 notes: >-
   Source validation performance only. One actual completed full school adapter may
   supply an opaque synchronous input-and-federal-material-bound school method proof
-  to the immediately following header adapter guard. Every prior guard and header
-  fresh federal calculation remains. A separate finite guided render case can
-  consume the original no-header school adapter result once. Changed or expired
-  contexts run the original full adapter; final header-added preview input is distinct.
+  to the immediately following header adapter guard. A finite confirmed-header
+  guided render can reuse the adapter's privately calculated federal result for
+  the exact same originals. A separate finite guided render case can consume the
+  original no-header school adapter result once. Changed or expired contexts run
+  the original full adapter; final header-added preview input is distinct.
 lines:
   - line: "same-invocation"
     description: Complete original replay and immutable proof scope
@@ -15,8 +16,22 @@ lines:
     testRef: "tests/guided-interview/oh-school-header-same-invocation.test.ts::complete current school header replay %s"
   - line: "observed-work"
     description: Original complete guided render work-count assertion preserves all expected outputs
-    formula: OH school header fresh federal seven and school two; unrelated PA four and zero unchanged
+    formula: OH school header fresh federal six and school two; unrelated PA four and zero unchanged
     testRef: "tests/guided-interview/guided-render-evaluation.test.ts::shares only one actual current source evaluation %s"
+  - line: "confirmed-header-school-federal"
+    description: Reuse one producer-owned federal result for the identical confirmed header context
+    formula: >-
+      In one guided render of the ordinary 2025 single part-year payroll school
+      return with an explicitly confirmed header and no Schedule A school payment
+      claim, calculate the school adapter's federal result from its privately
+      owned immutable canonical input. At the header's method check, reuse that
+      result only in the active synchronous scope with exact current source
+      material. Preserve every school, header, parent, payment and confirmation
+      check, the header source commitment and the separate federal and Ohio
+      preview. Standalone reads, edits, stale or unsupported originals, unowned
+      results and Schedule A claims retain their existing independent checks.
+      No proof survives across renders or changes saved sources or release gates.
+    testRef: "tests/guided-interview/oh-school-header-same-invocation.test.ts::complete current school header replay %s"
   - line: "header-school-current-parents"
     description: Validate the current residency and payment records once during header entry or confirmation
     formula: "For one header replay with the native school district, validate the original residency and payment drafts once and use those base results in the same synchronous school replay. Validate any header resident-credit child before using the school result, preserve the standalone school replay, and keep the incomplete header out of the state totals while its separately confirmed school display remains available. Only the explicit confirmation action captures header originals."
@@ -65,6 +80,21 @@ lines:
     description: A source proof cannot omit unsupported defined values or normalize distinct material into an existing proof
     formula: after the original full adapter, only finite primitives, explicit finite Decimal values with original data descriptors and dense finite integer digit arrays, exact plain objects with defined data properties and exact dense ordered arrays can capture or consume authority; unsupported types, symbol keys, accessors (never invoked by proof admission), extended Decimal metadata and nonfinite numbers fall back to original full validation without an earlier error; undefined object data properties remain omitted
     testRef: "tests/guided-interview/oh-school-header-material-boundary.test.ts::unsupported capture follows the actual adapter and leaves original fallback authority absent"
+  - line: "confirmed-header-proof-boundary"
+    description: Keep the confirmed render method bound to the actual current invocation
+    formula: >-
+      A producer-owned calculation can supply the method only while the completed
+      adapter callback is active and its canonical inputs still match. A caller-
+      supplied federal result, changed original or expired callback cannot supply
+      the method through this shortcut. Fresh federal validation is the fallback.
+    testRef: "tests/guided-interview/oh-school-header-material-boundary.test.ts::limits the confirmed header shortcut to current producer-owned originals"
+  - line: "confirmed-header-schedule-a-fallback"
+    description: Preserve the canonical Ohio school Schedule A source calculation
+    formula: >-
+      The full canonical payment predicate must allow the shortcut. Preserve fresh
+      federal validation when the school account needs Schedule A proof, including
+      a payment applied to the return year but paid in the following calendar year.
+    testRef: "tests/guided-interview/oh-school-header-material-boundary.test.ts::keeps next-calendar-year school payments on the independent federal path"
   - line: "standalone-school-render-adapter"
     description: Reuse the first accepted adapter result in the ordinary no-header Ohio school render
     formula: >-

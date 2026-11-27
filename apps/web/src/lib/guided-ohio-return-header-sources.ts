@@ -7,7 +7,7 @@ import type {OhioSchoolDistrictFacts} from '@/models/ohio-school-district';
 import type {buildGuidedOhioResidencyFacts,OhioResidencyDraft} from './guided-ohio-residency-facts';
 import type {buildGuidedOhioPaymentFacts,OhioPaymentDraft} from './guided-ohio-payment-facts';
 import {buildGuidedOhioResidentCreditSources} from './guided-ohio-resident-credit-sources';
-import {withGuidedOhioSchoolDistrictAdapter,type OhioSchoolDistrictDraft} from './guided-ohio-school-district-facts';
+import {guidedOhioSchoolScheduleAPaymentClaim,withGuidedOhioSchoolDistrictAdapter,type OhioSchoolDistrictDraft} from './guided-ohio-school-district-facts';
 type Entered<T>=T extends boolean?boolean|null:T extends number?string:T extends string?string:T extends Array<infer Row>?Entered<Row>[]:T extends object?{[Key in keyof T]:Entered<T[Key]>}:T;
 export type OhioReturnHeaderDraft=Omit<Entered<OhioReturnHeaderSources>,'originalFederalSources'|'originalOhioResidencySources'|'originalOhioPaymentSources'>&{
  originalFederalSources?:Record<string,unknown>;
@@ -48,7 +48,7 @@ type CurrentHeaderContext={canonical:TaxYearInput;federal:Record<string,unknown>
 function withCurrentContext<T>(
  input: TaxYearInput, residency: OhioResidencyDraft | undefined, payments: OhioPaymentDraft | undefined,
  school: OhioSchoolDistrictDraft | undefined, use: (current: CurrentHeaderContext, proof?: OhioSourceAdapterInvocation) => T,
- onSchoolReplay?: () => void, pendingRender = false,
+ onSchoolReplay?: () => void, mode: 'header' | 'pending-header' | 'confirmed-header' = 'header',
 ): T {
  const original=structuredClone(input);Reflect.deleteProperty(original,'ohioReturnHeaderSources');
  if(input.ohioSchoolDistrict&&!school)return fail('retained canonical school district originals require their current native child');
@@ -63,7 +63,7 @@ function withCurrentContext<T>(
    if(district)onSchoolReplay?.();
    return use({canonical,federal,facts,paid,district},proof);
   };
- },pendingRender);
+ },mode);
 }
 /** Only this explicit user action captures current sources. Parent/payment/credit confirmations are never changed. */
 export function confirmGuidedOhioReturnHeaderSources(input:TaxYearInput,data:OhioReturnHeaderDraft|undefined,residency:OhioResidencyDraft|undefined,payments:OhioPaymentDraft|undefined,school?:OhioSchoolDistrictDraft):OhioReturnHeaderDraft{
@@ -86,9 +86,12 @@ export function buildGuidedOhioReturnHeaderSources(input:TaxYearInput,data:OhioR
  * No externally supplied context and no cross-invocation reuse: every call replays originals. */
 export function buildGuidedOhioReturnHeaderOriginals(input:TaxYearInput,data:OhioReturnHeaderDraft|undefined,residency:OhioResidencyDraft|undefined,payments:OhioPaymentDraft|undefined,school?:OhioSchoolDistrictDraft,onSchoolReplay?:()=>void):TaxYearInput&{ohioReturnHeaderSources:OhioReturnHeaderSources}{
  if(!data)return fail('actual header records and explicit confirmation are required');
- const pendingRender = Boolean(onSchoolReplay && input.taxpayer.taxYear === 2025 && input.taxpayer.filingStatus === 'single'
-  && school?.partYearWageSources && !residency?.residentCreditSources
-  && Object.getOwnPropertyDescriptor(data, 'sourceFactsConfirmed')?.value === null);
+ const schoolRender = Boolean(onSchoolReplay && input.taxpayer.taxYear === 2025 && input.taxpayer.filingStatus === 'single'
+  && school?.partYearWageSources && !residency?.residentCreditSources);
+ const confirmation = schoolRender ? Object.getOwnPropertyDescriptor(data, 'sourceFactsConfirmed')?.value : undefined;
+ const pendingRender = schoolRender && confirmation === null;
+ const confirmedRender = schoolRender && confirmation === true && !residency?.businessSources
+  && !guidedOhioSchoolScheduleAPaymentClaim(school, input.taxpayer.taxYear);
  return withCurrentContext(input,residency,payments,school,(current,proof)=>{
  // The current school check and its observation have completed. The header
  // schema requires literal true and cannot accept this still-pending draft.
@@ -98,5 +101,5 @@ export function buildGuidedOhioReturnHeaderOriginals(input:TaxYearInput,data:Ohi
  if(!saved.success||!same(source,saved.data))return fail('actual header records differ from the separately confirmed originals; explicitly review them again');
  calculateOhioReturnHeaderWithSchoolAdapter(current.canonical,source,proof);
  return{...input,ohioResidency:current.facts,ohioPayments:current.paid,...(current.district?{ohioSchoolDistrict:current.district}:{}),ohioReturnHeaderSources:source};
- },onSchoolReplay,pendingRender);
+ },onSchoolReplay,pendingRender ? 'pending-header' : confirmedRender ? 'confirmed-header' : 'header');
 }
