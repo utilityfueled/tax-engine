@@ -48,8 +48,10 @@ describe('Ohio2026 paid Virginia resident-credit source draft', () => {
     expect(result.jointFilingCredit.toFixed()).toBe('0');
     expect(result.earnedIncomeCredit.toFixed()).toBe('0');
     expect(result.residentCredit?.toFixed()).toBe(allowed);
+    expect(result.lines.some(line => line.form === 'OH-IT-NRC')).toBe(false);
     const ratios: Record<string, string> = { 'liability-not-gross-WH': '0.6000', 'Ohio-cap': '0.6000', 'truncate-four': '0.2777', 'truncate-changes-credit': '0.2003', 'all-VA-services': '1.0000', 'complete-known-zero': '0.0000', 'paid-cents-down': '0.6000', 'paid-half-up': '0.6000', 'income-cents-down': '0.2777', 'income-half-up': '0.2777', 'preceding-personal-credit': '0.5000', 'paid-rounds-zero': '0.6000', 'income-rounds-zero': '0.0000', 'zero-Ohio-tax': '0.5000' };
     expect(result.lines.find(line => line.form === 'OH2026 enacted resident credit draft' && line.line === 'ratio')?.value.toFixed(4)).toBe(ratios[_name]);
+    expect(result.lines.find(line => line.form === 'OH2026 enacted resident credit draft' && line.line === 'credit')?.value.toFixed()).toBe(allowed);
     expect(result.incomeTax.toFixed()).toBe(liability);
     expect(result.withholding.toFixed()).toBe(withholding);
     expect(result.refund.toFixed()).toBe(refund);

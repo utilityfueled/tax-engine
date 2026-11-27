@@ -86,7 +86,7 @@ describe('Ohio 2026 private ordinary Box 1 unemployment draft', () => {
     expect(result.incomeTax.toFixed()).toBe('959');
     expect(result.withholding.toFixed()).toBe('1000');
     expect(result.refund.toFixed()).toBe('41');
-    expect(result.lines.find(line => line.line === '12' && line.description === 'Resident unemployment')?.value.toFixed()).toBe('1000');
+    expect(result.lines.some(line => line.form === 'OH-IT-NRC')).toBe(false);
     expect(result).toMatchObject({ ruleVersion: packet.sources.methodId, calculationStatus: 'incomplete', reviewStatus: 'independent-review-pending', filingQualified: false });
     expect(JSON.stringify(reopened)).toBe(saved);
   });

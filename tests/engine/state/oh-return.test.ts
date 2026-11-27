@@ -7,10 +7,13 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { calculateFederalTax } from "@/engine/federal.js";
+import { calculateOhioResidentReturnFromFederal } from "@/engine/state/oh-engine.js";
 import {
   calculateOhioResidentReturn,
   type OhioResidentReturnInput,
 } from "@/engine/state/oh-return.js";
+import { ohioPaymentFixture } from "../../fixtures/oh-payments.js";
 
 function makeInput(
   overrides: Partial<OhioResidentReturnInput> = {},
@@ -25,6 +28,35 @@ function makeInput(
 }
 
 describe("Ohio Resident Return — Orchestrator", () => {
+  it("projects the 2025 Ohio IT NRC worksheet only for returns with a nonresident period", () => {
+    const cases = [
+      ["full_year_resident", "2323"],
+      ["part_year_resident", "929"],
+      ["nonresident", "465"],
+    ] as const;
+    for (const [status, finalTax] of cases) {
+      const taxInput = ohioPaymentFixture(status);
+      const result = calculateOhioResidentReturnFromFederal({ taxInput, federalResult: calculateFederalTax(taxInput) });
+      const worksheet = result.nonresidentCreditResult;
+      if (!worksheet) throw new Error("Expected a calculation from the verified residency facts");
+      const nrcLines = result.lines.filter(row => row.form === "OH-IT-NRC");
+      const commitment = nrcLines.find(row => row.line === "actual-source-commitment");
+      expect(commitment?.inputs?.["Original source commitment"]).toMatch(/^[a-f0-9]{64}$/);
+      expect(result.it1040.line10_taxAfterCredits.toFixed()).toBe(finalTax);
+
+      const reportedWorksheet = nrcLines.filter(row => row.line !== "actual-source-commitment");
+      if (status === "full_year_resident") {
+        expect(worksheet.fullResidentOnly).toBe(true);
+        expect(worksheet.line20.toFixed()).toBe("0");
+        expect(reportedWorksheet.map(row => row.line)).toEqual([]);
+      } else {
+        expect(reportedWorksheet.find(row => row.line === "20")?.value.toFixed()).toBe(worksheet.line20.toFixed());
+        const showsPartB = reportedWorksheet.some(row => /^1[0-5]$/.test(row.line));
+        expect(showsPartB).toBe(status === "part_year_resident");
+      }
+    }
+  });
+
   // -------------------------------------------------------------------------
   // Basic wiring: adjustments flow into IT 1040
   // -------------------------------------------------------------------------

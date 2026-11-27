@@ -86,6 +86,29 @@ lines:
       determine credit amounts and eligibility.
     testRef: "tests/engine/state/oh-return.test.ts::business income deduction flows from adjustments to IT 1040 MAGI"
 
+  - line: "nrc-residency-audit"
+    description: "Omit the IT NRC worksheet from the 2025 all-resident return audit"
+    source: "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/itnrc.pdf#page=1"
+    formula: >-
+      A household consisting only of full-year Ohio residents does not include
+      IT NRC. The aggregate audit omits that worksheet's numeric rows while
+      retaining the validated residency source commitment. Preserve the internal
+      result and its zero nonresident credit for the separate IT RC review.
+      Retain the worksheet audit for part-year, nonresident and mixed households
+      using the applicable source-qualified return method.
+    testRef: "tests/engine/state/oh-return.test.ts::projects the 2025 Ohio IT NRC worksheet only for returns with a nonresident period"
+
+  - line: "nrc-reference-part-b"
+    description: "Apply Part B of the 2025 IT NRC reference worksheet by residency"
+    source: "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/itnrc.pdf#page=1"
+    formula: >-
+      For a household of only full-year nonresidents, the aggregate audit and
+      reference PDF omit Part B lines 10–15. Retain Parts A and C, the original
+      source commitment, and applicable business sections. The typed calculation
+      remains available to consumers that reconcile original facts and verified
+      printed lines.
+    testRef: "tests/pdf/oh-residency-reference.test.ts::saves actual nonresident reference worksheet with original-bound redaction"
+
   - line: "Step 3a"
     description: "Resident Credit worksheet (conditional: otherStateTaxes provided, no pass-through)"
     formula: "calculateOhioResidentCredit({ohioAgi, ohioTaxBeforeCredits, otherStates}) → totalResidentCredit"

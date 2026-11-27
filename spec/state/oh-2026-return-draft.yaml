@@ -326,6 +326,27 @@ lines:
     description: "Full-year, part-year, and nonresident actual-source computation"
     formula: "Reuse actual owner timeline/category validation and ITNRC allocation with 2026 source-contract evidence. Full-year source totals include all income; PY uses actual resident/nonresident services periods, not calendar ratio. Nonresident services are Ohio only when actually sourced here. Use min(1,truncate4(outsideOhioAGI/OhioAGI)); multiply tax after every preceding credit and roundDollar once. Reciprocal compensation requires separate current agreement/source method and cannot be treated as ordinary taxable OH wages."
     testRef: "tests/engine/state/oh-2026-return-draft.test.ts::uses actual services amounts rather than residency day counts"
+  - line: "nrc-worksheet-applicability"
+    description: "Expose the draft IT NRC only for a household with a nonresident period"
+    formula: >-
+      Omit all IT NRC audit rows when every verified owner is a full-year Ohio
+      resident, including ordinary single and joint returns, resident unemployment,
+      timely balance payments and paid resident-credit drafts. Retain the full-year
+      income, zero nonresident ratio and credit, resident-credit audit and settlement.
+      A return with any part-year owner shows Parts A, B and C. All-nonresident
+      returns and the admitted wage-only joint return with one full-year resident
+      and one full-year nonresident show only Parts A and C. Include the full-year
+      resident spouse's compensation in Part A. Keep the existing source validation,
+      credit order, payment qualification and closed filing gates.
+    sources:
+      - "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf#page=41"
+    testRef: "tests/engine/state/oh-2026-return-draft.test.ts::integrates enacted tax and explicit exemptions across all three residencies: %s"
+    testRefs:
+      - "tests/engine/state/oh-2026-return-draft.test.ts::retains credit order caps and strict personal-credit boundary"
+      - "tests/engine/state/oh-2026-return-draft.test.ts::permits a separate spouse domicile on the ordinary Ohio joint draft"
+      - "tests/engine/state/oh-2026-unemployment-draft.test.ts::includes all verified Box 1 unemployment for a full-year Ohio resident"
+      - "tests/engine/state/oh-2026-actual-balance-payment.test.ts::reports source-qualified return and paid account separately for %s"
+      - "tests/engine/state/oh-2026-resident-credit-draft.test.ts::applies independent literal2026 paid-credit and settlement accounts %s"
   - line: "settlement"
     description: "Finish known ordinary settlement without fabricating penalties"
     formula: "Only admit source-complete calendar original returns with known timely-payment/filing facts. A documented timely filing remains timely if observed after the deadline. The filing must be known by observation, or, if still expected, on or after observation and no later than the deadline. Initial employee cohort uses actual Ohio compensation withholding at least current tax, no school tax, no other payments/refundable credits/use tax/amendment/carryforward/donations. Section5747.09 withholding is equal across installment dates absent actual-date election, covering required current installments; penalty0. Unknown dates/election or other payment methods require a separate current method. Refund=withheld-tax; no late interest if no unpaid tax, otherwise dated method required."

@@ -657,10 +657,14 @@ export function calculateOhioResidentReturn(
       || d(input.sdCreditCarryforward).gt(sd100.line19_overpayment))throw new Error('Ohio actual school district sources: remaining-tax coverage or outgoing election contradicts actual return');
   }
   // Combine audit trails: Adjustments → Resident Credit → Credits → IT/SD 2210 → IT 1040 → SD 100
+  const allOwnersNonresident = input.residency?.owners.every(owner => owner.status === "nonresident");
+  const nonresidentAuditLines = nonresidentCreditResult && !nonresidentCreditResult.fullResidentOnly
+    ? nonresidentCreditResult.lines.filter(({ form, line }) => !allOwnersNonresident || form !== "OH-IT-NRC" || !/^1[0-5]$/.test(line))
+    : [];
   const lines = [
     ...adjustments.lines,
     ...(residentCreditResult ? residentCreditResult.lines : []),
-    ...(nonresidentCreditResult?.lines??[]),
+    ...nonresidentAuditLines,
     ...(residentSource?[{form:"OH-RESIDENT-CREDIT",line:"actual-resident-credit-source-commitment",description:"Actual current same-income paid other-state original sources",value:new Decimal(0),formula:"Complete actual private source commitment; no private references printed",inputs:{"Original source commitment":residentSource.sourceCommitment}}]:[]),
     ...(input.residencySourceDigest?[{form:"OH-IT-NRC",line:"actual-source-commitment",description:"Actual Ohio owner residency original sources",value:new Decimal(0),formula:"Complete source commitment; no private source references printed",inputs:{"Original source commitment":input.residencySourceDigest}}]:[]),
     ...(input.paymentSourceDigest?[{form:'OH-IT/SD-2210',line:'actual-payment-source-commitment',description:'Actual Ohio current account payment sources',value:new Decimal(0),formula:'Current actual private originals; digest only',inputs:{'Original source commitment':input.paymentSourceDigest,'State method version':input.paymentMethodVersion??'','Tax year':String(input.taxYear),'Timing kind':input.paymentTiming?.kind??'','Return filed/expected date':input.paymentTiming?.valuationDate??'','As of date':input.paymentTiming?.asOfDate??'','Remaining-tax payment kind':input.paymentTaxCoverage?.status??'','Remaining-tax payment date':input.paymentTaxCoverage?.date??''}}]:[]),

@@ -20,6 +20,7 @@ it.each([
  const p=ohio2026ActualBalanceFixture(status,withholding,due),before=JSON.stringify(p),r=run(p);
  expect(r.incomeTax.toFixed()).toBe(tax);expect(r.nonresidentCredit.toFixed()).toBe(nrc);expect(r.amountDue.toFixed()).toBe(due);expect(r.withholding.toFixed()).toBe(withholding);expect(r.refund.toFixed()).toBe('0');
  const nrcRows = r.lines.filter(line => line.form === 'OH-IT-NRC');
+ if (status === 'full_year_resident') expect(nrcRows).toHaveLength(0);
  if (status === 'nonresident') expect(nrcRows).toHaveLength(14);
  if (status === 'part_year_resident') expect(nrcRows).toHaveLength(20);
  expect(r.actualBalancePayment?.methodVersion).toBe('oh-2026-actual-timely-small-balance-v1');expect(r.actualBalancePayment?.status).toBe('actual_paid_on_time');expect(r.actualBalancePayment?.actualPaymentDate).toBe('2027-04-15');expect(r.actualBalancePayment?.actualBalancePaymentApplied.toFixed()).toBe(due);expect(r.actualBalancePayment?.outstandingTaxBalance.toFixed()).toBe('0');

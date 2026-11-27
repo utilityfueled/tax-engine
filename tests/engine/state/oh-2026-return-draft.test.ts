@@ -69,7 +69,9 @@ describe('Ohio2026 current ordinary source-to-return draft', () => {
     rebindOhio2026Ordinary(p);
     const result = run(p);
     expect(result.nonresidentRatio.toFixed(4)).toBe('0.5000');
-    expect(result.lines.filter(line => line.form === 'OH-IT-NRC')).toHaveLength(20);
+    const nrcRows = result.lines.filter(line => line.form === 'OH-IT-NRC');
+    expect(nrcRows.map(line => line.line)).toEqual(['1', '2', '3', '4', '5', '6', '7', '8', '9', '16', '17', '18', '19', '20']);
+    expect(nrcRows.find(line => line.line === '1')?.value.toFixed()).toBe('50000');
     p.input.taxpayer.stateResidency = 'nonresident';
     rebindOhio2026Ordinary(p);
     expect(() => run(p)).toThrow(/declared Ohio residency conflicts/i);
@@ -109,8 +111,9 @@ describe('Ohio2026 current ordinary source-to-return draft', () => {
     expect(result.underpaymentPenalty.toFixed()).toBe('0');
     expect(result.latePaymentInterest.toFixed()).toBe('0');
     const nrcLines = result.lines.filter(line => line.form === 'OH-IT-NRC').map(line => line.line);
+    if (status === 'full_year_resident') expect(nrcLines).toEqual([]);
     if (status === 'nonresident') expect(nrcLines).toEqual(['1', '2', '3', '4', '5', '6', '7', '8', '9', '16', '17', '18', '19', '20']);
-    if (status === 'part_year_resident') expect(nrcLines.slice(9, 15)).toEqual(['10', '11', '12', '13', '14', '15']);
+    if (status === 'part_year_resident') expect(nrcLines).toEqual(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20']);
   });
 
   it.each([
@@ -203,6 +206,8 @@ describe('Ohio2026 current ordinary source-to-return draft', () => {
     expect(joint.earnedIncomeCredit.toFixed()).toBe('0');
     expect(joint.incomeTax.toFixed()).toBe('2148');
     expect(joint.refund.toFixed()).toBe('352');
+    expect(joint.nonresidentCredit.toFixed()).toBe('0');
+    expect(joint.lines.some(line => line.form === 'OH-IT-NRC')).toBe(false);
   });
 
   it('uses actual services amounts rather than residency day counts', () => {

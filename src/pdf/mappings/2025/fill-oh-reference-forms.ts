@@ -508,8 +508,15 @@ export async function fillOhioReferenceForms(
     ),
   );
 
-  if(ohioResult.nonresidentCreditResult&&!ohioResult.nonresidentCreditResult.fullResidentOnly){
-    filledForms.push(await createReferencePdf({title:"Ohio IT NRC",subtitle:"Actual owner nonresident and part-year source allocation - reference worksheet",fileName:"oh-it-nrc-reference.pdf",lines:[...ohioResult.nonresidentCreditResult.lines,...ohioResult.lines.filter(row=>row.form==="OH-IT-NRC"&&row.line==="actual-source-commitment")]}));
+  if (ohioResult.nonresidentCreditResult && !ohioResult.nonresidentCreditResult.fullResidentOnly) {
+    const nrcForms = ["OH-IT-NRC", "OH-IT-NRC-II", "OH-IT-NRC-III"];
+    const nrcLines = ohioResult.lines.filter(row => nrcForms.includes(row.form));
+    filledForms.push(await createReferencePdf({
+      title: "Ohio IT NRC",
+      subtitle: "Actual owner nonresident and part-year source allocation - reference worksheet",
+      fileName: "oh-it-nrc-reference.pdf",
+      lines: nrcLines,
+    }));
   }
 
   if (shouldIncludeAdjustments(ohioResult.scheduleOfAdjustments)) {

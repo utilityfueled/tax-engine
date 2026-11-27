@@ -103,10 +103,11 @@ export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unkno
     ? { line19: new Decimal(0), line20: new Decimal(0), lines: [] } : calculateOhioITNRC({ taxYear: 2026, filingStatus: actual.filingStatus,
     federalAgi, ohioAgi, taxRemainingBeforeResidencyCredits: baseline.taxAfterJointCredit,
     residencyFacts: actual.residency });
-  // Part B (lines 10–15) is inapplicable when every verified owner is a full-year nonresident.
-  const nrcLines = actual.residency.owners.every(owner => owner.status === 'nonresident')
-    ? nrc.lines.filter(({ form, line }) => form !== 'OH-IT-NRC' || !/^1[0-5]$/.test(line))
-    : nrc.lines;
+  // The draft worksheet requires a nonresident period, and Part B requires a part-year owner.
+  const { owners } = actual.residency;
+  const nrcLines = owners.every(owner => owner.status === 'full_year_resident') ? []
+    : owners.some(owner => owner.status === 'part_year_resident') ? nrc.lines
+      : nrc.lines.filter(({ form, line }) => form !== 'OH-IT-NRC' || !/^1[0-5]$/.test(line));
   const taxAfterNrc = baseline.taxAfterJointCredit.minus(nrc.line20);
   const resident = actual.residentCreditIncome === undefined ? undefined : calculateOhio2026ResidentCredit({
     ohioAgi, taxAvailable: taxAfterNrc, virginiaIncome: actual.residentCreditIncome, virginiaTaxPaid: actual.residentCreditTaxPaid ?? '',

@@ -19,6 +19,7 @@ it('saves actual nonresident reference worksheet with original-bound redaction',
     expect(text).toContain('REFERENCE SUMMARY ONLY');
     expect(text).toContain('1858');
     expect(text).toContain('0.8');
+    expect(text).not.toMatch(/Resident interest\/dividends|Part B total/i);
     expect(text).not.toContain(input.taxpayer.primary.ssn);
     expect(text).not.toContain('Synthetic actual Ohio NRC original worksheet');
     expect((await readFile(file!)).length).toBeGreaterThan(1000);
