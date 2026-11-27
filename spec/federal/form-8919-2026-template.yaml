@@ -39,6 +39,18 @@ lines:
       separate Form 8919 for each group of up to five firms, with summary fields
       completed on only the first form.
     testRef: "tests/pdf/form-8919-2026-candidate.test.ts::projects six original firms and puts the summary on the first review form only"
+  - line: "reason-a-nec-original"
+    description: "Bind the single verified Reason A NEC to the physical review row"
+    formula: >-
+      When the return carries linked Form 1099-NEC Reason A evidence, replay
+      the canonical wage reconciliation as of the supplied review date.
+      Require exactly one Reason A firm row and one original NEC for the same
+      owner, year, statement reference, payer name and EIN. Match column (d)
+      to the IRS determination date and column (f) to the original Box 1a
+      cents. Any separately supplied original wage amount must match those
+      cents. Hold orphan original markers, unreceived determinations and
+      conflicting review rows. Leave public export and filing unqualified.
+    testRef: "tests/pdf/form-8919-2026-candidate.test.ts::binds the verified Reason A NEC to the physical review row"
   - line: "reason-h-nec-overlap"
     description: "Require independent classification of active NEC income"
     formula: >-

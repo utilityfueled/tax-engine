@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import Decimal from "decimal.js";
 import type { PDFDocument } from "pdf-lib";
 import { calculateForm8919 } from "@/engine/forms/form-8919.js";
+import { reconcileForm8919NecSources } from "@/engine/forms/form-8919-nec-sources.js";
 import { calculateUnreportedTipPayroll } from "@/engine/forms/unreported-tip-payroll.js";
 import { FEDERAL_2026_CONSTANTS } from "@/models/federal-2026-indexed.js";
 import type { TaxYearInput } from "@/models/inputs.js";
@@ -57,6 +58,27 @@ interface Form8919ReviewSources {
   confirmed: boolean;
   reviewedOn: string;
   firms: readonly FirmOriginal[];
+}
+
+function assertLinkedReasonAReview(input: TaxYearInput, sources: Form8919ReviewSources) {
+  const proof = input.form8919?.reasonANecSource;
+  if (!proof && !input.form1099Nec.some(source => source.originalForForm8919 !== undefined)) return;
+
+  const { form8919NecSource: match } = reconcileForm8919NecSources(input, sources.reviewedOn);
+  const statement = match && input.form1099Nec[match.wageNecIndex];
+  const [firm] = sources.firms;
+  const [original] = firm?.originals ?? [];
+  if (!proof || !match || !statement || sources.firms.length !== 1 || !firm
+    || firm.reason.code !== "A" || firm.reason.correspondenceDate !== proof.determinationDate
+    || firm.name.trim() !== statement.payer.trim() || firm.identifierType !== "ein"
+    || firm.identifier.trim().replaceAll("-", "") !== statement.payerTin?.trim().replaceAll("-", "")
+    || !exactCurrency.test(firm.wages.trim()) || !d(firm.wages.trim()).eq(statement.nonemployeeCompensation)
+    || firm.receivedForm1099 !== true || firm.originals?.length !== 1 || !original
+    || original.kind !== "1099-nec" || original.reference !== match.statementReference
+    || (original.reclassifiedWages !== undefined && (!exactCurrency.test(original.reclassifiedWages)
+      || !d(original.reclassifiedWages).eq(statement.nonemployeeCompensation)))) {
+    throw new Error("Form 8919 review must match the verified Reason A original Form 1099-NEC and IRS determination.");
+  }
 }
 
 const page = "topmostSubform[0].Page1[0].";
@@ -163,6 +185,7 @@ export async function fillForm8919ReviewCandidate(
     throw new Error("Form 8919 requires the confirmed original firm list and review date.");
   }
   if (createHash("sha256").update(template).digest("hex") !== sha256) throw new Error("Unreviewed Form 8919 template revision.");
+  assertLinkedReasonAReview(input, sources);
 
   if (input.w2s.some(w2 => w2.taxYear !== taxYear || !w2.accountHolder
     || (w2.accountHolder === "spouse" && !joint)

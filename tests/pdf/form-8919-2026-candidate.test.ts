@@ -51,6 +51,46 @@ function annualCase() {
   return { input, sources };
 }
 
+function linkedReasonACase() {
+  const { input, sources } = annualCase();
+  const original = {
+    kind: "1099-nec" as const, taxYear: 2026, accountHolder: "primary" as const,
+    firmIdentifier: "12-0000001", payerName: "Synthetic Firm A", reclassifiedWages: "3000.25",
+    reference: "Verified NEC original, internal only",
+  };
+  const proof = {
+    necSourceId: "form1099Nec:0", sourceTaxYear: 2026, statementReference: original.reference,
+    employerEin: original.firmIdentifier, employerName: original.payerName,
+    determinationReference: "Verified IRS letter, internal only",
+    determinationDate: "2027-02-08", determinationReceivedDate: "2027-02-12",
+    employeeDeterminationConfirmed: true, allCompensationEmployeeWagesConfirmed: true,
+    noEmployeeFicaWithheldConfirmed: true, receivedInsteadOfW2Confirmed: true,
+  };
+  const firm = {
+    name: original.payerName, identifier: original.firmIdentifier, identifierType: "ein" as const,
+    wages: original.reclassifiedWages, receivedForm1099: true, reference: "Firm file, internal only",
+    originals: [original], reason: { code: "A" as "A" | "C", correspondenceDate: proof.determinationDate },
+  };
+  return {
+    input: TaxYearInputSchema.parse({
+      ...input,
+      form8919: { accountHolder: "primary", wagesNotReportedOnW2: firm.wages, reasonANecSource: proof },
+      form1099Nec: [{
+        payer: original.payerName, payerTin: original.firmIdentifier, nonemployeeCompensation: firm.wages,
+        taxYear: original.taxYear, accountHolder: original.accountHolder, federalWithheld: "31.50",
+        originalForForm8919: {
+          statementReference: original.reference, recipientTin: input.taxpayer.primary.ssn,
+          currentOriginalNoCorrectionsOrVoidsConfirmed: true, noDirectSalesOrParachutePaymentConfirmed: true,
+        },
+      }],
+    }),
+    sources: { ...sources, firms: [firm] },
+    original,
+    proof,
+    firm,
+  };
+}
+
 const field = (name: string) => `topmostSubform[0].Page1[0].${name}`;
 
 describe("Final 2026 Form 8919 physical candidate", () => {
@@ -130,6 +170,44 @@ describe("Final 2026 Form 8919 physical candidate", () => {
       expect(getText(pdf, "f1_2[0]")).toBe("");
       expect(pdf.getSubject()).toMatch(/FOR REVIEW ONLY/);
     }
+  });
+
+  it("binds the verified Reason A NEC to the physical review row", async () => {
+    const { fillForm8919ReviewCandidate } = await import("@/pdf/mappings/2026/form-8919-candidate.js");
+    const { input, sources, firm, original, proof } = linkedReasonACase();
+    const bytes = await readFile(blank);
+    const documents = await fillForm8919ReviewCandidate(input, sources, bytes);
+    expect(documents).toHaveLength(1);
+    const pdf = (await PDFDocument.load(await documents[0].save())).getForm();
+    const row = "Pg1Table[0].Row1[0].";
+    expect([3, 4, 5, 6, 7].map(index => pdf.getTextField(field(`${row}f1_${index}[0]`)).getText()))
+      .toEqual(["Synthetic Firm A", "12-0000001", "A", "02/08/2027", "3000.25"]);
+    expect(pdf.getCheckBox(field(`${row}c1_1[0]`)).isChecked()).toBe(true);
+    expect(pdf.getTextField(field("f1_2[0]")).getText()).toBeUndefined();
+    expect(pdf.getFields().filter(entry => entry instanceof PDFTextField).map(entry => entry.getText()).join(" "))
+      .not.toMatch(/internal only/);
+
+    const matching = /verified Reason A|confirmed 2026 employee wage facts|requires a verified Reason A/i;
+    const differentEin = { ...firm, identifier: "12-0000099", originals: [{ ...original, firmIdentifier: "12-0000099" }] };
+    const contradictory = [
+      { ...firm, reason: { ...firm.reason, code: "C" as const } },
+      { ...firm, reason: { ...firm.reason, correspondenceDate: proof.determinationReceivedDate } },
+      { ...firm, originals: [{ ...original, reference: "Unrelated current statement" }] },
+      { ...firm, originals: [{ ...original, reclassifiedWages: "3000.24" }] },
+      { ...firm, originals: [original, { ...original, reference: "Second statement" }] },
+      { ...firm, name: "Different firm", originals: [{ ...original, payerName: "Different firm" }] },
+      differentEin,
+    ];
+    for (const conflictingFirm of contradictory) {
+      const outcome = fillForm8919ReviewCandidate(input, { ...sources, firms: [conflictingFirm] }, bytes).then(() => undefined);
+      await expect(outcome).rejects.toThrow(matching);
+    }
+    const split = [{ ...firm, wages: "1000.25" }, { ...differentEin, wages: "2000" }];
+    await expect(fillForm8919ReviewCandidate(input, { ...sources, firms: split }, bytes).then(() => undefined)).rejects.toThrow(matching);
+    await expect(fillForm8919ReviewCandidate(input, { ...sources, reviewedOn: "2027-02-10" }, bytes).then(() => undefined)).rejects.toThrow(matching);
+    if (!input.form8919) throw new Error("Expected the linked Form 8919 fixture");
+    const orphan = { ...input, form8919: { ...input.form8919, reasonANecSource: undefined } };
+    await expect(fillForm8919ReviewCandidate(orphan, sources, bytes).then(() => undefined)).rejects.toThrow(matching);
   });
 
   it("rejects unbound or conflicting annual originals", async () => {
