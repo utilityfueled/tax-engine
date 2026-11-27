@@ -614,3 +614,27 @@ revisions reviewed and the sources used for each conclusion.
   the admitted part-year and nonresident business methods, and the
   withholding-only case where no balance payment is due.
   [Ohio Revised Code §5747.08](https://codes.ohio.gov/ohio-revised-code/section-5747.08).
+
+## November 26 QBI minimum and cooperative patron deduction
+
+Pending independent qualified review. Consider a 2026 single filer with
+$300,000 of taxable income before the QBI deduction, $1,200 of materially
+participating qualified non-SSTB business income, zero qualified wages
+and property basis, and a reported $100 cooperative domestic production
+activities deduction (DPAD). Assume no other QBI items or patron
+reduction. Confirm whether those facts are sufficient and permissible.
+
+Derive the §199A(a) deduction, any minimum under §199A(i), the separate
+patron deduction and cap under §199A(g)(2), and the amount transferred to
+Form 1040. The draft Form 8995-A places the cooperative amount on line
+38 and compares an amount including it on line 39 with the active
+minimum on line 40. Address how that sequence applies when it yields
+a different result from applying the minimum to the subsection (a)
+deduction and adding the separately capped cooperative amount. Confirm
+the treatment against the final instructions when available. The direct
+calculation has a cooperative input, and the federal return adapter
+does not supply it. This worksheet does not qualify cooperative
+patronage or its filing export.
+[26 U.S.C. §199A](https://uscode.house.gov/us/usc/119-124/t26/s199A/) ·
+[Draft Form 8995-A](https://www.irs.gov/pub/irs-dft/f8995a--dft.pdf#page=3) ·
+[Draft instructions](https://www.irs.gov/pub/irs-dft/i8995a--dft.pdf#page=8).

@@ -1,5 +1,33 @@
 # 2026 upgrade implementation evidence
 
+## November 26 draft QBI form transfers
+
+`32a455f41` updates the 2026 draft audit for Forms 8995 and 8995-A.
+The audit separates the ordinary deduction and the active-business
+minimum, transfers the final amount from line 17 or 41 to Form 1040
+line 13b, and shows signed loss amounts on the draft carryforward rows.
+The named carryforward magnitudes, 2025 audit keys and deduction values
+are preserved. A minimum that cannot change the total is shown only
+when the known facts establish it. Form 8995-A line 33 also identifies
+the actual deductions used to determine income before QBI.
+[Draft Form 8995 instructions](https://www.irs.gov/pub/irs-dft/i8995--dft.pdf#page=6) ·
+[Draft Form 8995-A instructions](https://www.irs.gov/pub/irs-dft/i8995a--dft.pdf#page=8).
+
+The new assertions reproduced the obsolete line IDs and positive
+loss signs before implementation. All 228 integrated and 182
+independent focused tests passed. The browser input hashes and
+diagnostic manifest were verified without altering test budgets.
+The generated coverage inventory adds only the new traceability entry.
+
+The draft Form 8995-A ordering for combined active minimum and
+cooperative DPAD requires qualified tax review against §199A(a), (g)
+and (i). The direct engine behavior is preserved and the federal
+adapter supplies no cooperative inputs. The annual audit and final
+filing export remain unqualified for this case.
+[Reviewer worksheet](upgrade-2026-human-tax-review-packet.md#november-26-qbi-minimum-and-cooperative-patron-deduction) ·
+[26 U.S.C. §199A](https://uscode.house.gov/us/usc/119-124/t26/s199A/) ·
+[AMD64 CI](https://github.com/utilityfueled/tax-engine/actions/runs/45922794522).
+
 ## November 26 annual deduction lines and Ohio filing chronology
 
 `f34372189` binds the federal audit to the draft annual form and the

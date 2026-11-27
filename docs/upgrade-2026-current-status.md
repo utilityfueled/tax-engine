@@ -9,6 +9,11 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `32a455f41` aligns both federal QBI deduction audits with the 2026
+  drafts. All 228 integrated and 182 independent focused tests passed.
+  The existing cooperative calculation remains subject to qualified
+  review of the statute and draft ordering. [QBI evidence](upgrade-2026-progress.md#november-26-draft-qbi-form-transfers).
+
 - `f34372189` follows the November 24 federal draft's deduction line
   assignments. `c209b9b00` preserves Ohio draft review for timely filed
   and paid returns observed after April 15. Focused tests and independent

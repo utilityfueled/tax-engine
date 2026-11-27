@@ -3,9 +3,10 @@
     "asOf": "2026-11-26",
     "branch": "main",
     "applicationCommit": "f34372189684b5341fa911ca3ad8a468abd5f85f",
-    "latestScopedApplicationCommit": "c14606b59a3f25dee2f34b0f8cddeb524c451be1",
+    "latestScopedApplicationCommit": "32a455f41cd8c7a7c8e31ded00b3ad7591cb94d0",
     "latestCombinedCandidateCommit": "f34372189684b5341fa911ca3ad8a468abd5f85f",
     "annualDeductionLinesEvidenceKey": "activeContinuation.nov26AnnualDeductionLines",
+    "draftQbiFormsEvidenceKey": "activeContinuation.nov26DraftQbiForms",
     "ohioTimelyObservationEvidenceKey": "activeContinuation.nov26OhioTimelyObservation",
     "previousSchemaDiagnosticsEvidenceKey": "activeContinuation.nov26PreviousSchemaFailureDiagnostics",
     "w2gAndGuidedExactMoneyEvidenceKey": "activeContinuation.nov26W2gGuidedExactMoney",
@@ -142,14 +143,27 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Both strict Linux browser gates and target image evidence remain open. AMD64 Web 45920349552 covers c14606b59. ARM64 recovery 45919423965 covers f34372189, which has the same audited application and browser inputs. Earlier ARM64 45906276956 passed image/archive and stopped inside the pinned-schema migration before Chromium.",
-      "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960 and the Marketplace estimate exception. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
+      "Both strict Linux browser gates and target image evidence remain open. AMD64 Web 45922794522 covers the latest 32a455f41 application. ARM64 recovery 45919423965 covers the prior f34372189 application. Earlier ARM64 45906276956 passed image/archive and stopped inside the pinned-schema migration before Chromium.",
+      "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
       "Hosted cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open."
     ]
   },
   "activeContinuation": {
+    "nov26DraftQbiForms": {
+      "commit": "32a455f41cd8c7a7c8e31ded00b3ad7591cb94d0",
+      "draftForm8995": "https://www.irs.gov/pub/irs-dft/f8995--dft.pdf#page=2",
+      "draftForm8995A": "https://www.irs.gov/pub/irs-dft/f8995a--dft.pdf#page=3",
+      "statute": "https://uscode.house.gov/us/usc/119-124/t26/s199A/",
+      "integratedFocusedTestsPassed": 228,
+      "independentEngineeringTestsPassed": 182,
+      "browserSourceManifestVerified": true,
+      "cooperativeDraftVersusStatuteReview": "open",
+      "cooperativeReviewWorksheet": "docs/upgrade-2026-human-tax-review-packet.md#november-26-qbi-minimum-and-cooperative-patron-deduction",
+      "finalFormQualification": "open",
+      "amd64WebRun": 45922794522
+    },
     "nov26AnnualDeductionLines": {
       "commit": "f34372189684b5341fa911ca3ad8a468abd5f85f",
       "draftForm1040": "https://www.irs.gov/pub/irs-dft/f1040--dft.pdf#page=3",
