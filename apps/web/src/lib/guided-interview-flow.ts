@@ -105,6 +105,7 @@ import { clearGuidedPensionCoverage, updateGuidedPensionCoverage, type Retiremen
 import { invalidateEditedGuidedQcdSource, replayGuidedQcdOwnerReview, updateGuidedQcdEntries } from "./guided-retirement-source-inputs";
 import type { GuidedIraBasisData, GuidedIraBasisContext } from "./guided-ira-basis";
 import { guidedCommercialScheduleCContext, reviewCommercialScheduleCLink } from "./guided-commercial-vehicle-schedule-c";
+import { reopenCommercialVehicleWorkpaper, reviewCommercialVehicleWorkpaper } from "./guided-commercial-vehicle-workpaper";
 import { commercialVehicleOriginalFactError, vehicleFactErrors, type VehicleCreditData } from "./guided-vehicle-facts";
 import { adoptionFactErrors, type AdoptionCreditData } from "./guided-adoption-facts";
 import { invalidateAdoptionHistories } from "./guided-adoption-prior-benefits";
@@ -1780,12 +1781,16 @@ function clearCommercialScheduleCLink(vehicles: VehicleCreditData): VehicleCredi
   if (!original?.scheduleCLink) return vehicles;
   return {
     ...vehicles,
-    commercialOriginal: { ...original, scheduleCLink: {
-      ...original.scheduleCLink,
-      reviewedFingerprint: undefined,
-      sameOwnerAndVehicleConfirmed: original.scheduleCLink.sameOwnerAndVehicleConfirmed === false ? false : null,
-      scopeAndAmountsConfirmed: original.scheduleCLink.scopeAndAmountsConfirmed === false ? false : null,
-    } },
+    commercialOriginal: {
+      ...original,
+      scheduleCLink: {
+        ...original.scheduleCLink,
+        reviewedFingerprint: undefined,
+        sameOwnerAndVehicleConfirmed: original.scheduleCLink.sameOwnerAndVehicleConfirmed === false ? false : null,
+        scopeAndAmountsConfirmed: original.scheduleCLink.scopeAndAmountsConfirmed === false ? false : null,
+      },
+      ...(original.workpaper ? { workpaper: { records: original.workpaper.records } } : {}),
+    },
   };
 }
 
@@ -3154,6 +3159,12 @@ export function updateSectionData(
     && (commercialVehicleOriginalFactError(commercialVehicles, nextState.taxYear)
       || reviewCommercialScheduleCLink(commercialOriginal, guidedCommercialScheduleCContext(nextState)).fingerprint !== commercialLink.reviewedFingerprint)) {
     nextState.sectionData.credits = { ...commercialCredits, vehicles: clearCommercialScheduleCLink(commercialVehicles) };
+  } else if (commercialCredits && commercialVehicles && commercialOriginal?.workpaper?.reviewedFingerprint !== undefined
+    && (commercialVehicles.entries.length || commercialVehicleOriginalFactError(commercialVehicles, nextState.taxYear)
+      || !reviewCommercialVehicleWorkpaper(commercialOriginal, guidedCommercialScheduleCContext(nextState)).packet)) {
+    nextState.sectionData.credits = { ...commercialCredits, vehicles: { ...commercialVehicles, commercialOriginal: {
+      ...commercialOriginal, workpaper: { records: commercialOriginal.workpaper.records },
+    } } };
   }
   let nextStateReturn = nextState.sectionData["state-return"];
   if (state.taxYear === 2025 && state.segmentation.stateCode === "OH" && nextStateReturn) {
@@ -3916,6 +3927,17 @@ export function parseGuidedFlowState(raw: string | null): GuidedFlowState | null
       if (sectionData["income-retirement"]) {
         sectionData["income-retirement"] = { ...sectionData["income-retirement"], entries: sectionData["income-retirement"].entries.map((entry) => ({ ...entry, requiresCodeConfirmation: entry.distributionCode === "7" || entry.requiresCodeConfirmation })) };
       }
+    }
+    const vehicles = sectionData.credits?.vehicles;
+    const original = vehicles?.commercialOriginal;
+    if (sectionData.credits && vehicles && original?.workpaper !== undefined) {
+      sectionData.credits = {
+        ...sectionData.credits,
+        vehicles: { ...vehicles, commercialOriginal: {
+          ...original,
+          workpaper: reopenCommercialVehicleWorkpaper(original.workpaper),
+        } },
+      };
     }
     const credits = sectionData.credits;
     const llcNeedsYearReview = requiresLlcYearReview(parsed);

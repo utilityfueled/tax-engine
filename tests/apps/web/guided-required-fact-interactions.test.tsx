@@ -2,7 +2,7 @@
 // Spec: spec/federal/guided-input.yaml, child-credit-identity and required-source-facts
 import React, { act, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SectionPersonalInfo } from "@/components/guided-interview/section-personal-info";
 import { HouseholdSourceDetails } from "@/components/guided-interview/household-source-details";
 import { DeductionSourceDetails } from "@/components/guided-interview/deduction-source-details";
@@ -16,6 +16,7 @@ import { buildEducationInput, buildTaxInputFromGuidedData } from "@/lib/guided-i
 import { buildAdoptionInput, type AdoptionCreditData } from "@/lib/guided-adoption-facts";
 import { buildVehicleCreditInput, type VehicleCreditData } from "@/lib/guided-vehicle-facts";
 import { guidedCommercialScheduleCContext } from "@/lib/guided-commercial-vehicle-schedule-c";
+import { guidedCommercialWorkVanFixture } from "../../fixtures/guided-commercial-work-van";
 import { buildDonationsInput, buildForm1098Inputs, buildScheduleHInput } from "@/lib/guided-interview-bridge";
 import { personalFactErrors } from "@/lib/guided-taxpayer-facts";
 import { emptyCreditsData, emptyEducationCreditData, emptyDeductionData, emptyDonationEntry, emptyOtherTaxesData, loadGuidedFlowState, saveGuidedFlowState, updateSectionData, validateSection, type EducationCreditData, type DeductionData, type DonationEntryData, type OtherTaxesData, type PersonalInfoData } from "@/lib/guided-interview-flow";
@@ -252,6 +253,7 @@ describe("required fact interaction boundaries", () => {
     await act(async () => root.render(<Harness />));
     expect(container.textContent).toContain("$44500.25");
     expect(container.textContent).toContain("$125.26");
+    expect(container.querySelector('input[type="file"]')).toBeNull();
     await click("Confirm Schedule C owner and cash ledger");
     expect(latest.sectionData.credits?.vehicles?.commercialOriginal?.scheduleCLink?.reviewedFingerprint).toBeUndefined();
     await change("Original primary taxpayer record", "Filer identity record");
@@ -263,10 +265,80 @@ describe("required fact interaction boundaries", () => {
     await click("Confirm Schedule C owner and cash ledger");
     expect(container.textContent).toMatch(/Schedule C owner and cash ledger linked.*calculation remains on hold/i);
     expect(latest.sectionData.credits?.vehicles?.commercialOriginal?.scheduleCLink?.reviewedFingerprint).toMatch(/^[0-9a-f]{64}$/u);
+    const workpaperInput = control("Commercial vehicle workpaper file");
+    const invalid = new File(["not JSON"], "synthetic.json", { type: "application/json" });
+    Object.defineProperty(invalid, "text", { value: async () => "not JSON" });
+    Object.defineProperty(workpaperInput, "files", { configurable: true, value: [invalid] });
+    await act(async () => { workpaperInput.dispatchEvent(new Event("change", { bubbles: true })); });
+    expect(container.querySelector('[role="alert"]')?.textContent).toMatch(/valid commercial vehicle workpaper/i);
+    expect(latest.sectionData.credits?.vehicles?.commercialOriginal).not.toHaveProperty("workpaper");
     await change("Original annual cash ledger record", "Replacement cash ledger");
+    expect(container.querySelector('input[type="file"]')).toBeNull();
     expect(control("Do these exact amounts cover the full cash ledger for this business, excluding vehicle costs and other activities?").value).toBe("");
     expect(latest.sectionData.credits?.vehicles?.commercialOriginal?.scheduleCLink?.reviewedFingerprint).toBeUndefined();
     expect(buildTaxInputFromGuidedData(latest)).toBeNull();
+  });
+  it("imports the commercial workpaper locally and explicitly confirms it through saved replay", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2027, 0, 2, 12));
+    try {
+      const { state, linked, records } = guidedCommercialWorkVanFixture();
+      const credits = state.sectionData.credits ?? emptyCreditsData;
+      let latest = updateSectionData(state, "credits", {
+        ...credits,
+        vehicles: { entries: [], commercialOriginal: { ...linked, workpaper: undefined } },
+      });
+      const original = () => latest.sectionData.credits?.vehicles?.commercialOriginal;
+      function Harness() {
+        const [current, setCurrent] = useState(latest);
+        const sourceCredits = current.sectionData.credits ?? emptyCreditsData;
+        return <VehicleSourceDetails taxYear={2026} filingStatus="single" data={sourceCredits.vehicles}
+          scheduleCContext={guidedCommercialScheduleCContext(current)} onChange={(vehicles) => {
+            latest = updateSectionData(current, "credits", { ...sourceCredits, vehicles });
+            setCurrent(latest);
+          }} />;
+      }
+      await act(async () => root.render(<Harness />));
+      const workpaperInput = control("Commercial vehicle workpaper file");
+      const raw = JSON.stringify(records);
+      const workpaper = new File([raw], "fictional-workpaper.json", { type: "application/json" });
+      Object.defineProperty(workpaper, "text", { value: async () => raw });
+      Object.defineProperty(workpaperInput, "files", { configurable: true, value: [workpaper] });
+      await act(async () => { workpaperInput.dispatchEvent(new Event("change", { bubbles: true })); });
+      expect(original()?.workpaper).toBeUndefined();
+      await click("Save imported workpaper");
+      expect(original()?.workpaper?.records).toEqual(records);
+      expect(original()?.workpaper?.reviewedFingerprint).toBeUndefined();
+      await click("Confirm workpaper against originals");
+      expect(original()?.workpaper?.reviewedFingerprint).toMatch(/^[0-9a-f]{64}$/u);
+      expect(container.textContent).toContain("Workpaper confirmed.");
+
+      const largeFile = new File([], "oversized-workpaper.json", { type: "application/json" });
+      const readOversized = vi.fn();
+      Object.defineProperty(largeFile, "size", { value: 1024 * 1024 + 1 });
+      Object.defineProperty(largeFile, "text", { value: readOversized });
+      Object.defineProperty(workpaperInput, "files", { configurable: true, value: [largeFile] });
+      const confirmed = original()?.workpaper;
+      await act(async () => { workpaperInput.dispatchEvent(new Event("change", { bubbles: true })); });
+      expect(container.querySelector('[role="alert"]')?.textContent).toMatch(/up to 1 MB/i);
+      expect(readOversized).not.toHaveBeenCalled();
+      expect(original()?.workpaper).toEqual(confirmed);
+
+      const key = "commercial-van-workpaper-replay";
+      expect(saveGuidedFlowState(window.localStorage, key, latest)).toBe(true);
+      const reopened = loadGuidedFlowState(window.localStorage, key);
+      expect(reopened).toBeTruthy();
+      if (!reopened) throw new Error("Expected the commercial workpaper draft to reopen");
+      latest = reopened;
+      await act(async () => root.render(<Harness key="reopened" />));
+      expect(original()?.workpaper?.records).toEqual(records);
+      expect(container.textContent).toContain("Workpaper confirmed.");
+      await click("Remove saved workpaper");
+      expect(original()?.workpaper).toBeUndefined();
+      expect(original()?.scheduleCLink?.reviewedFingerprint).toMatch(/^[0-9a-f]{64}$/u);
+    } finally {
+      vi.useRealTimers();
+    }
   });
   it("records child credit identity as unknown false and true without guessing from an SSN", async () => {
     let latest: PersonalInfoData = { ...completePersonalInfo, employmentValidSsnIssuedByDueDate: null, tinIssuedByDueDate: null, childTaxCredit: { nonTaxableCombatPayElection: "0.20" }, dependentCount: "1", dependents: [{ ...completeDependent, ctcSsnEligible: null }] };

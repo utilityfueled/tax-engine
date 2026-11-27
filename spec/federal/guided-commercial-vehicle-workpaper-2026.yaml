@@ -1,0 +1,38 @@
+form: "Guided commercial clean vehicle workpaper"
+description: "Private saved original workpapers for one first-year Section 45W work van"
+lines:
+  - line: "saved-first-year-work-van"
+    description: "Bind an independently confirmed first-year workpaper to actual vehicle and Schedule C evidence"
+    formula: |
+      Reuse the existing confirmed 2026 Single primary cash Schedule C owner
+      and ledger review. For one work truck or van over 6,000 and under 14,000
+      pounds with a documented 100 percent bonus claim, preserve the complete
+      actual vehicle eligibility, basis, depreciation and current credit
+      workpapers in the same secured draft. Verify that the calendar year
+      has closed against the local observation date before accepting annual
+      inventory, mileage, participation and credit originals. Require the contract, payment,
+      possession, owner, activity, asset and reported claim to match. Use
+      separate original participation, AMT asset basis and credit inventory
+      records. Require explicit review of these records and preserve that
+      confirmation only while the workpapers and their linked facts agree.
+      Send the matching Schedule C and Form 8936 source packets together.
+      Leave monetary calculation to the canonical federal engine.
+    irsRef: "IRC §§38, 45W and 168; Instructions for Form 8936, https://www.irs.gov/instructions/i8936; Instructions for Form 4562, https://www.irs.gov/instructions/i4562"
+    testRef: "tests/guided-interview/guided-commercial-vehicle-workpaper.test.ts::reopens an actual reviewed first-year work van and sends both verified source packets"
+  - line: "saved-first-year-work-van-holds"
+    description: "Hold incomplete, edited, conflicting and out-of-scope workpapers"
+    formula: |
+      Preserve supported source records without using pending, mismatched or
+      stale review as proof. On reopening a draft, discard a malformed workpaper
+      and its confirmation while retaining the separate vehicle and ledger facts.
+      An edit to a material linked original
+      or workpaper revokes its review, even if the old value is later restored.
+      Do not admit personal vehicles, competing ledger deductions, multiple
+      assets, a prior-year carryback workpaper or other depreciation methods in
+      this path. The engine holds any application that needs a prior-year
+      carryback or an unsupported computation. Leave existing public preview,
+      filing, export and annual-source qualification gates in force.
+    testRef: "tests/guided-interview/guided-commercial-vehicle-workpaper.test.ts::keeps incomplete, conflicting and subsequently edited workpapers from canonical input"
+    testRefs:
+      - "tests/guided-interview/guided-commercial-vehicle-workpaper.test.ts::leaves a verified workpaper with unused credit subject to the canonical carryback hold"
+      - "tests/guided-interview/guided-commercial-vehicle-workpaper.test.ts::drops unsupported document data from a saved workpaper while retaining the vehicle and ledger"

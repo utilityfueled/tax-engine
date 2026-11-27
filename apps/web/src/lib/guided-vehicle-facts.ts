@@ -3,6 +3,7 @@ import { parseGuidedCurrency } from "./guided-currency";
 import type { CommercialCleanVehicle2026Source } from "@/models/inputs";
 import { currentLocalCivilDate, isActualDate } from "@/utils/civil-date";
 import { reviewCommercialScheduleCLink, type GuidedCommercialScheduleCContext, type GuidedCommercialScheduleCLink } from "./guided-commercial-vehicle-schedule-c";
+import { reviewCommercialVehicleWorkpaper, type GuidedCommercialVehicleWorkpaper } from "./guided-commercial-vehicle-workpaper";
 
 export interface VehicleEntryData {
   kind?: "new" | "used" | "";
@@ -36,6 +37,7 @@ export interface VehicleEntryData {
 export type CommercialVehicleOriginal = Partial<Pick<CommercialCleanVehicle2026Source,
   "vin" | "bindingContractDate" | "bindingContractReference" | "paymentDate" | "paymentReference" | "datePlacedInService" | "placedInServiceReference">> & {
     scheduleCLink?: GuidedCommercialScheduleCLink;
+    workpaper?: GuidedCommercialVehicleWorkpaper;
   };
 
 export interface VehicleCreditData {
@@ -95,9 +97,16 @@ export function commercialVehicleOriginalFactError(data: VehicleCreditData | und
 
 export function commercialVehicleOriginalError(data: VehicleCreditData | undefined, taxYear?: number | null, context?: GuidedCommercialScheduleCContext): string | undefined {
   if (data?.commercialOriginal === undefined) return undefined;
-  return commercialVehicleOriginalFactError(data, taxYear)
-    ?? (data.commercialOriginal.scheduleCLink && context ? reviewCommercialScheduleCLink(data.commercialOriginal, context).message
-      : "Commercial vehicle calculation is on hold until the Schedule C, depreciation and current credit records are linked to these originals.");
+  const originalError = commercialVehicleOriginalFactError(data, taxYear);
+  if (originalError) return originalError;
+  if (!data.commercialOriginal.scheduleCLink || !context) {
+    return "Commercial vehicle calculation is on hold until the Schedule C, depreciation and current credit records are linked to these originals.";
+  }
+  if (data.commercialOriginal.workpaper !== undefined) {
+    if (data.entries.length) return "This first-year workpaper requires one commercial vehicle and no personal vehicle credit entries.";
+    return reviewCommercialVehicleWorkpaper(data.commercialOriginal, context).message;
+  }
+  return reviewCommercialScheduleCLink(data.commercialOriginal, context).message;
 }
 
 export function vehicleFactErrors(data: VehicleCreditData | undefined, taxYear?: number | null, status?: FilingStatus | null, context?: GuidedCommercialScheduleCContext): Record<string, string> {

@@ -506,6 +506,14 @@ lines:
     testRefs:
       - "tests/apps/web/guided-required-fact-interactions.test.tsx::confirms the original commercial VIN owner and exact cash ledger in the guided panel"
 
+  - line: "commercial-vehicle-workpaper-import"
+    description: "Retain and confirm a local structured commercial vehicle workpaper"
+    formula: "After the current 2026 commercial vehicle has a confirmed Schedule C owner and cash ledger, accept one structured JSON workpaper from the original vehicle, depreciation and credit records. Parse it locally and save only the structured records. Reject invalid or oversized files without changing the saved workpaper. Import leaves any review unconfirmed. The user must explicitly confirm a source-matched current workpaper before the calculation adapter emits it. Changes to source linkage hide the controls until the new ledger is confirmed. The existing public preview and filing gates govern all outputs."
+    irsRef: "IRC §45W; Form 4562 instructions; Form 8936 instructions"
+    testRef: "tests/apps/web/guided-required-fact-interactions.test.tsx::confirms the original commercial VIN owner and exact cash ledger in the guided panel"
+    testRefs:
+      - "tests/apps/web/guided-required-fact-interactions.test.tsx::imports the commercial workpaper locally and explicitly confirms it through saved replay"
+
   - line: "hsa-actual-contribution-sources"
     description: "Calculate HSA deductions from actual owner-specific eligibility and contribution sources"
     formula: "Require twelve known monthly HDHP, Medicare and disqualifying-coverage answers, actual dependency/year/timing, separate personal and employer worksheet amounts, and actual special-history answers. Changing a retained account's contribution year or actual owner requires renewed monthly eligibility, contribution timing, and payroll review. A replacement worksheet for the same owner requires fresh review when it displaces the previous worksheet, including a simultaneous row identifier and year change. Reset each specific confirmation when its coverage period, designation, or applicable records change. Changing the prior excess-source year or its amounts requires fresh review of the actual prior Form 5329 figures and current year-end value. Once this specific annual review has been required, entering an amount into a blank field also invalidates any earlier annual answer. Preserve entered amounts and keep the changed confirmations pending on reopening. First entries on an untracked worksheet continue through ordinary source review. Equivalent values, reordering and independently added worksheets for a different owner preserve their own confirmations. Legacy deduction estimates cannot establish actual contribution data. Preserve unknown, false, zero and Decimal cents."

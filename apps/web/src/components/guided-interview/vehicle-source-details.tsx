@@ -5,6 +5,7 @@ import { reviewCommercialScheduleCLink, type GuidedCommercialScheduleCContext, t
 import { commercialVehicleOriginalError, commercialVehicleOriginalFactError, type VehicleCreditData, type VehicleEntryData } from "@/lib/guided-vehicle-facts";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
+import { CommercialVehicleWorkpaper } from "./commercial-vehicle-workpaper";
 
 function FilingStatusFact({ label, value, onChange }: { label: string; value: FilingStatus | "" | undefined; onChange: (value: FilingStatus | "") => void }) {
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value ?? ""} onChange={(event) => onChange(event.target.value as FilingStatus | "")}><option value="">Choose the actual prior-year status</option>{filingStatusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>;
@@ -105,6 +106,10 @@ export function VehicleSourceDetails({ data, taxYear, filingStatus, scheduleCCon
             onClick={() => updateLink({ reviewedFingerprint: scheduleCReview.fingerprint })}>Confirm Schedule C owner and cash ledger</button>
         </> : !link && <p className="guided-hint">{scheduleCReview.message}</p>}
       </fieldset>}
+      {taxYear === 2026 && scheduleCContext && scheduleCReview?.fingerprint && scheduleCReview.fingerprint === link?.reviewedFingerprint && (
+        <CommercialVehicleWorkpaper key={scheduleCReview.fingerprint} original={commercial} context={scheduleCContext}
+          onChange={(workpaper) => updateCommercial({ workpaper })} />
+      )}
       <p className="guided-hint">{commercialVehicleOriginalError(current, taxYear, scheduleCContext)}</p>
       <button type="button" className="utility-button" onClick={() => update({ commercialOriginal: undefined })}>Remove business-only commercial vehicle</button>
     </fieldset> : taxYear === 2026 && <button type="button" className="utility-button" onClick={() => update({ commercialOriginal: {} })}>Add business-only commercial vehicle</button>}

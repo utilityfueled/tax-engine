@@ -7534,6 +7534,26 @@
       ]
     },
     {
+      "key": "federal/guided-commercial-vehicle-workpaper-2026",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": "spec/federal/guided-commercial-vehicle-workpaper-2026.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/guided-coverage-family-health",
       "jurisdiction": "federal",
       "taxYear": 2025,

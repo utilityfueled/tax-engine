@@ -76,7 +76,9 @@ import { childCreditExclusionValues, dependentFactErrors, personalFactErrors } f
 import { allowsBlankEicChildIdentifier, type EicSeparatedSpouseData } from "./guided-eic-separated-spouse";
 import { buildGuidedEicClaimantEligibility } from "./guided-eic-eligibility";
 import { allowsBlankForm8862ChildIdentifier, type Form8862Data } from "./guided-form-8862";
-import { buildVehicleCreditInput, vehicleFactErrors } from "./guided-vehicle-facts";
+import { buildVehicleCreditInput, commercialVehicleOriginalFactError } from "./guided-vehicle-facts";
+import { guidedCommercialScheduleCContext } from "./guided-commercial-vehicle-schedule-c";
+import { reviewCommercialVehicleWorkpaper } from "./guided-commercial-vehicle-workpaper";
 import { buildAdoptionInput, adoptionFactErrors } from "./guided-adoption-facts";
 import { allPaymentFacts, assertKnownFacts, currentLocalCivilDate, deductionAmountYearErrors, deductionFactErrors, educationFactErrors, federalPaymentReceiptFacts, guidedDonationValue, hasEnteredAmount, paymentFactErrors, readGuidedTangiblePropertyUse, retirementFactErrors } from "./guided-required-facts";
 import { buildGuidedMedicalMileage } from "./guided-medical-mileage";
@@ -856,6 +858,10 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const deductionData = sectionData["deductions"] as DeductionData | undefined;
   const adjustmentData = sectionData["adjustments"] as AdjustmentData | undefined;
   const creditsData = sectionData["credits"] as CreditsData | undefined;
+  const vehicles = creditsData?.vehicles;
+  const commercialOriginal = vehicles?.commercialOriginal;
+  let commercialWorkpaper: ReturnType<typeof reviewCommercialVehicleWorkpaper>["packet"];
+  let form8936: GuidedTaxInputSources["form8936"];
   const otherTaxesData = sectionData["other-taxes"] as OtherTaxesData | undefined;
   const paymentData = sectionData["payments"] as PaymentData | undefined;
   const stateReturnData = sectionData["state-return"] as StateReturnData | undefined;
@@ -932,7 +938,14 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     assertKnownFacts(careBenefitsFactErrors(creditsData?.dependentCareBenefits, state.taxYear, segmentation.filingStatus, careBenefitSources));
     assertKnownFacts(careFactErrors(creditsData?.dependentCare, segmentation.filingStatus, { data: creditsData?.dependentCareBenefits, year: state.taxYear, sources: careBenefitSources }));
     assertKnownFacts(energyFactErrors(creditsData?.energy, state.taxYear, segmentation.filingStatus));
-    assertKnownFacts(vehicleFactErrors(creditsData?.vehicles, state.taxYear, segmentation.filingStatus));
+    if (commercialOriginal !== undefined) {
+      if (vehicles?.entries.length || commercialVehicleOriginalFactError(vehicles, state.taxYear)) return null;
+      commercialWorkpaper = reviewCommercialVehicleWorkpaper(commercialOriginal, guidedCommercialScheduleCContext(state)).packet;
+      if (!commercialWorkpaper) return null;
+      form8936 = commercialWorkpaper.form8936;
+    } else {
+      form8936 = buildVehicleCreditInput(vehicles, state.taxYear, segmentation.filingStatus);
+    }
     assertKnownFacts(adoptionFactErrors(creditsData?.adoption, state.taxYear, segmentation.filingStatus, personalInfo));
   } catch { return null; }
 
@@ -971,6 +984,13 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     ? buildGuidedFirstHomeSource(firstHomeEntry.code1IraFirstHomeSource, guidedCode1IraOriginal(firstHomeEntry, iraExceptionOwnerBirthDate))
     : undefined;
   const primaryFirstName = combineGivenNameWithMiddleInitial(personalInfo.firstName, personalInfo.middleName);
+  if (commercialWorkpaper) {
+    if (!scheduleC?.sourceFacts) return null;
+    const proof = commercialWorkpaper.scheduleC;
+    scheduleC.sourceFacts = { ...scheduleC.sourceFacts, section45WFirstYear: {
+      ...proof, owner: { ...proof.owner, firstName: primaryFirstName },
+    } };
+  }
   const educationOwnerFingerprint = educationEntry ? guidedIraEducationOwnerFingerprint({
     firstName: primaryFirstName, lastName: personalInfo.lastName, ssn: personalInfo.ssn,
   }) : undefined;
@@ -1165,7 +1185,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     ...studentLoans,
     energyCredits,
     ...(form8911 ? { form8911 } : {}),
-    form8936: buildVehicleCreditInput(creditsData?.vehicles, state.taxYear, segmentation.filingStatus),
+    form8936,
     form8839: buildAdoptionInput(creditsData?.adoption, state.taxYear, segmentation.filingStatus, personalInfo),
     scheduleH,
     iraDeductionWorksheet,
