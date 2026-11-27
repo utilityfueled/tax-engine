@@ -9,6 +9,11 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `07710f086` and `d92d17742` align the remaining upper draft QBI
+  audit rows. The phase-in tests verify lines 12, 25, 26, 27 and 32.
+  The ordinary draft audit uses numbered source labels. All 426
+  combined focused tests passed. [QBI transfer evidence](upgrade-2026-progress.md#november-26-upper-qbi-audit-transfers).
+
 - `dba45278c` combines verified bank interest and ordinary cash
   dividends in the inbound Pennsylvania part-year draft. The source
   checks, state tax and Schedule SP tests passed. Final 2026 filing

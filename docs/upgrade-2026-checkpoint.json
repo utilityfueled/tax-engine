@@ -3,10 +3,11 @@
     "asOf": "2026-11-26",
     "branch": "main",
     "applicationCommit": "32a455f41cd8c7a7c8e31ded00b3ad7591cb94d0",
-    "latestScopedApplicationCommit": "dba45278c615a38bc0134bbbe3db42599db38142",
+    "latestScopedApplicationCommit": "d92d17742fcd37d6304127bc258d4cac6c6fa019",
     "latestCombinedCandidateCommit": "32a455f41cd8c7a7c8e31ded00b3ad7591cb94d0",
     "annualDeductionLinesEvidenceKey": "activeContinuation.nov26AnnualDeductionLines",
     "draftQbiFormsEvidenceKey": "activeContinuation.nov26DraftQbiForms",
+    "upperQbiAuditEvidenceKey": "activeContinuation.nov26UpperQbiAudit",
     "paCombinedInvestmentEvidenceKey": "activeContinuation.nov26PACombinedOrdinaryInvestment",
     "ohioTimelyObservationEvidenceKey": "activeContinuation.nov26OhioTimelyObservation",
     "previousSchemaDiagnosticsEvidenceKey": "activeContinuation.nov26PreviousSchemaFailureDiagnostics",
@@ -144,7 +145,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Both strict Linux browser gates and target image evidence remain open. AMD64 Web 45922794522 covers the latest 32a455f41 application. ARM64 recovery 45919423965 covers the prior f34372189 application. Earlier ARM64 45906276956 passed image/archive and stopped inside the pinned-schema migration before Chromium. Another earlier ARM64 run, 45914423019, also failed the pinned-schema migration.",
+      "Both strict Linux browser gates and target image evidence remain open. AMD64 Web 45927516117 covers the latest d92d17742 application. ARM64 recovery 45919423965 covers the prior f34372189 application. Earlier ARM64 45906276956 passed image/archive and stopped inside the pinned-schema migration before Chromium. Another earlier ARM64 run, 45914423019, also failed the pinned-schema migration.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -152,6 +153,19 @@
     ]
   },
   "activeContinuation": {
+    "nov26UpperQbiAudit": {
+      "simpleFormCommit": "07710f086ffde0178f69b100f44e3a81e39f98c8",
+      "detailedFormCommit": "d92d17742fcd37d6304127bc258d4cac6c6fa019",
+      "simpleFocusedTestsPassed": 284,
+      "detailedFocusedTestsPassed": 172,
+      "combinedFocusedTestsPassed": 426,
+      "independentEngineeringReview": "passed after ordinal regression recheck",
+      "browserSourceManifestVerified": true,
+      "reviewWorksheet": "docs/upgrade-2026-human-tax-review-packet.md#november-26-upper-qbi-form-transfers",
+      "amountsAndArchivedBehaviorPreserved": true,
+      "amd64WebRun": 45927516117,
+      "finalFormQualification": "open"
+    },
     "nov26PACombinedOrdinaryInvestment": {
       "commit": "dba45278c615a38bc0134bbbe3db42599db38142",
       "residency": "part-year inbound",
@@ -161,6 +175,8 @@
       "paTaxAndActualWithholding": "1200",
       "worldwideScheduleSPEligibilityIncome": "75240",
       "focusedTestsPassed": 219,
+      "broadPennsylvaniaTestsPassed": 3116,
+      "broadPennsylvaniaTestFilesPassed": 176,
       "scopedSpecReferencesPassed": 1290,
       "independentEngineeringReview": "passed",
       "finalFormQualification": "open"

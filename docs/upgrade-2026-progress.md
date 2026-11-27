@@ -1,5 +1,37 @@
 # 2026 upgrade implementation evidence
 
+## November 26 upper QBI audit transfers
+
+`07710f086` follows draft Form 8995 lines 1–14 for individual
+business amounts, signed ordinary and REIT/PTP loss inputs, and
+the zero floors on lines 4, 8 and 13. It includes additional
+businesses in line 2 and explains the taxable income supplied
+by the caller. `d92d17742` traces the draft Form 8995-A phase-in
+for the supported ordinary methods, including lines 26 to 12
+and 16 to 27 and the effect on line 32. The review fixture has
+$239,250 of taxable income before QBI, $100,000 of business QBI,
+$20,000 of business wages and $1,000 of qualified REIT dividends.
+The audit reports $5,000 on line 25, $15,000 on lines 12, 26 and
+27, and $15,200 on line 32.
+[Draft Form 8995](https://www.irs.gov/pub/irs-dft/f8995--dft.pdf#page=2) ·
+[Draft Form 8995-A](https://www.irs.gov/pub/irs-dft/f8995a--dft.pdf#page=3) ·
+[Draft Form 8995-A instructions](https://www.irs.gov/pub/irs-dft/i8995a--dft.pdf#page=8).
+
+The packages preserve named deduction and carryforward amounts
+and the prior-year audit and PDF. Independent review identified
+raw business names in draft audit metadata. Regressions reproduced
+the exposure with synthetic markers, and the new draft rows now
+use source ordinals, including overflow, Schedule C, aggregation
+and PTP detail. Independent re-review passed. The cooperative
+branch retains its original amount and is held for qualified tax
+review. Final 2026 export qualification remains open.
+
+Simple and detailed focused suites passed 284 and 172 tests.
+After combining the two packages with Pennsylvania, all 426
+targeted tests passed. Exact inventory and browser input bindings
+were verified. The Pennsylvania package also passed 3,116 tests
+across 176 files.
+
 ## November 26 combined Pennsylvania investment sources
 
 `dba45278c` supports one complete original Form 1099-INT and one

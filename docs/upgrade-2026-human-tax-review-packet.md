@@ -655,3 +655,21 @@ with $1,199, keeping all income facts constant. Confirm the treatment
 on the final 2026 state forms when published.
 [Department of Revenue residency guidance](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/determining-residency) ·
 [Schedule SP instructions](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40sp.pdf).
+
+## November 26 upper QBI form transfers
+
+For Form 8995, use $1,000 and negative $250 of current QBI from two
+businesses, a $2,000 prior business QBI loss, $200 in current qualified
+REIT dividends and a separate $600 prior qualified REIT/PTP loss.
+Use $10,000 of taxable income before QBI and $200 of gains and qualified
+dividends. Derive lines 2 through 14 and the two separate carryforwards.
+
+For Form 8995-A, assume a single filer, $239,250 of taxable income
+before QBI, a non-SSTB with $100,000 of QBI and $20,000 of business
+wages, zero UBIA, $1,000 of qualified REIT dividends and no other
+deduction, loss or cooperative facts relevant to this form. Derive
+the Part III reduction, the transfer through Part II, and line 32.
+Record the official thresholds, loss presentation and final form
+revision used in the independent worksheet.
+[Draft Form 8995](https://www.irs.gov/pub/irs-dft/f8995--dft.pdf#page=2) ·
+[Draft Form 8995-A](https://www.irs.gov/pub/irs-dft/f8995a--dft.pdf#page=3).
