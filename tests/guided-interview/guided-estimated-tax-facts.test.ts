@@ -178,6 +178,39 @@ it("keeps independently linked credits, distinct dates or amounts and explicit z
   expect(input?.form2210?.priorYearCreditPayments).toEqual([{ date: "2026-04-15", amount: "100" }]);
   expect(input?.adjustments?.priorYearAppliedCredits).toEqual([{ sourceTaxYear: 2025, amount: "100", type: "federal" }]);
 });
+it("holds impossible and future 2026 dates after a payment draft reopens", () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2027, 0, 20, 12));
+  const reopen = (patch: Partial<EstimatedTaxFactsData>) => {
+    const state = stateWith({ ...emptyPaymentData, estimatedTaxFacts: { ...filedPriorReturnFacts2026(), ...patch } });
+    state.taxYear = 2026;
+    const reopened = parseGuidedFlowState(JSON.stringify(state));
+    if (!reopened) throw new Error("The actual payment draft must reopen");
+    expect(reopened.sectionData.payments?.estimatedTaxFacts).toMatchObject(patch);
+    return reopened;
+  };
+  const unknown = reopen({});
+  expect(buildTaxInputFromGuidedData(unknown)?.form2210?.returnPayments).toEqual([]);
+  expect(buildTaxInputFromGuidedData(unknown)?.form2210?.returnFiledDate).toBeUndefined();
+  const actual = { returnPayments: [{ date: "2027-01-20", amount: "12000.00" }],
+    earlyReturnExceptionClaimed: true, returnFiledDate: "2027-01-20", returnPaidInFullDate: "2027-01-20" };
+  expect(validateSection(reopen(actual), "payments").status).toBe("complete");
+  expect(buildTaxInputFromGuidedData(reopen(actual))?.form2210).toMatchObject({
+    returnPayments: [{ date: "2027-01-20", amount: "12000" }],
+    returnFiledDate: "2027-01-20", returnPaidInFullDate: "2027-01-20",
+  });
+  for (const date of ["2026-12-31", "2027-01-21", "2027-02-29"]) {
+    for (const patch of [
+      { ...actual, returnPayments: [{ date, amount: "12000.00" }] },
+      { ...actual, returnFiledDate: date },
+      { ...actual, returnPaidInFullDate: date },
+    ]) {
+      const held = reopen(patch);
+      expect(validateSection(held, "payments")).toMatchObject({ status: "partial", allowSkip: false });
+      expect(buildTaxInputFromGuidedData(held)).toBeNull();
+    }
+  }
+});
 it("holds conflicting positive prior-return refunds through Payments and the bridge", () => {
   for (const year of [2025, 2026]) {
     const credit = { sourceTaxYear: String(year - 1), amount: "872.09" };
@@ -291,6 +324,8 @@ it("applies the prior-tax high-income multiplier once to the original amount", (
 });
 
 it("uses the farmer deadline, keeps waiver answers exact and leaves unknown answers unknown", () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2027, 2, 3, 12));
   const farmer = { ...facts(), farmerOrFisher: true, farmingIncomeTwoThirdsConfirmed: true };
   const build = (patch: Partial<EstimatedTaxFactsData>, year = 2025, base = farmer) => buildEstimatedTaxFacts({ ...emptyPaymentData, estimatedTaxFacts: { ...base, sourceTaxYear: String(year), ...patch } }, year);
   const dates = (date: string) => ({ earlyReturnExceptionClaimed: true, returnFiledDate: date, returnPaidInFullDate: date });

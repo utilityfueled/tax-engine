@@ -20,7 +20,10 @@ const raw = (taxYear: 2025 | 2026, adjustmentFacts: object) => ({
 });
 const run = (year: 2025 | 2026, facts = adjustments(), asOfDate?: string) => calculateFederalTax(parseInput(raw(year, facts)), { asOfDate });
 
-function datedPenaltyReturn(year: 2025 | 2026, adjustmentFacts: object, returnPayments: readonly object[]) {
+function datedPenaltyReturn(year: 2025 | 2026, adjustmentFacts: object, returnPayments: readonly object[], options: {
+  asOfDate?: string;
+  filingDates?: { returnFiledDate?: string; returnPaidInFullDate?: string };
+} = {}) {
   const base = raw(year, adjustmentFacts);
   return calculateFederalTax(parseInput(JSON.parse(JSON.stringify({
     ...base, w2s: base.w2s.map(w2 => ({ ...w2, federalWithheld: "0" })),
@@ -29,8 +32,9 @@ function datedPenaltyReturn(year: 2025 | 2026, adjustmentFacts: object, returnPa
       waiverRequested: false, calculationMethod: "regular", withholdingMethod: "equal-installments",
       priorYearTaxStatus: "return-filed", priorYearFullYear: true, priorYearJointReturn: false,
       priorYearTaxComputationConfirmed: true, priorYearTaxForForm2210: "8000", priorYearAgiForForm2210: "85000", returnPayments,
+      ...options.filingDates,
     },
-  }))));
+  }))), { asOfDate: options.asOfDate });
 }
 
 describe("Actual federal payment dates and selected return application", () => {
@@ -88,6 +92,63 @@ describe("Actual federal payment dates and selected return application", () => {
       expect(JSON.stringify(result.allLines)).not.toMatch(/fictional-.*-original/iu);
       const legacy = { date: "2026-04-09", amount: paid.amount };
       expect(datedPenaltyReturn(2025, adjustments([], [{ ...legacy, type: "federal" }]), [legacy]).form2210?.totalPayments.toFixed()).toBe("4000.02");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("requires an observed following-year payment date for 2026 balance due", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2027, 3, 10, 12));
+    try {
+      const runOn = (date: string, asOfDate?: string) => datedPenaltyReturn(
+        2026, adjustments(), [{ date, amount: "2000.01" }], { asOfDate },
+      );
+      for (const date of ["2026-04-15", "2026-12-31"]) {
+        expect(() => runOn(date)).toThrow(/following calendar year/u);
+      }
+      expect(() => runOn("2027-04-12")).toThrow(/on or before the calculation as-of date/u);
+      expect(() => runOn("2027-04-10", "2027-04-09")).toThrow(/on or before the calculation as-of date/u);
+      expect(() => runOn("2027-04-10", "2027-04-11")).toThrow(/as-of date.*on or before today/u);
+      expect(() => runOn("2027-01-01", "2027-02-29")).toThrow(/as-of date.*valid calendar date/u);
+      expect(() => runOn("2027-02-29")).toThrow(/actual calendar date/iu);
+      for (const date of ["2027-01-01", "2027-01-15", "2027-04-10"]) {
+        expect(runOn(date, date).form2210?.totalPayments.toFixed()).toBe("2000.01");
+      }
+      expect(runOn("2027-04-10").form2210?.totalPayments.toFixed()).toBe("2000.01");
+      const noActualReturnDates = datedPenaltyReturn(2026, adjustments(), [], { asOfDate: "2027-04-11" });
+      expect(noActualReturnDates.form2210?.totalPayments.toFixed()).toBe("0");
+      expect(noActualReturnDates.form2210?.underpayment.toFixed()).toBe("8000");
+      const installments = ["2026-06-15", "2026-09-15", "2027-01-15"]
+        .map(date => ({ date, amount: "2000.01", type: "federal" }));
+      expect(datedPenaltyReturn(2026, adjustments(installments), []).form2210?.totalPayments.toFixed()).toBe("6000.03");
+      vi.setSystemTime(new Date(2028, 0, 1, 12));
+      expect(runOn("2027-12-31").form2210?.totalPayments.toFixed()).toBe("0");
+      expect(() => runOn("2028-01-01")).toThrow(/following calendar year/u);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("requires actual filing and full-payment dates before granting the 2026 early-return exception", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2027, 0, 20, 12));
+    try {
+      const returnPayments = [{ date: "2027-01-20", amount: "16000.05" }];
+      const runWith = (filingDates?: { returnFiledDate: string; returnPaidInFullDate: string }, asOfDate?: string) =>
+        datedPenaltyReturn(2026, adjustments(), returnPayments, { filingDates, asOfDate }).form2210;
+      const observed = { returnFiledDate: "2027-01-20", returnPaidInFullDate: "2027-01-20" };
+      const actual = runWith(observed);
+      const withoutProof = runWith();
+      expect(actual?.installments[3].payments.toFixed()).toBe("16000.05");
+      expect(withoutProof?.installments[3].payments.toFixed()).toBe("0");
+      expect(withoutProof?.exactPenalty.minus(actual?.exactPenalty ?? 0).toFixed(6)).toBe("2.191781");
+      expect(() => runWith({ ...observed, returnFiledDate: "2027-01-21" })).toThrow(/on or before the calculation as-of date/u);
+      expect(() => runWith({ ...observed, returnPaidInFullDate: "2027-02-01" })).toThrow(/on or before the calculation as-of date/u);
+      expect(() => runWith({ ...observed, returnFiledDate: "2026-12-31" })).toThrow(/following calendar year/u);
+      vi.setSystemTime(new Date(2027, 0, 22, 12));
+      expect(() => runWith({ ...observed, returnFiledDate: "2027-01-21" }, "2027-01-20")).toThrow(/on or before the calculation as-of date/u);
+      expect(runWith(observed, "2027-01-20")?.exactPenalty.toFixed()).toBe(actual?.exactPenalty.toFixed());
     } finally {
       vi.useRealTimers();
     }

@@ -161,6 +161,24 @@ lines:
       - "tests/engine/federal-payment-date-sources.test.ts::holds 2026 balance-due duplicates before they reduce the installment penalty"
       - "tests/engine/federal-payment-date-sources.test.ts::keeps independently documented 2026 installment payments and legacy 2025 entries"
 
+  - line: "actual-balance-due-chronology"
+    description: Validate observed payment, filing and full-payment dates before using the 2026 facts
+    formula: |
+      The actual calendar-year balance-due payment and any recorded return
+      filing and full-payment dates must be valid civil dates from January 1
+      through December 31 of the following calendar year. They must be on or
+      before the trusted calculation as-of date, which defaults to the
+      runtime civil date and cannot be in the future. A same-day occurrence
+      is sufficient. Missing actual evidence does not establish a payment or
+      the early-return exception. Earlier installments, separate estimated
+      and extension payments, deemed withholding and applied-credit effective
+      dates retain their existing source and treatment. Preserve 2025 behavior.
+    irsRef: "IRC 6654(b)(2), 6654(h), and Form 2210 instructions Part III line 11 and Table 1"
+    testRef: "tests/engine/federal-payment-date-sources.test.ts::requires an observed following-year payment date for 2026 balance due"
+    testRefs:
+      - "tests/engine/federal-payment-date-sources.test.ts::requires actual filing and full-payment dates before granting the 2026 early-return exception"
+      - "tests/guided-interview/guided-estimated-tax-facts.test.ts::holds impossible and future 2026 dates after a payment draft reopens"
+
   - line: "12a-12d"
     description: "Previous overpayment"
     formula: "Previous column line18, zero in column a"

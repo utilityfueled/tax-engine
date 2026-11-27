@@ -1,5 +1,5 @@
 import Decimal from "decimal.js";
-import { assertPriorReturnCreditSource } from "@/engine/forms/federal-payment-date-sources";
+import { assertActualFederalBalanceDueDates, assertPriorReturnCreditSource } from "@/engine/forms/federal-payment-date-sources";
 import { buildEstimatedInvestmentElection, type EstimatedInvestmentElectionData } from "./guided-estimated-investment-election";
 import { Form2210Schema, type TaxYearInput } from "@/models/inputs";
 import type { EstimatedPaymentEntry, FilingStatus, PaymentData } from "./guided-interview-flow";
@@ -203,6 +203,11 @@ export function buildEstimatedTaxFacts(
     const deadline = facts.farmerOrFisher === true ? (taxYear === 2025 ? "2026-03-02" : "2027-03-01") : (taxYear === 2025 ? "2026-02-02" : "2027-02-01");
     if (early !== (facts.returnFiledDate <= deadline && facts.returnPaidInFullDate <= deadline)) throw new Error("Actual filing/payment dates conflict with the early-return exception answer.");
   }
+  const filingDates = {
+    returnFiledDate: facts.returnFiledDate || undefined,
+    returnPaidInFullDate: facts.returnPaidInFullDate || undefined,
+  };
+  assertActualFederalBalanceDueDates(year, { returnPayments, ...filingDates });
   return Form2210Schema.parse({
     calendarYearTaxpayer: facts.calendarYearTaxpayer, residentReturn: facts.residentReturn, farmerOrFisher: facts.farmerOrFisher,
     disasterReliefClaimed: facts.disasterReliefClaimed, waiverRequested: facts.waiverRequested, calculationMethod: facts.calculationMethod, withholdingMethod: facts.withholdingMethod,
@@ -216,7 +221,7 @@ export function buildEstimatedTaxFacts(
     priorYearTaxStatus: facts.priorYearTaxStatus, priorYearFullYear: facts.priorYearFullYear ?? undefined, priorYearResidentAllYear: facts.priorYearResidentAllYear ?? undefined,
     priorYearJointReturn: facts.priorYearJointReturn ?? undefined, priorYearTaxComputationConfirmed: facts.priorYearTaxComputationConfirmed ?? undefined,
     priorYearTaxForForm2210: priorTax, priorYearAgiForForm2210: priorAgi, withholdingPayments, priorYearCreditPayments, returnPayments,
-    returnFiledDate: facts.returnFiledDate || undefined, returnPaidInFullDate: facts.returnPaidInFullDate || undefined,
+    ...filingDates,
   });
 }
 export function estimatedTaxFactErrors(data: PaymentData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null): Record<string, string> {

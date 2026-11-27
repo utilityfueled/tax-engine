@@ -29,6 +29,9 @@ lines:
       draft and project distinct opaque positional markers only for payments whose
       positive date and exact amount match. Preserve dates, amounts, explicit zero,
       distinct payments and independently linked prior-year applied credits.
+      When 2026 payment or filing history is entered, reject dates outside the
+      following calendar year or after the same runtime civil date used by the
+      canonical calculation. Preserve unfinished dates in the saved interview.
     irsRef: "26 USC 6654(b)(1)(B) and (c)(2), https://uscode.house.gov/us/usc/119-134/t26/s6654/; Form 2210 Instructions Part III line 11 and Table 1, https://www.irs.gov/instructions/i2210"
     testRef: "tests/guided-interview/guided-estimated-tax-facts.test.ts::holds a repeated January estimated payment through Payments, bridge and draft replay"
     testRefs:

@@ -49,6 +49,44 @@ export function assertPriorReturnCreditSource(
   }
 }
 
+function actualPaymentAsOfDate(calculationAsOfDate?: string): string {
+  const today = currentLocalCivilDate();
+  const asOfDate = calculationAsOfDate ?? today;
+  if (!actualDate.safeParse(asOfDate).success || asOfDate > today) {
+    throw new Error("Federal payment calculation as-of date must be a valid calendar date on or before today.");
+  }
+  return asOfDate;
+}
+
+/** Validate observed return events without assigning dates to an estimate or a projected payment. */
+export function assertActualFederalBalanceDueDates(
+  taxYear: number,
+  facts: {
+    returnPayments?: readonly { date: string }[];
+    returnFiledDate?: string;
+    returnPaidInFullDate?: string;
+  } | undefined,
+  calculationAsOfDate?: string,
+): void {
+  if (taxYear !== 2026 || facts === undefined) return;
+  const dates = [
+    ...(facts.returnPayments ?? []).map(payment => payment.date),
+    facts.returnFiledDate,
+    facts.returnPaidInFullDate,
+  ].filter(date => date !== undefined);
+  if (dates.length === 0) return;
+  const asOfDate = actualPaymentAsOfDate(calculationAsOfDate);
+  if (dates.some(date => !actualDate.safeParse(date).success)) {
+    throw new Error("Federal balance-due payment, filing and full-payment dates require actual calendar dates.");
+  }
+  if (dates.some(date => date < `${taxYear + 1}-01-01` || date > `${taxYear + 1}-12-31`)) {
+    throw new Error("Federal balance-due payment, filing and full-payment dates must be within the following calendar year.");
+  }
+  if (dates.some(date => date > asOfDate)) {
+    throw new Error("Federal balance-due payment, filing and full-payment dates must be on or before the calculation as-of date.");
+  }
+}
+
 export function assertFederalPaymentSources(
   input: Pick<TaxYearInput, "taxpayer" | "adjustments" | "form2210">,
   calculationAsOfDate?: string,
@@ -56,14 +94,8 @@ export function assertFederalPaymentSources(
   const year = input.taxpayer.taxYear;
   const datedPayments = [...(input.adjustments?.estimatedTaxPayments ?? []), ...(input.adjustments?.extensionPayments ?? [])]
     .filter(payment => payment.type === "federal");
-  let paymentAsOfDate: string | undefined;
-  if (year === 2026 && datedPayments.length > 0) {
-    const today = currentLocalCivilDate();
-    paymentAsOfDate = calculationAsOfDate ?? today;
-    if (!actualDate.safeParse(paymentAsOfDate).success || paymentAsOfDate > today) {
-      throw new Error("Federal payment calculation as-of date must be a valid calendar date on or before today.");
-    }
-  }
+  const paymentAsOfDate = year === 2026 && datedPayments.length > 0 ? actualPaymentAsOfDate(calculationAsOfDate) : undefined;
+  assertActualFederalBalanceDueDates(year, input.form2210, paymentAsOfDate ?? calculationAsOfDate);
   const receiptReferences = new Set<string>();
   const receiptByDateAndAmount = new Map<string, boolean>();
   const assertDistinctPositiveReceipt = (payment: { date: string; amount: string; receiptReference?: string }) => {
@@ -110,8 +142,8 @@ export function assertFederalPaymentSources(
   }
   if (year === 2026) {
     for (const payment of input.form2210?.returnPayments ?? []) {
-      if (!actualDate.safeParse(payment.date).success || !isActualPaymentAmount(payment.amount)) {
-        throw new Error("Federal balance-due payment requires its actual calendar date and confirmed nonnegative amount.");
+      if (!isActualPaymentAmount(payment.amount)) {
+        throw new Error("Federal balance-due payment requires a confirmed nonnegative amount.");
       }
       assertDistinctPositiveReceipt(payment);
     }
