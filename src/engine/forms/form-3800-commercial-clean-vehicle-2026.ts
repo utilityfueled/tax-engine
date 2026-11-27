@@ -3,16 +3,16 @@ import type Decimal from "decimal.js";
 import { z } from "zod";
 import { calculateForm3800 } from "@/engine/forms/form-3800.js";
 import { calculateCommercialCleanVehicleCredit2026 } from "@/engine/forms/form-8936-commercial-clean-vehicle-2026.js";
+import { allocateOrdinarySection39Carryback } from "@/engine/forms/section39-ordinary-carryback.js";
 import { CommercialCleanVehicle2026SourceSchema } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
+import { Section45WPriorYearWorkpaperSchema } from "@/models/section45w-current-credit.js";
 import { AuditTrail } from "@/utils/audit.js";
-import { d, min, zeroFloor } from "@/utils/decimal.js";
+import { d } from "@/utils/decimal.js";
 
 const FORM = "Form 3800";
 const reference = z.string().refine(value => value.trim().length > 0);
 const originalMoney = z.string().regex(/^\d{1,12}(?:\.\d{1,2})?$/u);
-// The statutory percentage in a confirmed prior limitation can produce fractions of a cent.
-const derivedMoney = z.string().regex(/^\d{1,12}(?:\.\d{1,4})?$/u);
 const currentTaxWorkpaper = { taxYear: z.literal(2026), reference };
 
 const workpaperSchema = z.strictObject({
@@ -44,21 +44,7 @@ const workpaperSchema = z.strictObject({
     otherNonrefundableCredits: originalMoney,
     allowableSection38ReductionsReconciledConfirmed: z.literal(true),
   }),
-  priorYear: z.strictObject({
-    taxYear: z.literal(2025),
-    filingStatus: z.literal("single"),
-    samePrimaryTaxpayerAndCalendarYearConfirmed: z.literal(true),
-    filedReturnReference: reference,
-    section38LimitationReference: reference,
-    priorityCreditOrderingReference: reference,
-    section39CapacityVerifiedConfirmed: z.literal(true),
-    onlyOrdinarySection38PriorityCreditsConfirmed: z.literal(true),
-    excludesProposedCarrybackConfirmed: z.literal(true),
-    section38Limitation: derivedMoney,
-    section38CarryforwardAndCurrentCredits: derivedMoney,
-    // No source tax year falls between successive calendar years 2025 and 2026.
-    earlierSourceYearCarrybacks: derivedMoney.refine(value => d(value).isZero()),
-  }).optional(),
+  priorYear: Section45WPriorYearWorkpaperSchema.optional(),
 });
 
 type WorkpaperInput = z.input<typeof workpaperSchema>;
@@ -102,11 +88,10 @@ export function calculateCommercialCleanVehicleForm3800Workpaper2026(input: Work
     throw new Error("Unused §45W credit requires confirmed 2025 §39 capacity workpapers before calculating a carryforward.");
   }
 
-  const priorYearSection39Capacity = priorYear
-    ? zeroFloor(d(priorYear.section38Limitation).minus(priorYear.section38CarryforwardAndCurrentCredits))
-    : undefined;
-  const carrybackTo2025 = priorYearSection39Capacity !== undefined ? min(unusedCredit2026, priorYearSection39Capacity) : zero;
-  const potentialCarryforwardTo2027 = unusedCredit2026.minus(carrybackTo2025);
+  const allocated = priorYear ? allocateOrdinarySection39Carryback(unusedCredit2026, priorYear) : undefined;
+  const priorYearSection39Capacity = allocated?.priorYearSection39Capacity;
+  const carrybackTo2025 = allocated?.carryback ?? zero;
+  const potentialCarryforwardTo2027 = allocated?.potentialCarryforward ?? unusedCredit2026;
   const audit = new AuditTrail();
   audit.merge(vehicleLines);
   audit.record(FORM, "current-year-limitation", "Ordinary 2026 general business credit limitation", current.creditLimitation,

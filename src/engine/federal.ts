@@ -135,6 +135,7 @@ import { calculateSchedule2 } from "./schedules/schedule-2.js";
 import { calculateForm2210 } from "./forms/form-2210.js";
 import { getForm2210DistributionOnlyBounds } from "./forms/form-2210-schedule-ai.js";
 import { calculateForm3800 } from "./forms/form-3800.js";
+import { allocateOrdinarySection39Carryback } from "./forms/section39-ordinary-carryback.js";
 import { calculateForm5695 } from "./forms/form-5695.js";
 import { calculateForm8911 } from "./forms/form-8911.js";
 import { calculateForm8815, type Form8815Result } from "./forms/form-8815.js";
@@ -311,6 +312,10 @@ function calculateFederalTaxReturn(input: TaxYearInput, context?: { asOfDate?: s
     if (!isActualDate(asOfDate) || asOfDate > today) throw new Error("Current Section 45W credit requires a valid calculation as-of date on or before today.");
     if (input.form8936.commercialCleanVehicles?.some(({ datePlacedInService }) => !isActualDate(datePlacedInService) || datePlacedInService > asOfDate)) {
       throw new Error("Current Section 45W credit requires actual vehicle possession on or before the calculation as-of date.");
+    }
+    const priorYear = input.form8936.commercialCleanVehicleCurrentCredit.priorYearCarryback;
+    if (priorYear && (!isActualDate(priorYear.filedReturnDate) || priorYear.filedReturnDate <= "2025-12-31" || priorYear.filedReturnDate > asOfDate)) {
+      throw new Error("Section 45W carryback requires a prior return filing date after 2025 and on or before the calculation as-of date.");
     }
   }
   if (input.paMarriedOrdinarySources?.paymentSources !== undefined) {
@@ -4693,22 +4698,50 @@ function calculateFederalTaxCore(sourceInput: TaxYearInput, marketplace?: Market
       otherNonrefundableCredits: otherCredits,
     });
     if (section45WCurrentCredit) {
-      if (!form3800.allowableCredit.eq(section45WCurrentCredit)) {
-        throw new Error("Unused current Section 45W credit requires actual 2025 Section 39 capacity before federal calculation.");
-      }
       const section45WAudit = new AuditTrail();
       section45WAudit.record("Form 3800", "ordinary-section38-limitation", "Ordinary current-year business credit limitation",
-        form3800.creditLimitation, "Net income tax less the greater of tentative minimum tax or 25% of net regular tax above $25,000", {
+        form3800.creditLimitation, "Net income tax less the greater of tentative minimum tax or 25% of net regular tax above the statutory threshold", {
           "Net income tax": form3800.netIncomeTax,
           "Earlier allowable credits": form3800.personalCredits,
           "Tentative minimum tax": form3800.tentativeMinimumTax,
           "25% of net regular tax above $25,000": form3800.twentyFivePercentExcess,
         });
       section45WAudit.record("Form 3800", "current-year-section45w", "Allowable direct commercial clean vehicle credit",
-        form3800.allowableCredit, "Verified direct credit fully allowed within the current ordinary limitation", {
+        form3800.allowableCredit, "Verified direct credit allowed within the current ordinary limitation", {
           "Verified tentative direct credit": section45WCurrentCredit,
         });
-      form3800 = { ...form3800, lines: section45WAudit.getLines() };
+      const unused = section45WCurrentCredit.minus(form3800.allowableCredit);
+      let potentialCarryforward = unused;
+      if (unused.gt(0)) {
+        const current = input.form8936?.commercialCleanVehicleCurrentCredit;
+        const priorYear = current?.priorYearCarryback;
+        if (!priorYear) throw new Error("Unused current Section 45W credit requires actual 2025 Section 39 capacity before federal calculation.");
+        if (filingStatus !== "single" || input.taxpayer.spouse) {
+          throw new Error("The Section 45W carryback workpaper requires the same single filing status; other statuses need separate attribution.");
+        }
+        const priorTin = priorYear.filedReturnTaxpayerTin.replace(/[-\s]/gu, "");
+        if (priorYear.taxpayerReference !== current.creditInventory.taxpayerReference
+          || priorTin !== input.taxpayer.primary.ssn.replace(/[-\s]/gu, "")) {
+          throw new Error("Section 45W carryback evidence must match the original 2025 taxpayer and verified current taxpayer.");
+        }
+        const priorVehicleStatus = input.form8936?.priorYearFilingStatus;
+        if ((priorVehicleStatus !== undefined && priorVehicleStatus !== priorYear.filingStatus)
+          || input.form2210?.priorYearTaxStatus === "no-return" || input.form2210?.priorYearFullYear === false
+          || input.form2210?.priorYearJointReturn === true) {
+          throw new Error("Section 45W carryback evidence conflicts with the recorded prior return status.");
+        }
+        const allocation = allocateOrdinarySection39Carryback(unused, priorYear);
+        potentialCarryforward = allocation.potentialCarryforward;
+        section45WAudit.record("Form 3800", "section45w-unused-2026", "2026 direct commercial clean vehicle credit not used",
+          unused, "Verified tentative direct credit less the amount allowed in 2026");
+        section45WAudit.record("Form 3800", "section45w-carryback-to-2025", "Commercial clean vehicle credit eligible for 2025 carryback",
+          allocation.carryback, "Smaller of the unused 2026 credit and verified 2025 Section 39 capacity", {
+            "Verified 2025 Section 39 capacity": allocation.priorYearSection39Capacity,
+          });
+        section45WAudit.record("Form 3800", "section45w-potential-carryforward-to-2027", "Potential commercial clean vehicle carryforward to 2027",
+          potentialCarryforward, "Unused 2026 credit after the 2025 carryback amount");
+      }
+      form3800 = { ...form3800, carryforwardToNextYear: potentialCarryforward, lines: section45WAudit.getLines() };
     }
     generalBusinessCredit = form3800.allowableCredit;
     audit.merge(form3800.lines);
@@ -5260,6 +5293,9 @@ function calculateFederalTaxCore(sourceInput: TaxYearInput, marketplace?: Market
         ? calculateForm1099C(form1099CForms, codExclusion, filingStatus, constants)
         : undefined;
       const hasCodExclusions = form1099CResult && form1099CResult.totalExclusions.greaterThan(0);
+      if (hasCodExclusions && section45WCurrentCredit && form3800 && section45WCurrentCredit.gt(form3800.allowableCredit)) {
+        throw new Error("Unused Section 45W credit and cancellation-of-debt exclusions require separate Section 108 attribute reconciliation.");
+      }
       if (codNolReduction && (!form1099CResult
         || !form1099CResult.totalCancelledDebt.eq(codNolReduction.sourceDischargedAmount)
         || !form1099CResult.totalInterestIncluded.eq(codNolReduction.sourceIncludedInterest)

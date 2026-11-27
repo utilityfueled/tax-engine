@@ -3,6 +3,7 @@ import Decimal from "decimal.js";
 import { expect, it, vi } from "vitest";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { parseInput } from "@/ingest/loader.js";
+import { principalResidenceCodInput } from "../fixtures/cod-principal-residence.js";
 import { marketplaceActualCashInput } from "../fixtures/marketplace-actual-cash.js";
 import { section45WBasisOriginals, section45WDepreciationOriginals } from "../fixtures/section45w-first-year.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
@@ -118,6 +119,138 @@ it("reduces the ordinary Section 38 limitation by earlier actual nonrefundable c
   expect(result.form3800?.personalCredits.toFixed()).toBe("2200");
   expect(result.form3800?.creditLimitation.toFixed()).toBe("7516");
   expect(result.schedule3?.generalBusinessCredit.toFixed()).toBe("6000");
+});
+
+it("holds separate filing for this direct credit regardless of available current tax", () => {
+  const input = actualReturn();
+  expect(() => calculateFederalTax(parseInput({ ...input,
+    taxpayer: { ...input.taxpayer, filingStatus: "married_filing_separately" },
+  }))).toThrow(/Single cash return/u);
+});
+
+function actualUnusedCreditReturn() {
+  const input = actualReturn();
+  const currentCredit = input.form8936.commercialCleanVehicleCurrentCredit;
+  const priorYearCarryback = {
+    taxYear: 2025, filingStatus: "single", taxpayerReference: currentCredit.creditInventory.taxpayerReference,
+    filedReturnTaxpayerTin: input.taxpayer.primary.ssn,
+    samePrimaryTaxpayerAndCalendarYearConfirmed: true,
+    filedReturnReference: "Fictional filed 2025 return",
+    filedReturnDate: "2026-04-15",
+    section38LimitationReference: "Fictional 2025 Section 38 limitation worksheet",
+    priorityCreditOrderingReference: "Fictional original 2025 credit ordering worksheet",
+    section39CapacityVerifiedConfirmed: true, onlyOrdinarySection38PriorityCreditsConfirmed: true,
+    excludesProposedCarrybackConfirmed: true,
+    section38Limitation: "1400", section38CarryforwardAndCurrentCredits: "1000", earlierSourceYearCarrybacks: "0",
+  };
+  const dependent = {
+    lastName: "Dependent", relationship: "child", dateOfBirth: "2016-01-01",
+    monthsLivedWithYou: 12, qualifiesForCTC: true, ctcSsnEligible: true, qualifiesForEIC: false,
+  };
+  return {
+    ...input,
+    childTaxCredit: { possessionIncomeExclusion: "0", bonaFidePuertoRicoResident: false },
+    taxpayer: { ...input.taxpayer, dependents: [
+      { ...dependent, firstName: "First", ssn: "123-45-6790" },
+      { ...dependent, firstName: "Second", ssn: "123-45-6791" },
+    ] },
+    form2210: { ...input.form2210, priorYearTaxStatus: "return-filed", priorYearJointReturn: false,
+      priorYearTaxForForm2210: "3000", priorYearAgiForForm2210: "55000" },
+    form8936: { ...input.form8936, commercialCleanVehicleCurrentCredit: { ...currentCredit, priorYearCarryback } },
+  };
+}
+
+it("splits unused current credit after verified actual 2025 capacity", () => {
+  const original = actualUnusedCreditReturn();
+  const input = parseInput(JSON.parse(JSON.stringify(original)));
+  const result = calculateFederalTax(input);
+  expect(result.ordinaryTax.toFixed()).toBe("18056");
+  expect(result.form6251?.tentativeMinimumTax.toFixed()).toBe("8340");
+  expect(result.childTaxCredit.toFixed()).toBe("4400");
+  expect(result.form3800?.creditLimitation.toFixed()).toBe("5316");
+  expect(result.form3800?.currentYearCredit.toFixed()).toBe("6000");
+  expect(result.schedule3?.generalBusinessCredit.toFixed()).toBe("5316");
+  expect(result.totalTax.toFixed()).toBe("30947");
+  const lines = result.form3800?.lines;
+  expect(lines?.find(line => line.line === "section45w-unused-2026")?.value.toFixed()).toBe("684");
+  expect(lines?.find(line => line.line === "section45w-carryback-to-2025")?.value.toFixed()).toBe("400");
+  expect(lines?.find(line => line.line === "section45w-potential-carryforward-to-2027")?.value.toFixed()).toBe("284");
+  expect(result.form3800?.carryforwardToNextYear.toFixed()).toBe("284");
+  expect(result.carryforwards.generalBusinessCredit.toFixed()).toBe("284");
+  expect(JSON.stringify(lines)).not.toMatch(/Fictional filed|Fictional original|123-45/u);
+});
+
+it("uses actual prior-year filing only on or after the recorded date", () => {
+  const original = actualUnusedCreditReturn();
+  const { commercialCleanVehicleCurrentCredit: current } = original.form8936;
+  const input = parseInput(original);
+  expect(() => calculateFederalTax(input, { asOfDate: "2026-04-14" })).toThrow(/prior return filing date/u);
+  expect(calculateFederalTax(input, { asOfDate: "2026-04-15" }).carryforwards.generalBusinessCredit.toFixed()).toBe("284");
+  const replaceDate = (filedReturnDate: string | undefined) => ({ ...original, form8936: { ...original.form8936,
+    commercialCleanVehicleCurrentCredit: { ...current, priorYearCarryback: { ...current.priorYearCarryback, filedReturnDate } },
+  } });
+  expect(() => calculateFederalTax(parseInput(replaceDate("2025-12-31")))).toThrow(/prior return filing date/u);
+  expect(() => parseInput(replaceDate("2026-02-30"))).toThrow(/filedReturnDate/u);
+  expect(() => parseInput(replaceDate(undefined))).toThrow(/filedReturnDate/u);
+  const fullyUsed = calculateFederalTax(parseInput(actualReturn()), { asOfDate: "2026-04-14" });
+  expect(fullyUsed.schedule3?.generalBusinessCredit.toFixed()).toBe("6000");
+});
+
+it("holds carryback evidence that conflicts with the Form 8936 prior status", () => {
+  const input = actualUnusedCreditReturn();
+  const priorMagi = { priorYearAgi: "55000", priorYearAgiAdjustmentsConfirmed: true };
+  const conflicting = { ...priorMagi, priorYearFilingStatus: "married_filing_jointly" };
+  expect(() => calculateFederalTax(parseInput({ ...input, form8936: { ...input.form8936, ...conflicting } }))).toThrow(/prior return status/u);
+  const agrees = calculateFederalTax(parseInput({ ...input,
+    form8936: { ...input.form8936, ...priorMagi, priorYearFilingStatus: "single" },
+  }));
+  expect(agrees.carryforwards.generalBusinessCredit.toFixed()).toBe("284");
+  const full = actualReturn();
+  expect(calculateFederalTax(parseInput({ ...full, form8936: { ...full.form8936, ...conflicting } })).schedule3?.generalBusinessCredit.toFixed()).toBe("6000");
+});
+
+it("holds missing or conflicting actual carryback evidence and accepts verified zero capacity", () => {
+  const input = actualUnusedCreditReturn();
+  const current = input.form8936.commercialCleanVehicleCurrentCredit;
+  const prior = current.priorYearCarryback;
+  const replace = (priorYearCarryback: unknown) => ({ ...input,
+    form8936: { ...input.form8936, commercialCleanVehicleCurrentCredit: { ...current, priorYearCarryback } },
+  });
+  expect(() => calculateFederalTax(parseInput(replace(undefined)))).toThrow(/actual 2025 Section 39 capacity/u);
+  expect(() => calculateFederalTax(parseInput(replace({ ...prior, taxYear: 2024 })))).toThrow();
+  expect(() => calculateFederalTax(parseInput(replace({ ...prior, earlierSourceYearCarrybacks: "10" })))).toThrow();
+  expect(() => calculateFederalTax(parseInput(replace({ ...prior, filingStatus: "head_of_household" })))).toThrow();
+  expect(() => calculateFederalTax(parseInput(replace({ ...prior, taxpayerReference: "A different original 2025 taxpayer" })))).toThrow(/original 2025 taxpayer/u);
+  expect(() => calculateFederalTax(parseInput(replace({ ...prior, filedReturnTaxpayerTin: "987-65-4321" })))).toThrow(/original 2025 taxpayer/u);
+  expect(() => calculateFederalTax(parseInput({ ...input, form2210: { ...input.form2210, priorYearTaxStatus: "no-return" } }))).toThrow(/prior return status/u);
+  expect(() => calculateFederalTax(parseInput({ ...input, form2210: { ...input.form2210, priorYearJointReturn: true } }))).toThrow(/prior return status/u);
+  expect(() => calculateFederalTax(parseInput({ ...input, taxpayer: { ...input.taxpayer, filingStatus: "head_of_household" } }))).toThrow(/Single cash return/u);
+  const withoutRoom = calculateFederalTax(parseInput(replace({ ...prior, section38Limitation: "1000" })));
+  expect(withoutRoom.schedule3?.generalBusinessCredit.toFixed()).toBe("5316");
+  expect(withoutRoom.form3800?.lines.find(line => line.line === "section45w-carryback-to-2025")?.value.toFixed()).toBe("0");
+  expect(withoutRoom.carryforwards.generalBusinessCredit.toFixed()).toBe("684");
+  const fractional = calculateFederalTax(parseInput(replace({ ...prior, section38Limitation: "1400.0025", filedReturnTaxpayerTin: prior.filedReturnTaxpayerTin.replace(/-/gu, "") })));
+  expect(fractional.schedule3?.generalBusinessCredit.toFixed()).toBe("5316");
+  expect(fractional.carryforwards.generalBusinessCredit.toFixed()).toBe("283.9975");
+  const noLaterBalance = calculateFederalTax(parseInput(replace({ ...prior, section38Limitation: "1800" })));
+  expect(noLaterBalance.form3800?.lines.find(line => line.line === "section45w-carryback-to-2025")?.value.toFixed()).toBe("684");
+  expect(noLaterBalance.carryforwards.generalBusinessCredit.isZero()).toBe(true);
+});
+
+it("holds an actual debt exclusion with a positive unused current credit", () => {
+  const input = actualUnusedCreditReturn();
+  const debt = principalResidenceCodInput(2026);
+  const { firstName, lastName, ssn } = input.taxpayer.primary;
+  const proof = debt.form982PrincipalResidenceSources;
+  const attached = { form1099C: debt.form1099C, form982PrincipalResidenceSources: { ...proof,
+    debt: { ...proof.debt, debtorName: `${firstName} ${lastName}`, debtorSsnLast4: ssn.slice(-4) },
+    acquisition: { ...proof.acquisition, residenceAddress: input.taxpayer.address,
+      outstandingPrincipal: "730000", originalAcquisitionPrincipal: "740000" },
+  } };
+  const completeUse = calculateFederalTax(parseInput({ ...actualReturn(), ...attached }));
+  expect(completeUse.schedule3?.generalBusinessCredit.toFixed()).toBe("6000");
+  expect(completeUse.schedule1?.cancelledDebtIncome.isZero()).toBe(true);
+  expect(() => calculateFederalTax(parseInput({ ...input, ...attached }))).toThrow(/Section 108 attribute reconciliation/u);
 });
 
 it("requires actual commercial vehicle possession by the federal calculation date", () => {

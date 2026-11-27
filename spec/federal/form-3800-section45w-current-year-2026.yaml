@@ -25,12 +25,21 @@ lines:
       regular income tax, AMT/TMT and earlier allowable credits from the actual
       return after the Schedule C deduction. Compute the ordinary limitation as
       net income tax less the greater of TMT or 25 percent of net regular tax
-      over $25,000, floored at zero. Use only the full allowed direct credit on
+      over the statutory threshold ($25,000 for the supported Single return),
+      floored at zero. Use only the current amount allowed on
       Schedule 3 line 6a. Rev. Proc. 2025-32 supplies the 2026 bracket, standard
       deduction and AMT exemption for the numerical fixture.
     testRef: "tests/engine/federal-section45w-current-credit-2026.test.ts::uses actual post-depreciation tax and TMT for one fully usable Section 45W credit"
+  - line: "current-filing-status-hold"
+    description: "Keep the direct credit within the source-qualified Single return"
+    formula: |
+      The existing verified Schedule C depreciation lane requires current Single
+      filing. A separate return would require the equivalent Section 38(c)(6)(A)
+      spouse credit evidence before choosing a $25,000 or $12,500 threshold, even
+      when the resulting 2026 credit could be fully used.
+    testRef: "tests/engine/federal-section45w-current-credit-2026.test.ts::holds separate filing for this direct credit regardless of available current tax"
   - line: "current-year-evidence-hold"
-    description: "Hold missing or competing sources and any credit not fully allowed"
+    description: "Hold missing or competing current and prior-year originals"
     formula: |
       Missing or conflicting direct, participation, qualifying property, credit
       inventory or equal-basis evidence holds the candidate. Reject a contradictory
@@ -42,9 +51,8 @@ lines:
       annualized estimated payments. Do not assume other
       credits, permit competing general business credit or minimum-tax-credit
       calculations, or guess the Form 3800 base when Schedule 2 Part I has additions
-      other than AMT. If any credit is unused, retain the hold pending actual 2025
-      Section 39 capacity, with no assumed carryback or forward balance. Preserve
-      existing holds for business-use personal vehicle claims and filing exports.
+      other than AMT. Preserve existing holds for business-use personal vehicle
+      claims and filing exports.
     testRef: "tests/engine/federal-section45w-current-credit-2026.test.ts::holds unsupported Section 45W evidence and unused current-year credit"
   - line: "actual-possession"
     description: "Only an actually placed-in-service vehicle starts the current credit"
@@ -53,3 +61,60 @@ lines:
       date is valid and on or before today. The confirmed vehicle possession date
       must be on or before that observation date. See https://www.irs.gov/instructions/i8936.
     testRef: "tests/engine/federal-section45w-current-credit-2026.test.ts::requires actual commercial vehicle possession by the federal calculation date"
+  - line: "section45w-carryback-to-2025"
+    description: "Determine the one-year carryback before the potential later balance"
+    formula: |
+      For a positive unused 2026 amount, require current single filing, a filed
+      calendar-year single 2025 return, and supporting ordinary Section 38 limitation
+      and priority-credit workpapers. Match its taxpayer reference and original return taxpayer TIN
+      to the verified current taxpayer. Reject conflicting prior return status and
+      hold changes in filing or marital status for the IRS separate-liability method.
+      Under Section 39(a) and (b), subtract prior carryforward and current priority
+      amounts from the original Section 38 limitation and floor at zero. Confirm
+      zero earlier-source-year carrybacks (the years are consecutive) and exclude
+      this proposed carryback from the 2025 originals. Section 6417(b)(6) limits
+      its longer carryback for this credit to specified tax-exempt entities. Subtract
+      the lesser of unused current credit and 2025 capacity from the unused amount
+      for the potential 2027 balance. Preserve exact Decimal amounts; only the
+      currently allowed credit reduces 2026 tax. The carryback estimate does not
+      prepare an amended return or apply any later-year credit. See
+      https://uscode.house.gov/us/usc/t26/s39/, https://uscode.house.gov/us/usc/t26/s6417/
+      and the IRS Instructions for Form 3800, Carryback and Carryforward of Unused Credit.
+    testRef: "tests/engine/federal-section45w-current-credit-2026.test.ts::splits unused current credit after verified actual 2025 capacity"
+  - line: "section45w-unused-2026"
+    description: "Unused direct credit before any prior-year application"
+    formula: "Subtract the 2026 ordinary allowed credit from the verified tentative direct credit."
+    testRef: "tests/engine/federal-section45w-current-credit-2026.test.ts::splits unused current credit after verified actual 2025 capacity"
+  - line: "section45w-prior-filing-date"
+    description: "Use the actual prior return only after filing"
+    formula: |
+      Require a valid actual original 2025 return filing date for the canonical
+      carryback packet. The date must be after the 2025 calendar-year close and
+      on or before the observed federal calculation date. The same-day filing
+      is permitted. A fully used current credit with no prior packet still uses
+      the current credit and possession evidence only.
+    testRef: "tests/engine/federal-section45w-current-credit-2026.test.ts::uses actual prior-year filing only on or after the recorded date"
+  - line: "section45w-prior-status-consistency"
+    description: "Reconcile prior return status across supplied federal sources"
+    formula: |
+      When unused credit requires a carryback workpaper, compare any explicitly
+      supplied Form 8936 prior-year filing status to the original 2025 Single
+      return before allocation. A conflicting alternative status requires the
+      separate-liability method. Preserve the ordinary current fully used result.
+    testRef: "tests/engine/federal-section45w-current-credit-2026.test.ts::holds carryback evidence that conflicts with the Form 8936 prior status"
+  - line: "section45w-potential-carryforward-to-2027"
+    description: "Hold unsupported prior-year or debt discharge coordination"
+    formula: |
+      A missing, mismatched or otherwise incompatible original holds unused credit.
+      Explicit verified zero 2025 capacity leaves the full current unused amount
+      potentially available for 2027; the canonical carryforward reflects only the
+      post-carryback balance.
+    testRef: "tests/engine/federal-section45w-current-credit-2026.test.ts::holds missing or conflicting actual carryback evidence and accepts verified zero capacity"
+  - line: "section45w-cod-coordination-hold"
+    description: "Defer combined debt exclusion and unused direct credit"
+    formula: |
+      Hold a positive unused credit combined with an actual cancellation-of-debt
+      exclusion pending Section 108 attribute reconciliation. Preserve existing
+      source rules when the 2026 credit is fully used.
+      See https://uscode.house.gov/us/usc/t26/s108/.
+    testRef: "tests/engine/federal-section45w-current-credit-2026.test.ts::holds an actual debt exclusion with a positive unused current credit"
