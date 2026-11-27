@@ -73,6 +73,20 @@ lines:
       reports only unrelated boxes such as rent, royalties or withholding can
       remain in the return.
     testRef: "tests/pdf/form-8919-2026-candidate.test.ts::holds Reason H review when active MISC other income could overlap wages"
+  - line: "reason-g-original-income-overlap"
+    description: "Hold pending SS-8 review when a documented wage source still counts as other income"
+    formula: >-
+      Reason G applies after an SS-8 filing with no IRS reply. The final 2026
+      Form 8919 includes qualifying wages in line 6. When a Reason G original
+      explicitly supplies a positive portion of those wages, apply the same
+      kind, source year, recipient owner, and payer TIN checks used for Reason H
+      to positive active NEC compensation or MISC Box 3 other income. Require
+      explicit original amounts to use valid cents and their sum to be at most
+      the firm's reported wages. Hold possible duplicate classification pending
+      reconciliation. Preserve separately identified
+      income, withholding-only records, and receipt-only originals. Leave
+      public export and filing unqualified.
+    testRef: "tests/pdf/form-8919-2026-candidate.test.ts::holds Reason G review when an original could overlap active Form 1099 income"
   - line: "6-13"
     description: "Reconcile original wages and project calculated summary"
     formula: >-

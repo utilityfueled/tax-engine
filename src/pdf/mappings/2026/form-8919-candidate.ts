@@ -91,8 +91,9 @@ function isDate(value: string): boolean {
   return Number.isFinite(date.valueOf()) && date.toISOString().slice(0, 10) === value;
 }
 
-function assertNoReasonHIncomeOverlap(
+function assertNoOriginalIncomeOverlap(
   input: TaxYearInput, sources: Form8919ReviewSources, firmTin: string, originals: readonly Form1099Original[],
+  reasonCode: "G" | "H",
 ): void {
   type StatementIdentity = Pick<TaxYearInput["form1099Nec"][number], "taxYear" | "accountHolder" | "payerTin">;
   const couldBeSameSource = (row: StatementIdentity) => {
@@ -108,7 +109,7 @@ function assertNoReasonHIncomeOverlap(
   const overlapsMisc = reclassifiedKinds.has("1099-misc") && input.form1099Misc.some(row =>
     d(row.otherIncome).gt(0) && couldBeSameSource(row));
   if (overlapsNec || overlapsMisc) {
-    throw new Error("Form 8919 Reason H wages may overlap active Form 1099 income. Reconcile the original statements and income classification before review.");
+    throw new Error(`Form 8919 Reason ${reasonCode} wages may overlap active Form 1099 income. Reconcile the original statements and income classification before review.`);
   }
 }
 
@@ -146,6 +147,13 @@ function originalFirmDetails(firm: FirmOriginal, sources: Form8919ReviewSources,
       if (!isDate(reason.ss8FiledOn) || reason.ss8FiledOn > sources.reviewedOn || reason.irsReplyReceived !== false) {
         throw new Error("Form 8919 requires an original Form SS-8 filing record and confirmed IRS response status.");
       }
+      if (originals.some(({ reclassifiedWages }) => reclassifiedWages !== undefined && !exactCurrency.test(reclassifiedWages))) {
+        throw new Error("Form 8919 requires original Reason G wage amounts in exact cents when supplied.");
+      }
+      if (sum(...originals.map(original => d(original.reclassifiedWages))).gt(wages)) {
+        throw new Error("Form 8919 original Reason G wage amounts exceed the firm's wages.");
+      }
+      assertNoOriginalIncomeOverlap(input, sources, digits, originals, reason.code);
       break;
     case "H": {
       const matchedW2 = firm.identifierType === "ein" && input.w2s.some(w2 =>
@@ -155,7 +163,7 @@ function originalFirmDetails(firm: FirmOriginal, sources: Form8919ReviewSources,
         || !sum(...originals.map(original => d(original.reclassifiedWages))).eq(wages)) {
         throw new Error("Form 8919 requires the original W-2 and Form 1099 wage reconciliation.");
       }
-      assertNoReasonHIncomeOverlap(input, sources, digits, originals);
+      assertNoOriginalIncomeOverlap(input, sources, digits, originals, reason.code);
       break;
     }
     default:

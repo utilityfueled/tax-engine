@@ -236,6 +236,66 @@ describe("Final 2026 Form 8919 physical candidate", () => {
     await expect(fillForm8919ReviewCandidate({ ...input, form8919: { ...input.form8919, socialSecurityWagesAndTipsAlreadyReported: "183499" } }, sources, bytes)).rejects.toThrow(/payroll/);
   });
 
+  it("holds Reason G review when an original could overlap active Form 1099 income", async () => {
+    const { fillForm8919ReviewCandidate } = await import("@/pdf/mappings/2026/form-8919-candidate.js");
+    const { input, sources } = annualCase();
+    const bytes = await readFile(blank);
+    const firm = sources.firms.find(row => row.reason.code === "G");
+    if (!firm) throw new Error("Form 8919 fixture requires a pending SS-8 firm");
+    const original = {
+      taxYear: 2026, accountHolder: "primary" as const, firmIdentifier: firm.identifier,
+      payerName: firm.name, reclassifiedWages: "600", reference: "Original payment for pending SS-8",
+    };
+    const active = {
+      taxYear: 2026, accountHolder: "primary" as const, payer: firm.name, payerTin: firm.identifier,
+    };
+    type Original = Omit<typeof original, "reclassifiedWages"> & {
+      kind: "1099-misc" | "1099-nec";
+      reclassifiedWages?: string;
+    };
+    const withOriginal = (...originals: Original[]) => ({
+      ...sources,
+      firms: sources.firms.map(candidate => candidate === firm
+        ? { ...firm, receivedForm1099: true, originals }
+        : candidate),
+    });
+    const misc = { ...active, otherIncome: "600" };
+    const miscOriginal = { ...original, kind: "1099-misc" as const };
+    const nec = { ...active, nonemployeeCompensation: "600" };
+    const necOriginal = { ...original, kind: "1099-nec" as const };
+    await expect(fillForm8919ReviewCandidate({ ...input, form1099Misc: [misc] }, withOriginal(miscOriginal), bytes).then(docs => docs.length))
+      .rejects.toThrow(/Reason G.*overlap/);
+    await expect(fillForm8919ReviewCandidate({ ...input, form1099Nec: [{ ...nec, payerTin: undefined }] }, withOriginal(necOriginal), bytes).then(docs => docs.length))
+      .rejects.toThrow(/Reason G.*overlap/);
+    await expect(fillForm8919ReviewCandidate(input, withOriginal({ ...necOriginal, reclassifiedWages: "12.345" }), bytes).then(docs => docs.length))
+      .rejects.toThrow(/original.*amount/i);
+    for (const originals of [
+      [{ ...necOriginal, reclassifiedWages: "600.01" }],
+      [{ ...necOriginal, reclassifiedWages: "300.01" }, { ...miscOriginal, reference: "Second payment", reclassifiedWages: "300" }],
+    ]) {
+      await expect(fillForm8919ReviewCandidate(input, withOriginal(...originals), bytes).then(docs => docs.length))
+        .rejects.toThrow(/original.*exceed.*firm/i);
+    }
+
+    const distinct = {
+      ...input,
+      form1099Nec: [{ ...nec, nonemployeeCompensation: "0", federalWithheld: "25" }],
+      form1099Misc: [{ ...misc, payerTin: "12-0000099" }],
+    };
+    for (const source of [necOriginal, miscOriginal]) {
+      const [review] = await fillForm8919ReviewCandidate(distinct, withOriginal(source), bytes);
+      expect(review.getForm().getTextField(field("f1_28[0]")).getText()).toBe("4000");
+    }
+    const [partial] = await fillForm8919ReviewCandidate(
+      distinct, withOriginal({ ...necOriginal, reclassifiedWages: "0.01" }), bytes,
+    );
+    expect(partial.getForm().getTextField(field("f1_28[0]")).getText()).toBe("4000");
+    const [receiptOnly] = await fillForm8919ReviewCandidate(
+      { ...input, form1099Misc: [misc] }, withOriginal({ ...miscOriginal, reclassifiedWages: undefined }), bytes,
+    );
+    expect(receiptOnly.getForm().getTextField(field("f1_28[0]")).getText()).toBe("4000");
+  });
+
   it("holds Reason H review when active NEC compensation could overlap wages", async () => {
     const { fillForm8919ReviewCandidate } = await import("@/pdf/mappings/2026/form-8919-candidate.js");
     const { input, sources } = annualCase();
