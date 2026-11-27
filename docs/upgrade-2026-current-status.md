@@ -11,9 +11,11 @@ Use the linked progress sections when investigating individual packages.
 
 - `5f958545d` adds linked Form 1099-NEC draft facts to the Form
   8919 interview, keeping the actual residency fact and separate
-  federal-only confirmation. All 60 focused tests passed. Exact
-  local checks follow the existing Chromium run. Qualified filing
-  and state-source treatment remain open.
+  federal-only confirmation. All 60 focused tests passed.
+  `a6111984c` binds the six original-source rules to a matching
+  coverage inventory entry, and the clean inventory check passed.
+  The corrected exact local run is queued. Qualified filing and
+  state-source treatment remain open.
   [Guided evidence](upgrade-2026-progress.md#november-26-guided-form-8919-original).
 
 - `c70e28bdf` applies Form 6251's separate-filer high-income
@@ -29,16 +31,17 @@ Use the linked progress sections when investigating individual packages.
 - `63efb2e25` reconciles Form 8919 wages with the 2026 original
   1099-NEC, preserves withholding and routes eligible overtime to
   draft Schedule 1-A. `b1878ddd0` enforces exact offline evaluation
-  authorization windows. Both reviews passed. Exact local unit,
-  coverage and web build checks passed for `c7d851d39`, with the
-  managed browser run in progress. [Form 8919 and evaluation evidence](upgrade-2026-progress.md#november-26-form-8919-original-and-offline-evaluation-windows).
+  authorization windows. Both reviews passed.
+  [Form 8919 and evaluation evidence](upgrade-2026-progress.md#november-26-form-8919-original-and-offline-evaluation-windows).
 
 - `0d564ea03` applies the independently reconciled 2026 draft ordinary
   tax and EIC tables. `c7d851d39` combines individually verified Ohio
-  part-year interest and cash dividends. Exact local verification and
-  [AMD64 CI](https://github.com/utilityfueled/tax-engine/actions/runs/45932847590)
-  cover the combined source. Final tax review and filing qualification
-  remain open. [Federal and Ohio evidence](upgrade-2026-progress.md#november-26-draft-federal-tables-and-ohio-investment-sources).
+  part-year interest and cash dividends. Exact local verification
+  passed all 11 commands, including 31,084 unit tests and 654
+  Chromium cases, with 88.60% branch coverage. Final tax review
+  and filing qualification remain open.
+  [Federal and Ohio evidence](upgrade-2026-progress.md#november-26-draft-federal-tables-and-ohio-investment-sources) ·
+  [AMD64 CI](https://github.com/utilityfueled/tax-engine/actions/runs/45932847590).
 
 - `b496c367d` fixes the authenticated step that failed during clean
   schema creation on both Linux architectures. The local PostgreSQL

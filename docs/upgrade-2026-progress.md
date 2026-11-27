@@ -11,10 +11,16 @@ answers. A selected or saved state return and actual state reporting
 hold this path. Invalid edits retain the original facts and reset
 their confirmation. The 2026 calculation and filled PDF release
 gates remain in place. All 60 focused tests and the web typecheck
-passed. The exact-source combined local run is queued behind the
-existing browser window. [Form 8919](https://www.irs.gov/pub/irs-pdf/f8919.pdf) ·
+passed. The first exact combined run found a stale generated
+coverage inventory for the new linked-original helper.
+`a6111984c` gives the helper a matching source spec, with all six
+existing rules and test links preserved. All 22 Form 8919 spec
+references resolve, and the clean inventory check passed. The
+inventory records partial coverage with the packet and e-file
+gates still open. The corrected exact-source run is queued.
+[Form 8919](https://www.irs.gov/pub/irs-pdf/f8919.pdf) ·
 [2026 Form 1099-NEC instructions](https://www.irs.gov/instructions/i1099mec) ·
-[AMD64 Web CI](https://github.com/utilityfueled/tax-engine/actions/runs/45935692352).
+[AMD64 Web CI](https://github.com/utilityfueled/tax-engine/actions/runs/45936627770).
 
 ## November 26 separate-filer AMT income addition
 
@@ -99,9 +105,13 @@ Official annual Ohio instructions and mapping qualification remain
 open. [Ohio allocation statute](https://codes.ohio.gov/ohio-revised-code/section-5747.20) ·
 [Draft Ohio instructions](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf).
 
-Exact `c7d851d39` passed the static checks, offline AI artifact check,
-31,084 unit tests with 81 existing skips, coverage at 88.60% branches,
-and the self-host web build. The managed Chromium run is in progress.
+Exact `c7d851d39` passed all 11 required local commands and the
+offline AI artifact check. Unit and coverage each passed 31,084
+tests with 81 existing skips. Branch coverage was 88.60%, above
+the unchanged 85% threshold. Managed Chromium passed 654 cases
+with five existing skips across nine windows and shut down cleanly.
+The run used Node 26.13.1, pypdf 6.10.0 and 15 verified official
+sample files. Exact receipt hashes are in the checkpoint.
 
 ## November 26 self-host migration authentication
 
