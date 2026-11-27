@@ -24,10 +24,10 @@ Use the linked progress sections when investigating individual packages.
   [Tax changes and evidence](upgrade-2026-progress.md#november-26-annual-deduction-lines-and-ohio-filing-chronology) ·
   [Reviewer worksheet](upgrade-2026-human-tax-review-packet.md#november-26-federal-deduction-transfers-and-ohio-filing-dates).
 
-- Exact `c14606b59` passed ten required local commands. Unit and coverage
+- Exact `c14606b59` passed all 11 required local commands. Unit and coverage
   each passed 31,054 tests with 81 existing skips and 88.59% branch
-  coverage. Managed Chromium passed 654 cases on `f34372189`. The
-  exact `c14606b59` browser run is in progress.
+  coverage. Managed Chromium passed 654 cases in nine windows with five
+  existing skips and clean shutdown.
   [Local verification](upgrade-2026-progress.md#november-26-annual-deduction-lines-and-ohio-filing-chronology).
 
 - `810d48f84` identifies failures in the pinned-schema rehearsal by

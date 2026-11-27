@@ -53,15 +53,14 @@ All 96 focused successor tests passed, including the prior-year PDF
 mapping and Form 2555 controls. The browser action audit verified
 the same source closure and budget manifest on both revisions.
 
-The exact `c14606b59` checkout passed ten required local commands and
+The exact `c14606b59` checkout passed all 11 required local commands and
 the offline AI artifact check. Unit and coverage each passed 31,054
 with 81 existing skips. Branch coverage was 88.59% against the 85%
-gate. The web and root builds, three type checks, spec and inventory,
-and lint passed. Managed Chromium on `f34372189` passed 654 in nine
-windows, with five original skips and a clean shutdown. The full
-browser runner also hashes the changed migration script and unit
-test, so that receipt is scoped to `f34372189`. A new managed run
-on the exact successor is in progress.
+gate. Managed Chromium passed 654 in nine windows, with five original
+skips and a clean shutdown. The source-bound receipt is separate from
+the earlier successful browser run on `f34372189`. The exact
+`c14606b59` manifest has SHA-256
+`205f9ff7ec98bbf51d7f13d1ae012756893480a780aeb7da220b2956f20068ff`.
 
 `c209b9b00` allows an already-admitted Ohio 2026 draft filed and paid
 on time to be observed after April 15. Six failing regressions covered

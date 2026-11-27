@@ -19,7 +19,7 @@
     "pinnedSelfHostSchemaEvidenceKey": "activeContinuation.nov26PinnedSelfHostSchema",
     "ohioOrdinaryCashDividendEvidenceKey": "activeContinuation.nov26OhioCashDividend",
     "pennsylvaniaAnnualCashDividendEvidenceKey": "activeContinuation.nov26PaAnnualCashDividend",
-    "latestExactLocalVerificationEvidenceKey": "activeContinuation.nov26RecoveryTaxInputsCombinedLocal",
+    "latestExactLocalVerificationEvidenceKey": "activeContinuation.nov26AnnualDeductionLines.successorLocalEvidence",
     "paPartYearDividendEvidenceKey": "activeContinuation.nov26PAPartYearCashDividend",
     "currentCombinedAndArmEvidenceKey": "activeContinuation.nov26CombinedEvAiAndArm64",
     "evChargerEvidenceKey": "activeContinuation.nov26PersonalEvCharger",
@@ -182,7 +182,7 @@
       "qualifiedIndependentReview": "open",
       "successorLocalEvidence": {
         "commit": "c14606b59a3f25dee2f34b0f8cddeb524c451be1",
-        "exactRequiredCommandsPassed": 10,
+        "exactRequiredCommandsPassed": 11,
         "unitAndCoveragePassesEach": 31054,
         "unitAndCoverageExistingSkipsEach": 81,
         "branchCoveragePercent": "88.59",
@@ -190,7 +190,14 @@
         "offlineAiArtifactCheckPassed": true,
         "officialSampleDocuments": 15,
         "partialEvidenceSha256": "9b86f7d7631435879f172e3b8f0845f6a52595307fb606ad2d3951995e89153e",
-        "managedChromiumStatus": "running"
+        "archiveSha256": "bc41104f0af18f08c46536ad205dfce4c3ea975de89aa0797758d7c3c2a2ce15",
+        "completeEvidenceSha256": "205f9ff7ec98bbf51d7f13d1ae012756893480a780aeb7da220b2956f20068ff",
+        "managedChromiumStatus": "passed",
+        "managedChromiumPassed": 654,
+        "managedChromiumExistingSkips": 5,
+        "managedChromiumWindows": 9,
+        "managedChromiumCleanShutdown": true,
+        "managedChromiumSourceBuildSha256": "1b6068aefc6d5f316df0ac04cf696708fcc4b7000bb7305629ff30d43d1d4534"
       },
       "predecessorManagedChromium": {
         "commit": "f34372189684b5341fa911ca3ad8a468abd5f85f",
