@@ -15,6 +15,26 @@ the latest application revision, exact-source runs and open dependencies. The
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
 
+## November 27 commercial EV first-year depreciation
+
+`302dc037a` joins the original §45W basis workpaper to private, first-year
+Form 4562 depreciation. The original asset, Schedule C activity, mileage,
+vehicle classification, inventory, and contract must agree. The calculation
+applies the documented bonus rate or class election, the service-quarter
+convention, and the passenger ceiling from the applicable original weight.
+In the reviewed example, a $6,000 direct credit reduces $25,000 of basis to
+$19,000. The qualifying 100% bonus deduction is $19,000. The transitional
+case with the same adjusted basis yields $3,800 bonus and $3,040 regular
+depreciation. An independent engineering review checked the formulas and
+source requirements. All 109 focused tests and eight exact-tree static
+checks passed, including 10,274 linked spec lines and the generated inventory.
+Qualified human review, actual parent Schedule C and Form 3800 attribution,
+later-year depreciation, and final filing qualification remain open.
+[IRS Publication 946](https://www.irs.gov/publications/p946) ·
+[Notice 2026-11](https://www.irs.gov/pub/irs-drop/n-26-11.pdf) ·
+[Rev. Proc. 2026-15](https://www.irs.gov/pub/irs-drop/rp-26-15.pdf) ·
+[Draft 2026 Form 4562](https://www.irs.gov/pub/irs-dft/f4562--dft.pdf).
+
 ## November 27 combined exact verification
 
 The tracked archive at `1cd975b37` passed all 11 required local

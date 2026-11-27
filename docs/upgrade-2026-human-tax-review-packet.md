@@ -822,3 +822,39 @@ expected full-return result.
 [26 USC §38](https://uscode.house.gov/us/usc/t26/s38/) ·
 [26 USC §39](https://uscode.house.gov/us/usc/t26/s39/) ·
 [Draft 2026 Form 3800](https://www.irs.gov/pub/irs-dft/f3800--dft.pdf).
+
+For the first-year depreciation review, assume the same vehicle is the only
+asset placed in service in 2026 and is an ordinary passenger car with an
+unloaded gross weight of 3,000 pounds. The full-year records verify 100%
+qualified business mileage, new original use, five-year GDS with 200%
+declining balance, no §179 expense, and no basis adjustments beyond the actual
+§45W claim. Independently derive Form 4562 lines 25, 26(e), 26(h), and 28
+under each of these changes:
+
+- Compare claiming the full per-vehicle credit, a confirmed no-claim position,
+  and a valid five-year class election out of bonus depreciation.
+- With a claimed credit and no bonus election out, compare a written contract
+  enforceable January 19, 2025, with one whose original cancellation rights
+  expire January 20. Assume each qualifies as a timely §45W acquisition.
+- With the bonus election out, compare placing the vehicle in service on
+  September 30 and October 1, 2026.
+- With a $68,000 purchase and pre-credit basis and a $62,000 comparable price,
+  compare the first-year limit for a January 19, 2025 acquisition with 20%
+  bonus versus an election out. Verify the distinction between an ordinary
+  car at 6,000 pounds unloaded and an ordinary truck above 6,000 pounds GVWR.
+
+Review the source boundaries and rounding before attributing this deduction
+to the Schedule C activity or using it in the Form 3800 tax limit.
+Confirm whether the vehicle's adjusted depreciable basis is the same for
+regular tax and AMT in each scenario and verify the resulting Form 6251
+line 2l adjustment. The current instructions describe equal-basis treatment
+for qualified special-allowance property, including the post-2015 election
+out rule. A complete Form 3800 result requires the actual post-depreciation
+return, including the regular tax, tentative minimum tax and applicable
+nonrefundable credits.
+[IRS Publication 946](https://www.irs.gov/publications/p946) ·
+[Form 6251 instructions, Line 2l](https://www.irs.gov/instructions/i6251) ·
+[26 USC §168(k)(2)(G)](https://uscode.house.gov/us/usc/t26/s168/) ·
+[Notice 2026-11](https://www.irs.gov/pub/irs-drop/n-26-11.pdf) ·
+[Rev. Proc. 2026-15](https://www.irs.gov/pub/irs-drop/rp-26-15.pdf) ·
+[Draft 2026 Form 4562](https://www.irs.gov/pub/irs-dft/f4562--dft.pdf).

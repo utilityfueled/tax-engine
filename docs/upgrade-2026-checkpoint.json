@@ -3,9 +3,9 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "1cd975b3786a52a1333dd467b6c5bf8de4b54d37",
-    "latestScopedApplicationCommit": "1fb0542be1d5f82924c761791984d0d7b547cc3a",
+    "latestScopedApplicationCommit": "302dc037a672282061dea9e64b3fc8a13c0bf5f3",
     "latestCombinedCandidateCommit": "1cd975b3786a52a1333dd467b6c5bf8de4b54d37",
-    "latestScopedChecksEvidenceKey": "activeContinuation.nov27CommercialVehicleBasis",
+    "latestScopedChecksEvidenceKey": "activeContinuation.nov27CommercialVehicleFirstYearDepreciation",
     "nov27PaymentReceiptsAndForm8863EvidenceKey": "activeContinuation.nov27PaymentReceiptsAndForm8863",
     "nov27OhioPennsylvaniaPensionEvidenceKey": "activeContinuation.nov27OhioPennsylvaniaPension",
     "nov27PennsylvaniaNonresidentAndAotcEvidenceKey": "activeContinuation.nov27PennsylvaniaNonresidentAndAotc",
@@ -194,6 +194,41 @@
     ]
   },
   "activeContinuation": {
+    "nov27CommercialVehicleFirstYearDepreciation": {
+      "commit": "302dc037a672282061dea9e64b3fc8a13c0bf5f3",
+      "verifiedTree": "69555fed05d74bfb9f7a8137e4e2b0f38554c797",
+      "primarySources": [
+        "https://www.irs.gov/instructions/i8936",
+        "https://www.irs.gov/instructions/i4562",
+        "https://www.irs.gov/publications/p946",
+        "https://www.irs.gov/pub/irs-drop/n-26-11.pdf",
+        "https://www.irs.gov/pub/irs-drop/rp-26-15.pdf",
+        "https://www.irs.gov/pub/irs-dft/f4562--dft.pdf"
+      ],
+      "focusedTestsPassed": 109,
+      "repositorySpecReferencesValidated": 10274,
+      "exactTreeChecksPassed": [
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
+      "engineeringReviewPassed": true,
+      "qualifiedHumanReviewPassed": false,
+      "referenceDirectCredit": "6000",
+      "referenceCreditAdjustedBasis": "19000",
+      "referencePermanentBonus": "19000",
+      "referenceTransitionalBonus": "3800",
+      "referenceTransitionalRegular": "3040",
+      "method": "One original 100%-business vehicle, confirmed five-year GDS 200% declining balance, no §179, first year only",
+      "parentScheduleCAndForm3800AttributionVerified": false,
+      "laterYearDepreciationVerified": false,
+      "filingQualified": false
+    },
     "nov27OhioReciprocityAndAiDispatch": {
       "ohioReciprocity": {
         "commit": "a2a12d1c95428cd6f2dbf6f111361bc3bc71e14d",
