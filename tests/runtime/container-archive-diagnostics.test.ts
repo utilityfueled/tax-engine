@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
 const revision='b'.repeat(40);
 type Mode='index'|'failure'|'oversized'|'invalid'|'valid'|'malformed'|'remote'|'wrongroot'|'wrongarch'|'containers'|'wrongid'|'runroot-limit'|'foreign-root'|'symlink-root'|'changed-identity'|'duplicateids'|'mismatch-env'|'mismatch-layers'|'mismatch-entrypoint'|'mismatch-labels';
 type Receipt={platform:string|null;stage:string;archiveImportVerified:boolean;scratchRemoved:boolean;storeInfoDiagnostics?:{command:string;exitCode:number;stderr:string;truncated:boolean};loadedImageDiagnostics?:{imageListMatches:boolean;signatureMatches:boolean|null;signatureFields:Record<string,boolean>|null;archiveHashMatches:boolean|null}};
-function exercise(mode:Mode,architecture:'amd64'|'arm64'='amd64',mismatch?:'host'|'docker'|'candidate'|'config'|'loaded'){
+function exercise(mode:Mode,architecture:'amd64'|'arm64'='amd64',mismatch?:'host'|'docker'|'candidate'|'config'|'loaded',availableKib=2_097_152){
  const other=architecture==='amd64'?'arm64':'amd64';
  const rawConfig=JSON.stringify({os:'linux',architecture:mismatch==='config'?other:architecture,rootfs:{type:'layers',diff_ids:[`sha256:${'c'.repeat(64)}`]},config:{User:'1001',Cmd:['node','server.js'],Entrypoint:null,Env:['NODE_ENV=production'],Labels:{'org.opencontainers.image.revision':revision}}});
 const imageId=`sha256:${createHash('sha256').update(rawConfig).digest('hex')}`;
@@ -36,6 +36,11 @@ with tarfile.open(sys.argv[1],'w') as t:
  const executable=(name:string,code:string)=>writeFileSync(join(bin,name),`#!${process.execPath}\n${code}`,{mode:0o700});
  executable('mktemp',`const fs=require('node:fs'),cp=require('node:child_process'),a=process.argv.slice(2);if(process.env.FAKE_MODE==='foreign-root'){process.stdout.write(process.env.FAKE_ROOT+'/unowned-victim\\n');process.exit(0)}if(process.env.FAKE_MODE==='symlink-root'){const p=process.env.FAKE_ROOT+'/foreign-link';fs.symlinkSync(process.env.FAKE_ROOT+'/unowned-victim',p);process.stdout.write(p+'\\n');process.exit(0)}const r=cp.spawnSync('/usr/bin/mktemp',a,{encoding:'utf8'});if(r.status===0){fs.writeFileSync(process.env.FAKE_ROOT+'/created-root',fs.realpathSync(r.stdout.trim()));process.stdout.write(r.stdout)}else process.stderr.write(r.stderr);process.exit(r.status??98);`);
  executable('stat',`const fs=require('node:fs'),f=process.argv.at(-1),s=fs.lstatSync(f),changed=process.env.FAKE_MODE==='changed-identity'&&fs.existsSync(process.env.FAKE_ROOT+'/info-ran');process.stdout.write([s.dev,s.ino+(changed?1:0),s.uid,(s.mode&0o777).toString(8)].join(':')+'\\n');`);
+ executable('df', `const fs=require('node:fs');
+const [flag,scratch,...extra]=process.argv.slice(2);
+const created=fs.readFileSync(process.env.FAKE_ROOT+'/created-root','utf8');
+if(flag!=='-Pk'||extra.length||scratch!==fs.realpathSync(created))process.exit(98);
+process.stdout.write('Filesystem 1024-blocks Used Available Capacity Mounted\\nfixture 2097152 0 ${availableKib} 0% /tmp\\n');`);
  executable('uname',`process.stdout.write('${mismatch==='host'?'Linux riscv64':architecture==='arm64'?'Linux aarch64':'Linux x86_64'}\\n');`);
  executable('docker',`const fs=require('node:fs'),a=process.argv.slice(2);if(a.includes('version'))process.stdout.write('linux/${mismatch==='docker'?other:architecture}\\n');else if(a.includes('save')){fs.writeFileSync(process.env.FAKE_ROOT+'/called-export','yes');fs.copyFileSync(process.env.FAKE_ROOT+'/archive-fixture.tar',a[a.indexOf('--output')+1]);}else process.exit(91);`);
  executable('sudo',`const fs=require('node:fs'),cp=require('node:child_process'),a=process.argv.slice(2);if(a.shift()!=='-n'||a.shift()!=='--')process.exit(92);if(a[0]==='rm'){const target=a.at(-1);if(target!==fs.readFileSync(process.env.FAKE_ROOT+'/created-root','utf8'))process.exit(93);fs.rmSync(target,{recursive:true,force:true});process.exit(0)}if(a.shift()!=='env')process.exit(94);const env={...process.env};while(a[0]?.includes('=')){const s=a.shift(),at=s.indexOf('=');env[s.slice(0,at)]=s.slice(at+1)}const r=cp.spawnSync(a.shift(),a,{env,stdio:'inherit'});process.exit(r.status??95);`);
@@ -48,6 +53,22 @@ with tarfile.open(sys.argv[1],'w') as t:
  }finally{const record=join(dir,'created-root');if(existsSync(record)){const owned=readFileSync(record,'utf8');if(/^\/(?:private\/)?tmp\/tax26archive\.[A-Za-z0-9]{8}$/.test(owned))rmSync(owned,{recursive:true,force:true});}rmSync(dir,{recursive:true,force:true});}
 }
 describe('Independent archive owned-store diagnostics',()=>{
+ it('holds archive export below the required scratch capacity',()=>{
+  // The fixture has one layer and a 1 KiB image. The export and load copies
+  // need 2 more KiB plus the 1 GiB margin.
+  const requiredKib = 1_048_579;
+  const short = exercise('valid','amd64',undefined,requiredKib-1);
+  expect(short.exit).not.toBe(0);
+  expect(short.exported).toBe(false);
+  expect(short.loaded).toBe(false);
+  expect(short.receipt).toMatchObject({stage:'archive-capacity',archiveImportVerified:false,scratchRemoved:true});
+
+  const exact = exercise('valid','amd64',undefined,requiredKib);
+  expect(exact.exit).toBe(0);
+  expect(exact.exported).toBe(true);
+  expect(exact.loaded).toBe(true);
+  expect(exact.receipt).toMatchObject({stage:'verified',archiveImportVerified:true,scratchRemoved:true});
+ });
  it('loads the uniquely bound config while retaining the original OCI index identity',()=>{
   const x=exercise('index');expect(x.exit).toBe(0);expect(x.loaded).toBe(true);expect(x.receipt).toMatchObject({archiveImportVerified:true,scratchRemoved:true,loadedImageDiagnostics:{imageListMatches:true,signatureMatches:true,archiveHashMatches:true}});
  });
