@@ -109,6 +109,27 @@ lines:
     label: "PartB total"
     formula: "Sum10through13 minus14, only actual resident owner portions."
     testRef: "tests/engine/state/oh-it-nrc.test.ts::matches independently sourced complete20line actual nonbusiness worksheet"
+  - line: "2026-draft-part-b-applicability"
+    label: "Omit Part B from the 2026 draft audit for all-nonresident returns"
+    formula: |
+      Under the 2026 draft instructions, show Part A (lines 1–9) and Part C
+      (lines 16–20), without Part B (lines 10–15), when every verified return
+      owner is a full-year nonresident. Apply this to the emitted IT NRC
+      Section I rows in the ordinary and business draft results. Preserve
+      the worksheet calculations, part-year and mixed-residency joint rows,
+      business Sections II and III, and existing 2025 results. This does not
+      qualify a final 2026 form or an export.
+      https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf#page=41
+    testRef: "tests/engine/state/oh-2026-return-draft.test.ts::integrates enacted tax and explicit exemptions across all three residencies: %s"
+    testRefs:
+      - "tests/engine/state/oh-2026-return-draft.test.ts::omits IT NRC Part B for two full-year nonresident joint owners"
+      - "tests/engine/state/oh-2026-return-draft.test.ts::permits a separate spouse domicile on the ordinary Ohio joint draft"
+      - "tests/engine/state/oh-2026-actual-balance-payment.test.ts::reports source-qualified return and paid account separately for %s"
+      - "tests/engine/state/oh-2026-unemployment-draft.test.ts::uses zero Ohio unemployment for a full-year nonresident paid by an Ohio agency"
+      - "tests/engine/state/oh-2026-bank-interest-draft.test.ts::credits all bank interest away from Ohio for a full-year nonresident"
+      - "tests/engine/state/oh-2026-cash-dividend-draft.test.ts::allocates verified ordinary cash dividends for %s"
+      - "tests/engine/state/oh-2026-business-draft.test.ts::dispatches actual current $row.0 $status originals"
+      - "tests/engine/state/oh-it-nrc.test.ts::retains all 20 internal audit rows for a 2025 full-year nonresident"
   - line: "16"
     label: "Ohio AGI"
     formula: "Actual IT1040line3, finite signed; not taxable income less exemptions."

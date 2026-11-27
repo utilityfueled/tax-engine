@@ -111,7 +111,8 @@ describe('Ohio 2026 private ordinary Box 1 unemployment draft', () => {
     expect(result.nonresidentRatio.toFixed(4)).toBe('0.8039');
     expect(result.nonresidentCredit.toFixed()).toBe('771');
     expect(result.refund.toFixed()).toBe('812');
-    expect(result.lines.find(line => line.line === '12' && line.description === 'Resident unemployment')?.value.toFixed()).toBe('0');
+    expect(result.lines.filter(line => line.form === 'OH-IT-NRC').map(line => line.line))
+      .toEqual(['1', '2', '3', '4', '5', '6', '7', '8', '9', '16', '17', '18', '19', '20']);
   });
 
   // Spec: state/oh-2026-return-draft.yaml#primary-residency-declaration.

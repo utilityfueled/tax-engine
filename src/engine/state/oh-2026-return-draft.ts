@@ -81,7 +81,6 @@ export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unkno
   const fullYearBankInterest = context.methodId === ohio2026BankInterestMethodByResidency.full_year_resident;
   const nonresidentBankInterest = context.methodId === ohio2026BankInterestMethodByResidency.nonresident;
   const fullYearCashDividend = context.methodId === ohio2026CashDividendMethodByResidency.full_year_resident;
-  const nonresidentCashDividend = context.methodId === ohio2026CashDividendMethodByResidency.nonresident;
   const treasuryCouponDeduction = actual.treasuryCoupon ? new Decimal(actual.treasuryCoupon.deduction) : undefined;
   const ohioAgi = partYearReciprocal ? new Decimal(partYearReciprocalOhioAgi)
     : actual.treasuryCoupon ? new Decimal(actual.treasuryCoupon.ohioAgi) : federalAgi.minus(actual.reciprocalWageExclusion ?? '0');
@@ -104,8 +103,8 @@ export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unkno
     ? { line19: new Decimal(0), line20: new Decimal(0), lines: [] } : calculateOhioITNRC({ taxYear: 2026, filingStatus: actual.filingStatus,
     federalAgi, ohioAgi, taxRemainingBeforeResidencyCredits: baseline.taxAfterJointCredit,
     residencyFacts: actual.residency });
-  // Part B (lines 10–15) applies only to part-year residents in the investment drafts.
-  const nrcLines = nonresidentBankInterest || nonresidentCashDividend
+  // Part B (lines 10–15) is inapplicable when every verified owner is a full-year nonresident.
+  const nrcLines = actual.residency.owners.every(owner => owner.status === 'nonresident')
     ? nrc.lines.filter(({ form, line }) => form !== 'OH-IT-NRC' || !/^1[0-5]$/.test(line))
     : nrc.lines;
   const taxAfterNrc = baseline.taxAfterJointCredit.minus(nrc.line20);

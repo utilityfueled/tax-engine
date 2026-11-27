@@ -22,6 +22,11 @@ describe('source-bound Ohio2026 ordinary business draft dispatch', () => {
     expect(v.residentFederalDeductions.toFixed()).toBe('0');
     expect(v.exemptions.toFixed()).toBe(row[5]); expect(v.taxBeforeCredits.toFixed()).toBe(row[6]);
     expect(v.nonresidentRatio.toFixed(4)).toBe(row[7]); expect(v.nonresidentCredit.toFixed()).toBe(row[8]); expect(v.incomeTax.toFixed()).toBe(row[9]);
+    const nrcLines = v.lines.filter(line => line.form === 'OH-IT-NRC').map(line => line.line);
+    if (status === 'nonresident') expect(nrcLines).toEqual(['1', '2', '3', '4', '5', '6', '7', '8', '9', '16', '17', '18', '19', '20']);
+    if (status === 'part_year_resident') expect(nrcLines.slice(9, 15)).toEqual(['10', '11', '12', '13', '14', '15']);
+    expect(v.lines.find(line => line.form === 'OH-IT-NRC-II' && line.line === '23')?.value.toFixed()).toBe(row[3]);
+    expect(v.lines.find(line => line.form === 'OH-IT-NRC-III' && line.line === '1:15')?.value.toFixed()).toBe(v.ohioApportionedBusinessIncome.toFixed());
     expect(v.calculationStatus).toBe('incomplete'); expect(v.filingQualified).toBe(false);
     expect(v.withholding).toBeNull(); expect(v.amountDue).toBeNull(); expect(v.refund).toBeNull();
     expect(JSON.stringify(p)).toBe(before); expect(TAX_CONSTANTS[2026]).toBeUndefined(); expect(OHIO_TAX_CONSTANTS[2026]).toBeUndefined();
@@ -93,6 +98,7 @@ it('allocates an actual PY personal deduction from its original domicile date',(
   owner(p).amounts.federalAdjustments.residentAmount='24830';
   const v=run(p); expect(v.residentFederalDeductions.toFixed()).toBe('24830'); expect(v.nonresidentRatio.toFixed(4)).toBe('0.9480');
   expect(v.nonresidentCredit.toFixed()).toBe('20624'); expect(v.incomeTax.toFixed()).toBe('1131');
+  expect(v.lines.find(line => line.form === 'OH-IT-NRC' && line.line === '14')?.value.toFixed()).toBe('24830');
 });
 it('never treats a source-complete zero-profit original as a completed EIC method',()=>{
   const p=ohio2026BusinessDraftFixture('100000'); known(p.input.scheduleC).grossReceipts='0';

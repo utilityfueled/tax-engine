@@ -108,6 +108,9 @@ export function calculateOhio2026BusinessDraft(taxInput: TaxYearInput, raw: unkn
     ohioAgi: actual.ohioAgi, taxRemainingBeforeResidencyCredits: baseline.taxAfterJointCredit,
     residencyFacts: facts, businessSource: context,
     expectedFederalCategories: Object.fromEntries(ohioNrcCategories.map(category => [category, category === 'federalAdjustments' ? actual.deductibleHalf : '0'])) });
+  const nrcLines = facts.owners.every(owner => owner.status === 'nonresident')
+    ? nrc.lines.filter(({ form, line }) => form !== 'OH-IT-NRC' || !/^1[0-5]$/.test(line))
+    : nrc.lines;
   const incomeTax = baseline.taxAfterJointCredit.minus(nrc.line20);
   // Only the completed C-only source inventory above proves raw/reportable
   // withholding zero. Never project zero from missing W2/payment sources.
@@ -141,5 +144,5 @@ export function calculateOhio2026BusinessDraft(taxInput: TaxYearInput, raw: unkn
     limitations: ['Finite ordinary single NR/PY business draft only; not a complete2026 federal or Ohio return.',
       actualBalancePayment ? 'Finite first Ohio return with confirmed no taxing-school-district residency and actual timely IT1040 balance at most500; amount due remains the return balance. Outstanding balance is receipt arithmetic, not an external account observation. School financials remain unavailable; no native or final form qualification.' : 'Payments, school financials, penalties, interest and settlement are unknown; no native or final form qualification.',
       'Low-income EIC, other credits/adjustments, losses, alternative factors and broader business cohorts require separate actual methods.'],
-    lines: [...baseline.lines, ...nrc.lines, ...paymentAudit.getLines()] };
+    lines: [...baseline.lines, ...nrcLines, ...paymentAudit.getLines()] };
 }

@@ -67,10 +67,19 @@ describe('Ohio2026 current ordinary source-to-return draft', () => {
     residency(p).owners.reverse();
     p.input.taxpayer.stateResidency = 'full-year';
     rebindOhio2026Ordinary(p);
-    expect(run(p).nonresidentRatio.toFixed(4)).toBe('0.5000');
+    const result = run(p);
+    expect(result.nonresidentRatio.toFixed(4)).toBe('0.5000');
+    expect(result.lines.filter(line => line.form === 'OH-IT-NRC')).toHaveLength(20);
     p.input.taxpayer.stateResidency = 'nonresident';
     rebindOhio2026Ordinary(p);
     expect(() => run(p)).toThrow(/declared Ohio residency conflicts/i);
+  });
+
+  it('omits IT NRC Part B for two full-year nonresident joint owners', () => {
+    const result = run(ohio2026OrdinaryFixture('nonresident', '50000', '10000', true));
+    expect(result.nonresidentRatio.toFixed(4)).toBe('0.8000');
+    expect(result.lines.filter(line => line.form === 'OH-IT-NRC').map(line => line.line))
+      .toEqual(['1', '2', '3', '4', '5', '6', '7', '8', '9', '16', '17', '18', '19', '20']);
   });
 
   it('derives current ordinary wage AGI without a fabricated federal return', () => {
@@ -99,6 +108,9 @@ describe('Ohio2026 current ordinary source-to-return draft', () => {
     expect(result.refund.toFixed()).toBe(refund);
     expect(result.underpaymentPenalty.toFixed()).toBe('0');
     expect(result.latePaymentInterest.toFixed()).toBe('0');
+    const nrcLines = result.lines.filter(line => line.form === 'OH-IT-NRC').map(line => line.line);
+    if (status === 'nonresident') expect(nrcLines).toEqual(['1', '2', '3', '4', '5', '6', '7', '8', '9', '16', '17', '18', '19', '20']);
+    if (status === 'part_year_resident') expect(nrcLines.slice(9, 15)).toEqual(['10', '11', '12', '13', '14', '15']);
   });
 
   it.each([
