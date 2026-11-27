@@ -8,12 +8,21 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `fc0420e56` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `dbf3d7f79` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
+
+## November 27 native recovery queue
+
+The current ARM64 rehearsal `46057962832` targets `86fe42b9b`, which
+contains application code `dbf3d7f79` and the two checklist updates. It was
+pending at the check. The earlier `e075fceaf` run `46014076098`
+was in progress. Final Linux image, browser, and recovery qualification
+requires successful results for the release candidate.
+[Current ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/46057962832) · [Earlier ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/46014076098).
 
 ## November 27 commercial clean vehicle asset basis
 
@@ -31,7 +40,11 @@ Independent review confirmed the source binding and adjusted amount.
 Full federal attribution still needs verified listed-property or passenger
 classification, the applicable weight measurement, a depreciation election,
 and the complete business asset record for downstream deduction and tax.
-Exact-source verification started with the prior archive's work completing.
+The clean tracked archive passed all 11 local checks. Both unit runs passed
+31,342 tests with 83 skips and 88.68% branch coverage. Chromium passed
+654 cases with 5 skips across 9 windows. Encrypted standalone
+backup, deletion and restoration passed, and all listeners closed.
+Manifest SHA-256 `dd9cb6475cb6725d850f1b2cd8dc2e128e4eceff00c930ef799d181e6df02158`.
 [IRS Form 8936 basis instructions](https://www.irs.gov/instructions/i8936) ·
 [26 USC §45W](https://uscode.house.gov/us/usc/t26/s45W/) ·
 [26 USC §30D](https://uscode.house.gov/us/usc/t26/s30D/).

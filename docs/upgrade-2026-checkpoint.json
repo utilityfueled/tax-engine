@@ -2,9 +2,9 @@
   "resume": {
     "asOf": "2026-11-27",
     "branch": "main",
-    "applicationCommit": "fc0420e56ad478ab0cda4d7fd627e5550999dc4e",
+    "applicationCommit": "dbf3d7f794ae865d6317f24b7e3dc54f6cd076d4",
     "latestScopedApplicationCommit": "dbf3d7f794ae865d6317f24b7e3dc54f6cd076d4",
-    "latestCombinedCandidateCommit": "fc0420e56ad478ab0cda4d7fd627e5550999dc4e",
+    "latestCombinedCandidateCommit": "dbf3d7f794ae865d6317f24b7e3dc54f6cd076d4",
     "latestScopedChecksEvidenceKey": "activeContinuation.nov27CommercialVehicleBasis",
     "nov27PaymentReceiptsAndForm8863EvidenceKey": "activeContinuation.nov27PaymentReceiptsAndForm8863",
     "nov27OhioPennsylvaniaPensionEvidenceKey": "activeContinuation.nov27OhioPennsylvaniaPension",
@@ -12,6 +12,7 @@
     "nov27AotcInstitutionEvidenceKey": "activeContinuation.nov27AotcInstitution",
     "nov27AnnualFormAvailability": "docs/upgrade-2026-official-source-refresh-20261117-continuation.md#november-27-annual-availability-recheck",
     "nov27ReceiptW2AndOhioPackagesEvidenceKey": "activeContinuation.nov27ReceiptW2AndOhioPackages",
+    "latestNativeRecoveryQueueEvidenceKey": "activeContinuation.nov27CurrentNativeRecoveryQueue",
     "previousArm64StrictBrowserEvidenceKey": "activeContinuation.nov27Arm64StrictBrowserResult",
     "latestObservedArm64StrictBrowserEvidenceKey": "activeContinuation.nov27Arm64StrictBrowserFollowup",
     "ohioBusinessAndEquityResidencyEvidenceKey": "activeContinuation.nov27OhioBusinessAndEquityResidency",
@@ -62,7 +63,7 @@
     "pinnedSelfHostSchemaEvidenceKey": "activeContinuation.nov26PinnedSelfHostSchema",
     "ohioOrdinaryCashDividendEvidenceKey": "activeContinuation.nov26OhioCashDividend",
     "pennsylvaniaAnnualCashDividendEvidenceKey": "activeContinuation.nov26PaAnnualCashDividend",
-    "latestExactLocalVerificationEvidenceKey": "activeContinuation.nov27CommercialCreditCarryoverExact",
+    "latestExactLocalVerificationEvidenceKey": "activeContinuation.nov27CommercialVehicleBasisExact",
     "paPartYearDividendEvidenceKey": "activeContinuation.nov26PAPartYearCashDividend",
     "currentCombinedAndArmEvidenceKey": "activeContinuation.nov26CombinedEvAiAndArm64",
     "evChargerEvidenceKey": "activeContinuation.nov26PersonalEvCharger",
@@ -110,7 +111,7 @@
     "householdUpkeepEvidenceKey": "activeContinuation.nov25HouseholdUpkeepPrecision",
     "verificationCommit": "cd6e64b972869264f35234e64267c88f36778860",
     "generatedInventoryCommit": "26983a3c48380a3c1ead47a86dbe3977dd02f6bd",
-    "latestLocalChecksEvidenceKey": "activeContinuation.nov27CommercialCreditCarryoverExact",
+    "latestLocalChecksEvidenceKey": "activeContinuation.nov27CommercialVehicleBasisExact",
     "vehicleStatementEvidenceKey": "activeContinuation.nov25Form1098Vli",
     "vehicleRefundEvidenceKey": "activeContinuation.nov25Form1098VliCashRefund",
     "vehicleInterestCreditEvidenceKey": "activeContinuation.nov25Form1098VliInterestCredit",
@@ -183,7 +184,7 @@
     "pensionTaxableAmountEvidenceKey": "activeContinuation.nov24ReportedPensionTaxableAmount",
     "completeLocalBaselineEvidenceKey": "activeContinuation.nov24ExactLocalBaselineAndCurrentRuns",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
-    "unitCoverageEvidenceKey": "activeContinuation.nov27CommercialCreditCarryoverExact",
+    "unitCoverageEvidenceKey": "activeContinuation.nov27CommercialVehicleBasisExact",
     "remaining": [
       "Both strict Linux browser gates and current image evidence remain open. See activeContinuation.nov27OhioBusinessAndEquityResidency for the current e075fceaf run IDs. The earlier ARM64 strict browser step failed on nine Ohio deadlines. Verified 46005900143 held the active concurrency lease and exact e075fceaf run 46014076098 was pending behind it. Keep both runs in place.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
@@ -337,6 +338,64 @@
         }
       }
     },
+    "nov27CommercialVehicleBasisExact": {
+      "commit": "dbf3d7f794ae865d6317f24b7e3dc54f6cd076d4",
+      "archiveSha256": "6eca09b492969fec6f53e04f948b56c40746f6c57ac0b6a85a5f7c34fb9df8d4",
+      "localManifestSha256": "dd9cb6475cb6725d850f1b2cd8dc2e128e4eceff00c930ef799d181e6df02158",
+      "requiredLocalChecksPassed": 11,
+      "unitPassed": 31342,
+      "unitSkips": 83,
+      "branchCoveragePercent": 88.68,
+      "chromiumPassed": 654,
+      "chromiumSkipped": 5,
+      "chromiumWindows": 9,
+      "browserSummarySha256": "6248e28c6bd2fafd8a9e28b094800bd3e2ab7614bf293a3c4bb79950c31f987d",
+      "standaloneReceiptSha256": "defd97142c33df8d5f388e9247f75c7f129a4a6f1c7753757e9bbcb697f75ec3",
+      "standalonePassed": true,
+      "localListenersClosed": true,
+      "remoteWorkflows": {
+        "CI": {
+          "id": 46056120779,
+          "status": "queued",
+          "conclusion": null
+        },
+        "Web": {
+          "id": 46056120678,
+          "status": "queued",
+          "conclusion": null
+        },
+        "Docker": {
+          "id": 46056120710,
+          "status": "queued",
+          "conclusion": null
+        }
+      }
+    },
+    "nov27CurrentNativeRecoveryQueue": {
+      "appRevision": "dbf3d7f794ae865d6317f24b7e3dc54f6cd076d4",
+      "relativeChangedPaths": [
+        "docs/upgrade-2026-checkpoint.json",
+        "docs/upgrade-2026-progress.md"
+      ],
+      "currentRun": {
+        "runId": 46057962832,
+        "revision": "86fe42b9b291f3f4bb2eb5240523491f166372fd",
+        "status": "pending",
+        "conclusion": null,
+        "jobId": null,
+        "strictBrowserStatus": null,
+        "strictBrowserConclusion": null
+      },
+      "priorRun": {
+        "runId": 46014076098,
+        "revision": "e075fceaf376fef3e7aff1b01a1eea63c390cb75",
+        "status": "in_progress",
+        "conclusion": null,
+        "jobId": 140634639448,
+        "strictBrowserStatus": "in_progress",
+        "strictBrowserConclusion": null
+      }
+    },
     "nov27CommercialVehicleBasis": {
       "commit": "dbf3d7f794ae865d6317f24b7e3dc54f6cd076d4",
       "primarySources": [
@@ -355,7 +414,8 @@
       "adjustedBasisBeforeDepreciation": "19000",
       "actualDepreciationAndFederalAttributionVerified": false,
       "filingQualified": false,
-      "exactBasisVerification": "running",
+      "exactBasisVerification": "passed",
+      "exactEvidenceKey": "activeContinuation.nov27CommercialVehicleBasisExact",
       "browserSourceAuditSha256": "2114f7470b2e801f43147d455c273a61273df9ccf6dd23a52bc70b24e1f1fde5"
     },
     "nov27CommercialCreditCarryoverExact": {
