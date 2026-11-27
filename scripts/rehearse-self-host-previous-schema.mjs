@@ -75,7 +75,11 @@ export async function rehearsePreviousSchema({ previousRevision, candidateRevisi
       || !/^[a-f0-9]{64}$/u.test(fields[4])) throw Error();
     password = fields[4];
   } catch { throw new Error('Expected generated private rehearsal authentication'); }
-  const admin = new Pool({ connectionString: databaseUrl, password, ssl: false, max: 1, connectionTimeoutMillis: 5_000, statement_timeout: 10_000, query_timeout: 15_000 });
+  // pg would overwrite the file-derived password with the empty password in the URL.
+  const admin = new Pool({
+    host: url.hostname, port: Number(url.port), database: url.pathname.slice(1), user: url.username,
+    password, ssl: false, max: 1, connectionTimeoutMillis: 5_000, statement_timeout: 10_000, query_timeout: 15_000,
+  });
   const work = await mkdtemp(path.join(tmpdir(), 'tax-previous-schema-'));
   let created = false;
   let receipt;

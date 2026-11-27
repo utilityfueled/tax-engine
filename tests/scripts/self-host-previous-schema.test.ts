@@ -3,7 +3,8 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { describe, expect, it } from 'vitest';
+import { createRequire } from 'node:module';
+import { describe, expect, it, vi } from 'vitest';
 import { normalizeCandidateImage, admitPreviousSchemaInput, assertPreviousRowsPreserved, materializeHistoricalSchemaSource, rehearsePreviousSchema } from '../../scripts/rehearse-self-host-previous-schema.mjs';
 const revision = 'd32cb8cf3d607c643c4c7f7e1b845fcace61563f';
 const candidateRevision = execFileSync('git', ['rev-parse', 'HEAD'], {encoding:'utf8'}).trim();
@@ -27,6 +28,33 @@ describe('pinned previous-schema rehearsal', () => {
       expect(message).toContain('Expected generated private rehearsal authentication');
       expect(message).not.toContain(secret);
     } finally { await rm(directory,{recursive:true,force:true}); }
+  });
+  it('passes the validated file password to the schema client without a parent passfile', async () => {
+    const require = createRequire(new URL('../../apps/web/package.json', import.meta.url));
+    const { Client, Pool } = require('pg');
+    const directory = await mkdtemp(path.join(tmpdir(), 'previous-schema-auth-test-'));
+    const file = path.join(directory, 'pgpass');
+    const syntheticPassword = 'b'.repeat(64);
+    let passwordRetained = false;
+    const query = vi.spyOn(Pool.prototype, 'query').mockImplementationOnce(function (this: { options: unknown }) {
+      const client = new Client(this.options);
+      passwordRetained = client.connectionParameters.password === syntheticPassword;
+      return Promise.reject(new Error('Stop before opening a database connection'));
+    });
+    vi.stubEnv('PGPASSFILE', undefined);
+    vi.stubEnv('PGPASSWORD', undefined);
+    try {
+      await writeFile(file, `127.0.0.1:54321:postgres:ai_test:${syntheticPassword}\n`, { mode: 0o600 });
+      expect(admitPreviousSchemaInput(revision, database).password).toBe('');
+      await expect(rehearsePreviousSchema({previousRevision: revision, candidateRevision, candidateImage, databaseUrl: database, pgPassFile: file}))
+        .rejects.toThrow('verification failed during create-schema');
+      expect(query).toHaveBeenCalledTimes(1);
+      expect(passwordRetained).toBe(true);
+    } finally {
+      query.mockRestore();
+      vi.unstubAllEnvs();
+      await rm(directory, {recursive: true, force: true});
+    }
   });
   it('normalizes Docker and Podman immutable image identities and rejects mutable references', () => {
     expect(normalizeCandidateImage('a'.repeat(64))).toBe(candidateImage);
