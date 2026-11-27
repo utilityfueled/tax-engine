@@ -96,6 +96,39 @@ describe("Form8863 actual2026 facts",()=>{
   expect(calculateForm8863(make({aocBanInEffect:true})).aocAfterPhaseOut.toString()).toBe("0");
   expect(()=>calculateForm8863(make({form8862Required:true}))).toThrow(/8862/i);
  });
+ it.each(["AOTC", "LLC"])("requires the actual resident election for a positive nonresident joint %s claim", (claim) => {
+  const input = make({
+   filingStatus: "married_filing_jointly",
+   nonresidentAlien: true,
+   ...(claim === "LLC" ? {
+    primarySsnEligible: false, spouseSsnEligible: true,
+    aocStudents: [], llcExpenses: d(4000), llcStudents: [{ ...student(), courseEligibilityConfirmed: true }],
+   } : {}),
+  });
+  expect(() => calculateForm8863(input)).toThrow(/actual.*joint resident election/i);
+  const no = calculateForm8863({ ...input, residentJointElection: false });
+  expect(no.totalNonrefundable.toFixed()).toBe("0");
+  expect(no.totalRefundable.toFixed()).toBe("0");
+  const yes = calculateForm8863({ ...input, residentJointElection: true });
+  expect(yes.totalNonrefundable.toFixed()).toBe(claim === "LLC" ? "800" : "1500");
+  expect(yes.totalRefundable.toFixed()).toBe(claim === "LLC" ? "0" : "1000");
+ });
+ it("preserves cases without an applicable 2026 joint resident election", () => {
+  const input = make({ filingStatus: "married_filing_jointly", nonresidentAlien: true });
+  for (const overrides of [
+   { aocStudents: [{ ...student(), qualifiedExpenses: d(0) }] },
+   { taxYear: 2025 },
+   { filingStatus: "single" as const },
+   { claimedAsDependent: true },
+   { primarySsnEligible: false, spouseSsnEligible: false },
+   { magi: d(180000) },
+  ]) {
+   const result = calculateForm8863({ ...input, ...overrides });
+   expect(result.totalNonrefundable.toFixed()).toBe("0");
+   expect(result.totalRefundable.toFixed()).toBe("0");
+  }
+  expect(calculateForm8863({ ...input, nonresidentAlien: false }).totalRefundable.toFixed()).toBe("1000");
+ });
  it.each([
   ["completedFirstFourYearsBeforeYear",true],["enrolledAtLeastHalfTime",false],["pursuingDegreeOrCredential",false],["institutionEligible",false],["expensesEligibilityConfirmed",false],["form1098TRequirementMet",false],
  ])("denies AOC when actual %s is ineligible",(field,value)=>{

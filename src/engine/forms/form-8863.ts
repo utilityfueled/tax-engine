@@ -132,18 +132,24 @@ export function calculateForm8863(input: Form8863Input): Form8863Result {
   if (input.taxLiabilityLimit !== undefined) nonnegative(input.taxLiabilityLimit, "tax liability limit");
   const hasExpenses = input.aocStudents.some(s => s.qualifiedExpenses.gt(0)) || input.llcExpenses.gt(0) || (input.llcStudents ?? []).some(s => s.qualifiedExpenses.gt(0));
   const joint = input.filingStatus === "married_filing_jointly";
+  const upper = new Decimal(joint ? 180000 : 90000);
+  const hasEligibleClaimantSsn = input.primarySsnEligible === true || (joint && input.spouseSsnEligible === true);
   if (strict && hasExpenses && input.filingStatus !== "married_filing_separately") {
     required(input.taxLiabilityLimit, "tax liability limit");
     required(input.claimedAsDependent, "actual claimant dependency claim");
     required(input.nonresidentAlien, "claimant residency facts");
-    if (input.primarySsnEligible !== true && !(joint && input.spouseSsnEligible === true)) {
+    if (!hasEligibleClaimantSsn) {
       required(input.primarySsnEligible, "claimant SSN eligibility");
       if (joint) required(input.spouseSsnEligible, "spouse SSN eligibility");
+    }
+    if (joint && input.nonresidentAlien === true && input.claimedAsDependent === false
+      && hasEligibleClaimantSsn && input.magi.lt(upper)) {
+      required(input.residentJointElection, "joint resident election");
     }
   }
   const claimantEligible = input.filingStatus !== "married_filing_separately" && input.claimedAsDependent !== true
     && !(input.nonresidentAlien === true && !(joint && input.residentJointElection === true))
-    && (!strict || input.primarySsnEligible === true || (joint && input.spouseSsnEligible === true));
+    && (!strict || hasEligibleClaimantSsn);
   const seen = new Set<string>();
   for (const s of [...input.aocStudents, ...(input.llcStudents ?? [])]) {
     if (!s.studentTaxId) continue;
@@ -155,7 +161,6 @@ export function calculateForm8863(input: Form8863Input): Form8863Result {
     required(input.aocBanInEffect, "AOC ban facts"); required(input.form8862Required, "Form8862 requirement");
   }
   if (input.form8862Required && input.form8862Completed !== true && input.aocStudents.some(s => s.qualifiedExpenses.gt(0))) throw new Error("Form8863 required Form8862 must be completed before AOC claim");
-  const upper = new Decimal(joint ? 180000 : 90000);
   const range = new Decimal(joint ? 20000 : 10000);
   const remaining = zeroFloor(upper.minus(input.magi));
   const factor = claimantEligible ? Decimal.min(1,remaining.div(range)) : new Decimal(0);

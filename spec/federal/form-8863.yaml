@@ -37,6 +37,21 @@ lines:
       - "tests/engine/federal-education-distribution.test.ts::holds contradictory 2026 claimant TIN even when the other spouse is the student"
       - "tests/guided-interview/guided-aotc-student-history.test.ts::holds conflicting 2026 spouse student identity answers after reopen"
       - "tests/guided-interview/guided-aotc-student-history.test.ts::holds a conflicting 2026 spouse claimant TIN when the primary is the student"
+  - line: "2026-nonresident-joint-election"
+    description: "Preserve the actual resident election for positive education credit expenses on a joint return"
+    formula: >-
+      For a 2026 joint return with positive AOTC or LLC source expenses below
+      the MAGI phaseout ceiling, a nonresident-alien claimant who is unclaimed
+      as a dependent and meets the claimant SSN requirement must confirm the
+      actual joint residency election under IRC6013(g) or (h). Hold when that
+      answer is unknown.
+      Confirmed no yields zero credit. Confirmed yes proceeds through the
+      remaining eligibility and credit rules. Historical returns and cases
+      where this election fact does not apply retain their existing treatment.
+    irsRef: "26 USC 25A(g)(7), https://uscode.house.gov/us/usc/t26/s25A/"
+    testRef: "tests/engine/forms/form-8863-2026.test.ts::requires the actual resident election for a positive nonresident joint %s claim"
+    testRefs:
+      - "tests/engine/forms/form-8863-2026.test.ts::preserves cases without an applicable 2026 joint resident election"
   - line: "22-aotc-institution-ein"
     description: "Actual EINs on the institution records for an American Opportunity Credit"
     formula: "For the 2025 and 2026 rules, when aggregate Form 8863 line 7 is positive, require a nine-digit EIN on every supplied school record of each student with a positive tentative AOTC and reconcile any student summary EIN to one of those records. Complete 2025 school records can supply the EINs when the separate summary is absent. Form 1098-T exceptions do not supply an EIN. A zero line 7 or zero tentative student credit does not trigger the additional school-list requirement."
