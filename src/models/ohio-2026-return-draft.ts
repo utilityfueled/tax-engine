@@ -37,7 +37,7 @@ export const Ohio2026OrdinarySourcesSchema = z.object({
 export type Ohio2026OrdinarySources = z.infer<typeof Ohio2026OrdinarySourcesSchema>;
 
 /** Current ordinary Box 1 only. Box 2 has two existing input aliases. */
-export const Ohio2026UnemploymentOriginalSchema = z.object({
+const ohio2026UnemploymentOriginal = z.strictObject({
   payer: reference, payerTin: reference.optional(), accountHolder: z.literal('primary'),
   sourceId: reference, accountReference: reference, taxYear: z.literal(2026), sourceFormRevision: z.literal('2026-12'),
   sourceFactsComplete: z.literal(true), sourceFactsConfirmed: z.literal(true), actualReceiptConfirmed: z.literal(true),
@@ -47,7 +47,13 @@ export const Ohio2026UnemploymentOriginalSchema = z.object({
   familyLeaveBenefits: money, tradeOrBusinessRefund: z.literal(false), currentYearRepaid: money, priorYearRepaid: money,
   unrecoveredAfterTaxContributions: money, stateTaxReporting: z.enum(['none', 'single']),
   state: z.literal('OH').optional(), statePayerId: reference.optional(), stateWithheld: money.optional(),
-}).strict().refine(form => form.stateLocalIncomeTaxRefund !== undefined || form.stateOrLocalTaxRefund !== undefined);
+}).refine(form => form.stateLocalIncomeTaxRefund !== undefined || form.stateOrLocalTaxRefund !== undefined);
+
+export const Ohio2026UnemploymentOriginalSchema = z.preprocess(value => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+  // Live canonical input can carry absent optionals that disappear on JSON save.
+  return Object.fromEntries(Object.entries(value).filter(([, field]) => field !== undefined));
+}, ohio2026UnemploymentOriginal);
 
 const unemploymentOriginal = z.strictObject({
   sourceId: reference, sourceReference: reference,
@@ -55,8 +61,9 @@ const unemploymentOriginal = z.strictObject({
   currentUncorrectedNonvoidOriginalConfirmed: z.literal(true), allOriginalBoxesKnownConfirmed: z.literal(true),
   ordinaryNoncontributoryStateUnemploymentConfirmed: z.literal(true),
 });
+export const OHIO_2026_UNEMPLOYMENT_EMPLOYEE_METHOD = 'oh-2026-unemployment-employee-draft-v1';
 export const Ohio2026UnemploymentEmployeeSourcesSchema = Ohio2026OrdinarySourcesSchema.omit({ seniorCreditHistory: true }).extend({
-  methodId: z.literal('oh-2026-unemployment-employee-draft-v1'),
+  methodId: z.literal(OHIO_2026_UNEMPLOYMENT_EMPLOYEE_METHOD),
   unemploymentOriginal: z.union([
     unemploymentOriginal.extend({ noStateWithholdingConfirmed: z.literal(true) }),
     unemploymentOriginal.extend({ ohioWithholding: z.strictObject({

@@ -4,6 +4,8 @@ import { calculateOhio2026OrdinarySource, calculateOhio2026UnemploymentEmployeeS
 import { calculateOhio2026ReturnDraftFromSources } from '@/engine/state/oh-engine.js';
 import { calculateOhio2026ReturnDraft, calculateOhio2026UnemploymentReturnDraft } from '@/engine/state/oh-2026-return-draft.js';
 import { Form1099GSchema } from '@/models/inputs.js';
+import { buildGovernmentPaymentSourceRecords } from '@/lib/guided-government-payment-inputs';
+import { unemploymentSource } from '../../fixtures/guided-government-uc-original.js';
 import { ohio2026OrdinaryFixture, rebindOhio2026Ordinary } from '../../fixtures/oh-2026-ordinary-return.js';
 
 function current<T>(value: T | undefined): T {
@@ -72,6 +74,50 @@ function unemploymentWithholdingFixture(status: NonNullable<Parameters<typeof un
 }
 
 describe('Ohio 2026 private ordinary Box 1 unemployment draft', () => {
+  it.each([
+    ['full_year_resident', '959'],
+    ['part_year_resident', '572'],
+    ['nonresident', '188'],
+  ] as const)('dispatches the private unemployment packet for %s', (status, tax) => {
+    const packet = unemploymentWithholdingFixture(status);
+    const result = calculateOhio2026ReturnDraftFromSources({ taxInput: packet.input, sources: packet.sources });
+    expect(result.incomeTax.toFixed()).toBe(tax);
+    expect(result.withholding.toFixed()).toBe('1026');
+    expect(result).toMatchObject({ filingQualified: false, reviewStatus: 'independent-review-pending' });
+    expect(result).toEqual(calculateOhio2026UnemploymentReturnDraft(packet.input, packet.sources));
+  });
+
+  it.each(['no state withholding', 'Ohio withholding'] as const)('replays live and reopened canonical unemployment originals with %s', reporting => {
+    const withWithholding = reporting === 'Ohio withholding';
+    const packet = withWithholding ? unemploymentWithholdingFixture('part_year_resident') : unemploymentFixture();
+    const [guided] = buildGovernmentPaymentSourceRecords([{
+      ...unemploymentSource, compensation: '1000', federalWithheld: '100',
+      sourceTaxYear: '2026', sourceFormRevision: '2026-12', familyLeaveBenefits: '0',
+      ...(withWithholding ? {
+        stateTaxReporting: 'single' as const, state: 'OH',
+        statePayerId: packet.form.statePayerId, stateWithheld: '25.25',
+      } : {}),
+    }]);
+    const original = Form1099GSchema.parse(guided);
+    expect(Object.hasOwn(original, 'grantIncomeCategory')).toBe(true);
+    expect(original.grantIncomeCategory).toBeUndefined();
+    packet.input.form1099G = [original];
+    packet.schedule.originalSourceId = current(original.sourceId);
+    packet.sources.unemploymentOriginal.sourceId = current(original.sourceId);
+    rebindOhio2026Ordinary(packet);
+    const live = { taxInput: packet.input, sources: packet.sources };
+    const reopened = JSON.parse(JSON.stringify(live)) as typeof live;
+    const savedResult = calculateOhio2026UnemploymentReturnDraft(reopened.taxInput, reopened.sources);
+    expect(savedResult.incomeTax.toFixed()).toBe('572');
+    expect(calculateOhio2026UnemploymentReturnDraft(live.taxInput, live.sources)).toEqual(savedResult);
+    expect(calculateOhio2026ReturnDraftFromSources(reopened)).toEqual(savedResult);
+    expect(calculateOhio2026ReturnDraftFromSources(live)).toEqual(savedResult);
+
+    original.refundTaxYear = 2025;
+    rebindOhio2026Ordinary(packet);
+    expect(() => calculateOhio2026ReturnDraftFromSources(live)).toThrow(/one confirmed current government unemployment original/);
+  });
+
   it.each([
     ['full_year_resident', '959', '67'],
     ['part_year_resident', '572', '454'],
@@ -246,11 +292,14 @@ describe('Ohio 2026 private ordinary Box 1 unemployment draft', () => {
   });
 
   it('keeps joint owners and the existing wage-only entry point outside the method', () => {
-    expect(() => run(unemploymentFixture('full_year_resident', true))).toThrow(/requires a single primary owner/);
+    const joint = unemploymentFixture('full_year_resident', true);
+    expect(() => run(joint)).toThrow(/requires a single primary owner/);
+    expect(() => calculateOhio2026ReturnDraftFromSources({ taxInput: joint.input, sources: joint.sources })).toThrow(/requires a single primary owner/);
     const { input, sources } = unemploymentFixture('full_year_resident');
     const { methodId: _method, unemploymentOriginal: _original, ...ordinarySources } = sources;
     expect(() => calculateOhio2026OrdinarySource(input, ordinarySources)).toThrow(/retained other originals/);
-    expect(() => calculateOhio2026ReturnDraftFromSources({ taxInput: input, sources })).toThrow(/complete confirmed current source packets/);
+    expect(() => calculateOhio2026ReturnDraftFromSources({ taxInput: input, sources: ordinarySources })).toThrow(/retained other originals/);
+    expect(() => calculateOhio2026ReturnDraftFromSources({ taxInput: input, sources: { ...sources, methodId: 'unavailable-method' } })).toThrow(/complete confirmed current source packets/);
   });
 
   it('rejects modified receipt evidence and forged contexts before composing a return', () => {

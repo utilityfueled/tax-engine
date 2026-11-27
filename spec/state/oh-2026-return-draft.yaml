@@ -293,6 +293,21 @@ lines:
     testRefs:
       - "tests/engine/state/oh-2026-unemployment-draft.test.ts::includes all verified Box 1 unemployment for a full-year Ohio resident"
       - "tests/engine/state/oh-2026-unemployment-draft.test.ts::holds contradicted full-year unemployment allocations and incomplete original receipts"
+  - line: "unemployment-draft-dispatch"
+    description: "Dispatch the verified unemployment cohort through the private Ohio source-to-return entry"
+    formula: >-
+      Use the dedicated unemployment method only when the source packet
+      names its exact method ID. Require the same evidence and opaque source
+      validation as the direct calculation for full-year, part-year and
+      nonresident returns. Treat optional undefined canonical Form 1099-G
+      properties as absent so live and saved originals receive the same
+      strict validation. Retain and review supplied unsupported fields.
+      Keep missing or wrong method IDs outside this calculation, and retain
+      the existing state review, release and filing gates.
+    testRef: "tests/engine/state/oh-2026-unemployment-draft.test.ts::dispatches the private unemployment packet for %s"
+    testRefs:
+      - "tests/engine/state/oh-2026-unemployment-draft.test.ts::replays live and reopened canonical unemployment originals with %s"
+      - "tests/engine/state/oh-2026-unemployment-draft.test.ts::keeps joint owners and the existing wage-only entry point outside the method"
   - line: "ordinary-unemployment-ohio-withholding"
     description: "Credit verified Ohio unemployment withholding in the 2026 ordinary draft"
     formula: >-
