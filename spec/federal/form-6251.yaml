@@ -88,9 +88,35 @@ lines:
 
   - line: "4"
     description: "Alternative minimum taxable income (AMTI)"
-    formula: "Line 1b + Lines 2a through 3 (SALT, depletion, depreciation, dispositions, other)"
+    formula: "Start with line 1b plus lines 2a through 3 (SALT, depletion, depreciation, dispositions, other). Include the separate-return high-income addition when required."
     irsRef: "Form 6251 Instructions, Line 4"
     testRef: "tests/engine/forms/form-6251.test.ts::Line 4 - AMTI equals taxable income plus SALT add-back"
+
+  - line: "4-mfs-addition"
+    description: "Increase AMTI for a married individual filing separately above the exemption exhaustion threshold"
+    formula: >-
+      Where the filing status is married filing separately, find the preliminary AMTI
+      threshold at which the MFS exemption is exhausted by adding the annual MFS phaseout
+      start to the annual MFS exemption divided by the phaseout rate. Increase line 4 by
+      the rounded lesser of the MFS base exemption or the positive excess above that
+      threshold multiplied by the phaseout rate. Apply the adjusted line 4 to the
+      exemption, tentative minimum tax, and final AMT. The income-only calculation
+      for the line 2f ATNOLD limit uses the tentative total of lines 1–3, before this
+      addition. Use the actual line 2f deduction before deciding if line 4 increases.
+    notes: >-
+      The statutory percentage is 25% for 2025 and 50% for 2026. The final
+      2025 instructions give the $900,350 start and $68,500 cap. The November 25 draft
+      2026 instructions give the $640,200 start and $70,100 cap. The shorter draft form
+      refers filers above $640,200 to those instructions. Other filing statuses do not
+      apply this addition. The 2026 rule pack and filing export remain gated.
+    irsRef: "IRC section 55(d)(2) and (4)(A)(ii)(IV), https://uscode.house.gov/us/usc/119-142/t26/s55/; https://www.irs.gov/pub/irs-pdf/i6251.pdf#page=9; https://www.irs.gov/pub/irs-dft/i6251--dft.pdf#page=10; https://www.irs.gov/pub/irs-dft/i6251--dft.pdf#page=4"
+    testRef: "tests/engine/forms/form-6251-mfs-addition.test.ts::applies the published Form 6251 line 4 addition for separate filers"
+
+  - line: "2026-line-1a-senior-source"
+    description: "Identify the annual source of the enhanced senior deduction"
+    formula: "Subtract the senior deduction on draft Schedule 1-A line 43 from Form 1040 line 14. The 2025 audit still identifies Schedule 1-A line 37."
+    irsRef: "https://www.irs.gov/pub/irs-dft/f6251--dft.pdf#page=2; https://www.irs.gov/pub/irs-pdf/f6251.pdf#page=1"
+    testRef: "tests/engine/forms/form-6251-mfs-addition.test.ts::identifies the correct Schedule 1-A senior deduction line for each year"
 
   - line: "5"
     description: "AMT exemption amount"

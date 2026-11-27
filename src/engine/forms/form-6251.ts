@@ -18,7 +18,7 @@ export interface Form6251Input {
   taxableIncome: Decimal; // AGI less deductions before the 1040 zero floor
   totalDeductions?: Decimal; // Actual Form1040 line14, before subtracting senior deduction
   standardDeductionAmount?: Decimal; // Actual standard deduction selected on Form 1040
-  seniorDeduction?: Decimal; // Schedule 1-A line 37; personal exemption for AMT
+  seniorDeduction?: Decimal; // Schedule 1-A enhanced senior deduction, treated as a personal exemption for AMT
   specifiedPrivateActivityBondInterest?: Decimal; // Actual line2g preference
   section1202Preference?: Decimal; // Actual pre2010 exclusion preference on2h
   saltDeduction: Decimal; // Legacy name: actual Schedule A line7 taxes, including elected foreign income taxes.
@@ -61,13 +61,15 @@ export interface Form6251Result {
 export type Form6251IncomeInput = Omit<Form6251Input, "regularTax">;
 export interface Form6251IncomeResult { amti: Decimal; lines: CalculatedLine[] }
 
-export function calculateForm6251(input: Form6251IncomeInput, constants: Pick<YearConstants, "amt" | "capitalGainsRates">,
+type Form6251Constants = Pick<YearConstants, "amt" | "capitalGainsRates"> & Partial<Pick<YearConstants, "taxYear">>;
+
+export function calculateForm6251(input: Form6251IncomeInput, constants: Form6251Constants,
   options: { incomeOnly: true }): Form6251IncomeResult;
-export function calculateForm6251(input: Form6251Input, constants: Pick<YearConstants, "amt" | "capitalGainsRates">): Form6251Result;
+export function calculateForm6251(input: Form6251Input, constants: Form6251Constants): Form6251Result;
 
 export function calculateForm6251(
   input: Form6251Input | Form6251IncomeInput,
-  constants: Pick<YearConstants, "amt" | "capitalGainsRates">,
+  constants: Form6251Constants,
   options?: { incomeOnly: true },
 ): Form6251Result | Form6251IncomeResult {
   const audit = new AuditTrail();
@@ -79,8 +81,11 @@ export function calculateForm6251(
     if (!input.totalDeductions.isFinite() || input.totalDeductions.lt(seniorAddBack)) {
       throw new Error("AMT total deductions must be finite and at least the senior deduction");
     }
+    const seniorDeductionFormula = constants.taxYear === 2026
+      ? "Form 1040 line 14 minus draft Schedule 1-A line 43"
+      : "Form1040 line14 minus Schedule1A line37";
     audit.record("Form 6251", "1a", "Deductions excluding enhanced senior deduction", input.totalDeductions.minus(seniorAddBack),
-      "Form1040 line14 minus Schedule1A line37");
+      seniorDeductionFormula);
   }
   audit.record("Form 6251", "1b", "Taxable income after AMT-allowed deductions", input.taxableIncome.plus(seniorAddBack),
     "Form1040 line11b minus Form6251 line1a; retain signed income before the1040 zero floor");
@@ -152,7 +157,7 @@ export function calculateForm6251(
   }
 
   // Line 4: AMTI
-  const amti = input.taxableIncome
+  const preliminaryAmti = input.taxableIncome
     .plus(saltAddBack)
     .plus(standardAddBack)
     .plus(seniorAddBack)
@@ -165,15 +170,31 @@ export function calculateForm6251(
     .plus(otherAdjustments)
     .plus(specifiedPrivateActivityBondInterest)
     .plus(section1202Preference);
-  audit.record("Form 6251", "4", "AMTI", amti,
-    "Taxable income + signed investment adjustment and other AMT adjustments (SALT/standard and senior add-backs, depreciation, depletion, dispositions, other)");
+  const baseExemption = amtConst.exemption[input.filingStatus];
+  const phaseOutThreshold = amtConst.phaseOutThreshold[input.filingStatus];
+  let mfsAddition = new Decimal(0);
+  // Line 2f uses the tentative sum of lines 1–3. The line 4 addition follows the actual ATNOLD.
+  if (!options?.incomeOnly && input.filingStatus === "married_filing_separately") {
+    const additionThreshold = phaseOutThreshold.plus(baseExemption.div(amtConst.phaseOutRate));
+    const excess = zeroFloor(preliminaryAmti.minus(additionThreshold));
+    mfsAddition = roundDollar(min(baseExemption, excess.times(amtConst.phaseOutRate)));
+  }
+  const amti = preliminaryAmti.plus(mfsAddition);
+  const preliminaryAmtiFormula = "Taxable income + signed investment adjustment and other AMT adjustments (SALT/standard and senior add-backs, depreciation, depletion, dispositions, other)";
+  if (mfsAddition.gt(0)) {
+    audit.record("Form 6251", "4", "AMTI", amti,
+      "Sum of lines 1b through 3 plus the separate-filer high-income addition under IRC section 55(d)(2)", {
+        "AMTI before MFS addition": preliminaryAmti,
+        "MFS high-income addition": mfsAddition,
+      });
+  } else {
+    audit.record("Form 6251", "4", "AMTI", amti, preliminaryAmtiFormula);
+  }
 
   if (options?.incomeOnly) return { amti, lines: audit.getLines() };
   if (!("regularTax" in input)) throw new Error("Complete AMT requires the actual regular tax comparison");
 
   // Line 5: Exemption (with phase-out)
-  const baseExemption = amtConst.exemption[input.filingStatus];
-  const phaseOutThreshold = amtConst.phaseOutThreshold[input.filingStatus];
   const excessOverThreshold = zeroFloor(amti.minus(phaseOutThreshold));
   // 25% for 2025; 50% from 2026 under IRC 55(d)(4)(A)(ii)(IV).
   const exemptionReduction = roundDollar(excessOverThreshold.times(amtConst.phaseOutRate));
