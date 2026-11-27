@@ -2,7 +2,7 @@ import "server-only";
 import { z } from "zod";
 import { calculateAiCost, maximumAiRequestCost, type AiTokenUsage } from "@tax-engine/engine/src/ai-pricing";
 import { geminiTextResponseSchema, readGeminiTextResponse } from "@tax-engine/engine/src/ai-gemini-text-response";
-import { openAiUsageSchema } from "@tax-engine/engine/src/ai-openai-usage";
+import { assertOpenAiVisibleOutputUsage, openAiUsageSchema } from "@tax-engine/engine/src/ai-openai-usage";
 import { resolveCandidateAiRoute, type AiProvider, type AiTask, type AiProfileId } from "@tax-engine/engine/src/ai-task-registry";
 import { containsUnsafeDirectIdentifier } from "./provider-request-privacy";
 import { selectQualifiedAiRoute, type AiRolloutState } from "./ai-rollout";
@@ -185,6 +185,7 @@ export async function executeAiTask<T>(request: AiTaskRequest<T>, execution: AiT
     completed = envelope.status === "completed" && !envelope.output?.some(item => item.content?.some(part => part.type === "refusal"));
     outputText = envelope.output_text ?? envelope.output?.flatMap(item => item.type === "message"
       ? item.content?.filter(part => part.type === "output_text").map(part => part.text ?? "") ?? [] : []).join("") ?? "";
+    if (completed) assertOpenAiVisibleOutputUsage(envelope.usage, outputText);
     const details = envelope.usage.input_tokens_details;
     // No explicit cache breakpoints are requested. Unexpected writes still require exact duration charges.
     const writes = details?.cache_write_tokens_details;

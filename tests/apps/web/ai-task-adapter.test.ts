@@ -360,7 +360,7 @@ describe("task-based candidate AI adapter", () => {
     const id = "resp_fixtureTotal";
     for (const reported of [{}, { total_tokens: 2100, output_tokens_details: {} },
       { output_tokens_details: { reasoning_tokens: 0 } },
-      { total_tokens: 2100, output_tokens_details: { reasoning_tokens: 2000 } }]) {
+      { total_tokens: 2100, output_tokens_details: { reasoning_tokens: 1900 } }]) {
       const deps = execution(envelope(undefined, { id, usage: { ...base.usage, ...reported } }));
       const recordAttempt = vi.fn();
       const recordUnknownAttempt = vi.fn();
@@ -392,6 +392,58 @@ describe("task-based candidate AI adapter", () => {
       expect(deps.fetchFn).toHaveBeenCalledOnce();
       expect(recordAttempt).not.toHaveBeenCalled();
       expect(recordUnknownAttempt).toHaveBeenCalledExactlyOnceWith(expect.anything(), { providerRequestId: id });
+    }
+  });
+  it("holds completed provider text with provably zero visible output tokens", async () => {
+    const id = "resp_fixtureVisibleTokens";
+    const cases = [
+      ["openai", envelope(undefined, { id, usage: { input_tokens: 100, output_tokens: 0, total_tokens: 100 } }), id],
+      ["openai", envelope(undefined, { id, usage: { input_tokens: 100, output_tokens: 3,
+        output_tokens_details: { reasoning_tokens: 3 } } }), id],
+      ["google", { modelVersion: "gemini-3.8-flash", candidates: [{ finishReason: "STOP",
+        content: { parts: [{ text: '{"summary":"Confirm the W-2."}' }] } }], usageMetadata: {
+        promptTokenCount: 100, candidatesTokenCount: 0, thoughtsTokenCount: 3, totalTokenCount: 103,
+      } }, undefined],
+    ] as const;
+    for (const [provider, payload, providerRequestId] of cases) {
+      const deps = execution();
+      deps.fetchFn.mockResolvedValueOnce(Response.json(payload));
+      const recordAttempt = vi.fn();
+      const recordUnknownAttempt = vi.fn();
+      await expect.soft(executeAiTask(request(), { ...deps, provider, recordAttempt, recordUnknownAttempt }))
+        .rejects.toThrow(/^AI provider request failed; usage requires reconciliation\.$/);
+      expect.soft(recordAttempt).not.toHaveBeenCalled();
+      expect.soft(recordUnknownAttempt).toHaveBeenCalledExactlyOnceWith(expect.anything(), { providerRequestId });
+      expect(deps.fetchFn).toHaveBeenCalledOnce();
+    }
+  });
+  it("preserves consistent usage when reported visible output is permitted", async () => {
+    const cases = [
+      ["openai", envelope(undefined, { usage: { input_tokens: 100, output_tokens: 3 } }), true, 3],
+      ["openai", envelope(undefined, { usage: { input_tokens: 100, output_tokens: 3,
+        output_tokens_details: { reasoning_tokens: 2 } } }), true, 3],
+      ["openai", envelope(undefined, { output: [{ type: "message", content: [{ type: "refusal" }] }],
+        usage: { input_tokens: 100, output_tokens: 0, output_tokens_details: { reasoning_tokens: 0 } } }), false, 0],
+      ["openai", envelope(" ", { usage: { input_tokens: 100, output_tokens: 3,
+        output_tokens_details: { reasoning_tokens: 3 } } }), false, 3],
+      ["google", { modelVersion: "gemini-3.8-flash", candidates: [{ finishReason: "STOP",
+        content: { parts: [{ thought: true, text: "Synthetic thought" }, { text: " " }] } }],
+        usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 0, thoughtsTokenCount: 3 } }, false, 3],
+      ["google", { modelVersion: "gemini-3.8-flash", candidates: [{ finishReason: "STOP",
+        content: { parts: [{ text: '{"summary":"Confirm the W-2."}' }] } }],
+        usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 1, thoughtsTokenCount: 3 } }, true, 4],
+    ] as const;
+    for (const [provider, payload, accepted, outputTokens] of cases) {
+      const deps = execution();
+      deps.fetchFn.mockResolvedValueOnce(Response.json(payload));
+      const recordAttempt = vi.fn();
+      const recordUnknownAttempt = vi.fn();
+      await expect(executeAiTask(request(), { ...deps, provider, recordAttempt, recordUnknownAttempt }))
+        .resolves.toMatchObject({ accepted, accounting: { usage: { outputTokens } } });
+      expect(recordAttempt).toHaveBeenCalledExactlyOnceWith(expect.anything(), expect.objectContaining({
+        accepted, usage: expect.objectContaining({ outputTokens }),
+      }));
+      expect(recordUnknownAttempt).not.toHaveBeenCalled();
     }
   });
   it("uses official cache-write detail fields and counts both lifetimes exactly once", async () => {

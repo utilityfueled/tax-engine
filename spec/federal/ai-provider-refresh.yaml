@@ -77,6 +77,25 @@ lines:
       - "tests/engine/provider-eval-transport.test.ts::reconciles reported OpenAI totals before returning evaluation usage"
       - "tests/apps/web/ai-task-adapter.test.ts::holds OpenAI usage for an unpriced reported service tier"
       - "tests/engine/provider-eval-transport.test.ts::holds OpenAI evaluation usage for an unpriced reported service tier"
+  - line: "visible-output-usage"
+    description: "Reconcile completed generated text with the reported output tokens"
+    formula: >-
+      When a response completes with nonblank generated text, its reported
+      counts cannot establish zero tokens for that text. For OpenAI, hold
+      the usage when the output count is zero or the reported reasoning
+      count equals the full output count. For Gemini, reasoning tokens are
+      reported separately and cannot substitute for a positive candidate
+      count. An omitted OpenAI reasoning count with positive output is not
+      contradictory. In either transport, leave contradictory usage unknown
+      without settling or retrying and retain the available provider reference
+      for reconciliation. Preserve known usage for refusals, prompt blocks,
+      and responses with no generated text.
+    irsRef: "https://developers.openai.com/api/reference/resources/responses/methods/create; https://aistudio.google.com/api-reference/generate-content"
+    testRef: "tests/apps/web/ai-task-adapter.test.ts::holds completed provider text with provably zero visible output tokens"
+    testRefs:
+      - "tests/engine/provider-eval-transport.test.ts::holds completed evaluation text with provably zero visible output tokens"
+      - "tests/apps/web/ai-task-adapter.test.ts::preserves consistent usage when reported visible output is permitted"
+      - "tests/engine/provider-eval-transport.test.ts::preserves consistent evaluation usage when reported visible output is permitted"
   - line: "gemini-rejected-usage"
     description: "Settle reported usage when Gemini omits candidate content"
     formula: "For one Gemini candidate, allow absent content when usage is complete and valid. Accept only normal completion with valid structured and grounded text. Settle known rejected usage once without another provider dispatch. At November 2026 rates, 1,000 input tokens with 200 cached reads and 100 candidate plus 900 thought tokens cost $0.004365 and one retail cent."

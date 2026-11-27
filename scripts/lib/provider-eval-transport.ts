@@ -1,7 +1,7 @@
 import { performance } from "node:perf_hooks";
 import { z } from "zod";
 import { geminiTextResponseSchema, readGeminiTextResponse } from "../../packages/engine/src/ai-gemini-text-response";
-import { openAiUsageSchema } from "../../packages/engine/src/ai-openai-usage";
+import { assertOpenAiVisibleOutputUsage, openAiUsageSchema } from "../../packages/engine/src/ai-openai-usage";
 import { providerModelCandidates } from "../../packages/engine/src/provider-model-eval";
 import { evalHttpStatusSchema, evalUsageSchema, type ProviderEvalRequest, type ProviderEvalTransport, type ProviderEvalTransportResult } from "./provider-eval-runner";
 import { PROVIDER_EVAL_CONTRACT as contract, providerEvalClientTrace } from "./provider-eval-contract";
@@ -75,6 +75,7 @@ export function createLiveProviderEvalTransport(options: { profileIds: string[];
           cachedInputTokens: details?.cached_tokens ?? 0, cacheWrite30mTokens: writes?.ttl_30m_tokens ?? 0, cacheWrite12hTokens: writes?.ttl_12h_tokens ?? 0 });
         complete = envelope.status === "completed" && !envelope.output?.some(item => item.content?.some(part => part.type === "refusal"));
         outputText = envelope.output_text ?? envelope.output?.flatMap(item => item.type === "message" ? item.content?.filter(part => part.type === "output_text").map(part => part.text ?? "") ?? [] : []).join("") ?? "";
+        if (complete) assertOpenAiVisibleOutputUsage(envelope.usage, outputText);
         reportedModel = envelope.model;
       } else {
         responseReference = googleBodyReference.safeParse(payload).data?.responseId ?? responseReference;

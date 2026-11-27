@@ -46,6 +46,8 @@ export function readGeminiTextResponse(response: z.infer<typeof geminiTextRespon
   }
 
   const outputText = candidate?.content?.parts.filter(part => !part.thought).map(part => part.text ?? "").join("") ?? "";
+  const completed = candidate?.finishReason === "STOP" && Boolean(outputText.trim());
+  if (completed && candidateTokens === 0) throw new Error("Gemini returned generated text without candidate tokens.");
   const usage: AiTokenUsage = { inputTokens: promptTokenCount, outputTokens: Number(outputTokens), cachedInputTokens: cachedContentTokenCount };
-  return { completed: candidate?.finishReason === "STOP" && Boolean(outputText.trim()), outputText, usage };
+  return { completed, outputText, usage };
 }

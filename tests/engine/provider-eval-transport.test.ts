@@ -34,7 +34,7 @@ describe("official evaluation transport", () => {
     const transport = createLiveProviderEvalTransport({ profileIds: ["luna-high"], apiKeys: { openai: "synthetic" }, fetchFn });
     for (const reported of [{}, { total_tokens: 150, output_tokens_details: {} },
       { output_tokens_details: { reasoning_tokens: 0 } },
-      { total_tokens: 150, output_tokens_details: { reasoning_tokens: 50 } }]) {
+      { total_tokens: 150, output_tokens_details: { reasoning_tokens: 30 } }]) {
       fetchFn.mockReset().mockResolvedValueOnce(response({ ...openai, usage: { ...openai.usage, ...reported } }));
       await expect(transport(request())).resolves.toMatchObject({
         status: "completed", reportedModel: "gpt-6-luna", responseReference: openai.id,
@@ -57,6 +57,45 @@ describe("official evaluation transport", () => {
         status: "failed", httpStatus: 200, reportedModel: null, responseReference: openai.id, usage: null, payload: null,
       });
       expect(fetchFn).toHaveBeenCalledOnce();
+    }
+  });
+  it("holds completed evaluation text with provably zero visible output tokens", async () => {
+    const geminiId = "gemini-fixture-visible-tokens";
+    const cases = [
+      ["luna-high", "openai", { ...openai, usage: { ...openai.usage, output_tokens: 0, total_tokens: 100 } }, openai.id],
+      ["luna-high", "openai", { ...openai, usage: { ...openai.usage, output_tokens_details: { reasoning_tokens: 50 } } }, openai.id],
+      ["gemini-flash-high", "google", { modelVersion: "gemini-3.8-flash", responseId: geminiId,
+        candidates: [{ finishReason: "STOP", content: { parts: [{ text: '{"probe":"ok"}' }] } }],
+        usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 0, thoughtsTokenCount: 3, totalTokenCount: 103 } }, geminiId],
+    ] as const;
+    for (const [profile, provider, payload, responseReference] of cases) {
+      const fetchFn = vi.fn(async () => response(payload));
+      const evaluate = createLiveProviderEvalTransport({ profileIds: [profile], apiKeys: { [provider]: "synthetic" }, fetchFn });
+      await expect.soft(evaluate(request(profile))).resolves.toMatchObject({
+        status: "failed", responseReference, usage: null, payload: null,
+      });
+      expect(fetchFn).toHaveBeenCalledOnce();
+    }
+  });
+  it("preserves consistent evaluation usage when reported visible output is permitted", async () => {
+    const cases = [
+      ["luna-high", "openai", openai, 50, { probe: "ok" }],
+      ["luna-high", "openai", { ...openai, usage: { ...openai.usage, output_tokens_details: { reasoning_tokens: 49 } } }, 50, { probe: "ok" }],
+      ["luna-high", "openai", { ...openai, output_text: undefined,
+        output: [{ type: "message", content: [{ type: "refusal" }] }], usage: { ...openai.usage, output_tokens: 0 } }, 0, null],
+      ["luna-high", "openai", { ...openai, output_text: " ", usage: { ...openai.usage,
+        output_tokens_details: { reasoning_tokens: 50 } } }, 50, null],
+      ["gemini-flash-high", "google", { modelVersion: "gemini-3.8-flash", candidates: [{ finishReason: "STOP",
+        content: { parts: [{ thought: true, text: "Synthetic thought" }, { text: " " }] } }],
+        usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 0, thoughtsTokenCount: 3 } }, 3, null],
+      ["gemini-flash-high", "google", { modelVersion: "gemini-3.8-flash", candidates: [{ finishReason: "STOP",
+        content: { parts: [{ text: '{"probe":"ok"}' }] } }],
+        usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 1, thoughtsTokenCount: 3 } }, 4, { probe: "ok" }],
+    ] as const;
+    for (const [profile, provider, payload, outputTokens, expectedPayload] of cases) {
+      const evaluate = createLiveProviderEvalTransport({ profileIds: [profile], apiKeys: { [provider]: "synthetic" },
+        fetchFn: async () => response(payload) });
+      await expect(evaluate(request(profile))).resolves.toMatchObject({ usage: { outputTokens }, payload: expectedPayload });
     }
   });
   it("holds OpenAI evaluation usage for an unpriced reported service tier", async () => {

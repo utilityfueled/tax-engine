@@ -21,3 +21,9 @@ export const openAiUsageSchema = z.object({
   message: "OpenAI reasoning tokens exceed the reported output token count.",
   path: ["output_tokens_details", "reasoning_tokens"],
 });
+
+export function assertOpenAiVisibleOutputUsage(usage: z.infer<typeof openAiUsageSchema>, outputText: string): void {
+  if (outputText.trim() && usage.output_tokens === (usage.output_tokens_details?.reasoning_tokens ?? 0)) {
+    throw new Error("OpenAI returned generated text without visible output tokens.");
+  }
+}
