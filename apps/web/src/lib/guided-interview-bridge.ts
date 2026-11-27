@@ -532,21 +532,29 @@ export function buildAdjustmentsInput(adjustmentData: AdjustmentData | undefined
 
 // ── Estimated payments converter ────────────────────────────────────────────
 
-function federalPaymentInput(entry: PaymentData["estimatedPayments"][number]) {
-  return {
+function federalPaymentInputs(
+  entries: PaymentData["estimatedPayments"] | undefined,
+  taxYear: number | null | undefined,
+  kind: "estimate" | "extension",
+) {
+  return (entries ?? []).map((entry, index) => ({
     date: entry.date,
     amount: toDecimalString(entry.amount),
     type: "federal" as const,
+    // Receipt originals are checked before conversion and stay in the guided source data.
+    ...(taxYear === 2026 && entry.receiptReference?.trim() ? {
+      receiptReference: `guided-${kind}-receipt-${index + 1}`,
+    } : {}),
     ...(entry.application?.confirmed === true ? {
       application: { taxYear: Number(entry.application.taxYear), confirmed: true as const },
     } : {}),
-  };
+  }));
 }
 
 export function buildEstimatedPaymentsInput(paymentData: PaymentData | undefined, taxYear?: number | null) {
   if (!paymentData) return [];
   assertKnownFacts({ ...paymentFactErrors(paymentData.estimatedPayments, taxYear, "estimate"), ...federalPaymentReceiptFactErrors(paymentData, taxYear) });
-  return (paymentData.estimatedPayments ?? []).map(federalPaymentInput);
+  return federalPaymentInputs(paymentData.estimatedPayments, taxYear, "estimate");
 }
 
 // ── Retirement income (1099-R) converter ──────────────────────────────────
@@ -1013,7 +1021,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const usesDedicatedReceipts = usesDedicatedStatePaymentReceipts(segmentation.stateCode);
   const supportsEstimateApplication = !usesDedicatedReceipts || (state.taxYear === 2025 && segmentation.stateCode === "OH");
   const estimatedPayments = [
-    ...(paymentData?.estimatedPayments ?? []).map(federalPaymentInput),
+    ...federalPaymentInputs(paymentData?.estimatedPayments, state.taxYear, "estimate"),
     ...(stateReturnData?.stateEstimatedPayments ?? []).map((entry) => {
       const taxYear = supportsEstimateApplication ? confirmedStateEstimatedPaymentYear(entry) : undefined;
       return {
@@ -1025,7 +1033,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
       };
     }),
   ];
-  const extensionPayments = (paymentData?.extensionPayments ?? []).map(federalPaymentInput);
+  const extensionPayments = federalPaymentInputs(paymentData?.extensionPayments, state.taxYear, "extension");
   const priorYearAppliedCredits = (paymentData?.priorYearAppliedCredits ?? []).map((entry) => ({ sourceTaxYear: Number(entry.sourceTaxYear), amount: toDecimalString(entry.amount), type: "federal" as const }));
   const paymentAdjustments = { estimatedTaxPayments: estimatedPayments, extensionPayments, priorYearAppliedCredits };
   const form172 = buildCurrentLossOrigin(adjustmentData?.currentLossOrigin, state);

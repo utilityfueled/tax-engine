@@ -110,8 +110,12 @@ it("requires distinct actual references for matching 2026 estimates", () => {
   const twoActual = guidedWithPayments([{ ...first, receiptReference: firstOriginal.receiptReference },
     { ...repeated, receiptReference: secondOriginal.receiptReference }], undefined, 2026);
   expect(validateSection(twoActual, "payments").status).toBe("complete");
-  expect(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(twoActual)).adjustments?.estimatedTaxPayments)
-    .toEqual([{ ...first, type: "federal" }, { ...repeated, type: "federal" }]);
+  const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(twoActual));
+  expect(input.adjustments?.estimatedTaxPayments).toMatchObject([{ ...first, type: "federal", receiptReference: expect.any(String) },
+    { ...repeated, type: "federal", receiptReference: expect.any(String) }]);
+  expect(new Set(input.adjustments?.estimatedTaxPayments.map(row => row.receiptReference)).size).toBe(2);
+  expect(JSON.stringify(input)).not.toMatch(/Synthetic receipt [AB]/);
+  expect(() => calculateFederalTax(input)).toThrow(/2026 rule pack .* calculation is unavailable/);
 });
 
 it("reconciles matching 2026 extension payments before transfer", () => {
@@ -136,10 +140,24 @@ it("reconciles matching 2026 extension payments before transfer", () => {
     { ...repeated, receiptReference: secondOriginal.receiptReference },
   ], 2026);
   const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(JSON.parse(JSON.stringify(actual))));
-  expect(input.adjustments?.extensionPayments).toEqual([
-    { ...first, type: "federal" }, { ...repeated, type: "federal" },
+  expect(input.adjustments?.extensionPayments).toMatchObject([
+    { ...first, type: "federal", receiptReference: expect.any(String) },
+    { ...repeated, type: "federal", receiptReference: expect.any(String) },
   ]);
+  expect(new Set(input.adjustments?.extensionPayments.map(row => row.receiptReference)).size).toBe(2);
+  expect(JSON.stringify(input)).not.toMatch(/Synthetic receipt [AB]/);
   expect(() => calculateFederalTax(input)).toThrow(/2026 rule pack .* calculation is unavailable/);
+
+  const sameDay = { ...first, date: "2026-04-15" };
+  const mixed = guidedWithPayments([{ ...sameDay, receiptReference: firstOriginal.receiptReference }],
+    [{ ...sameDay, receiptReference: secondOriginal.receiptReference }], 2026);
+  const mixedInput = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(mixed));
+  expect(mixedInput.adjustments?.estimatedTaxPayments[0]?.receiptReference).toEqual(expect.any(String));
+  expect(mixedInput.adjustments?.extensionPayments[0]?.receiptReference).toEqual(expect.any(String));
+  expect(mixedInput.adjustments?.estimatedTaxPayments[0]?.receiptReference)
+    .not.toBe(mixedInput.adjustments?.extensionPayments[0]?.receiptReference);
+  expect(JSON.stringify(mixedInput)).not.toMatch(/Synthetic receipt [AB]/);
+  expect(() => calculateFederalTax(mixedInput)).toThrow(/2026 rule pack .* calculation is unavailable/);
 });
 
 it("holds a reused 2026 payment reference across estimates and extensions", () => {

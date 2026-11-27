@@ -20,3 +20,18 @@ lines:
       - "tests/guided-interview/guided-federal-payment-receipts.test.ts::keeps exact cents and the existing return-year admission"
       - "tests/guided-interview/guided-federal-payment-receipts.test.ts::admits a saved extension-only draft through Continue and the bridge"
       - "tests/apps/web/guided-federal-payment-receipts.test.tsx::reconciles matching payment rows through the 2025 and 2026 Payments panel"
+
+  - line: "2026-calculation-reference"
+    description: Pass distinct receipt evidence to the 2026 calculation without original references
+    formula: >-
+      Validate the actual private receipt references across estimates and
+      extensions before conversion. Give each referenced 2026 row a distinct
+      calculation reference within the return. Every such reference identifies
+      an admitted row by position and contains no characters from the original
+      taxpayer reference. An unreferenced row remains unreferenced. Dates,
+      exact amounts, payment categories, confirmed applications and the 2025
+      conversion retain their existing treatment.
+    irsRef: "Payment history (https://www.irs.gov/payments/online-account-for-individuals); IRS Direct Pay payment-specific confirmations (https://www.irs.gov/payments/direct-pay-help)"
+    testRef: "tests/guided-interview/guided-federal-payment-receipts.test.ts::reconciles matching 2026 extension payments before transfer"
+    testRefs:
+      - "tests/guided-interview/guided-federal-payment-receipts.test.ts::requires distinct actual references for matching 2026 estimates"

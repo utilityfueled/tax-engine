@@ -617,6 +617,7 @@ lines:
       - "tests/engine/federal-payment-date-sources.test.ts::holds indistinguishable positive 2026 federal applied credits before line 26"
       - "tests/engine/federal-payment-date-sources.test.ts::holds a reused actual federal payment receipt before crediting payments"
       - "tests/engine/federal-payment-date-sources.test.ts::credits distinct receipts with matching dates and amounts and preserves unbound payments"
+      - "tests/engine/federal-payment-date-sources.test.ts::holds indistinguishable positive 2026 payments without distinct actual receipts"
     notes: |
       Final 2025 Form 1040 instructions (https://www.irs.gov/instructions/i1040gi),
       Line 26 and Schedule 3 line 10, distinguish estimates from payments made
@@ -658,8 +659,17 @@ lines:
       repeated nonblank references across positive federal rows within either
       payment list or across both lists before computing credits. Compare
       references without whitespace or case differences, as in guided intake.
-      Preserve distinct references with matching dates and amounts, legacy rows
-      without a reference, explicit zero amounts and state payment treatment.
+      For 2026, multiple positive federal rows with the same civil date and
+      exact amount require distinct actual payment references on every row,
+      including when the rows come from different payment lists. Hold an
+      indistinguishable import for reconciliation before crediting either line.
+      Guided intake carries calculation references from rows admitted against
+      private actual references without transferring their original contents.
+      Preserve distinct references with matching dates and amounts, individual
+      unbound payments without a matching row, explicit zero amounts and
+      state payment treatment. The historical 2025 direct-import rule remains
+      in force. Verify ambiguous rows against the taxpayer's IRS payment
+      history (https://www.irs.gov/payments/online-account-for-individuals).
       Do not print the receipt reference in an audit or error. An IRS Direct
       Pay confirmation number identifies one payment. Draft 2026 Form 1040
       (https://www.irs.gov/pub/irs-dft/f1040--dft.pdf) line 26 and Schedule 3

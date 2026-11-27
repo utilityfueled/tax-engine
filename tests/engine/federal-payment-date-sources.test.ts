@@ -46,7 +46,7 @@ describe("Actual federal payment dates and selected return application", () => {
       const baseline = run(taxYear).totalPayments;
       for (const payments of [
         adjustments([first], [second]),
-        adjustments([unbound], [unbound]),
+        ...(taxYear === 2025 ? [adjustments([unbound], [unbound])] : []),
         adjustments([first, zero, state], [second]),
       ]) {
         const result = run(taxYear, payments);
@@ -55,7 +55,26 @@ describe("Actual federal payment dates and selected return application", () => {
         expect(result.totalPayments.minus(baseline).toFixed()).toBe("250.74");
         expect(JSON.stringify(result.allLines)).not.toContain(first.receiptReference);
       }
+      expect(run(taxYear, adjustments([unbound])).totalPayments.minus(baseline).toFixed()).toBe("125.37");
     }
+  });
+
+  it("holds indistinguishable positive 2026 payments without distinct actual receipts", () => {
+    const unbound = { ...estimate, date: "2026-04-15" };
+    const formatted = { ...unbound, amount: "125.370" };
+    const referenced = { ...unbound, receiptReference: "fictional-confirmation-070" };
+    for (const payments of [
+      adjustments([unbound, formatted]),
+      adjustments([], [unbound, formatted]),
+      adjustments([unbound], [formatted]),
+      adjustments([referenced], [unbound]),
+      adjustments([unbound], [referenced]),
+    ]) {
+      expect(() => run(2026, payments)).toThrow(/distinct actual receipt references/i);
+    }
+    const baseline = run(2026).totalPayments;
+    const distinct = adjustments([unbound], [{ ...unbound, amount: "125.38" }]);
+    expect(run(2026, distinct).totalPayments.minus(baseline).toFixed()).toBe("250.75");
   });
 
   it("credits only nonnegative amounts actually carried over from the preceding return", () => {
