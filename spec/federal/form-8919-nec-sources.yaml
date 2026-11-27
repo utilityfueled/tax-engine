@@ -1,0 +1,85 @@
+form: "Form 8919 2026 Reason A original Form 1099-NEC"
+fullName: "2026 original worker-classification wage source reconciliation"
+taxYear: 2026
+irsReference: "https://www.irs.gov/pub/irs-pdf/f8919.pdf"
+instructions: "https://www.irs.gov/instructions/i1099mec"
+notes: |
+  Federal 2026 source reconciliation for one original Form 1099-NEC and
+  a confirmed Reason A employee determination. This scope governs source
+  attribution and the supporting interview. Form 8919 summary tax rules
+  remain in form-8919.yaml. Annual filing export gates remain in place.
+
+lines:
+  - line: "2026-reason-a-nec-wages"
+    description: "Reconcile one original Form 1099-NEC to confirmed Reason A wages"
+    formula: >-
+      Require an actual 2026 Form 1099-NEC received in place of Form W-2 for one firm,
+      a confirmed IRS SS-8 employee determination reference and issued and received dates, and confirmation
+      of no employee Social Security or Medicare withholding. Bind the original by its
+      canonical source index, original statement reference, employer EIN and recipient
+      TIN, matching the documented return owner. Require full positive Box 1a to agree
+      exactly with Form 8919 line 6. Carry the wages to Form 1040 line 1g once and preserve
+      original federal income tax withholding. Exclude the linked Box 1a from Schedule C,
+      net self-employment earnings and QBI. Box 1d remains part of Box 1a and supplies
+      separately verified FLSA overtime to draft Schedule 1-A line 16.
+    irsRef: "https://www.irs.gov/pub/irs-pdf/f8919.pdf; https://www.irs.gov/instructions/i1099mec; https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf#page=110; IRC section 225(a) and (c)"
+    testRef: "tests/engine/federal-form-8919-nec-2026.test.ts::carries the original NEC as Form 8919 wages and deducts qualified overtime once"
+
+  - line: "2026-reason-a-nec-overlap"
+    description: "Hold unmatched or unsupported overlap before income calculation"
+    formula: >-
+      Hold a same-owner or unattributed 2026 original with positive NEC compensation
+      and positive Form 8919 wages if its original linkage is missing or unconfirmed.
+      Amount equality and a reported overtime box do not establish worker classification.
+      This source method requires one current original and holds same-firm W-2s, other
+      or corrected originals, tips from the linked original, original NEC Boxes 2 and 3
+      indicating separate direct-sale or parachute-payment facts, and business or
+      state-source overlaps requiring separate attribution. Preserve historical summary
+      inputs and returns that have only a separate household owner's original.
+    irsRef: "https://www.irs.gov/pub/irs-pdf/f8919.pdf; https://www.irs.gov/instructions/i1099mec; https://www.irs.gov/pub/taxpros/fs-2026-13.pdf#page=4"
+    testRef: "tests/engine/federal-form-8919-nec-2026.test.ts::holds an original 2026 NEC overlap without a verified Form 8919 link"
+
+  - line: "2026-reason-a-nec-identification"
+    description: "Validate original owner, identity, and amount before business classification"
+    formula: >-
+      Verify the original statement and determination against the return year, filer,
+      recipient TIN, firm name, EIN, and exact wages from the taxpayer's records. Require
+      actual W-2 issuer EINs to establish the linked firm is absent from the W-2s. Preserve
+      the original input for federal withholding and overtime, and return a business
+      calculation input without the linked statement. Never render identifiers or
+      document references in the audit lines.
+    irsRef: "https://www.irs.gov/pub/irs-pdf/f8919.pdf#page=2"
+    testRef: "tests/engine/forms/form-8919-nec-sources.test.ts::filters only the documented original from the business calculation input"
+
+  - line: "2026-reason-a-guided-original-nec"
+    description: "Collect a linked original in the federal-only Form 8919 interview"
+    formula: >-
+      For a federal-only, non-joint return, collect the original employee determination,
+      its actual receipt date, and the current Form 1099-NEC issued in place of Form W-2.
+      Use the primary filer's confirmed identifying facts and the original issuer, recipient,
+      Box 1a, Box 1d, Box 4 and attestations. Block missing, changed or unsupported sources.
+      Preserve the taxpayer's actual residency answer. Require explicit confirmation that
+      the linked calculation covers only the federal return. This confirms calculation
+      scope and leaves all state filing obligations and unsupported state sources separate.
+      Transfer the statement as Form 8919 employee compensation without a Schedule C.
+      Allow a separately confirmed FLSA premium to reference this original from Schedule 1-A.
+      Preserve existing no-1099 guided drafts and final-year export gates.
+    irsRef: "https://www.irs.gov/pub/irs-pdf/f8919.pdf; https://www.irs.gov/instructions/i1099mec; https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf#page=110"
+    testRef: "tests/guided-interview/guided-form-8919-reason-a.test.ts::projects a verified original 1099-NEC as employee compensation without creating business income"
+
+  - line: "2026-reason-a-determination-date"
+    description: "Observe the received IRS classification before using Reason A"
+    formula: >-
+      Require real calendar dates for the determination and its receipt. Use the IRS
+      issuance date for column (d), and hold the calculation until receipt. Require
+      issue date no later than receipt date and receipt date no later than the calculation
+      observation date. The determination may follow the wage year. Apply the same bound
+      when replaying the federal calculation as of an earlier date.
+    irsRef: "https://www.irs.gov/pub/irs-pdf/f8919.pdf#page=2"
+    testRef: "tests/engine/federal-form-8919-nec-2026.test.ts::holds a determination until its observed date"
+
+  - line: "2026-reason-a-nec-boxes-2-and-3"
+    description: "Require the original to rule out direct sales and excess golden parachute payments"
+    formula: "Confirm original Form 1099-NEC Box 2 is unchecked and Box 3 is blank or zero before applying the single wage source method. Hold those additional facts for their separate calculation."
+    irsRef: "https://www.irs.gov/instructions/i1099mec"
+    testRef: "tests/engine/forms/form-8919-nec-sources.test.ts::requires the original to rule out reported direct sales or parachute payments"

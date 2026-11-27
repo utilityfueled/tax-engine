@@ -1,4 +1,4 @@
-/** Original Reason A wage source reconciliation. Spec: spec/federal/form-8919.yaml. */
+/** Original Reason A wage source reconciliation. Spec: spec/federal/form-8919-nec-sources.yaml. */
 import { Form1099NecSchema, Form8919Schema, type TaxYearInput } from "@/models/inputs.js";
 import { isActualDate } from "@/utils/civil-date.js";
 import { d } from "@/utils/decimal.js";

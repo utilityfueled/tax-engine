@@ -1,4 +1,4 @@
-// Spec: spec/federal/form-8919.yaml, 2026 Reason A original NEC sources.
+// Spec: spec/federal/form-8919-nec-sources.yaml.
 import { describe, expect, it } from "vitest";
 import { reconcileForm8919NecSources } from "@/engine/forms/form-8919-nec-sources.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";

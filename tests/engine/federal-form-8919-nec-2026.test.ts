@@ -1,4 +1,4 @@
-// Spec: spec/federal/form-8919.yaml. The isolated calculation does not open the 2026 rule pack.
+// Spec: spec/federal/form-8919-nec-sources.yaml. The isolated calculation does not open the 2026 rule pack.
 import { expect, it, vi } from "vitest";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
