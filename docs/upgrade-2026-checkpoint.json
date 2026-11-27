@@ -3,9 +3,9 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "1cd975b3786a52a1333dd467b6c5bf8de4b54d37",
-    "latestScopedApplicationCommit": "41947009527b5ba1fb5386c06180ed9f1551e0cd",
+    "latestScopedApplicationCommit": "183535fb25e1559d4acbb62d208e32c4b30e1a4d",
     "latestCombinedCandidateCommit": "1cd975b3786a52a1333dd467b6c5bf8de4b54d37",
-    "latestScopedChecksEvidenceKey": "activeContinuation.nov27CommercialVehicleCurrentCredit",
+    "latestScopedChecksEvidenceKey": "activeContinuation.nov27CommercialVehicleCarryback",
     "nov27PaymentReceiptsAndForm8863EvidenceKey": "activeContinuation.nov27PaymentReceiptsAndForm8863",
     "nov27OhioPennsylvaniaPensionEvidenceKey": "activeContinuation.nov27OhioPennsylvaniaPension",
     "nov27PennsylvaniaNonresidentAndAotcEvidenceKey": "activeContinuation.nov27PennsylvaniaNonresidentAndAotc",
@@ -194,6 +194,32 @@
     ]
   },
   "activeContinuation": {
+    "nov27CommercialVehicleCarryback": {
+      "commit": "183535fb25e1559d4acbb62d208e32c4b30e1a4d",
+      "verifiedTree": "7c60a77ec1113572f5e4ad49f429d64ad84a02a4",
+      "primarySources": ["https://uscode.house.gov/us/usc/t26/s39/", "https://www.irs.gov/instructions/i3800"],
+      "exactFocusedTestsPassed": 255,
+      "independentEngineeringReviewPassed": true,
+      "repositorySpecReferencesValidated": 10288,
+      "exactTreeChecksPassed": ["typecheck", "contracts", "web-types", "spec", "inventory", "lint", "build", "offline-eval"],
+      "currentCredit": "5316",
+      "unusedCurrentCredit": "684",
+      "eligible2025Carryback": "400",
+      "potential2027Carryforward": "284",
+      "combinedReleaseChecks": "running",
+      "qualifiedHumanReviewPassed": false,
+      "filingQualified": false
+    },
+    "nov27GuidedCommercialVehicleOriginals": {
+      "commit": "4b23f72966a80c14bb52021a8db7818c03405215",
+      "verifiedTree": "d73bbaa8f9e9d30387648a53d8c559bcfd57dc70",
+      "exactFocusedTestsPassed": 17,
+      "repositorySpecReferencesValidated": 10281,
+      "exactTreeChecksPassed": ["typecheck", "contracts", "web-types", "spec", "inventory", "lint", "build", "offline-eval"],
+      "independentEngineeringReviewPassed": true,
+      "guidedCalculationSourceBindingComplete": false,
+      "filingQualified": false
+    },
     "nov27CommercialVehicleCurrentCredit": {
       "commit": "41947009527b5ba1fb5386c06180ed9f1551e0cd",
       "verifiedTree": "a7014b3fe0b45fa4a996bb7508efb3c9d2abeb89",
@@ -210,7 +236,12 @@
       "ordinaryCreditLimit": "9716",
       "ordinaryCreditLimitWithChildCredit": "7516",
       "appliedCurrentCredit": "6000",
-      "fullReleaseChecks": "running",
+      "exactUnitTestsPassed": 31373,
+      "exactUnitTestsSkipped": 83,
+      "exactCoverageBranchPercent": 88.71,
+      "exactCoverageExitCode": 0,
+      "exactWebBuildExitCode": 0,
+      "browserAndRecoveryChecks": "running",
       "canonicalUnusedCreditSupported": false,
       "qualifiedHumanReviewPassed": false,
       "filingQualified": false

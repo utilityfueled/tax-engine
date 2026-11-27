@@ -15,6 +15,38 @@ the latest application revision, exact-source runs and open dependencies. The
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
 
+## November 27 verified 2025 carryback for the 2026 commercial EV credit
+
+`183535fb2` uses a filed 2025 ordinary §38 workpaper for the same single
+taxpayer when the actual 2026 credit is larger than its limit. It checks the
+original filing date and reconciles conflicting prior filing status. The
+synthetic case applies $5,316 in 2026 and leaves $684 unused. Verified 2025
+capacity permits $400 of carryback, leaving $284 potentially available in
+2027. Only $5,316 enters Schedule 3. The later-year balance reflects the
+carryback. The mixed unused-credit and §108 case still requires separate
+reconciliation.
+
+Independent engineering review reproduced a conflicting prior-joint case
+that admitted the $400 carryback before the fix. The corrected focused suite
+passed 255 tests in the exact tree. All eight exact static checks passed,
+including 10,288 spec lines and the offline AI artifact check. The qualified
+human review, amendment and filing gates remain in place. The combined
+unit, coverage and browser checks are running.
+[26 USC §39](https://uscode.house.gov/us/usc/t26/s39/) ·
+[IRS Form 3800 instructions](https://www.irs.gov/instructions/i3800).
+
+## November 27 guided commercial EV original records
+
+`4b23f7296` saves the commercial VIN, contract, payment and possession
+dates and original record references in the existing guided workspace.
+The Credits step shows that the Schedule C, depreciation and credit
+records still need to be linked. Existing personal credit entries retain
+their own seller-report instructions and validation. Both rendered and
+saved-state regressions failed before the fix. All 17 focused tests and
+eight exact-tree static checks passed after engineering review, including
+10,281 spec lines. The exact test first stopped at the Python prerequisite
+and passed after supplying pinned pypdf and verified sample PDFs.
+
 ## November 27 federal commercial EV current-year credit
 
 `419470095` applies the verified ordinary §45W credit in the 2026 federal
@@ -25,9 +57,11 @@ to Schedule 3. Adding the actual $2,200 child tax credit reduces the limit
 to $7,516. The calculation rejects evidence dated after the calculation date.
 Independent engineering review found and verified the possession-date fix.
 All 137 focused tests and eight exact-tree static checks passed, including
-10,280 spec lines. Full-suite and browser verification are underway. An
-unused credit still requires verified 2025 carryback capacity. Qualified
-human tax review and final filing qualification remain open.
+10,280 spec lines. Exact unit and coverage each passed 31,373 tests with
+83 skips. Branch coverage was 88.71% with unchanged thresholds. The local
+web build passed. Chromium and encrypted recovery verification are
+underway. Qualified human tax review and final filing qualification remain
+open.
 [IRS commercial clean vehicle credit](https://www.irs.gov/credits-deductions/commercial-clean-vehicle-credit) ·
 [26 USC §38](https://uscode.house.gov/us/usc/t26/s38/) ·
 [Form 6251 instructions](https://www.irs.gov/instructions/i6251).

@@ -874,3 +874,15 @@ results together with any source or rounding disagreements.
 [Rev. Proc. 2025-32](https://www.irs.gov/pub/irs-drop/rp-25-32.pdf) ·
 [Form 6251 instructions](https://www.irs.gov/instructions/i6251) ·
 [26 USC §38](https://uscode.house.gov/us/usc/t26/s38/).
+
+For the carryback case, use two otherwise eligible children in the same
+current federal return. The taxpayer filed a calendar-year single 2025
+return on April 15, 2026. Its actual ordinary §38 limit is $1,400 and
+$1,000 of priority credits apply. Derive the 2026 tax reduction, unused
+credit, permitted 2025 carryback and potential 2027 balance. Then reconcile
+a separate 2025 vehicle MAGI workpaper that says the taxpayer filed
+jointly. Compare calculations dated April 14 and April 15 and identify
+which workpapers must be available. Verify the §108 attribute reduction
+ordering before accepting an unused-credit case with an excluded debt
+discharge. [26 USC §39](https://uscode.house.gov/us/usc/t26/s39/) ·
+[IRS Form 3800 instructions](https://www.irs.gov/instructions/i3800).
