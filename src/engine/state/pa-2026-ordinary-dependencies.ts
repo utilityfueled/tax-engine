@@ -134,8 +134,8 @@ export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdin
     || !cashDividend.payer.trim() || !accountReference) {
    return fail('cash dividends require one actual 2026 Form 1099-DIV for the primary owner and original account');
   }
-  if (income.residencyStatus !== 'part_year' && isIncompleteDividendAccountReference(accountReference)) {
-   fail('full-year cash dividends require a complete unmasked account reference');
+  if (isIncompleteDividendAccountReference(accountReference)) {
+   fail('cash dividends require a complete unmasked account reference');
   }
   if (dividendSource.domesticCorporateCashDividendsOnlyConfirmed !== true) {
    fail('confirm actual domestic corporate cash dividends only for this personal investment original');

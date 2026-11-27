@@ -253,7 +253,10 @@ lines:
       part-year Pennsylvania residency. Require exactly one current uncorrected
       2026 Form 1099-DIV for the primary owner and actual payer and account,
       with a matching confirmed PA source row and a complete dated credit
-      ledger. Confirm that the Box 1a amount consists entirely of ordinary cash
+      ledger. Require a complete unmasked dividend account reference. Equal
+      masked or suffix-only values cannot verify the account. Use the same
+      mask recognition as for full-year returns and match the complete
+      original reference literally. Confirm that Box 1a consists entirely of ordinary cash
       dividends on the taxpayer's personal investment in a domestic corporation
       paid in cash without reinvestment, and that the complete original contains
       no special reportable amounts or classifications. Accept known Box 1b only
@@ -290,14 +293,18 @@ lines:
     testRefs:
       - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 part-year cash dividend outside the resident period enters Schedule SP only"
       - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 part-year cash dividend holds %s"
+      - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 reopened part-year %s holds repeated masked dividend account references"
+      - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 reopened part-year %s accepts a complete literal dividend account"
+      - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 reopened part-year cash dividends retain literal account matching"
   - line: "part-year-interest-and-cash-dividends"
     description: "Apply the separate income-class and withholding checks when both ordinary originals are present"
     formula: |
       For the confirmed high-wage single inbound part-year method, allow
       one supported Form 1099-INT and one supported Form 1099-DIV together.
       Require the complete matched original and reconcile each dated ledger
-      independently under its own source method. Report resident-period
-      credits separately on Schedule A and Schedule B. Include each
+      independently under its own source method. Require the same complete
+      unmasked dividend account reference as the dividend-only method. Report
+      resident-period credits separately on Schedule A and Schedule B. Include each
       nonresident-period amount once in worldwide Schedule SP eligibility
       income. Sum the reported Pennsylvania income classes, apply PA tax,
       and require actual withholding to cover that combined amount. With
@@ -315,6 +322,8 @@ lines:
     testRefs:
       - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 part-year combined interest and dividends require withholding for both classes"
       - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 part-year combined investment sources hold a mismatched %s original"
+      - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 reopened part-year %s holds repeated masked dividend account references"
+      - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 reopened part-year %s accepts a complete literal dividend account"
   - line: "full-year-personal-cash-dividend"
     description: "Include one verified cash-dividend original for a continuous PA resident or nonresident"
     formula: |
@@ -327,9 +336,9 @@ lines:
       methods other than the existing part-year move into Pennsylvania.
       Require a complete account reference for each added residency method.
       Repeated masked or suffix-only values cannot verify the account. Preserve
-      literal X characters within ordinary unmasked identifiers and the existing
-      part-year admission rules. Classify separated X masks and fullwidth forms
-      after compatibility normalization. Preserve literal agreement of the
+      literal X characters within ordinary unmasked identifiers. Classify
+      separated X masks and fullwidth forms after compatibility normalization.
+      Preserve literal agreement of the
       matched original evidence.
       The exact nationwide Box 1a amount contributes once to the source income
       underlying federal AGI and worldwide Schedule SP. Known Box 1b is a subset

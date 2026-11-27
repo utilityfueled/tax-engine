@@ -113,6 +113,57 @@ function partYearInterestAndDividends(withholding: string) {
  return f;
 }
 
+type CashDividendFixture = ReturnType<typeof pa2026OrdinaryCashDividendFixture>;
+
+function bindCashDividendAccount(f: CashDividendFixture, accountReference: string) {
+ f.input.form1099Div[0].accountReference = accountReference;
+ f.residency.dividends[0].original = structuredClone(f.input.form1099Div[0]);
+ rebindPA2026Draft(f);
+}
+
+const partYearDividendAccountCases = [
+ ['dividend-only', () => pa2026OrdinaryCashDividendFixture(), '0', '39040', '1199', '75120'],
+ ['combined investment', () => partYearInterestAndDividends('1200'), '40', '39080', '1200', '75240'],
+] as const;
+
+it.each(partYearDividendAccountCases)('PA2026 reopened part-year %s holds repeated masked dividend account references', (_method, makeFixture) => {
+ for (const reference of ['BROKER-XXXX-1234', 'BROKER****1234', 'last four 1234', '1234', 'ＢＲＯＫＥＲ－ＸＸＸＸ－１２３４']) {
+  const f = makeFixture();
+  bindCashDividendAccount(f, reference);
+  const saved: CashDividendFixture = JSON.parse(JSON.stringify(f));
+  expect(() => calculatePA2026OrdinaryDraft(saved.input, saved.facts, saved.sources), reference)
+   .toThrow(/complete unmasked account reference/i);
+ }
+});
+
+it.each(partYearDividendAccountCases)('PA2026 reopened part-year %s accepts a complete literal dividend account', (_method, makeFixture, interest, taxable, tax, eligibility) => {
+ const f = makeFixture();
+ bindCashDividendAccount(f, 'ＢＲＯＫＥＲ－Ｘ７ＸＸ－１２３４');
+ const saved: CashDividendFixture = JSON.parse(JSON.stringify(f));
+ const before = JSON.stringify(saved);
+ const result = calculatePA2026OrdinaryDraft(saved.input, saved.facts, saved.sources);
+ expect(result.pa.scheduleB.line1.toFixed()).toBe('120');
+ expect(result.pa.scheduleB.line4.toFixed()).toBe('80');
+ expect(result.pa.scheduleB.line12.toFixed()).toBe('40');
+ expect(result.pa.pa40.interest.toFixed()).toBe(interest);
+ expect(result.pa.pa40.totalPATaxableIncome.toFixed()).toBe(taxable);
+ expect(result.pa.pa40.taxLiability.toFixed()).toBe(tax);
+ expect(result.pa.scheduleSP.eligibilityIncome.toFixed()).toBe(eligibility);
+ expect(result.readiness).toMatchObject({filingEligible: false, fullFederalCalculated: false});
+ expect(result.readiness.blockers).toContain('final-2026-forms-unqualified');
+ expect(JSON.stringify(saved)).toBe(before);
+});
+
+it('PA2026 reopened part-year cash dividends retain literal account matching', () => {
+ const f = pa2026OrdinaryCashDividendFixture();
+ bindCashDividendAccount(f, 'ＢＲＯＫＥＲ－Ｘ７ＸＸ－１２３４');
+ f.residency.dividends[0].original.accountReference = 'BROKER-X7XX-1234';
+ rebindPA2026Draft(f);
+ const saved: CashDividendFixture = JSON.parse(JSON.stringify(f));
+ expect(() => calculatePA2026OrdinaryDraft(saved.input, saved.facts, saved.sources))
+  .toThrow(/original owner\/year\/identity is missing or stale/i);
+});
+
 it('PA2026 part-year combines separately reconciled interest and dividends', () => {
  const f = partYearInterestAndDividends('1200');
  const facts = confirmGuidedPAOrdinaryReturnFacts(f.input, { ...f.facts, sourceFactsConfirmed: null });
@@ -259,9 +310,7 @@ it.each([
 
 function fullYearCashDividendAccountFixture(status: 'resident' | 'nonresident', accountReference: string) {
  const f = pa2026OrdinaryCashDividendFixture(status);
- f.input.form1099Div[0].accountReference = accountReference;
- f.residency.dividends[0].original = structuredClone(f.input.form1099Div[0]);
- rebindPA2026Draft(f);
+ bindCashDividendAccount(f, accountReference);
  return f;
 }
 
