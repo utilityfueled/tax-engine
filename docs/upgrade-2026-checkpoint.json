@@ -3,9 +3,10 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "71c4736a609920c52345598a4d711354a3a39cc1",
-    "latestScopedApplicationCommit": "0cf50ee630ebc71d6a91d79e383bd549ea392277",
-    "latestCombinedCandidateCommit": "0cf50ee630ebc71d6a91d79e383bd549ea392277",
+    "latestScopedApplicationCommit": "1746edc4267ac3fa885e2d15e83e0e039c8f62ea",
+    "latestCombinedCandidateCommit": "1746edc4267ac3fa885e2d15e83e0e039c8f62ea",
     "nov27OhioPennsylvaniaPensionEvidenceKey": "activeContinuation.nov27OhioPennsylvaniaPension",
+    "nov27PennsylvaniaNonresidentAndAotcEvidenceKey": "activeContinuation.nov27PennsylvaniaNonresidentAndAotc",
     "nov27AnnualFormAvailability": "docs/upgrade-2026-official-source-refresh-20261117-continuation.md#november-27-annual-availability-recheck",
     "nov27ReceiptW2AndOhioPackagesEvidenceKey": "activeContinuation.nov27ReceiptW2AndOhioPackages",
     "previousArm64StrictBrowserEvidenceKey": "activeContinuation.nov27Arm64StrictBrowserResult",
@@ -296,6 +297,16 @@
         "browserSourceAuditSha256": "adffe2ea772540a0829c344bbf07eefb12d9543b02be92c2f486990c7511ce0e"
       }
     },
+    "nov27PennsylvaniaNonresidentAndAotc": {
+      "paNonresidentInterestCommit": "fcc7742ff032b80d0f59f3467a62c5f1586db5a8",
+      "paNonresidentInterestFocusedTestsPassed": 287,
+      "paPinnedNodeFocusedTestsPassed": 238,
+      "aotcExpenseConfirmationCommit": "1746edc4267ac3fa885e2d15e83e0e039c8f62ea",
+      "aotcPinnedNodeFocusedTestsPassed": 57,
+      "aotcEngineeringReviewPassed": true,
+      "scopedApplicationVerificationPassed": true,
+      "combinedVerification": "static-started-unit-coverage-and-web-queued"
+    },
     "nov27Arm64StrictBrowserFollowup": {
       "revision": "bc9ab6a12c25c6075ee6375daeac4c20133eca04",
       "workflowRunId": 46005900143,
@@ -319,6 +330,10 @@
       "privateOhioFocusedTestsPassed": 109,
       "pennsylvaniaFocusedTestsPassed": 273,
       "guidedOhioAndFederalIndependentFocusedTestsPassed": 191,
+      "guidedOhioDesktopAndPixel7CasesPassed": 6,
+      "guidedOhioListenerClosed": true,
+      "guidedOhioProbeLogSha256": "53b3c65a76d8bdcc502ce078b81553870ba3919fe43748f30d6e965d163a754e",
+      "guidedOhioProbeSourceSha256": "cf9e6f9564f04b1c52f272a09c2bba2d3418617c26cb796e95f68a66ffa7fa77",
       "combinedCandidate": "0cf50ee630ebc71d6a91d79e383bd549ea392277",
       "combinedLocalVerification": "started",
       "latestVerifiedRevisionRemains": "71c4736a609920c52345598a4d711354a3a39cc1"

@@ -15,6 +15,23 @@ the latest application revision, exact-source runs and open dependencies. The
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
 
+## November 27 Pennsylvania nonresident interest and AOTC expense confirmation
+
+- `fcc7742ff` reconciles a nonresident's verified ordinary bank-interest
+  original. In the synthetic example, $120 is excluded from PA-40 line 2
+  and included once in Schedule SP eligibility income. $9,000 of PA wages
+  produces $276 in tax and matches actual withholding. All 287 targeted
+  checks passed, including 238 rerun under pinned Node. [Pennsylvania interest guidance](https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/interest) · [Tax Forgiveness guidance](https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/tax-forgiveness).
+- `1746edc42` requires a fresh 2026 AOTC expense-eligibility answer when the
+  retained amount materially changes. Save and reopen preserve the edited
+  amount, pending confirmation, and prior claim history. Equivalent Decimal
+  formatting preserves the answer. The independent engineering review and
+  all 57 pinned targeted tests passed. [Draft Form 8863 instructions](https://www.irs.gov/pub/irs-dft/i8863--dft.pdf).
+
+The tracked archive of `1746edc42` started static checks. The new unit,
+coverage, browser and recovery runs are queued behind the earlier exact
+archive's corresponding runs to reuse local resources safely.
+
 ## November 27 Pennsylvania, Ohio and federal source packages
 
 - `e8f2d3950` reaches the narrowly scoped Ohio unemployment calculator through
@@ -29,7 +46,10 @@ the latest application revision, exact-source runs and open dependencies. The
 - `78f03681e` retains and replays confirmed Ohio unemployment evidence for
   full-year, part-year and nonresident cases. The 2026 Ohio IT NRC input
   receives the derived receipt only on the existing part-year
-  path. The private receipt replay covers all three statuses.
+  path. Six browser cases on the exact `0cf50ee63` standalone build passed on
+  desktop and Pixel 7. All three statuses confirmed, saved, and reopened
+  successfully. After the receipt date was edited and reconfirmed, the Ohio
+  allocation changed from $1,000 to $0 only in the part-year case.
 - `0cf50ee63` holds indistinguishable confirmed 2026 Form 1099-R copies before
   summing income and withholding. It keeps distinct recipients, accounts,
   and original box values, including missing versus explicit zero values.
