@@ -15,13 +15,19 @@ and the Schedule A correction had its own failing regression. All 128
 focused tests, all 15 scoped spec references, web type checking and scoped
 lint passed after independent review.
 
+The exact archive passed unit and coverage with 31,130 tests each,
+81 existing skips and 88.62% branch coverage. Static checks, both builds
+and the offline AI artifact check passed. The managed Chromium run is
+underway with the 15 verified public sample files.
+
 In an alternating local comparison on Node 26.13.1, the two median
 fixture durations fell from 34.708 to 32.705 ms and from 34.006 to
 31.742 ms. Each of four runs took 100 warm samples per case. This tests
 the pure render evaluation on macOS. Linux browser qualification still
 requires full-image evidence at the existing deadlines.
 [Ohio source-replay spec](../spec/state/oh-school-header-same-invocation.yaml) ·
-[AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45945885969).
+[AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45945885969) ·
+[ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45946100698).
 
 ## November 27 Form 8919 review PDF source binding
 
@@ -38,8 +44,10 @@ checks. The renderer remains internal and gated. Exact local unit and
 coverage each passed 31,128 tests with 81 existing skips and 88.62%
 branch coverage. Static checks, both builds and the offline evaluation
 artifact check passed. Initial browser preflight stopped before any cases
-because the archive had no downloaded samples. The same archive is
-rerunning after all 15 official samples passed their hash checks.
+because the archive had no downloaded samples. After all 15 official
+samples passed their hash checks, the exact source finished all nine
+windows with 654 passes, five existing skips and confirmed cleanup. All
+11 required local commands passed.
 [Final 2026 Form 8919](https://www.irs.gov/pub/irs-pdf/f8919.pdf) ·
 [AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45944364135).
 
@@ -206,6 +214,10 @@ the same three groups. [AMD64 fix run](https://github.com/utilityfueled/tax-engi
 On later `c7d851d39`, AMD64 passed Compose recovery and cleaned up the
 browser container. Strict Chromium recorded 652 passes, five existing
 skips and two desktop school district timeouts across nine windows.
+Both desktop failures were at the filing-rejection request after the
+review PDF had downloaded and passed inspection. This is consistent with
+the cases exhausting their shared 30-second budgets across the prior
+actions. It does not establish that the final request was slow.
 A separate managed Chromium job had 652 passes, five existing skips
 and two RRTA saved-PDF inspection timeouts.
 A separate local Node 26.13.1 measurement used two synthetic Ohio

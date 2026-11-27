@@ -13,14 +13,15 @@ Use the linked progress sections when investigating individual packages.
   confirmed Ohio school header preview. Both school adapters and the
   independent Schedule A path still run. All 128 focused tests passed.
   The two isolated fixture medians fell about 6%, with Linux browser
-  qualification still open. [Ohio preview evidence](upgrade-2026-progress.md#november-27-confirmed-ohio-school-header-preview).
+  qualification still open. Exact local unit and coverage each passed
+  31,130 tests at 88.62% branch coverage. Local Chromium is running.
+  [Ohio preview evidence](upgrade-2026-progress.md#november-27-confirmed-ohio-school-header-preview).
 
 - `1808a5a6b` binds the isolated 2026 Form 8919 review PDF to the
   verified original Form 1099-NEC and the IRS determination. Saved PDF
   checks cover the actual firm row, receipt box, and private reference
-  handling. Independent engineering review passed. Exact local checks
-  passed unit, coverage, static checks and both builds. The browser
-  rerun has all 15 verified sample files. [Form 8919 PDF evidence](upgrade-2026-progress.md#november-27-form-8919-review-pdf-source-binding).
+  handling. Independent engineering review passed. All 11 local checks
+  passed on the exact commit, including 654 Chromium cases. [Form 8919 PDF evidence](upgrade-2026-progress.md#november-27-form-8919-review-pdf-source-binding).
 
 - `5f958545d` adds linked Form 1099-NEC draft facts to the Form
   8919 interview, keeping the actual residency fact and separate
