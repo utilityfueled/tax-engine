@@ -946,3 +946,26 @@ deduction before approving a federal transfer.
 [IRS Publication 946](https://www.irs.gov/publications/p946) ·
 [Form 6251 instructions](https://www.irs.gov/instructions/i6251) ·
 [26 USC §1016](https://uscode.house.gov/us/usc/t26/s1016/).
+
+## November 27 Form 4952 final worksheet
+
+Use verified $6,000.25 current-year investment interest and $2,000.50
+from the filed 2025 carryforward. Ordinary original records show
+$5,800.50 gross investment income, $1,000 of qualified dividends,
+$4,000 net gain including $3,000 net capital gain, and $500 deductible
+investment expenses. There is no preferential-income election or Form 8814
+amount. Derive the investment interest deduction and disallowed carryforward.
+Compare every posted monetary line with the private review proof and confirm
+the final form and transfer rules before any public export.
+[Final IRS Form 4952](https://www.irs.gov/pub/irs-prior/f4952--2026.pdf).
+
+## November 27 Form 2210 receipt reconciliation
+
+Compare one $2,000.01 processed extension payment on April 9, 2027 with
+two separate $2,000.01 original receipts for the same day, one extension
+and one balance-due payment. Use $8,000 of initially unpaid required
+installments. Verify which entry relieves the unpaid amount in each
+case, the effect on the penalty to the observation date, and that a
+repeated receipt does not create a new payment.
+[IRS Form 2210 instructions](https://www.irs.gov/instructions/i2210) ·
+[26 USC §6654](https://uscode.house.gov/us/usc/119-134/t26/s6654/).

@@ -8,12 +8,73 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `419470095` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. The current `6a3d2602c` candidate is in combined testing. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `183535fb2` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. Verify the newer combined revision. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
+
+## November 27 Pennsylvania Schedule A verification reliability
+
+The exact `6a3d2602c` unit run passed 31,401 tests with 83 skips. One
+Pennsylvania PDF reader waited on standard input until its owned process
+was stopped. The run ended with one failure, and its coverage command
+did not start. `58333f258` gives the independent reader a private
+temporary copy of the generated synthetic PDF, adds a bounded read and
+cleans up the copy. The original PDF assertions remain in force.
+The focused test passed three consecutive runs. All 99 adjacent tests
+and the eight static checks then passed from the exact tree.
+
+## November 27 Form 2210 balance-due payment receipts
+
+`98ee59aea` reconciles confirmed positive 2026 balance-due receipts with
+federal estimates and extensions before applying payments to the Form 2210
+penalty. The exact synthetic comparison leaves $5,999.99 unpaid with one
+actual payment and $3,999.98 with two distinct receipts. Repeating the same
+receipt or omitting proof for same-day, same-amount entries holds the
+calculation. The saved guided route emits opaque calculation references for
+confirmed collisions. It keeps the original references outside the
+calculation input.
+
+All 297 exact focused tests and eight static checks passed, including
+10,301 spec references. Independent review also reproduced the separate
+actual-payment chronology gap and recorded it for follow-up.
+[IRS Form 2210 instructions](https://www.irs.gov/instructions/i2210) ·
+[26 USC §6654](https://uscode.house.gov/us/usc/119-134/t26/s6654/).
+
+## November 27 private Form 4952 physical proof
+
+`b43890105` recomputes the confirmed 2026 investment interest worksheet
+and renders the pinned final IRS Form 4952. A separate PDF reader verified
+all 15 printed amounts, including the $5,301 deduction and $2,700
+carryforward. Both identification fields remain blank, original document
+references are excluded and all four pages carry the review notice. The
+comparisons at 49 and 50 cents verified that the printed subtotals and
+carryforwards reconcile under the posted whole-dollar method. The proof
+holds prior-year mismatches, incomplete facts, preferential-income
+elections, embedded Form 8814 and different blank bytes.
+
+Independent engineering review, all 87 exact focused tests and eight static
+checks passed, including 10,301 spec references. The private proof is
+outside the public review and filing registries. Human qualification
+remains open.
+[Final IRS Form 4952](https://www.irs.gov/pub/irs-prior/f4952--2026.pdf).
+
+## November 27 guided base standard deduction
+
+`5f99b997c` uses the published 2026 base deduction from the indexed
+rule data in the deductions and review screens. It displays $16,100 for
+single and separate filers, $24,150 for heads of household and $32,200
+for joint filers and qualifying surviving spouses. The comparison
+keeps entered cents exact on either side of the base amount. The reviewed
+taxpayer data determines the actual deduction. The nonitemized method
+hides the base amount on review.
+Three tests reproduced the omitted value before the fix. All 285 exact
+focused tests and eight static checks passed, including 10,300 spec
+references. Independent engineering review verified the 2025 values and
+unknown-year controls.
+[IRS Rev. Proc. 2025-32, section 4.14](https://www.irs.gov/irb/2025-45_IRB).
 
 ## November 27 federal attribution of second-year commercial EV depreciation
 
@@ -117,9 +178,12 @@ that admitted the $400 carryback before the fix. The corrected focused suite
 passed 255 tests in the exact tree. All eight exact static checks passed,
 including 10,288 spec lines and the offline AI artifact check. The qualified
 human review, amendment and filing gates remain in place. Exact unit and
-coverage each passed 31,381 tests with 83 skips and 88.72% branches. The
-remaining browser and recovery checks wait for the earlier local runner
-to close the browser port.
+coverage each passed 31,381 tests with 83 skips and 88.72% branch
+coverage. All 11 required local checks passed, including 654 Chromium
+passes and five original skips across nine windows. The standalone
+encrypted backup, deletion, restoration and process cleanup passed.
+The exact local evidence manifest SHA-256 is
+`32bca1c682c135ab517bb07f05acf011d34de1ae70669f516d8b1a67e5c13e5a`.
 [26 USC §39](https://uscode.house.gov/us/usc/t26/s39/) ·
 [IRS Form 3800 instructions](https://www.irs.gov/instructions/i3800).
 
