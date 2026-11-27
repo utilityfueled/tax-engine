@@ -106,6 +106,17 @@ lines:
       - "tests/guided-interview/guided-retirement-source-facts.test.ts::holds carried pension coverage after a direct original or contract edit and reopen"
       - "tests/guided-interview/guided-retirement-source-facts.test.ts::requires fresh coverage for simultaneous original removal and worksheet replacement"
       - "tests/guided-interview/guided-retirement-source-facts.test.ts::requires pension coverage again for a different taxpayer in the same recipient role"
+  - line: "retirement-account-whitespace"
+    description: "Hold potentially repeated 2026 retirement accounts for comparison with originals"
+    formula: |
+      For the 2026 duplicate check, compare whitespace runs within the trimmed,
+      case-insensitive account reference as a single space. Hold otherwise
+      matching payer and recipient entries for review. Ask the taxpayer to compare
+      the original statements because spacing can be meaningful. Keep the
+      original account references, coverage bindings, dollar values, prior-year
+      comparisons, distinct account identities and separate recipients.
+    irsRef: "2026 Instructions for Forms 1099-R and 5498, Account Number; https://www.irs.gov/instructions/i1099r"
+    testRef: "tests/guided-interview/guided-retirement-source-facts.test.ts::holds 2026 retirement account references that differ only in whitespace after reopening"
   - line: "retirement-2025-simplified-method"
     description: "Collect the 2025 single-life Simplified Method worksheet for a pension with undetermined Box 2a"
     formula: "For a 2025 non-IRA Code 1 or 7 source with checked Box 2b and an original blank Box 2a, require actual qualified plan and single-life periodic annuity facts for a post-1997 start before age 75. Collect the contract identity, cost, annuity start, age at start, months paid, and the cost recovered or that could have been recovered in prior years. Confirm that Box 1 on one original contains all and only the contract's 2025 periodic payments. For a 2025 start, payment months may not exceed the months from the start of cost recovery through December. Retain original Box 2a blank and explicit zero separately. Pass the actual Table 1 facts to Form 1099-R so the canonical worksheet divides cost by the IRS expected payments and limits the exclusion to remaining cost. Reject missing, conflicting or stale facts and duplicate owner-plan worksheets. Edits revoke source confirmation and saved originals survive reopening. Other methods remain blocked."

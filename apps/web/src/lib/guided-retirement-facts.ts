@@ -288,8 +288,7 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
     const boundIra = basisBound && entry.isIraSepSimple === true;
     const fail = (key: string, message: string) => { errors[`retirement-${index}-${key}`] = message; };
     if (!entry.payer.trim()) fail("payer", "Enter the actual retirement payer.");
-    const sourceIdentity = guidedRetirementSourceIdentity(entry);
-    const [, , payerTin, accountReference] = sourceIdentity;
+    const [sourceYear, accountHolder, payerTin, accountReference] = guidedRetirementSourceIdentity(entry);
     const validPayerTin = /^\d{9}$/.test(payerTin);
     if (!validPayerTin) fail("payer-tin", "Enter the actual nine-digit payer TIN from the source form.");
     if (!accountReference) fail("account", "Enter a local account reference that distinguishes this retirement statement.");
@@ -300,8 +299,13 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
     if (!validRecipient) fail("owner", "Confirm the actual retirement distribution recipient.");
     if (filingStatus && filingStatus !== "mfj" && entry.accountHolder === "spouse") fail("owner", "A spouse's retirement income requires a joint return or their separate return.");
     if (validPayerTin && accountReference && validYear && validRecipient) {
-      const sourceId = JSON.stringify(sourceIdentity);
-      if (sourceIds.has(sourceId)) fail("duplicate", "Reconcile duplicate or corrected statements for this retirement account before calculating.");
+      const comparableAccount = sourceYear === "2026" ? accountReference.replace(/\s+/gu, " ") : accountReference;
+      const sourceId = JSON.stringify([sourceYear, accountHolder, payerTin, comparableAccount]);
+      if (sourceIds.has(sourceId)) {
+        fail("duplicate", sourceYear === "2026"
+          ? "Compare the original statements and reconcile potentially duplicate or corrected entries for this retirement account before calculating."
+          : "Reconcile duplicate or corrected statements for this retirement account before calculating.");
+      }
       sourceIds.add(sourceId);
     }
     const code = normalizeGuidedRetirementCode(entry.distributionCode);

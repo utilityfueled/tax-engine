@@ -854,6 +854,54 @@ it("binds retirement duplicate identity to the actual recipient and normalized p
   expect(result.pensionDistributionsTaxable.toFixed(2)).toBe("1750.30");
 });
 
+const retirementAccountOriginal = {
+  ...completeRetirementSource, sourceTaxYear: "2026", accountReference: "Synthetic Pension 123",
+  grossDistribution: "1000", taxableAmount: "800.01", federalWithheld: "80.02",
+};
+const retirementAccountCopy = {
+  ...retirementAccountOriginal, accountReference: " SYNTHETIC  PENSION 123 ", payerTin: "123456789",
+  grossDistribution: "1,000.00",
+};
+
+function reopenRetirementAccounts(entries: RetirementEntryData[], filingStatus: "single" | "mfj" = "single", year = 2026) {
+  const state = startCompleteInterview({ filingStatus, incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
+  state.taxYear = year;
+  state.sectionData["income-retirement"] = { entries };
+  const reopened = parseGuidedFlowState(JSON.stringify(state));
+  if (!reopened) throw new Error("Unable to reopen the test retirement statements");
+  return reopened;
+}
+
+it("holds 2026 retirement account references that differ only in whitespace after reopening", () => {
+  const state = reopenRetirementAccounts([retirementAccountOriginal, retirementAccountCopy]);
+  expect(state.sectionData["income-retirement"]?.entries.map(entry => entry.accountReference)).toEqual([
+    retirementAccountOriginal.accountReference, retirementAccountCopy.accountReference,
+  ]);
+  const section = validateSection(state, "income-retirement");
+  expect(section.status).toBe("partial");
+  expect(section.fieldErrors?.["retirement-1-duplicate"]).toMatch(/compare the original statements/iu);
+  expect(JSON.stringify(section.fieldErrors)).not.toMatch(/synthetic|123456789|800\.01/iu);
+  expect(buildTaxInputFromGuidedData(state)).toBeNull();
+});
+
+it("preserves distinct retirement accounts, separate recipients and historical comparison", () => {
+  const distinct = { ...retirementAccountCopy, accountReference: "SYNTHETIC  PENSION 124" };
+  const spouse = { ...retirementAccountCopy, accountHolder: "spouse" as const };
+  const prior = [retirementAccountOriginal, retirementAccountCopy].map(entry => ({ ...entry, sourceTaxYear: "2025" }));
+  for (const [state, retainedReference] of [
+    [reopenRetirementAccounts([retirementAccountOriginal, distinct]), distinct.accountReference],
+    [reopenRetirementAccounts([retirementAccountOriginal, spouse], "mfj"), spouse.accountReference.trim()],
+    [reopenRetirementAccounts(prior, "single", 2025), retirementAccountCopy.accountReference.trim()],
+  ] as const) {
+    expect(validateSection(state, "income-retirement").status).toBe("complete");
+    const { form1099R } = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
+    expect(form1099R[1]?.accountReference).toBe(retainedReference);
+    const result = calculateForm1099R(form1099R, { taxYear: state.taxYear ?? undefined, hasJointSpouse: !!form1099R.find(row => row.accountHolder === "spouse") });
+    expect(result.pensionTaxable.toFixed(2)).toBe("1600.02");
+    expect(result.federalWithholding.toFixed(2)).toBe("160.04");
+  }
+});
+
 it("preserves legacy unchecked IRA answers as unconfirmed and leaves actual source answers unchanged on reload", () => {
   const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
   const legacy = { payer: "Old plan", grossDistribution: "0", taxableAmount: "0", federalWithheld: "0", distributionCode: "7", isIraSepSimple: false };
