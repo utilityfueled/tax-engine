@@ -46,6 +46,31 @@ describe('Ohio2026 source-qualified PA reciprocal employee draft', () => {
     expect(JSON.stringify(p)).toBe(before);
   });
 
+  it.each(['full-year', 'part-year'] as const)('holds a conflicting Ohio declaration of %s for full-year Pennsylvania reciprocity', stateResidency => {
+    const packet = ohio2026PaReciprocalFixture('1000');
+    packet.input.taxpayer.stateResidency = stateResidency;
+    rebindOhio2026Ordinary(packet);
+
+    expect(() => run(packet)).toThrow(/declared Ohio residency conflicts with the primary taxpayer's confirmed domicile records/);
+  });
+
+  it('accepts matching or omitted Ohio declarations for full-year Pennsylvania reciprocity', () => {
+    const omitted = ohio2026PaReciprocalFixture('1000');
+    const matching = ohio2026PaReciprocalFixture('1000');
+    delete omitted.input.taxpayer.stateResidency;
+    matching.input.taxpayer.stateResidency = 'nonresident';
+    rebindOhio2026Ordinary(omitted);
+    rebindOhio2026Ordinary(matching);
+
+    for (const packet of [omitted, matching]) {
+      const draft = run(packet);
+      expect(draft.reciprocalWageExclusion?.toFixed()).toBe('50000');
+      expect(draft.incomeTax.toFixed()).toBe('0');
+      expect(draft.refund.toFixed()).toBe('1000');
+      expect(draft.filingQualified).toBe(false);
+    }
+  });
+
   it('qualifies only complete current PA employee originals', () => {
     const mutations: Array<(p: Packet) => void> = [
       p => { p.sources.reciprocalWageSources.sourceTaxYear = 2025; },

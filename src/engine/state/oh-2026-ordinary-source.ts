@@ -449,7 +449,7 @@ function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, res
     expectedFederalCategories: Object.fromEntries(ohioNrcCategories.map(category => [category,
       category === 'wages' ? roundDollar(federalWages) : category === 'unemployment' ? unemploymentAmounts?.box1 ?? '0'
         : category === 'interestDividends' ? roundDollar(federalInterestDividends) : '0'])) });
-  if (schema === Ohio2026OrdinarySourcesSchema || partYearReciprocal || residentCredit || unemployment || treasuryCoupon || bankInterest || cashDividend) {
+  if (schema === Ohio2026OrdinarySourcesSchema || reciprocal || residentCredit || unemployment || treasuryCoupon || bankInterest || cashDividend) {
     assertOhio2026PrimaryResidencyDeclaration(input.taxpayer, facts);
   }
   const timing = payments.currentTiming;

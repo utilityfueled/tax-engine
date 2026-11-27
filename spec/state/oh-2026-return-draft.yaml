@@ -400,6 +400,18 @@ lines:
     description: "Separately qualify actual2026 full-year Pennsylvania employee originals"
     formula: "Require an explicit oh-2026-pa-reciprocal-employee-draft-v1 packet, current original taxpayer/W2/domicile/employer/service/payroll evidence, single primary full-year PA nonresident, one ordinary C-corporation employer and all wages for actual OH employee services. Reconcile complete unique current-year service/pay dates, W2 cash and actual OH withholding. Current reciprocal originals in residency and source packet must match exactly and bind every unchanged input/source. Preserve all ordinary original-family, age, EITC, school, other-credit and timely withholding-only payment gates. Direct ordinary qualifier still rejects reciprocity. Unknown mixed/PY/MFJ/non-PA/special compensation remains unsupported."
     testRef: "tests/engine/state/oh-2026-reciprocal-return-draft.test.ts::qualifies only complete current PA employee originals"
+  - line: "pa-reciprocal-residency-declaration"
+    description: "Reconcile the 2026 Ohio declaration for a full-year Pennsylvania employee"
+    formula: >-
+      A confirmed full-year Pennsylvania domicile supports the Ohio nonresident
+      reciprocal method. If an Ohio residency declaration was retained, require
+      nonresident and hold a conflicting full-year or part-year Ohio declaration.
+      With an omitted declaration, the same actual domicile and wage evidence
+      establishes eligibility for the draft.
+    irsRef: "Ohio R.C. 5747.05(A)(2), https://codes.ohio.gov/ohio-revised-code/section-5747.05"
+    testRef: "tests/engine/state/oh-2026-reciprocal-return-draft.test.ts::holds a conflicting Ohio declaration of %s for full-year Pennsylvania reciprocity"
+    testRefs:
+      - "tests/engine/state/oh-2026-reciprocal-return-draft.test.ts::accepts matching or omitted Ohio declarations for full-year Pennsylvania reciprocity"
   - line: "pa-reciprocal-refund"
     description: "Refund actual Ohio compensation withholding without duplicate relief"
     formula: "RC5747.05(A)(2) compensation reciprocity and historical2025 ScheduleAdjustments reciprocal-wage treatment applied as a labeled2026 statutory draft: federalAGI=roundDollar(actual complete W2 wages); exclusion=the same source-qualified compensation; OhioAGI=federalAGI-exclusion=0. Actual known-zero other sources and complete no-child federal EITC facts imply zero Ohio taxable income and tax/credits, NRC0/resident-credit0 (never reuse excluded wages), refund=roundDollar(sum actual OH state compensation withholding). School/municipal/other-state withholding never enters the Ohio refund. Do not fabricate a federal return or final2026 form lines; current draft filing/review gates remain closed."
