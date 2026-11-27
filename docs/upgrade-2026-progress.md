@@ -8,12 +8,95 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `e075fceaf` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `e4ea3f10c` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
-| AI routing and evaluation | Obtain independent human case labels, selected Google project access and comparable provider evidence. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
+| AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
+
+## November 27 payment, wage, retirement and review PDF source reconciliation
+
+`4edd26944` holds same-day, same-amount 2026 estimates and extension
+payments without distinct actual receipt records. Guided intake validates
+the private receipts and passes position-based references to calculation.
+The direct and guided regressions failed before the fixes. Afterward, all 44
+focused tests across seven suites, 61 spec lines, engine and web typechecks,
+scoped lint and a staged browser source audit passed. An independent code
+review confirmed 2025 direct-import compatibility and the receipt boundary.
+[Form 1040 instructions](https://www.irs.gov/instructions/i1040gi) ·
+[IRS payment history](https://www.irs.gov/payments/online-account-for-individuals).
+
+The combined unit run at `64b4f2d67` exposed one compatibility failure.
+The guided bridge passed an opaque receipt marker for a unique estimated
+payment in a case with two independently linked Form 2210 return payments.
+`52fc5e73c` limits those markers to groups of positive 2026 estimates or
+extensions that share a date and exact amount. The unchanged Form 2210 test
+and a new regression for unique and zero rows both failed before correction
+and passed afterward. All 33 focused tests passed, along with scoped spec,
+web typecheck, lint and the staged browser source audit.
+
+`4c0762311` holds indistinguishable 2026 W-2 entries for one recipient
+after reopening a saved interview. Separate joint recipients and different
+federal originals from the same employer remain eligible for intake. The
+reopened-interview regression failed before the fix. All 301 W-2 tests,
+76 guided spec lines, engine and web typechecks, scoped lint and a staged
+browser source audit passed. [2026 W-2 instructions](https://www.irs.gov/instructions/iw2w3).
+
+`e4ea3f10c` flags potentially duplicate 2026 Form 1099-R statements from the
+same payer and recipient when only recognized account-reference formatting
+differs. The saved and reopened 2026 regression previously allowed an
+extra occurrence to double taxable pension and withholding. The hold asks
+the taxpayer to compare the originals. The saved references, exact amounts,
+different accounts and recipients, and 2025 comparison behavior were
+verified. All 256 retirement tests across 13 suites, all 77 guided spec
+references, both typechecks, scoped lint and the staged browser source audit
+passed. Scoped lint retained six existing warnings. Independent code review
+confirmed the pension bindings and 2025 behavior, and cleared the payment
+receipt compatibility correction. [Form 1099-R instructions](https://www.irs.gov/instructions/i1099r).
+
+`64b4f2d67` checks original document years again when exporting a review
+PDF. The saved summary can still say one year even after additional
+sources were saved. The builder now holds conflicting or unknown original
+years, including when malformed saved interview data prevents recalculating
+the year summary. Review downloads still work for the supported 2025
+legacy fixture, explicit source year and guided-only paths. Four new
+regression cases passed, including the normal POST route, within 392 tests
+across 73 affected suites. All 30 scoped spec references, the inventory,
+web typecheck and staged browser source audit passed. Scoped lint reported
+four existing warnings and zero errors.
+
+On November 27 the IRS current Form 1040 and Pennsylvania's annual PA-40
+still showed 2025. Ohio's filing forms index links a final 2025 IT 1040
+bundle. Its 2026 forms and booklet covering adjustments, business income,
+credits and nonresident calculations remain drafts. No 2026 filing map was
+qualified from these sources. [IRS Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[Pennsylvania annual PA-40](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40.pdf) ·
+[Ohio filing forms](https://tax.ohio.gov/individual/get-a-form) ·
+[Ohio 2026 draft booklet](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf).
+
+## November 27 exact payment, wage, 1099-R and review PDF verification
+
+The tracked `e4ea3f10c` archive passed all 11 required local checks
+and the offline AI artifact check with Node 26.13.1, pypdf
+6.10.0, a frozen offline install and 15 verified sample hashes.
+Unit and coverage each passed 31,232 tests with 81 existing
+skips. Branch coverage was 88.66% against the unchanged 85% gate.
+
+Chromium passed 654 cases across nine windows with five existing skips
+and listener cleanup. The standalone
+rehearsal backed up a synthetic return, deleted it, restored the original
+document and private facts, and closed its listener. The local manifest
+SHA-256 is `55e2ade6312c1142e6bf9c1e0c329c88d0cedc2b4ff54c1511b13d52a1d64fc0`.
+The predecessor's unit failure and partial browser run were retained.
+The corrected revision ran all required checks.
+
+The public CI, AMD64 Web and Docker workflows were queued at verification.
+ARM64 already had an active run and a pending `e075fceaf` run. Start the
+new ARM64 qualification when both existing runs can be preserved.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/46017564860) ·
+[AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/46017565136) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/46017565075).
 
 ## November 27 exact Ohio, vehicle loan and AI verification
 
