@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: native-arm64-recovery
+  group: ${{ inputs.compare_school_workers && 'native-arm64-worker-diagnostic' || 'native-arm64-recovery' }}
   cancel-in-progress: false
 
 jobs:
