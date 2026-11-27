@@ -26,6 +26,19 @@ const wageReturn = {
     socialSecurityTips: "0", socialSecurityWages: "125000", socialSecurityWithheld: "7750", medicareWages: "125000", medicareWithheld: "1812.50" }],
 };
 
+it("holds a later port after the federal calculation as-of date", () => {
+  const form8911 = {
+    ...charger,
+    additionalPortSources: {
+      firstPortReference: "First port", independentCostsConfirmed: true,
+      ports: [{ ...charger, portReference: "Second port", invoiceReference: "Second invoice", placedInServiceDate: "2026-07-01" }],
+    },
+  };
+  const input = TaxYearInputSchema.parse({ ...wageReturn, form8911 });
+  expect(() => calculateFederalTax(input, { asOfDate: "2026-06-30" })).toThrow(/on or before.*as-of/i);
+  expect(calculateFederalTax(input, { asOfDate: "2026-07-01" }).form8911?.personalCredit.toFixed()).toBe("600");
+});
+
 it("calculates the June 30 credit and excludes a July 1 installation", () => {
   const input = TaxYearInputSchema.parse(JSON.parse(JSON.stringify({ ...wageReturn, form8911: charger })));
   const result = calculateFederalTax(input);

@@ -1,5 +1,5 @@
 form: "Guided Form 8911 personal EV charging port"
-fullName: "Actual source facts for one 2026 personal-use EV charging port"
+fullName: "Actual source facts for 2026 personal-use EV charging ports"
 taxYear: 2026
 irsReference: "https://www.irs.gov/instructions/i8911"
 lines:
@@ -18,3 +18,19 @@ lines:
     formula: "Save the exact entered draft. Material source edits, actual owner identity changes, return year changes or filing-unit changes revoke source confirmation. Unrelated personal edits do not revoke charging port confirmation. Existing returns without this source remain unchanged."
     irsRef: "26 USC 30C(c); Form 8911 Schedule A instructions"
     testRef: "tests/guided-interview/guided-personal-ev-charger-8911.test.ts::retains actual records on reopen and revokes stale owner or year confirmation"
+  - line: "separate-personal-port-originals"
+    description: "Retain each independently invoiced port and its records through save and reopen"
+    formula: |
+      Extend the existing single-port worksheet with optional records for
+      separately invoiced ports. Require distinct actual port and invoice
+      references and an affirmative confirmation that all costs and reductions
+      are traceable separately, without shared costs. Capture each port's own
+      service date and Census evidence. Hold unknown, repeated or shared source
+      records. Material changes to an original port record revoke its
+      confirmation and require fresh review of whether the costs are
+      independent. Actual owner or year changes require fresh review. Retain
+      all original source facts and the established single-port shape.
+    irsRef: "IRC 30C(b)(2) and (i); IRS Form 8911 Item A; IRS Publication 6027, https://www.irs.gov/pub/irs-access/p6027_accessible.pdf"
+    testRef: "tests/guided-interview/guided-personal-ev-charger-8911.test.ts::reopens separately invoiced ports with independent costs and service dates"
+    testRefs:
+      - "tests/guided-interview/guided-personal-ev-charger-8911.test.ts::requires fresh confirmation after editing an additional port or its owner"

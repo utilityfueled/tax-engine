@@ -19,6 +19,30 @@ const tax = {
   foreignTaxCredit: d("0"), priorAllowableCredits: d("0"), tentativeMinimumTax: d("0"),
 } as const;
 
+it("computes separate personal port amounts before applying one tax limit", () => {
+  const first = { ...source, invoiceGrossCost: "4000" };
+  const second = { ...first, portReference: "Physical port B", invoiceReference: "Second paid invoice" };
+  const withSecond = (port: typeof second, invoiceGrossCost = first.invoiceGrossCost) => ({
+    ...first, invoiceGrossCost,
+    additionalPortSources: { firstPortReference: "Physical port A", independentCostsConfirmed: true as const, ports: [port] },
+  });
+  const limited = { ...tax, incomeTax: d("2500"), priorAllowableCredits: d("250"), tentativeMinimumTax: d("500") };
+  const result = calculateForm8911(withSecond(second), limited);
+  expect(result.qualifiedCost.toFixed()).toBe("8000");
+  expect(result.tentativePersonalCredit.toFixed()).toBe("2000");
+  expect(result.personalCredit.toFixed()).toBe("1750");
+  expect(result.remainingBasis.toFixed()).toBe("6000");
+  expect(result.lines.filter(line => line.form === "Form 8911" && line.line === "4")).toHaveLength(1);
+  expect(JSON.stringify(result.lines)).not.toMatch(/Physical port|Second paid invoice/u);
+  expect(calculateForm8911(withSecond({ ...second, placedInServiceDate: "2026-07-01" }), limited).personalCredit.toFixed()).toBe("1000");
+  expect(calculateForm8911(withSecond({ ...second, censusTractGeoid: "01001020300" }), limited).personalCredit.toFixed()).toBe("1000");
+  expect(calculateForm8911(withSecond({ ...second, invoiceGrossCost: "334.99" }, "334.99"), tax).personalCredit.toFixed()).toBe("200");
+  for (const port of [
+    { ...second, portReference: " PHYSICAL  PORT A " },
+    { ...second, invoiceReference: " PAID  charger invoice " },
+  ]) expect(() => calculateForm8911(withSecond(port), tax)).toThrow(/distinct/u);
+});
+
 it("bounds the 2026 personal charger by the actual service date, verified tract and invoice basis", () => {
   const result = calculateForm8911({ ...source, invoiceGrossCost: "1500.00", nonqualifyingInvoiceCost: "198.33", rebatesAndOtherBasisReductions: "300.00" }, tax);
   // $1,001.67 of eligible basis gives $300.501 before whole-dollar rounding.

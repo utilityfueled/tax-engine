@@ -4,7 +4,7 @@ import { parseGuidedCurrency } from "./guided-currency";
 import type { FilingStatus } from "./guided-interview-flow";
 import { amountError, guidedAmountChanged } from "./guided-required-facts";
 
-export interface GuidedPersonalEvCharger {
+export interface GuidedPersonalEvChargerPort {
   owner: "" | "primary" | "spouse";
   invoiceReference: string;
   placedInServiceReference: string;
@@ -22,6 +22,18 @@ export interface GuidedPersonalEvCharger {
   censusTractMatchesLocationConfirmed: boolean | null;
   sourceFactsConfirmed: boolean | null;
   confirmedFilingStatus: FilingStatus | null;
+}
+
+interface GuidedPersonalEvAdditionalPort extends GuidedPersonalEvChargerPort {
+  portReference: string;
+}
+
+export interface GuidedPersonalEvCharger extends GuidedPersonalEvChargerPort {
+  additionalPortSources?: {
+    firstPortReference: string;
+    independentCostsConfirmed: boolean | null;
+    ports: GuidedPersonalEvAdditionalPort[];
+  };
 }
 
 export const personalEvChargerQuestions = [
@@ -46,7 +58,7 @@ const confirmations = {
   confirmedFilingStatus: null,
 } as const;
 
-export const emptyGuidedPersonalEvCharger: GuidedPersonalEvCharger = {
+export const emptyGuidedPersonalEvCharger: GuidedPersonalEvChargerPort = {
   owner: "",
   invoiceReference: "",
   placedInServiceReference: "",
@@ -67,23 +79,54 @@ const amountFields = [
 ] as const;
 
 export function invalidatePersonalEvChargerSource(data: GuidedPersonalEvCharger): GuidedPersonalEvCharger {
-  return { ...data, ...confirmations };
+  const additional = data.additionalPortSources;
+  return {
+    ...data, ...confirmations,
+    ...(additional ? { additionalPortSources: {
+      ...additional, independentCostsConfirmed: null, ports: additional.ports.map(port => ({ ...port, ...confirmations })),
+    } } : {}),
+  };
 }
 
-export function invalidateEditedPersonalEvCharger(previous: GuidedPersonalEvCharger | undefined, next: GuidedPersonalEvCharger): GuidedPersonalEvCharger {
-  if (!previous) return next;
-  const sourceChanged = previous.owner !== next.owner
+function portOriginalChanged(previous: GuidedPersonalEvChargerPort, next: GuidedPersonalEvChargerPort): boolean {
+  return previous.owner !== next.owner
     || previous.placedInServiceDate !== next.placedInServiceDate
     || previous.censusTractGeoid !== next.censusTractGeoid
     || referenceFields.some(field => previous[field] !== next[field])
     || amountFields.some(([field]) => guidedAmountChanged(previous[field], next[field]));
-  if (sourceChanged) return invalidatePersonalEvChargerSource(next);
+}
+
+function invalidateEditedPort<T extends GuidedPersonalEvChargerPort>(previous: T, next: T, referenceChanged: boolean): T {
+  if (referenceChanged || portOriginalChanged(previous, next)) return { ...next, ...confirmations };
   return personalEvChargerQuestions.some(([field]) => previous[field] !== next[field])
     ? { ...next, sourceFactsConfirmed: null, confirmedFilingStatus: null }
     : next;
 }
 
-function readPersonalEvCharger(data: GuidedPersonalEvCharger, taxYear?: number | null, filingStatus?: FilingStatus | null): Form8911Sources2026 | string {
+export function invalidateEditedPersonalEvCharger(previous: GuidedPersonalEvCharger | undefined, next: GuidedPersonalEvCharger): GuidedPersonalEvCharger {
+  if (!previous) return next;
+  const previousAdditional = previous.additionalPortSources;
+  const additional = next.additionalPortSources;
+  const firstReferenceChanged = Boolean(previousAdditional && additional
+    && previousAdditional.firstPortReference !== additional.firstPortReference);
+  const updated = invalidateEditedPort(previous, next, firstReferenceChanged);
+  if (!additional) return updated;
+
+  let originalsChanged = firstReferenceChanged || portOriginalChanged(previous, next)
+    || previousAdditional?.ports.length !== additional.ports.length;
+  const ports = additional.ports.map((port, index) => {
+    const before = previousAdditional?.ports[index];
+    if (!before) return { ...port, ...confirmations };
+    const referenceChanged = before.portReference !== port.portReference;
+    if (referenceChanged || portOriginalChanged(before, port)) originalsChanged = true;
+    return invalidateEditedPort(before, port, referenceChanged);
+  });
+  return { ...updated, additionalPortSources: {
+    ...additional, ports, independentCostsConfirmed: originalsChanged ? null : additional.independentCostsConfirmed,
+  } };
+}
+
+function readPersonalEvChargerPort(data: GuidedPersonalEvChargerPort, taxYear?: number | null, filingStatus?: FilingStatus | null): Form8911Sources2026 | string {
   if (taxYear !== 2026) return "This worksheet covers 2026 records. Return to 2026 or remove the retained charging port.";
   if (data.owner !== "primary" && !(data.owner === "spouse" && filingStatus === "mfj")) {
     return "Choose the actual charging port owner on this return.";
@@ -127,6 +170,24 @@ function readPersonalEvCharger(data: GuidedPersonalEvCharger, taxYear?: number |
     invoiceReconciledConfirmed: true,
     censusTractMatchesLocationConfirmed: true,
   });
+  return original.success ? original.data : original.error.issues[0]?.message ?? "Reconcile the original charging port records.";
+}
+
+function readPersonalEvCharger(data: GuidedPersonalEvCharger, taxYear?: number | null, filingStatus?: FilingStatus | null): Form8911Sources2026 | string {
+  const first = readPersonalEvChargerPort(data, taxYear, filingStatus);
+  if (typeof first === "string" || data.additionalPortSources === undefined) return first;
+  const additional = data.additionalPortSources;
+  if (additional?.independentCostsConfirmed !== true || !Array.isArray(additional.ports) || additional.ports.length === 0) {
+    return "Confirm independent original invoices and costs for each charging port. Shared costs require separate review.";
+  }
+  const ports = [];
+  for (const [index, port] of additional.ports.entries()) {
+    if (!port || typeof port !== "object") return "Enter the original records for each additional charging port.";
+    const source = readPersonalEvChargerPort(port, taxYear, filingStatus);
+    if (typeof source === "string") return `Charging port ${index + 2}. ${source}`;
+    ports.push({ ...source, portReference: port.portReference });
+  }
+  const original = Form8911Sources2026Schema.safeParse({ ...first, additionalPortSources: { ...additional, ports } });
   return original.success ? original.data : original.error.issues[0]?.message ?? "Reconcile the original charging port records.";
 }
 

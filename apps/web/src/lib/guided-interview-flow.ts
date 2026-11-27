@@ -2803,9 +2803,11 @@ export function updateSectionData(
   const nextCreditsDraft = sectionId === "credits"
     ? invalidateEditedLlcSources(credits, retainAotcSources(credits, data as CreditsData | undefined)) : credits;
   const charger = nextCreditsDraft?.personalEvCharger;
-  const chargerOwner = (personal?: PersonalInfoData) => charger?.owner === "spouse" ? personal?.spouse : personal;
   const chargerOwnerChanged = sectionId === "personal-info" && charger
-    && guidedSourceValuesChanged(guidedTaxpayerIdentity(chargerOwner(formerPersonal)), guidedTaxpayerIdentity(chargerOwner(nextPersonal)));
+    && [charger, ...(charger.additionalPortSources?.ports ?? [])].some(({ owner }) => {
+      const chargerOwner = (personal?: PersonalInfoData) => owner === "spouse" ? personal?.spouse : personal;
+      return guidedSourceValuesChanged(guidedTaxpayerIdentity(chargerOwner(formerPersonal)), guidedTaxpayerIdentity(chargerOwner(nextPersonal)));
+    });
   const nextCredits = sectionId === "credits" && nextCreditsDraft && charger
     ? { ...nextCreditsDraft, personalEvCharger: invalidateEditedPersonalEvCharger(credits?.personalEvCharger, charger) }
     : nextCreditsDraft;

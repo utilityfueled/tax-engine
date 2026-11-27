@@ -69,6 +69,35 @@ it("passes one actual personal charging port from Credits to the federal input",
   expect(buildTaxInputFromGuidedData(household(undefined, 2025))).not.toHaveProperty("form8911");
 });
 
+it("reopens separately invoiced ports with independent costs and service dates", () => {
+  const first = { ...original, invoiceGrossCost: "4,000.00", rebatesAndOtherBasisReductions: "0" };
+  const second = { ...first, portReference: "Synthetic port B", invoiceReference: "Second synthetic invoice", placedInServiceDate: "2026-07-01" };
+  const additionalPortSources = { firstPortReference: "Synthetic port A", independentCostsConfirmed: true, ports: [second] };
+  const state = household({ ...first, additionalPortSources });
+  expect(saveGuidedFlowState(localStorage, "separate-ports", state)).toBe(true);
+  const reopened = loadGuidedFlowState(localStorage, "separate-ports");
+  if (!reopened) throw new Error("Reopen both original ports");
+  expect(reopened.sectionData.credits?.personalEvCharger?.additionalPortSources).toEqual(additionalPortSources);
+  expect(validateSection(reopened, "credits").status).toBe("complete");
+  const { form8911 } = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(reopened));
+  if (!form8911) throw new Error("Missing actual port sources");
+  expect(form8911.additionalPortSources?.ports).toMatchObject([{ portReference: second.portReference, placedInServiceDate: "2026-07-01", invoiceGrossCost: "4000" }]);
+  expect(calculateForm8911(form8911, {
+    taxYear: 2026, filingStatus: "single", spousePresent: false, incomeTax: d(5000),
+    schedule2PartIAdditions: d(0), foreignTaxCredit: d(0), priorAllowableCredits: d(0), tentativeMinimumTax: d(0),
+  }).personalCredit.toFixed()).toBe("1000");
+  for (const packet of [
+    { ...additionalPortSources, independentCostsConfirmed: false },
+    { ...additionalPortSources, ports: [{ ...second, invoiceReference: first.invoiceReference }] },
+    { ...additionalPortSources, ports: [{ ...second, placedInServiceDate: "2026-12-01" }] },
+    { ...additionalPortSources, ports: [{ ...second, personalUseOnlyConfirmed: false }] },
+  ]) {
+    const held = household({ ...first, additionalPortSources: packet });
+    expect(validateSection(held, "credits").status).toBe("partial");
+    expect(buildTaxInputFromGuidedData(held)).toBeNull();
+  }
+});
+
 it("holds incomplete and unsupported records while preserving known facts", () => {
   for (const patch of [
     { invoiceReference: "" }, { placedInServiceReference: "" }, { censusTractSourceReference: "" },
@@ -116,6 +145,47 @@ it("retains actual records on reopen and revokes stale owner or year confirmatio
   }
 });
 
+it("requires fresh confirmation after editing an additional port or its owner", () => {
+  const additionalPort = {
+    ...original, portReference: "Port B", invoiceReference: "Second invoice",
+    owner: "spouse" as const, confirmedFilingStatus: "mfj" as const,
+  };
+  const state = household({
+    confirmedFilingStatus: "mfj",
+    additionalPortSources: { firstPortReference: "Port A", independentCostsConfirmed: true, ports: [additionalPort] },
+  }, 2026, "mfj");
+  const credits = state.sectionData.credits;
+  const source = credits?.personalEvCharger;
+  const additional = source?.additionalPortSources;
+  if (!additional || !completePersonalInfo.spouse) throw new Error("Expected original records for both joint owners");
+  expect(buildTaxInputFromGuidedData(state)?.form8911?.additionalPortSources?.ports[0]?.owner).toBe("spouse");
+  const editSecondAmount = (invoiceGrossCost: string) => updateSectionData(state, "credits", {
+    ...credits, personalEvCharger: { ...source, additionalPortSources: {
+      ...additional, ports: [{ ...additionalPort, invoiceGrossCost }],
+    } },
+  });
+  expect(buildTaxInputFromGuidedData(editSecondAmount("4000.55"))?.form8911?.additionalPortSources?.ports[0]?.invoiceGrossCost).toBe("4000.55");
+  const edited = editSecondAmount("4,000.57");
+  expect(edited.sectionData.credits?.personalEvCharger).toMatchObject({
+    sourceFactsConfirmed: true,
+    additionalPortSources: {
+      independentCostsConfirmed: null,
+      ports: [{ sourceFactsConfirmed: null, invoiceGrossCost: "4,000.57", invoiceReference: "Second invoice" }],
+    },
+  });
+  for (const changed of [
+    edited,
+    updateSectionData(state, "personal-info", { ...completePersonalInfo, spouse: { ...completePersonalInfo.spouse, ssn: "222-33-5555" } }),
+    setInterviewTaxYear(setInterviewTaxYear(state, 2025), 2026),
+  ]) {
+    expect(changed.sectionData.credits?.personalEvCharger?.additionalPortSources).toMatchObject({
+      independentCostsConfirmed: null,
+      ports: [{ sourceFactsConfirmed: null, portReference: "Port B" }],
+    });
+    expect(buildTaxInputFromGuidedData(changed)).toBeNull();
+  }
+});
+
 it("offers the worksheet through Credits and shows the unsupported-year hold on retained records", () => {
   const render = (state: ReturnType<typeof household>) => renderToStaticMarkup(createElement(SectionCredits, {
     data: state.sectionData.credits, filingStatus: state.segmentation.filingStatus, taxYear: state.taxYear,
@@ -123,6 +193,14 @@ it("offers the worksheet through Credits and shows the unsupported-year hold on 
   }));
   expect(render(household())).toContain("Add personal EV charger");
   expect(render(household({}, 2026))).toContain("2020 census tract GEOID");
+  expect(render(household({}, 2026))).toContain("Add another separately invoiced charging port");
+  const separate = render(household({ additionalPortSources: {
+    firstPortReference: "Port A", independentCostsConfirmed: null,
+    ports: [{ ...original, portReference: "Port B", invoiceReference: "Second invoice" }],
+  } }));
+  expect(separate).toContain("Original reference identifying charging port 1");
+  expect(separate).toContain("Original reference identifying charging port 2");
+  expect(separate).toContain("Each port has a separate invoice");
   expect(render(household({ placedInServiceDate: "2026-07-01" }))).toContain("Property placed in service after June 30, 2026 is ineligible");
   expect(render(household({ personalUseOnlyConfirmed: false }))).toContain("These records need separate review");
   expect(render(household(undefined, 2025))).not.toContain("Add personal EV charger");

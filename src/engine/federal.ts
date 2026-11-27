@@ -299,8 +299,8 @@ function calculateFederalTaxReturn(input: TaxYearInput, context?: { asOfDate?: s
     const today = currentLocalCivilDate();
     const asOfDate = context?.asOfDate ?? today;
     if (!isActualDate(asOfDate) || asOfDate > today) throw new Error("Form 8911 requires a valid as-of date on or before today.");
-    const placedInServiceDate = input.form8911?.placedInServiceDate;
-    if (!placedInServiceDate || !isActualDate(placedInServiceDate) || placedInServiceDate > asOfDate) {
+    const ports = [input.form8911, ...(input.form8911.additionalPortSources?.ports ?? [])];
+    if (ports.some(({ placedInServiceDate }) => !isActualDate(placedInServiceDate) || placedInServiceDate > asOfDate)) {
       throw new Error("Form 8911 requires the actual date the charger was ready for use on or before the calculation as-of date.");
     }
   }

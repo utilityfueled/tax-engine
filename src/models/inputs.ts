@@ -4533,7 +4533,7 @@ const form8911InvoiceSchema = z.object({
 });
 const form8911PossessionStateFips = new Set(["60", "66", "69", "72", "78"]);
 
-export const Form8911Sources2026Schema = z.strictObject({
+const form8911PortSourceSchema = z.strictObject({
   ...form8911InvoiceSchema.shape,
   taxYear: z.literal(2026),
   owner: z.enum(["primary", "spouse"]),
@@ -4555,6 +4555,31 @@ export const Form8911Sources2026Schema = z.strictObject({
 }).refine(source => d(source.nonqualifyingInvoiceCost).plus(source.rebatesAndOtherBasisReductions).lte(source.invoiceGrossCost), {
   path: ["invoiceGrossCost"], message: "Nonqualifying costs and basis reductions may not exceed the original invoice cost",
   when: payload => form8911InvoiceSchema.safeParse(payload.value).success,
+});
+
+const form8911PortReferenceSchema = z.string().trim().min(1, "Enter the original reference identifying the physical charging port");
+const form8911AdditionalPortSourceSchema = form8911PortSourceSchema.safeExtend({
+  portReference: form8911PortReferenceSchema,
+});
+
+export const Form8911Sources2026Schema = form8911PortSourceSchema.safeExtend({
+  additionalPortSources: z.strictObject({
+    firstPortReference: form8911PortReferenceSchema,
+    independentCostsConfirmed: z.literal(true),
+    ports: z.array(form8911AdditionalPortSourceSchema).min(1),
+  }).optional(),
+}).superRefine((source, context) => {
+  const additional = source.additionalPortSources;
+  if (!additional) return;
+  const distinctReferences = (references: string[]) => new Set(
+    references.map(reference => reference.trim().replace(/\s+/g, " ").toUpperCase()),
+  ).size === references.length;
+  if (!distinctReferences([additional.firstPortReference, ...additional.ports.map(port => port.portReference)])) {
+    context.addIssue({ code: "custom", path: ["additionalPortSources", "ports"], message: "Use distinct original references for each physical charging port." });
+  }
+  if (!distinctReferences([source.invoiceReference, ...additional.ports.map(port => port.invoiceReference)])) {
+    context.addIssue({ code: "custom", path: ["additionalPortSources", "ports"], message: "Use distinct original invoices for independently documented port costs." });
+  }
 });
 
 // Record whether original source facts existed before legacy schema defaults.

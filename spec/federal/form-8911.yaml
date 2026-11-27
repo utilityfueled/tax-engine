@@ -5,10 +5,10 @@ reviewStatus: "independent-review-pending"
 retrievedAt: "2026-11-26"
 irsReference: "https://www.irs.gov/instructions/i8911"
 notes: |
-  Calculate one documented new electric vehicle charging port used solely for
+  Calculate documented new electric vehicle charging ports used solely for
   personal purposes at the taxpayer's main home in a U.S. state or D.C. This is
-  a draft federal calculation. Multiple ports, equipment for two- and three-wheel
-  vehicles only, shared-property allocations, commercial or mixed use, property
+  a draft federal calculation. Equipment for two- and three-wheel vehicles
+  only, common-cost allocations, commercial or mixed use, property
   in U.S. possessions, business credits, transfers, elective pay, and recapture
   require separate source and calculation support. Source authorities are IRC 30C, P.L. 119-21
   section 70504, the December 2025 Form 8911 and Schedule A (Form 8911), their
@@ -61,6 +61,24 @@ lines:
       6251 line 9 even if there is zero alternative minimum tax. Line 9 is the
       nonnegative difference of lines 7 and 8.
     testRef: "tests/engine/forms/form-8911.test.ts::subtracts prior allowable credits and actual tentative minimum tax before using the credit"
+  - line: "separately-sourced-personal-ports"
+    description: "Calculate separate Schedule A amounts for distinct qualifying charging ports"
+    formula: |
+      Each charging port is a single item. Require distinct port references and
+      independent invoices whose costs and reductions are directly attributable
+      to that item. Hold repeated references, shared costs and unsupported uses.
+      Check the actual location and placed-in-service date separately for each
+      port even when the dates or homes are the same. Hold a future date on any
+      row and calculate zero for a known date after June 30, 2026. Use exact
+      cents for each item's net cost. Calculate and round 30 percent on each
+      Schedule A and apply the $1,000 per-item cap. Sum the Schedule A line 21
+      amounts on Form 8911 line 4 and apply the regular tax and tentative
+      minimum tax limitation once. Keep the single-source shape and calculation
+      for historical saved returns and leave the annual release gates in place.
+    irsRef: "IRC 30C(b)(2), (d)(2), (i) as amended by P.L. 119-21 section 70504; IRS Form 8911 Item A and Schedule A lines 19-21; IRS Publication 6027, https://www.irs.gov/pub/irs-access/p6027_accessible.pdf"
+    testRef: "tests/engine/forms/form-8911.test.ts::computes separate personal port amounts before applying one tax limit"
+    testRefs:
+      - "tests/engine/federal-form-8911.test.ts::holds a later port after the federal calculation as-of date"
   - line: "Form 8911 10 and Schedule 3 6j"
     description: "Apply the nonrefundable personal credit once to federal tax"
     formula: |
