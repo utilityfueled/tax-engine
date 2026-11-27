@@ -32,7 +32,7 @@ lines:
     testRef: "tests/engine/forms/schedule-1-a-return.test.ts::excludes allowable business tips from QBI and rejects an unresolved shared reduction"
   - line: "canonical-return"
     description: "Apply the deduction after AGI and before QBI"
-    formula: "Schedule1-A line38 reduces taxable income only. Actual ScheduleC tips already included in receipts remain taxable business income for AGI and SE tax; the allowable business tip deduction also reduces the business source QBI once."
+    formula: "Schedule 1-A line 38 (final 2025) or line 44 (draft 2026) reduces taxable income only. Actual ScheduleC tips already included in receipts remain taxable business income for AGI and SE tax; the allowable business tip deduction also reduces the business source QBI once."
     testRef: "tests/engine/federal-schedule-1-a-sources.test.ts::deducts actual business tips once from taxable income and QBI without changing AGI or SE tax"
   - line: "source-conservation"
     description: "Validate whole information-return amounts before any deduction"

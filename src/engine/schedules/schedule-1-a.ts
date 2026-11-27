@@ -81,6 +81,9 @@ function verifyForm1098Vli(loan: Schedule1AInput["vehicleLoans"][number], taxYea
 export function calculateSchedule1A(input: Schedule1AParams): Schedule1AResult {
   const { taxpayer } = input;
   if (![2025, 2026].includes(taxpayer.taxYear)) throw new Error("Unsupported Schedule 1-A tax year");
+  const lines = taxpayer.taxYear === 2026
+    ? { tips: "15", overtime: "27", vehicleInterest: "36", seniors: "43", total: "44" }
+    : { tips: "13", overtime: "21", vehicleInterest: "30", seniors: "37", total: "38" };
   if (!input.agi.isFinite() || !input.foreignExcludedIncome.isFinite() || input.foreignExcludedIncome.lt(0)) throw new Error("Invalid Schedule 1-A MAGI inputs");
   const facts = Schedule1ASchema.parse(input.facts);
   const actualSources = facts.sourceTaxYear !== undefined || facts.sourceReference !== undefined || facts.sourceFactsConfirmed !== undefined || facts.allSourcesIncluded !== undefined
@@ -118,10 +121,10 @@ export function calculateSchedule1A(input: Schedule1AParams): Schedule1AResult {
   }));
   const wageDeductionReduction = zeroFloor(magi.minus(joint ? "300000" : "150000")).div("1000").floor().times("100");
   const tipsDeduction = marriedSeparate ? d("0") : roundDollar(zeroFloor(min(employeeTips.plus(businessTips), d("25000")).minus(wageDeductionReduction)));
-  audit.record("Schedule 1-A", "13", "Qualified tips deduction", tipsDeduction, "max(0, min(eligible reported tips, 25000) - 100 × floor(MAGI excess / 1000)); MFS excluded");
+  audit.record("Schedule 1-A", lines.tips, "Qualified tips deduction", tipsDeduction, "max(0, min(eligible reported tips, 25000) - 100 × floor(MAGI excess / 1000)); MFS excluded");
   const eligibleOvertime = sum(...facts.overtime.map((entry) => ssnEligible(entry.owner) && entry.requiredByFlsa ? d(entry.qualifiedPremium) : d("0")));
   const overtimeDeduction = marriedSeparate ? d("0") : roundDollar(zeroFloor(min(eligibleOvertime, d(joint ? "25000" : "12500")).minus(wageDeductionReduction)));
-  audit.record("Schedule 1-A", "21", "Qualified overtime compensation deduction", overtimeDeduction, "max(0, min(FLSA premium, 12500 [25000 MFJ]) - 100 × floor(MAGI excess / 1000)); MFS excluded");
+  audit.record("Schedule 1-A", lines.overtime, "Qualified overtime compensation deduction", overtimeDeduction, "max(0, min(FLSA premium, 12500 [25000 MFJ]) - 100 × floor(MAGI excess / 1000)); MFS excluded");
   const vehicleInterest = sum(...facts.vehicleLoans.map((loan, loanIndex) => {
     verifyForm1098Vli(loan, taxpayer.taxYear);
     if (actualSources || loan.owner !== undefined || loan.sourceTaxYear !== undefined || loan.borrowerQualificationConfirmed !== undefined) {
@@ -139,7 +142,7 @@ export function calculateSchedule1A(input: Schedule1AParams): Schedule1AResult {
   }));
   const vehicleReduction = zeroFloor(magi.minus(joint ? "200000" : "100000")).div("1000").ceil().times("200");
   const vehicleInterestDeduction = roundDollar(zeroFloor(min(vehicleInterest, d("10000")).minus(vehicleReduction)));
-  audit.record("Schedule 1-A", "30", "Qualified vehicle loan interest deduction", vehicleInterestDeduction, "max(0, min(eligible interest, 10000) - 200 × ceil(MAGI excess / 1000))");
+  audit.record("Schedule 1-A", lines.vehicleInterest, "Qualified vehicle loan interest deduction", vehicleInterestDeduction, "max(0, min(eligible interest, 10000) - 200 × ceil(MAGI excess / 1000))");
   const seniorPerPerson = roundDollar(zeroFloor(d("6000").minus(zeroFloor(magi.minus(joint ? "150000" : "75000")).times("0.06"))));
   const seniorAgeEligible = (owner: "primary" | "spouse") => {
     const person = owner === "primary" ? taxpayer.primary : taxpayer.spouse!;
@@ -170,8 +173,9 @@ export function calculateSchedule1A(input: Schedule1AParams): Schedule1AResult {
   const seniorDeduction = marriedSeparate ? d("0") : roundDollar(sum(...facts.seniorOwners.map((owner) => {
     return ssnEligible(owner) && ageEligible.get(owner) ? seniorPerPerson : d("0");
   })));
-  audit.record("Schedule 1-A", "37", "Enhanced deduction for seniors", seniorDeduction, "Each eligible person: max(0, 6000 - 6% × MAGI excess); MFS excluded");
+  audit.record("Schedule 1-A", lines.seniors, "Enhanced deduction for seniors", seniorDeduction, "Each eligible person: max(0, 6000 - 6% × MAGI excess); MFS excluded");
   const totalDeduction = sum(tipsDeduction, overtimeDeduction, vehicleInterestDeduction, seniorDeduction);
-  audit.record("Schedule 1-A", "38", "Total additional deductions", totalDeduction, "Lines 13 + 21 + 30 + 37");
+  audit.record("Schedule 1-A", lines.total, "Total additional deductions", totalDeduction,
+    `Lines ${lines.tips} + ${lines.overtime} + ${lines.vehicleInterest} + ${lines.seniors}`);
   return { magi, tipsDeduction, overtimeDeduction, vehicleInterestDeduction, seniorDeduction, totalDeduction, lines: audit.getLines() };
 }

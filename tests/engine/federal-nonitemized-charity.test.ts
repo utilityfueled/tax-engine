@@ -22,8 +22,8 @@ it('claims only actual current eligible cash when the standard deduction is unav
   expect(result.nonitemizerCharitableDeduction?.toFixed()).toBe('1000');
   expect(result.allLines.find(row => row.form === '1040' && row.line === '14')?.value.toFixed()).toBe('1000');
   expect(result.agi.toFixed()).toBe('75000'); expect(result.taxableIncome.toFixed()).toBe('74000');
-  expect(result.allLines.filter(row => row.form === '1040' && row.line === '12').map(row => row.value.toFixed())).toEqual(['0']);
-  expect(result.allLines.find(row => row.form === '1040' && row.line === 'nonitemizer-charity')?.description).not.toMatch(/with standard/i);
+  expect(result.allLines.filter(row => row.form === '1040' && row.line === '12e').map(row => row.value.toFixed())).toEqual(['0']);
+  expect(result.allLines.find(row => row.form === '1040' && row.line === '12f')?.description).toBe('Nonitemizer charitable deduction');
   expect(extractMetricsFromResult(result).taxableIncome).toBe('74000');
   const ohio = buildOhioResidentReturnInput(input, result);
   expect(ohio.federalAgi.toFixed()).toBe('75000');

@@ -4,6 +4,7 @@ import { PDFDocument, PDFDict, PDFName } from "pdf-lib";
 import Decimal from "decimal.js";
 import { fillForm1040 } from "@/pdf/fill-form-1040.js";
 import { calculateFederalTax } from "@/engine/federal.js";
+import { TaxYearInputSchema } from "@/models/inputs.js";
 import { simpleW2Fixture, complexMFJFixture } from "../fixtures/simple-w2.js";
 
 const p1 = "topmostSubform[0].Page1[0].";
@@ -97,6 +98,23 @@ describe("official 2025 Form 1040 field locations", () => {
     expect(form.getTextField(dep + "Row3[0].f1_39[0]").getText()).toBe("777889999");
     expect(form.getTextField(dep + "Row4[0].f1_43[0]").getText()).toBe("Son");
     expect(form.getCheckBox(dep + "Row7[0].Dependent1[0].c1_28[0]").isChecked()).toBe(true);
+  });
+
+  it("saves nonzero 2025 Schedule 1-A and QBI deductions on their original printed lines", async () => {
+    const input = TaxYearInputSchema.parse({
+      ...simpleW2Fixture,
+      form1099Div: [{ payer: "Fictional REIT", ordinaryDividends: "5000", section199ADividends: "5000" }],
+      schedule1A: {
+        primarySsnEligible: true, excludedPuertoRicoIncome: "0", form4563Exclusion: "0",
+        employeeTips: [], businessTips: [], vehicleLoans: [], seniorOwners: [],
+        overtime: [{ owner: "primary", qualifiedPremium: "2000", reportedCompensation: "85000", requiredByFlsa: true }],
+      },
+    });
+    const doc = await fillForm1040(input, calculateFederalTax(input), blank);
+    const form = (await PDFDocument.load(await doc.save())).getForm();
+    expect(form.getTextField(p2 + "f2_03[0]").getText()).toBe("1000"); // 13a QBI
+    expect(form.getTextField(p2 + "f2_04[0]").getText()).toBe("2000"); // 13b Schedule 1-A
+    expect(form.getTextField(p2 + "f2_05[0]").getText()).toBe("18750"); // 14 total deductions
   });
 
   it("selects the distinct qualifying surviving spouse box", async () => {

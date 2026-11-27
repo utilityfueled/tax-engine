@@ -2,12 +2,13 @@ form: "Schedule 1-A"
 fullName: "Additional deductions, 2025 and 2026 rule implementation"
 taxYear: 2026
 reviewStatus: "independent-review-pending"
-retrievedAt: "2026-10-24"
+retrievedAt: "2026-11-26"
 irsReference: "https://www.irs.gov/instructions/i1040gi"
 notes: |
-  Line labels follow final 2025 Schedule 1-A. Publication 505 (2026) confirms
-  unchanged amounts for 2026. This is calculation research, not qualification
-  of a final 2026 form. Explicit facts must establish SSN validity, reported
+  The calculation sections below document final 2025 Schedule 1-A numbering.
+  Publication 505 (2026) confirms unchanged amounts for 2026. The separate
+  audit entries document the corresponding 2026 draft lines. Explicit facts
+  must establish SSN validity, reported
   eligible tips, FLSA premium, and loan requirements; gross wages, arbitrary
   overtime pay and a vehicle purchase alone cannot establish those facts.
   All monetary amounts use Decimal. Unknown qualification facts reject.
@@ -97,3 +98,26 @@ lines:
     formula: "AGI is unchanged; taxable income before QBI = max(0, AGI - standard/itemized deduction - Schedule 1-A total). Total deductions include QBI and Schedule 1-A. Actual business-tip deductions require the supported source reconciliation and business-level QBI adjustment."
     irsRef: "2025 Form 1040 line 13b; Form 8995 instructions line 11"
     testRef: "tests/engine/schedules/schedule-1-a.test.ts::Schedule 1-A federal integration"
+    testRefs:
+      - "tests/pdf/form-1040-source-mapping.test.ts::saves nonzero 2025 Schedule 1-A and QBI deductions on their original printed lines"
+  - line: "2026-draft-deduction-audit"
+    description: "Year-specific Schedule 1-A deduction line identifiers"
+    formula: >-
+      For 2026, audit MAGI on line 3, qualified tips on line 15, qualified
+      overtime on line 27, qualified vehicle loan interest on line 36,
+      and the senior deduction on line 43. Audit their sum on line 44.
+      Final 2025 Schedule 1-A reports those amounts on lines 3, 13, 21, 30,
+      37, and 38 respectively. Amounts and their named calculation outputs
+      remain the same. The 2026 identifiers describe a draft.
+    irsRef: "https://www.irs.gov/pub/irs-dft/f1040s1a--dft.pdf; https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf#page=106"
+    testRef: "tests/engine/schedules/schedule-1-a.test.ts::reports the deduction components and total on the correct annual Schedule 1-A lines"
+  - line: "2026-draft-1040-13a-13b"
+    description: "Transfer Schedule 1-A and QBI to the 2026 draft Form 1040"
+    formula: >-
+      Transfer Schedule 1-A line 44 to Form 1040 line 13a and the applicable
+      Form 8995 or 8995-A deduction to line 13b. Line 14 is the sum of the
+      selected deduction on line 12e, the current nonitemizer charitable
+      deduction on line 12f, and lines 13a and 13b. Preserve 2025 audit keys
+      and the final 2025 PDF mappings. Export and filing gates still apply.
+    irsRef: "https://www.irs.gov/pub/irs-dft/f1040--dft.pdf#page=3; https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf#page=38"
+    testRef: "tests/engine/federal-schedule-1-a-sources.test.ts::reports the 2026 draft Form 1040 deduction transfers without changing their amounts"

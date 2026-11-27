@@ -46,7 +46,7 @@ lines:
     irsRef: "IRC 165(d), https://uscode.house.gov/us/usc/119-120/t26/s165/"
     testRef: "tests/engine/schedules/schedule-a-2026.test.ts::2026 wagering deduction"
   - line: "1040-nonitemizer-charity"
-    description: "Current cash contributions with standard deduction"
+    description: "Current cash contributions by nonitemizers (draft Form 1040 line 12f)"
     formula: |
       2026 candidate = min(1000 [2000 MFJ], 60% of max(0, AGI), eligible current-year
       cash contributions). Required explicit recipient qualification under

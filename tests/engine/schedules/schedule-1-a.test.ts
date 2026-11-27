@@ -13,6 +13,23 @@ function calc(input: Record<string, unknown> = {}, magi = "50000", person = taxp
   return calculateSchedule1A({ taxpayer: person, agi: d(magi), foreignExcludedIncome: d("0"), facts: Schedule1ASchema.parse({ ...facts, ...input }), standardDeductionFacts: { primaryDeathDate: null, spouseDeathDate: null } });
 }
 describe("Schedule 1-A additional deductions", () => {
+  it("reports the deduction components and total on the correct annual Schedule 1-A lines", () => {
+    const deductionFacts = { employeeTips: [tip], overtime: [overtime], vehicleLoans: [vehicle], seniorOwners: ["primary"] };
+    const withYear = (taxYear: number) => calc(deductionFacts, "50000", {
+      ...taxpayer, taxYear, primary: { ...taxpayer.primary, dateOfBirth: "1950-01-01" },
+    });
+    const draft = withYear(2026);
+    const historical = withYear(2025);
+    expect(draft.lines.map(row => [row.line, row.value.toFixed()])).toEqual([
+      ["3", "50000"], ["15", "20000"], ["27", "12500"], ["36", "10000"], ["43", "6000"], ["44", "48500"],
+    ]);
+    expect(draft.lines.at(-1)?.formula).toBe("Lines 15 + 27 + 36 + 43");
+    expect(historical.lines.map(row => [row.line, row.value.toFixed()])).toEqual([
+      ["3", "50000"], ["13", "20000"], ["21", "12500"], ["30", "10000"], ["37", "6000"], ["38", "48500"],
+    ]);
+    expect(historical.lines.at(-1)?.formula).toBe("Lines 13 + 21 + 30 + 37");
+  });
+
   it.each([["150999.99", "20000"], ["151000", "19900"], ["350000", "0"]])("floors tip phase-down steps at MAGI %s", (magi, expected) => {
     expect(calc({ employeeTips: [tip] }, magi).tipsDeduction.toString()).toBe(expected);
   });

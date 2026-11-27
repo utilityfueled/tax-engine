@@ -36,6 +36,28 @@ function cardTipInput() {
   };
 }
 
+it("reports the 2026 draft Form 1040 deduction transfers without changing their amounts", () => {
+  const input = TaxYearInputSchema.parse({ ...cardTipInput(), donations: [{
+    organization: "Fictional public charity", type: "cash", amount: "250", dateOfDonation: "2026-05-15",
+    qualifiedOrganization: true, isPrivateFoundation: false, supportingOrganization: false, donorAdvisedFund: false,
+  }] });
+  const result = calculateFederalTax(input);
+  const returnLines = result.allLines.filter(row => row.form === "1040");
+  const deductionLines = returnLines.filter(row => ["12e", "12f", "13a", "13b"].includes(row.line));
+  expect(Object.fromEntries(deductionLines.map(row => [row.line, row.value.toFixed()]))).toEqual({
+    "12e": "16100", "12f": "250", "13a": "1000", "13b": "4261",
+  });
+  expect(deductionLines).toHaveLength(4);
+  expect(returnLines.some(row => ["12", "13", "nonitemizer-charity"].includes(row.line))).toBe(false);
+  expect(returnLines.find(row => row.line === "13a")?.formula).toContain("Schedule 1-A line 44");
+  const total = returnLines.find(row => row.line === "14");
+  expect(total?.value.toFixed()).toBe("21611");
+  expect(total?.formula).toBe("Line 12e + Line 12f + Line 13a + Line 13b");
+  expect(result.schedule1A?.totalDeduction.toFixed()).toBe("1000");
+  expect(result.form8995?.qbiDeduction.toFixed()).toBe("4261");
+  expect(result.taxableIncome.toFixed()).toBe("85693");
+});
+
 it("deducts qualified card tips from one reconciled 2026 Form 1099-K without adding income", () => {
   const input = cardTipInput();
   const baseline = calculateFederalTax(TaxYearInputSchema.parse({ ...input, schedule1A: undefined }));
@@ -48,7 +70,7 @@ it("deducts qualified card tips from one reconciled 2026 Form 1099-K without add
   expect(result.agi.eq(baseline.agi)).toBe(true);
   expect(result.scheduleC?.grossReceipts.toFixed()).toBe("24000");
   expect(result.allLines.find(line => line.form === "Sched SE" && line.line === "12")?.value.toFixed()).toBe("3391");
-  expect(result.allLines.find(line => line.form === "1040" && line.line === "13b")?.value.toFixed()).toBe("1000");
+  expect(result.allLines.find(line => line.form === "1040" && line.line === "13a")?.value.toFixed()).toBe("1000");
   expect(result.schedule1A?.tipsDeduction.toFixed()).toBe("1000");
   expect(result.allLines.find(line => line.line === "business-report:form1099K:0")?.value.toFixed()).toBe("1000");
   expect(result.form8995?.qbiDeduction.toFixed()).toBe("4261");

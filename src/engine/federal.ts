@@ -3114,8 +3114,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   if (nol?.modified) additionalDeductions = additionalDeductions.minus(schedule1A?.seniorDeduction ?? d("0"));
   if (schedule1A) audit.merge(schedule1A.lines);
   if (schedule1AReturn) audit.merge(schedule1AReturn.lines);
-  audit.record("1040", "13b", "Additional deductions from Schedule 1-A", schedule1A?.totalDeduction ?? d("0"),
-    "Schedule 1-A line 38; no change to AGI or payroll taxes");
+  audit.record("1040", year === 2026 ? "13a" : "13b", "Additional deductions from Schedule 1-A", schedule1A?.totalDeduction ?? d("0"),
+    `Schedule 1-A line ${year === 2026 ? "44" : "38"}; no change to AGI or payroll taxes`);
   const noQbiLimits = { w2Wages: d(0), ubia: d(0), isSST: false };
   const adjustedQbiSources: QBIBusinessSource[] = qbiSourceDeductions.sources.map(source => ({ ...source,
     ...(source.form8995ALimits ?? noQbiLimits),
@@ -3421,16 +3421,16 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   }
   if (form8995Result) audit.merge(form8995Result.lines);
   if (form8995AResult) audit.merge(form8995AResult.lines);
-  audit.record("1040", "12", "Standard or itemized deduction", deductionAmount, `${deductionUsed} deduction selected after applicable limitations`);
-  audit.record("1040", "nonitemizer-charity", "Nonitemizer charitable deduction", nonitemizerCharitableDeduction,
+  audit.record("1040", year === 2026 ? "12e" : "12", "Standard or itemized deduction", deductionAmount, `${deductionUsed} deduction selected after applicable limitations`);
+  audit.record("1040", year === 2026 ? "12f" : "nonitemizer-charity", "Nonitemizer charitable deduction", nonitemizerCharitableDeduction,
     "2026 current eligible cash under section170(p); actual nonitemization is distinct from standard deduction eligibility");
-  audit.record("1040", "13", "Section 199A deduction", qbiDeduction,
+  audit.record("1040", year === 2026 ? "13b" : "13", "Section 199A deduction", qbiDeduction,
     qbiDeduction.isZero() ? "No QBI sources or zero deduction" :
     form8995AResult ? `Form 8995-A: $${qbiDeduction}` : `Form 8995: $${qbiDeduction}`);
 
-  // Line 14: Total deductions = Line 12 + Line 13
   const totalDeduction = deductionAmount.plus(qbiDeduction).plus(additionalDeductions);
-  audit.record("1040", "14", "Total deductions", totalDeduction, "Line 12 + Line 13a QBI + Line 13b Schedule 1-A");
+  audit.record("1040", "14", "Total deductions", totalDeduction,
+    year === 2026 ? "Line 12e + Line 12f + Line 13a + Line 13b" : "Line 12 + Line 13a QBI + Line 13b Schedule 1-A");
 
   // Line 15: Taxable income (preliminary, before NOL deduction)
   const rawTaxableIncome = agi.minus(totalDeduction);
