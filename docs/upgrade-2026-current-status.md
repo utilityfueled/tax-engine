@@ -9,6 +9,31 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `f34372189` follows the November 24 federal draft's deduction line
+  assignments. `c209b9b00` preserves Ohio draft review for timely filed
+  and paid returns observed after April 15. Focused tests and independent
+  engineering reviews passed. `c14606b59` corrects a full-suite REIT/QBI
+  assertion to use the draft line. The official annual download links
+  still show 2025. Final 2026 qualification and qualified human review
+  remain open.
+  [Tax changes and evidence](upgrade-2026-progress.md#november-26-annual-deduction-lines-and-ohio-filing-chronology) ·
+  [Reviewer worksheet](upgrade-2026-human-tax-review-packet.md#november-26-federal-deduction-transfers-and-ohio-filing-dates).
+
+- Exact `c14606b59` passed ten required local commands. Unit and coverage
+  each passed 31,054 tests with 81 existing skips and 88.59% branch
+  coverage. Managed Chromium passed 654 cases on `f34372189`. The
+  exact `c14606b59` browser run is in progress.
+  [Local verification](upgrade-2026-progress.md#november-26-annual-deduction-lines-and-ohio-filing-chronology).
+
+- `810d48f84` identifies failures in the pinned-schema rehearsal by
+  stage. An earlier ARM64 run built, booted and imported the image but
+  stopped inside that helper. The local SCRAM migration and forced
+  failure controls passed. The AMD64 job covers `c14606b59`. Native
+  ARM64 covers `f34372189` with the same audited application inputs.
+  [Migration evidence](upgrade-2026-progress.md#november-26-native-migration-failure-diagnostics) ·
+  [AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45920349552) ·
+  [ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45919423965).
+
 - Exact `369c195b2` passed all 11 local checks. Unit and coverage each
   passed 31,042 tests with 81 existing skips, at 88.59% branch coverage.
   Managed Chromium passed 654 cases in nine windows with five existing

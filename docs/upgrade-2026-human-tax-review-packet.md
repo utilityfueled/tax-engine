@@ -590,3 +590,27 @@ the final annual materials once available.
 [26 CFR §1.36B-2](https://www.ecfr.gov/current/title-26/section-1.36B-2) ·
 [2026 draft Form 8962 instructions](https://www.irs.gov/pub/irs-dft/i8962--dft.pdf#page=10) ·
 [2025 Form 8962 instructions](https://www.irs.gov/instructions/i8962).
+
+## November 26 federal deduction transfers and Ohio filing dates
+
+Pending independent qualified review. Record the form and instruction
+revisions reviewed and the sources used for each conclusion.
+
+- Trace the 2026 draft Schedule 1-A deductions through line 44 and the
+  Form 1040 deduction lines. Show where the nonitemizer charitable
+  deduction and the qualified business income deduction belong and
+  which amounts enter line 14. Compare the prior-year transfer
+  assignments to check the archived return. Repeat the trace on the
+  final 2026 forms when published. [Draft Form 1040](https://www.irs.gov/pub/irs-dft/f1040--dft.pdf#page=3)
+  · [Draft Schedule 1-A](https://www.irs.gov/pub/irs-dft/f1040s1a--dft.pdf#page=4)
+  · [Draft Form 1040 instructions](https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf#page=38).
+- Assume no filing extension or disaster relief. For an otherwise
+  eligible Ohio draft, consider an actual filing and a documented
+  balance payment both dated April 15, 2027, when first reviewed on
+  April 16. Compare a filing or payment that actually occurred on
+  April 16, and a planned April 15 filing with no confirmation at the
+  time of review. Identify the evidence needed to distinguish each
+  result. Consider employee returns under all three residency types,
+  the admitted part-year and nonresident business methods, and the
+  withholding-only case where no balance payment is due.
+  [Ohio Revised Code §5747.08](https://codes.ohio.gov/ohio-revised-code/section-5747.08).

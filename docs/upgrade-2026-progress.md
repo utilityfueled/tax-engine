@@ -1,5 +1,88 @@
 # 2026 upgrade implementation evidence
 
+## November 26 annual deduction lines and Ohio filing chronology
+
+`f34372189` binds the federal audit to the draft annual form and the
+November 24 draft Form 1040 instructions.
+Schedule 1-A adds lines 15, 27, 36 and 43 on line 44 and transfers the
+sum to Form 1040 line 13a. QBI moves to 13b. The standard or itemized
+deduction and nonitemizer charitable deduction appear on 12e and 12f.
+Line 14 references all four deductions. The earlier line assignments
+remain in the 2025 audit and archived PDF. All 724 focused tests and
+38 scoped spec references passed. Independent engineering review
+verified the draft routing and passed 76 tests. The 2026 full-return
+test uses draft constants supplied by the fixture. Final annual PDF
+mapping, qualified tax review and public release remain open.
+[Draft Form 1040](https://www.irs.gov/pub/irs-dft/f1040--dft.pdf#page=3) ·
+[Draft Schedule 1-A](https://www.irs.gov/pub/irs-dft/f1040s1a--dft.pdf#page=4) ·
+[Draft instructions](https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf#page=38).
+
+Full unit and coverage runs on `f34372189` each passed 31,053 tests and
+found one REIT/QBI assertion using the old line number. Both retained
+the same 81 environment skips. `c14606b59` asserts the allowed $200
+deduction and the ineligible zero deductions on draft line 13b.
+All 96 focused successor tests passed, including the prior-year PDF
+mapping and Form 2555 controls. The browser action audit verified
+the same source closure and budget manifest on both revisions.
+
+The exact `c14606b59` checkout passed ten required local commands and
+the offline AI artifact check. Unit and coverage each passed 31,054
+with 81 existing skips. Branch coverage was 88.59% against the 85%
+gate. The web and root builds, three type checks, spec and inventory,
+and lint passed. Managed Chromium on `f34372189` passed 654 in nine
+windows, with five original skips and a clean shutdown. The full
+browser runner also hashes the changed migration script and unit
+test, so that receipt is scoped to `f34372189`. A new managed run
+on the exact successor is in progress.
+
+`c209b9b00` allows an already-admitted Ohio 2026 draft filed and paid
+on time to be observed after April 15. Six failing regressions covered
+three employee residency groups, two admitted business groups and one
+withholding-only return. Chronology checks still reject a filing or
+payment dated after observation, a stale expected filing date, and
+actually late filing or payment. All 2,636 Ohio tests and 968 state spec
+references passed.
+Independent engineering review also passed. The draft-only source
+methods and filing gates stay in place.
+[Ohio Revised Code §5747.08](https://codes.ohio.gov/ohio-revised-code/section-5747.08).
+
+The independent taxpayer worksheet covers both changes. The final
+annual Form 1040 endpoint still serves 2025. The Pennsylvania
+download page and Ohio tax forms catalog still list 2025 annual
+returns. The 2026 federal instructions used here remain a draft.
+[Tax reviewer worksheet](upgrade-2026-human-tax-review-packet.md#november-26-federal-deduction-transfers-and-ohio-filing-dates) ·
+[IRS annual Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[PA personal income tax](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
+[Ohio tax forms](https://tax.ohio.gov/business/get-a-form).
+
+## November 26 native migration failure diagnostics
+
+ARM64 comparison source `3a54df082` passed image build, smoke,
+independent archive import and candidate evidence binding. Its Compose
+step failed inside the pinned previous-schema helper before Chromium.
+The retained error gives no internal stage. The helper and candidate
+schema inputs match the earlier successful host PostgreSQL rehearsal.
+[Comparison run](https://github.com/utilityfueled/tax-engine/actions/runs/45906276956).
+
+`810d48f84` reports fixed migration stages and command outcomes without
+printing private child output. All 47 focused tests passed and
+independent engineering review found the checks and cleanup intact.
+A fresh disposable PostgreSQL 16.14 SCRAM cluster on macOS preserved the
+three migrated rows and inventory across rerun and dump and restore.
+A forced missing dump tool reported `dump (command unavailable)`,
+returned a failure, and left no schema or cluster. That local run uses
+the same materialized schema inputs. Diagnosis of the Linux failure
+and target Compose qualification still require native results.
+[Current AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45920349552) ·
+[Current ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45919423965).
+
+Full lint flagged the throw inside the command error handler.
+`0435d706d` raises the same fixed diagnostic after the handler has
+classified the outcome and discarded the raw error. The lint rerun
+reported zero errors. All 47 focused checks and both disposable
+PostgreSQL controls passed again. The application and browser inputs
+are identical to `f34372189`.
+
 ## November 26 combined checks for recovery and tax inputs
 
 All 11 local checks passed on exact application revision `369c195b2`
