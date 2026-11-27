@@ -17,6 +17,7 @@ import type { CalculatedLine } from '@/models/outputs.js';
 import { calculateOhio2026Baseline } from './oh-2026-baseline.js';
 import { calculateOhio2026QualifyingCapitalGainDraft } from './oh-2026-qualifying-capital-gain-draft.js';
 import { lookupOhio2026SchoolDistrict } from './oh-2026-school-catalog.js';
+import { assertOhio2026PrimaryResidencyDeclaration } from './oh-residency-source.js';
 
 const reference = z.string().trim().min(1).max(200);
 const yes = z.literal(true);
@@ -246,6 +247,7 @@ export function calculateOhio2026ResidentCapitalGainDraft(taxInput: TaxYearInput
     const { ohioResidency: _residency, ...federal } = input;
     requireFact(residency.originalFederalSources && digest(residency.originalFederalSources) === digest(federal));
     requireFact(residency.owners.length === 1 && owner && owner.accountHolder === 'primary' && owner.status === 'full_year_resident' && owner.periods.length === 1 && owner.periods[0]?.from === '2026-01-01' && owner.periods[0].to === '2026-12-31' && owner.periods[0].domicileState === 'OH');
+    assertOhio2026PrimaryResidencyDeclaration(person, residency);
     const district = schoolSource && lookupOhio2026SchoolDistrict(residency.taxYear, schoolSource.residence.districtCode);
     if (schoolSource) {
       const { residence } = schoolSource, { finder } = residence;

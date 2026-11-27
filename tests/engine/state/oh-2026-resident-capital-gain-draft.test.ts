@@ -81,6 +81,34 @@ function ventureFixture() {
 }
 
 describe('Ohio2026 source-bound full-year resident A34 dispatcher', () => {
+  it.each(['part-year', 'nonresident'] as const)('holds a conflicting primary Ohio equity-sale residency declaration: %s', declaration => {
+    const p = fixture();
+    p.input.taxpayer.stateResidency = declaration;
+    rebind(p);
+    expect(required(required(p.input.ohioResidency).owners[0]).status).toBe('full_year_resident');
+    const saved = JSON.stringify(p);
+    const result = calculateOhio2026ReturnDraftFromSources({ taxInput: p.input, sources: p.sources });
+    expect(result).toMatchObject({ sourceStatus: 'incomplete', calculationStatus: 'incomplete', sourceCommitment: null,
+      qualifyingCapitalGainsAndPayrollDeduction: null, incomeTax: null, filingQualified: false, exportAllowed: false, lines: [],
+    });
+    expect(result.incompleteReason).toBe('Complete current resident equity-sale originals are required; no filing or payment conclusion.');
+    expect(JSON.stringify(result)).not.toContain('PRIVATE-');
+    expect(JSON.stringify(p)).toBe(saved);
+  });
+
+  it('preserves the Ohio equity-sale draft with a matching or omitted residence declaration', () => {
+    for (const declaration of ['full-year', undefined] as const) {
+      const p = fixture();
+      if (declaration !== undefined) p.input.taxpayer.stateResidency = declaration;
+      rebind(p);
+      const result = calculateOhio2026ReturnDraftFromSources({ taxInput: p.input, sources: p.sources });
+      expect(result.sourceStatus).toBe('admitted-draft');
+      expect(result.qualifyingCapitalGainsAndPayrollDeduction?.toFixed()).toBe('100000');
+      expect(result.incomeTax?.toFixed()).toBe('2438');
+      expect(result.filingQualified).toBe(false);
+    }
+  });
+
   it('composes the issuer-direct venture sale with separately sourced Ohio business income', () => {
     const p = ventureFixture();
     const saved = JSON.stringify(p);

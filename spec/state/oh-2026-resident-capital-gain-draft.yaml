@@ -143,8 +143,22 @@ lines:
     testRef: "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::preserves MAGI exemption thresholds and separate business tax"
   - line: "resident"
     description: "Retain full-year actual residency and require the matching school source branch"
-    formula: "Exactly one current primary full-year OH period Jan1-Dec31, category amounts reconcile wages and capital gain once, nonresident amounts zero and no other adjustments or other-state sources. The no-taxing-district branch remains available with its express confirmation and no school source. A taxing-district claim without complete traditional sources stays incomplete."
+    formula: |
+      Require exactly one current primary Ohio domicile period from January 1
+      through December 31. An explicit primary Ohio residency declaration must
+      agree with the documented full-year status. A part-year or nonresident
+      declaration holds the draft with its existing sanitized incomplete response.
+      An omitted declaration leaves qualification to the actual domicile records.
+      Reconcile wages and capital gain once, with zero nonresident amounts and
+      no other adjustments or other-state sources. The no-taxing-district branch
+      requires its express confirmation and no school source. A taxing-district
+      claim requires complete traditional school sources.
+    sources:
+      - "https://codes.ohio.gov/ohio-revised-code/section-5747.01"
     testRef: "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::rejects incomplete household residency employment and school sources"
+    testRefs:
+      - "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::holds a conflicting primary Ohio equity-sale residency declaration: %s"
+      - "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::preserves the Ohio equity-sale draft with a matching or omitted residence declaration"
   - line: "traditional-school-base-and-levy"
     description: "Compose the enrolled traditional district with the original A34 calculation"
     formula: "For one actual 2026 full-year Ohio primary resident, require the current taxpayer address, separate residence and Finder records, actual entire-year residence in a single named district, matching traditional type and rate in the Ohio Rev. 3/26 annual schedule, and an explicit whole-dollar election. Preserve the existing A34 method's verified whole-dollar W-2, gain, and no reported local rows conditions. The school base is max(0, Ohio AGI plus A34 plus A28 minus the completed exemption), using the same statutory MAGI as the state baseline once. Multiply by the actual annual district rate, retaining the exact pre-credit levy and rounding once half up for the reported draft levy. No payments, credits, settlement, exported forms or filing status are derived."

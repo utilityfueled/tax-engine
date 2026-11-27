@@ -11,6 +11,11 @@ const examples = [
   ['400000','16796','383204','250000','133204','1900','3939','1.0000','3939','0'],
   ['1000000','24830','975170','250000','725170','0','21755','0.9138','19880','1875'],
 ] as const;
+const declarations = [
+  { status: 'nonresident', matching: 'nonresident', conflicting: 'part-year', partBLines: [] },
+  { status: 'part_year_resident', matching: 'part-year', conflicting: 'full-year', partBLines: ['10', '11', '12', '13', '14', '15'] },
+] as const;
+
 describe('source-bound Ohio2026 ordinary business draft dispatch', () => {
   it.each(examples.flatMap(row => (['nonresident','part_year_resident'] as const).map(status => ({row,status}))))('dispatches actual current $row.0 $status originals', ({row,status}) => {
     const p=ohio2026BusinessDraftFixture(row[0],status), before=JSON.stringify(p);
@@ -31,6 +36,33 @@ describe('source-bound Ohio2026 ordinary business draft dispatch', () => {
     expect(v.withholding).toBeNull(); expect(v.amountDue).toBeNull(); expect(v.refund).toBeNull();
     expect(JSON.stringify(p)).toBe(before); expect(TAX_CONSTANTS[2026]).toBeUndefined(); expect(OHIO_TAX_CONSTANTS[2026]).toBeUndefined();
     expect(()=>calculateFederalTax(p.input)).toThrow(/incomplete; calculation is unavailable/);
+  });
+
+  it.each(declarations)('holds an Ohio business draft with a conflicting $status declaration', ({ status, conflicting }) => {
+    const p = ohio2026BusinessDraftFixture('1000000', status);
+    p.input.taxpayer.stateResidency = conflicting;
+    rebindOhio2026BusinessDraft(p);
+    expect(owner(p).status).toBe(status);
+    expect(() => run(p)).toThrow(/^Ohio actual residency sources: declared Ohio residency conflicts with the primary taxpayer's confirmed domicile records$/);
+  });
+
+  it.each(declarations)('preserves qualified $status allocations with a matching or omitted declaration', ({ status, matching, partBLines }) => {
+    for (const declaration of [matching, undefined]) {
+      const p = ohio2026BusinessDraftFixture('1000000', status);
+      if (declaration !== undefined) p.input.taxpayer.stateResidency = declaration;
+      rebindOhio2026BusinessDraft(p);
+      const before = JSON.stringify(p);
+      const result = run(p);
+      expect(result.ohioApportionmentRatio.toFixed()).toBe('0.3125');
+      expect(result.ohioApportionedBusinessIncome.toFixed()).toBe('312500');
+      expect(result.ohioBusinessIncomeAfterDeduction.toFixed()).toBe('62500');
+      expect(result.nonresidentRatio.toFixed(4)).toBe('0.9138');
+      expect(result.nonresidentCredit.toFixed()).toBe('19880');
+      expect(result.incomeTax.toFixed()).toBe('1875');
+      expect(result.lines.filter(line => line.form === 'OH-IT-NRC' && /^1[0-5]$/.test(line.line)).map(line => line.line)).toEqual(partBLines);
+      expect(result.filingQualified).toBe(false);
+      expect(JSON.stringify(p)).toBe(before);
+    }
   });
 });
 

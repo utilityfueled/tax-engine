@@ -31,6 +31,20 @@ lines:
     description: "Actual domicile-date deduction allocation and truncated nonresident ratio"
     formula: "Actual original source and resident half-SE allocation; existing NRC line19=min(1,max(0,OhioAGI-OhioIncome)/OhioAGI), truncate4 decimals; line20=round(actual preceding tax*line19). Published2025 form is structural source, not a qualified2026 form."
     testRef: "tests/engine/state/oh-2026-business-draft.test.ts::allocates an actual PY personal deduction from its original domicile date"
+  - line: "residency-declaration"
+    description: "Reconcile the primary Ohio declaration with the admitted business domicile timeline"
+    formula: |
+      The nonresident or part-year business draft requires actual Ohio domicile
+      records and source allocations. Hold a conflicting explicit primary Ohio
+      declaration with the standard original-source error before returning any
+      result. A matching or omitted declaration preserves the original domicile
+      allocation, apportionment, IT NRC lines, and calculated tax. Filing and
+      export qualification remain closed.
+    sources:
+      - "https://codes.ohio.gov/ohio-revised-code/section-5747.01"
+    testRef: "tests/engine/state/oh-2026-business-draft.test.ts::holds an Ohio business draft with a conflicting $status declaration"
+    testRefs:
+      - "tests/engine/state/oh-2026-business-draft.test.ts::preserves qualified $status allocations with a matching or omitted declaration"
   - line: "unknown-financials"
     description: "Explicitly incomplete financial settlement and protected gates"
     formula: "Absent the separately admitted actual balance receipt, withholding, payments, school financials, underpayment, late interest, due and refund remain null. School financials stay null in both branches. No final return, filing, native, full federal or form qualification."

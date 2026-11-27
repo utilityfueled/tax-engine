@@ -13,6 +13,7 @@ import { calculateOhioCanonicalBusinessSource, readOhioCanonicalBusinessSource }
 import { calculateOhio2026Baseline } from './oh-2026-baseline.js';
 import { calculateOhioITNRC } from './oh-it-nrc.js';
 import { calculateOhio2026ActualBalancePayment, validateOhio2026ActualBalancePaymentSources } from './oh-2026-payment-source.js';
+import { assertOhio2026PrimaryResidencyDeclaration } from './oh-residency-source.js';
 import { AuditTrail } from '@/utils/audit.js';
 
 export interface Ohio2026BusinessDraftResult extends Omit<Ohio2026ReturnDraftResult, 'ruleVersion' | 'withholding' | 'underpaymentPenalty' | 'latePaymentInterest' | 'amountDue' | 'refund'> {
@@ -108,6 +109,7 @@ export function calculateOhio2026BusinessDraft(taxInput: TaxYearInput, raw: unkn
     ohioAgi: actual.ohioAgi, taxRemainingBeforeResidencyCredits: baseline.taxAfterJointCredit,
     residencyFacts: facts, businessSource: context,
     expectedFederalCategories: Object.fromEntries(ohioNrcCategories.map(category => [category, category === 'federalAdjustments' ? actual.deductibleHalf : '0'])) });
+  assertOhio2026PrimaryResidencyDeclaration(taxpayer.data, facts);
   const nrcLines = facts.owners.every(owner => owner.status === 'nonresident')
     ? nrc.lines.filter(({ form, line }) => form !== 'OH-IT-NRC' || !/^1[0-5]$/.test(line))
     : nrc.lines;
