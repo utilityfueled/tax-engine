@@ -1,5 +1,98 @@
 # 2026 upgrade implementation evidence
 
+## November 27 Exact Code 3 and Form 5329 release checks
+
+All 11 local checks passed. The exact `64ca11a71` unit and coverage
+runs each passed 31,186 tests with 81 existing skips and 88.64%
+branch coverage. Static checks resolved 10,221 spec references, the
+offline AI artifact check passed and all 15 official sample hashes
+matched. Chromium passed 654 cases in nine windows with five
+existing skips and verified listener cleanup on `ba45cde16`.
+The later revision changed only the Form 5329 spec note and PDF
+fixture, both outside the browser source manifest. Its production
+build and standalone backup restore also passed directly.
+
+The initial local attempts recorded the restricted loopback failure,
+the Form 5329 fixture failure and a disk-space interruption. The
+fixture received the required matching source facts and the original
+assertions were retained. The clean reruns came from tracked archives.
+The combined manifest SHA-256 is
+`5817c8f7cc43ada389975363a556357b6951aa378dce8ef570b6769881a4fc52`.
+Strict Linux qualification is still open.
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45981014199) ·
+[AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45981014261) ·
+[ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45982831811).
+
+## November 27 Documented Code 3 placement
+
+`ba45cde16` validates positive, dated standalone non-IRA Code 3
+statements against the current recipient, actual statement amounts and
+employer plan timing. For a payment period entirely before the
+documented minimum retirement date, the taxable amount reaches line
+1h and federal earned income. A period beginning the following day
+uses the pension lines. A caller's historical calculation date limits
+which receipts can be included. Box 4 withholding is credited once,
+and the audit contains zero plan or recipient identifiers from the
+source packet.
+
+The direct return preserves a substantiated post-retirement
+Simplified Method and the existing eligible public safety officer
+premiums. The worksheet needs a documented annuity starting date and
+positive payment count. A printed zero with Box 2b checked requires
+actual support. Ohio validates the same current source when an
+adapter caller supplies a federal result. The guided 2026 path reuses
+its documented single-payment evidence, including valid saved
+worksheets for taxpayers with a middle name. All 419 focused final
+tests and 22 Form 1099-R spec references passed. Independent
+engineering retested 36 cases covering the observation date, checked
+zero, known worksheet and guided owner binding.
+
+`64ca11a71` updated the existing Form 5329 PDF fixture after the full
+run found it lacked the required employer timing. The fixture still
+checks payer-reported exception 03, zero additional tax and omission
+of the separate form. The same production source remains on both
+revisions. All 27 focused tests and 108 Form 5329 references passed.
+[Form 5329 instructions](https://www.irs.gov/instructions/i5329).
+
+Attainment-day reporting still needs a qualified interpretation.
+Originals spanning both periods still need a reconciled allocation.
+The 2026 annual filing readiness gate remains held.
+[Form 1040 line 1h instructions](https://www.irs.gov/instructions/i1040gi) ·
+[IRS Publication 575](https://www.irs.gov/publications/p575) ·
+[Form 1099-R instructions](https://www.irs.gov/instructions/i1099r) ·
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45979849525).
+
+## November 27 Code 3 build recovery
+
+The exact `64ca11a71` standalone build restored the encrypted sample
+workspace in a fresh macOS ARM64 Chromium context. The single
+rehearsal passed with zero retries and zero skips. It verified the
+decrypted facts, PDF bytes, display preference and all three 12-page
+review PDFs. The PDFs returned HTTP 200 and passed the private
+identifier check. The localhost listener closed after the test.
+The sanitized receipt SHA-256 is
+`323ce8f2835347dede9717aa40259468c6ebb974c2e36549cf0d3d2dae049bf2`.
+
+## November 27 Earlier native ARM64 strict run
+
+The Linux ARM64 run for `8f9bfc2d8` passed the independent image
+archive check and isolated Compose upgrade and recovery. Its overall
+result failed because strict Chromium passed 645 cases, recorded
+eight timeouts and one failure with a timeout clue, and skipped
+five existing cases. Browser cleanup passed. The affected flows
+covered Ohio reciprocal wages, resident credits, school-district
+returns and the NEW212 township example. The timing evidence SHA-256 is
+`b8ab3bc1d737f2e9f54947fd282a05e6b0d789ad013a4be795273eb00e9711de`.
+[Native workflow](https://github.com/utilityfueled/tax-engine/actions/runs/45965920531) ·
+[Timing artifact](https://github.com/utilityfueled/tax-engine/actions/runs/45965920531/artifacts/15188682807).
+
+Completed Ohio school header-entry phases took 5.285 to 6.574 seconds
+on the native Linux runner. The same source paths took 1.232 to 1.307
+seconds on macOS. These measurements cover the whole header-entry
+phase. The current source has a queued Linux managed-versus-container
+comparison to help isolate the difference.
+[Ohio comparison](https://github.com/utilityfueled/tax-engine/actions/runs/45982119919).
+
 ## November 27 Exact pension and federal receipts checks
 
 All 11 required local checks passed for the tracked application source
@@ -42,11 +135,12 @@ references and a separate 192-test engineering review passed.
 [2025 Form 1099-R instructions](https://www.irs.gov/pub/irs-prior/i1099r--2025.pdf) ·
 [Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45974961842).
 
-The filing review still needs to close a separate Code 3 timing gap.
+The later `ba45cde16` source package addresses a separate whole-period
+Code 3 timing gap.
 In a parsed 2025 original with $6,000 gross and $4,200 taxable,
-omitting the plan timing currently routes $4,200 to line 5b. The
+omitting the plan timing previously routed $4,200 to line 5b. The
 stored default is indistinguishable from an explicit older false
-answer. Resolving this requires the employer's documented minimum
+answer. The new check requires the employer's documented minimum
 retirement date and complete payment evidence for the original.
 A statement that spans both periods needs a gross and taxable
 allocation that reconciles to the original and credits withholding

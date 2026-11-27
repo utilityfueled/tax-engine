@@ -9,6 +9,15 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `ba45cde16` derives whole-period Code 3 placement from employer timing
+  bound to the actual statement. All 419 focused final tests passed.
+  Attainment-day and mixed-period originals remain held.
+  [Placement evidence](upgrade-2026-progress.md#november-27-documented-code-3-placement).
+- `64ca11a71` updated the Form 5329 review fixture with the documented
+  payment source. All 11 local checks passed across the two revisions,
+  including 31,186 unit tests, 88.64% branch coverage and 654 Chromium
+  cases on the unchanged application source.
+  [Combined checks](upgrade-2026-progress.md#november-27-exact-code-3-and-form-5329-release-checks).
 - `13e946571` requires known taxable amounts for dated 2025 non-IRA
   Code 2 and Code 3 statements. All 728 focused tests passed.
   [Pension evidence](upgrade-2026-progress.md#november-27-early-and-disability-pension-taxable-amounts).
@@ -51,15 +60,17 @@ Use the linked progress sections when investigating individual packages.
   passed. Final 2026 qualification remains open.
   [Ohio worksheet applicability](upgrade-2026-progress.md#november-27-ohio-it-nrc-worksheet-applicability).
 
-Current `c446e38bc` Linux evidence is pending in
-[AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45975311337)
-and [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45975311418).
-The ARM64 workflow shares one queue. The [active run](https://github.com/utilityfueled/tax-engine/actions/runs/45965920531)
-uses `8f9bfc2d8` and the [pending run](https://github.com/utilityfueled/tax-engine/actions/runs/45974073418)
-uses `1aea928e3`. Exact current ARM64 qualification remains open.
+Current `64ca11a71` Linux evidence is pending in
+[AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45981014261),
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45981014183)
+and [ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45982831811).
+The ARM64 queue also holds an [earlier rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/45974073418)
+for `1aea928e3`. The previous Linux ARM64 run passed image and Compose
+recovery and failed strict browser timing.
+[Earlier results](upgrade-2026-progress.md#november-27-earlier-native-arm64-strict-run).
 The standalone macOS build restored its encrypted backup into a fresh
-Chromium profile and reopened the return on `c446e38bc`.
-[Exact portable restore](upgrade-2026-progress.md#november-27-pension-and-federal-receipts-build-recovery).
+Chromium profile and reopened the return on `64ca11a71`.
+[Exact portable restore](upgrade-2026-progress.md#november-27-code-3-build-recovery).
 The [external actions](upgrade-2026-external-actions.md) record the remaining
 human, form, provider and release decisions.
 

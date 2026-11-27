@@ -1,5 +1,21 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 27 Disability pension payment periods
+
+A qualified reviewer needs to determine the treatment of a payment made
+on the employer's documented minimum retirement date and confirm
+expected outputs for an original that covers payments on both sides.
+The current engine accepts documented periods wholly before the date
+or beginning the following day. It holds attainment-day and mixed
+periods. An example for review is one original with $6,000 gross,
+$4,200 taxable and $125 withheld. The mixed case needs an actual
+gross and taxable allocation from the plan's dated payment records,
+with the combined withholding credited once. A post-retirement
+worksheet or an eligible premium election needs its own source facts
+when applicable.
+[Form 1040 instructions](https://www.irs.gov/instructions/i1040gi) ·
+[IRS Publication 575](https://www.irs.gov/publications/p575).
+
 ## November 26 Pennsylvania part-year ordinary cash dividends
 
 Independently reconcile a $120 Box 1a ordinary cash-dividend original
