@@ -8,7 +8,7 @@ import { calculateUnreportedTipPayroll } from "@/engine/forms/unreported-tip-pay
 import { calculateSchedule1A } from "@/engine/schedules/schedule-1-a.js";
 import { calculateScheduleC } from "@/engine/schedules/schedule-c.js";
 import { calculateFederalTax } from "@/engine/federal.js";
-import { simpleW2Fixture } from "../../fixtures/simple-w2.js";
+import { complexMFJFixture, simpleW2Fixture } from "../../fixtures/simple-w2.js";
 const facts = Schedule1ASchema.parse({ primarySsnEligible: true, spouseSsnEligible: true, excludedPuertoRicoIncome: "0", form4563Exclusion: "0", employeeTips: [], businessTips: [], overtime: [], vehicleLoans: [], seniorOwners: ["primary"] });
 function calculate(death: string | null | undefined, dob = "1960-02-14", year = 2025, verified = false) {
   return calculateSchedule1A({ taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: year, primary: { ...simpleW2Fixture.taxpayer.primary, dateOfBirth: dob } },
@@ -68,6 +68,55 @@ function calculateVehicleSource(loan: Record<string, unknown>, taxYear = 2026) {
     facts: vehicleSourceFacts(loan, taxYear),
   });
 }
+
+const secondVehicleLoan = {
+  ...vehicleLoan,
+  owner: "spouse",
+  lenderName: "FICTIONAL   Original Lender",
+  loanAccountReference: "Fictional LO AN",
+  sourceReference: "Another payment ledger entry",
+  vin: "1HGCM82653A004353",
+  form1098Vli: {
+    ...statement,
+    payer: "spouse",
+    lenderName: "FICTIONAL   Original Lender",
+    loanAccountReference: "Fictional LO AN",
+    sourceReference: "Another Copy B",
+    vin: "1HGCM82653A004353",
+  },
+} as const;
+
+function calculateJointVehicleSources(loans: ReturnType<typeof vehicleSourceFacts>["vehicleLoans"], year = 2026) {
+  const actualFacts = vehicleSourceFacts(vehicleLoan, 2026);
+  return calculateSchedule1A({
+    taxpayer: { ...complexMFJFixture.taxpayer, taxYear: year },
+    agi: new Decimal("50000"), foreignExcludedIncome: new Decimal("0"),
+    facts: { ...actualFacts, sourceTaxYear: year, vehicleLoans: loans },
+  });
+}
+
+it("holds a repeated actual vehicle loan account despite changed borrower and VIN", () => {
+  expect(() => calculateJointVehicleSources([vehicleLoan, secondVehicleLoan])).toThrow(/same lender and loan account/u);
+});
+
+it("retains distinct actual loans and historical vehicle interest", () => {
+  const otherAccount = {
+    ...secondVehicleLoan,
+    loanAccountReference: "loan-2",
+    form1098Vli: { ...secondVehicleLoan.form1098Vli, loanAccountReference: "loan-2" },
+  };
+  const otherLender = {
+    ...secondVehicleLoan,
+    lenderName: "Fictional originallender",
+    form1098Vli: { ...secondVehicleLoan.form1098Vli, lenderName: "Fictional originallender" },
+  };
+  expect(calculateJointVehicleSources([vehicleLoan, otherAccount]).vehicleInterestDeduction.toFixed()).toBe("1101");
+  expect(calculateJointVehicleSources([vehicleLoan, otherLender]).vehicleInterestDeduction.toFixed()).toBe("1101");
+  const historicalLoans = [vehicleLoan, secondVehicleLoan].map((loan) => ({
+    ...loan, sourceTaxYear: 2025, form1098Vli: undefined,
+  }));
+  expect(calculateJointVehicleSources(historicalLoans, 2025).vehicleInterestDeduction.toFixed()).toBe("1101");
+});
 
 function vehicleReturnInput(loan: Record<string, unknown>) {
   return TaxYearInputSchema.parse({

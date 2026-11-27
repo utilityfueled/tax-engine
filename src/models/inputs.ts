@@ -6985,6 +6985,21 @@ export const Schedule1ASchema = z.object({
   ] as const) {
     if (new Set(entries).size !== entries.length) ctx.addIssue({ code: z.ZodIssueCode.custom, path: [name], message: `Duplicate ${name} entry` });
   }
+  const loanAccounts = new Set<string>();
+  for (const [index, loan] of facts.vehicleLoans.entries()) {
+    if ((facts.sourceTaxYear ?? loan.sourceTaxYear) !== 2026 || !loan.lenderName || !loan.loanAccountReference) continue;
+    const lender = loan.lenderName.toLowerCase().replace(/\s+/gu, " ");
+    const account = loan.loanAccountReference.toLowerCase().replace(/\s+/gu, "");
+    const identity = JSON.stringify([lender, account]);
+    if (loanAccounts.has(identity)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["vehicleLoans", index, "loanAccountReference"],
+        message: "Review vehicle loan entries that use the same lender and loan account",
+      });
+    }
+    loanAccounts.add(identity);
+  }
 });
 export type Schedule1AInput = z.infer<typeof Schedule1ASchema>;
 

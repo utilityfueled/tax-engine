@@ -71,6 +71,30 @@ function vehicleStatementFacts() {
   };
   return { facts, loan, form1098Vli };
 }
+
+it("holds repeated actual vehicle loan accounts through the guided source bridge", async () => {
+  const { buildTaxInputFromGuidedData } = await import("@/lib/guided-interview-bridge");
+  const state = stateWithSources(2026);
+  const { facts, loan, form1098Vli } = vehicleStatementFacts();
+  const first = {
+    ...loan, interestPaid: "900", businessInterestDeducted: "0",
+    form1098Vli: { ...form1098Vli, reportedInterest: "900", directThirdPartyInterest: "0", reimbursedBorrowerInterest: "0" },
+  };
+  const second = {
+    ...first, lenderName: "fictional   LENDER", loanAccountReference: " LOAN- 1 ",
+    vin: "1HGCM82653A004353", sourceReference: "Another payment ledger entry",
+    form1098Vli: { ...first.form1098Vli, sourceReference: "Another Copy B" },
+  };
+  const configure = (vehicleLoans: VehicleInterestData[]) => {
+    state.sectionData["additional-deductions"] = { schedule1A: { ...facts, vehicleLoans } };
+  };
+  configure([first, { ...second, loanAccountReference: "loan-2" }]);
+  expect(buildTaxInputFromGuidedData(state)?.schedule1A?.vehicleLoans).toHaveLength(2);
+  configure([first, second]);
+  expect(() => buildSchedule1AInput({ ...facts, vehicleLoans: [first, second] }, state)).toThrow(/same lender and loan account/u);
+  expect(buildTaxInputFromGuidedData(state)).toBeNull();
+});
+
 it("routes actual 2026 Copy B and reconciles exact borrower payments", async () => {
   const state = stateWithSources(2026);
   const { facts, loan, form1098Vli } = vehicleStatementFacts();

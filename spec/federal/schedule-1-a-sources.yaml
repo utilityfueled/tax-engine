@@ -43,6 +43,18 @@ lines:
       boxes 2a–2c and box 4 principal stay on the original statement.
     irsRef: "https://www.irs.gov/pub/irs-pdf/f1098vli.pdf#page=3; https://www.irs.gov/instructions/i1098vli"
     testRef: "tests/engine/schedules/schedule-1-a-sources.test.ts::reconciles current 1098-VLI interest before applying the existing vehicle deduction"
+  - line: "vehicle-loan-account-identity"
+    description: "Hold repeated actual vehicle-loan accounts for review"
+    formula: |
+      In a 2026 actual-source worksheet, the same lender and account reference
+      identify one loan. Compare lender names without case differences or
+      repeated whitespace between words, and account references without case or
+      whitespace. Hold repeated loan identities for review even when the VIN,
+      borrower or source reference differs. Distinct accounts at one lender and
+      identical account references at distinct lenders are separate loan
+      identities. Keep existing record validation and historical calculation paths.
+    irsRef: "https://www.irs.gov/instructions/i1098vli (Account Number; Box 2d Vehicle Identification Number)"
+    testRef: "tests/engine/schedules/schedule-1-a-sources.test.ts::holds a repeated actual vehicle loan account despite changed borrower and VIN"
   - line: "form-1098-vli-limit"
     description: "Hold lender statements requiring another source or tax method"
     formula: |
