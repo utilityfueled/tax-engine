@@ -2,7 +2,7 @@
 import Decimal from 'decimal.js';
 import {calculateOhio2026ActualBalancePayment} from './oh-2026-payment-source.js';
 import {
-  OHIO_2026_PART_YEAR_BANK_INTEREST_AND_DIVIDENDS_METHOD, ohio2026BankInterestMethodByResidency,
+  ohio2026BankInterestAndDividendsMethodByResidency, ohio2026BankInterestMethodByResidency,
   ohio2026CashDividendMethodByResidency, type Ohio2026ActualBalancePaymentProjection,
 } from '@/models/ohio-2026-return-draft.js';
 import type { TaxYearInput } from '@/models/inputs.js';
@@ -78,9 +78,11 @@ export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unkno
   const { bankInterestOhioAllocation, cashDividendOhioAllocation } = actual;
   const bankInterest = bankInterestOhioAllocation !== undefined;
   const cashDividend = cashDividendOhioAllocation !== undefined;
-  const combinedInvestment = context.methodId === OHIO_2026_PART_YEAR_BANK_INTEREST_AND_DIVIDENDS_METHOD;
-  const fullYearBankInterest = context.methodId === ohio2026BankInterestMethodByResidency.full_year_resident;
-  const nonresidentBankInterest = context.methodId === ohio2026BankInterestMethodByResidency.nonresident;
+  const combinedInvestment = bankInterest && cashDividend;
+  const fullYearBankInterest = context.methodId === ohio2026BankInterestMethodByResidency.full_year_resident
+    || context.methodId === ohio2026BankInterestAndDividendsMethodByResidency.full_year_resident;
+  const nonresidentBankInterest = context.methodId === ohio2026BankInterestMethodByResidency.nonresident
+    || context.methodId === ohio2026BankInterestAndDividendsMethodByResidency.nonresident;
   const fullYearCashDividend = context.methodId === ohio2026CashDividendMethodByResidency.full_year_resident;
   const treasuryCouponDeduction = actual.treasuryCoupon ? new Decimal(actual.treasuryCoupon.deduction) : undefined;
   const ohioAgi = partYearReciprocal ? new Decimal(partYearReciprocalOhioAgi)
@@ -181,7 +183,8 @@ export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unkno
     limitations: [
       unemployment ? 'Single ordinary employee under 65 with one actual state unemployment original and a complete domicile timeline. No dependents, EITC-qualifying children, state adjustments, or other credit sources.'
         : treasuryCouponDeduction ? 'Single full-year Ohio resident and ordinary employee under 65 with one actual direct Treasury note or bond coupon and its Ohio deduction. No dependents, EITC-qualifying children, other adjustments, or other credit sources.'
-        : combinedInvestment ? 'Single part-year Ohio resident and ordinary employee under 65 with one verified bank deposit account and one verified domestic corporate cash dividend original. No dependents, EITC-qualifying children, state adjustments, or other credit sources.'
+        : context.methodId === ohio2026BankInterestAndDividendsMethodByResidency.part_year_resident ? 'Single part-year Ohio resident and ordinary employee under 65 with one verified bank deposit account and one verified domestic corporate cash dividend original. No dependents, EITC-qualifying children, state adjustments, or other credit sources.'
+        : combinedInvestment ? 'Single ordinary employee under 65 with documented full-year residence or nonresidence, one verified bank deposit account and one verified domestic corporate cash dividend original. No dependents, EITC-qualifying children, state adjustments, or other credit sources.'
         : context.methodId === ohio2026BankInterestMethodByResidency.part_year_resident ? 'Single part-year Ohio resident and ordinary employee under 65 with one actual bank deposit account. No dependents, EITC-qualifying children, state adjustments, or other credit sources.'
         : bankInterest ? 'Single ordinary employee under 65 with documented Ohio residency status and one actual bank deposit account. No dependents, EITC-qualifying children, state adjustments, or other credit sources.'
         : cashDividend ? 'Single ordinary employee under 65 with documented Ohio residency and one ordinary domestic corporate cash dividend original. No dependents, EITC-qualifying children, state adjustments, or other credit sources.'

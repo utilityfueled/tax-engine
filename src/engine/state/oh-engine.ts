@@ -1,7 +1,7 @@
 import {calculateOhio2026EarnedSchoolDraft,type Ohio2026EarnedSchoolDraftResult} from './oh-2026-earned-school-draft.js';
 import { calculateOhio2026ResidentCapitalGainDraft, type Ohio2026ResidentCapitalGainDraftResult } from './oh-2026-resident-capital-gain-draft.js';
 import { calculateOhio2026BusinessDraft, type Ohio2026BusinessDraftResult } from './oh-2026-business-draft.js';
-import { calculateOhio2026OrdinarySource, calculateOhio2026PartYearBankInterestAndDividendsSource, calculateOhio2026PartYearPaReciprocalEmployeeSource, calculateOhio2026PaReciprocalEmployeeSource, calculateOhio2026VaResidentCreditEmployeeSource } from "./oh-2026-ordinary-source.js";
+import { calculateOhio2026BankInterestAndDividendsSource, calculateOhio2026OrdinarySource, calculateOhio2026PartYearPaReciprocalEmployeeSource, calculateOhio2026PaReciprocalEmployeeSource, calculateOhio2026VaResidentCreditEmployeeSource } from "./oh-2026-ordinary-source.js";
 import { calculateOhio2026BankInterestReturnDraft, calculateOhio2026CashDividendReturnDraft, calculateOhio2026ReturnDraft, calculateOhio2026UnemploymentReturnDraft, type Ohio2026ReturnDraftResult } from "./oh-2026-return-draft.js";
 import {
   buildOhioResidentReturnInput,
@@ -14,7 +14,7 @@ import {
 import type { TaxYearInput } from "@/models/inputs.js";
 import { OHIO_2026_PA_PART_YEAR_RECIPROCAL_METHOD } from '@/models/ohio-2026-part-year-reciprocal-wage-sources.js';
 import type { TaxReturnResult } from "@/models/outputs.js";
-import { OHIO_2026_PART_YEAR_BANK_INTEREST_AND_DIVIDENDS_METHOD, OHIO_2026_UNEMPLOYMENT_EMPLOYEE_METHOD, Ohio2026BankInterestMethodSchema, Ohio2026CashDividendMethodSchema } from '@/models/ohio-2026-return-draft.js';
+import { OHIO_2026_UNEMPLOYMENT_EMPLOYEE_METHOD, Ohio2026BankInterestAndDividendsMethodSchema, Ohio2026BankInterestMethodSchema, Ohio2026CashDividendMethodSchema } from '@/models/ohio-2026-return-draft.js';
 
 export { calculateOhio2026RefundableJobsCreditDraft } from './oh-2026-refundable-jobs-credit-draft.js';
 export { calculateOhio2026TraditionalSchoolDraft } from './oh-2026-traditional-school-draft.js';
@@ -52,8 +52,8 @@ export function calculateOhio2026ReturnDraftFromSources(input: { taxInput: TaxYe
   if (method === OHIO_2026_UNEMPLOYMENT_EMPLOYEE_METHOD) return calculateOhio2026UnemploymentReturnDraft(input.taxInput, input.sources);
   if (Ohio2026BankInterestMethodSchema.safeParse(method).success) return calculateOhio2026BankInterestReturnDraft(input.taxInput, input.sources);
   if (Ohio2026CashDividendMethodSchema.safeParse(method).success) return calculateOhio2026CashDividendReturnDraft(input.taxInput, input.sources);
-  if (method === OHIO_2026_PART_YEAR_BANK_INTEREST_AND_DIVIDENDS_METHOD) {
-    const context = calculateOhio2026PartYearBankInterestAndDividendsSource(input.taxInput, input.sources);
+  if (Ohio2026BankInterestAndDividendsMethodSchema.safeParse(method).success) {
+    const context = calculateOhio2026BankInterestAndDividendsSource(input.taxInput, input.sources);
     return calculateOhio2026ReturnDraft(input.taxInput, input.sources, context);
   }
   if (method === OHIO_2026_PA_PART_YEAR_RECIPROCAL_METHOD) {

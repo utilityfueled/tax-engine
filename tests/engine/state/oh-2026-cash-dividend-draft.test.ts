@@ -3,6 +3,8 @@ import { calculateOhio2026ReturnDraftFromSources } from '@/engine/state/oh-engin
 import { Form1099DivSchema, Form1099IntSchema } from '@/models/inputs.js';
 import { ohio2026OrdinaryFixture, rebindOhio2026Ordinary } from '../../fixtures/oh-2026-ordinary-return.js';
 
+// Spec: state/oh-2026-return-draft.yaml#full-year-and-nonresident-ordinary-interest-and-dividends
+
 const scenarios = {
   full_year_resident: { method: 'full-year', declaration: 'full-year', ohioWages: '50000', allocation: '4000', ratio: '0.0000', credit: '0', tax: '1042', refund: '208' },
   part_year_resident: { method: 'part-year', declaration: 'part-year', ohioWages: '30000', allocation: '1000', ratio: '0.4259', credit: '444', tax: '598', refund: '402' },
@@ -102,6 +104,54 @@ function matchAccountReferences(packet: Packet, accountReference: string) {
 }
 
 describe('Ohio 2026 private ordinary cash dividend draft', () => {
+  const fullYearCombinedScenarios = [
+    ['full_year_resident', '0.0000', '0', '1152', '98'],
+    // IT NRC truncates $48,001 outside Ohio / $58,001 to four decimal places.
+    ['nonresident', '0.8275', '953', '199', '801'],
+  ] as const;
+
+  it.each(fullYearCombinedScenarios)('calculates both exact ordinary investment originals for %s', (status, ratio, credit, tax, refund) => {
+    const packet = combinedInvestmentFixture(status);
+    packet.sources.methodId = `oh-2026-${scenarios[status].method}-bank-interest-and-cash-dividend-employee-draft-v1`;
+    packet.form.ordinaryDividends = packet.bankForm.interestIncome = '4000.25';
+    packet.original.credits[1].amount = packet.sources.bankInterestOriginal.credits[1].amount = '1000.25';
+    packet.allocation.federalAmount = '8000.50';
+    packet.allocation.residentAmount = status === 'full_year_resident' ? '8000.50' : '0';
+    rebindOhio2026Ordinary(packet);
+    const before = JSON.stringify(packet);
+    const result = run(packet);
+    expect(result).toMatchObject({ ruleVersion: packet.sources.methodId, calculationStatus: 'incomplete', reviewStatus: 'independent-review-pending', filingQualified: false });
+    expect(result.federalAgi.toFixed()).toBe('58001');
+    expect(result.ohioAgi.toFixed()).toBe('58001');
+    for (const lineId of ['ohio-bank-interest', 'ohio-ordinary-cash-dividends']) {
+      expect(result.lines.find(({ line }) => line === lineId)?.value.toFixed()).toBe(status === 'full_year_resident' ? '4000.25' : '0');
+    }
+    const nrcLines = result.lines.filter(({ form }) => form === 'OH-IT-NRC');
+    expect(nrcLines.some(({ line }) => line === '20')).toBe(status === 'nonresident');
+    expect(nrcLines.some(({ line }) => /^1[0-5]$/.test(line))).toBe(false);
+    expect(result.nonresidentRatio.toFixed(4)).toBe(ratio);
+    expect(result.nonresidentCredit.toFixed()).toBe(credit);
+    expect(result.incomeTax.toFixed()).toBe(tax);
+    expect(result.refund.toFixed()).toBe(refund);
+    expect(JSON.stringify(packet)).toBe(before);
+  });
+
+  it.each(['full_year_resident', 'nonresident'] as const)('rejects conflicting combined residency, ownership or income evidence for %s', (status) => {
+    const conflicting = combinedInvestmentFixture('part_year_resident');
+    conflicting.sources.methodId = `oh-2026-${scenarios[status].method}-bank-interest-and-cash-dividend-employee-draft-v1`;
+    expect(() => run(conflicting)).toThrow(/method and confirmed primary domicile differ/);
+
+    const packet = combinedInvestmentFixture(status);
+    packet.sources.methodId = conflicting.sources.methodId;
+    const ownerSsn = packet.original.recipient.ssn;
+    packet.original.recipient.ssn = '987-65-4321';
+    expect(() => run(packet)).toThrow(/actual Form 1099-DIV recipient, payer or account differs/);
+    packet.original.recipient.ssn = ownerSsn;
+    packet.input.scheduleC = { businessName: 'Actual Ohio business', grossReceipts: '100.25' };
+    rebindOhio2026Ordinary(packet);
+    expect(() => run(packet)).toThrow(/retained other originals require their separate actual method/);
+  });
+
   it('combines independently matched bank interest and cash dividends on the part-year Ohio draft', () => {
     const packet = combinedInvestmentFixture();
     const before = JSON.stringify(packet);

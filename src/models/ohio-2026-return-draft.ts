@@ -163,13 +163,18 @@ export const Ohio2026CashDividendEmployeeSourcesSchema = Ohio2026OrdinarySources
 }).strict();
 export type Ohio2026CashDividendEmployeeSources = z.infer<typeof Ohio2026CashDividendEmployeeSourcesSchema>;
 
-/** Both current investment originals are required by this distinct part-year method. */
-export const OHIO_2026_PART_YEAR_BANK_INTEREST_AND_DIVIDENDS_METHOD = 'oh-2026-part-year-bank-interest-and-cash-dividend-employee-draft-v1';
-export const Ohio2026PartYearBankInterestAndDividendsSourcesSchema = Ohio2026BankInterestEmployeeSourcesSchema.extend({
-  methodId: z.literal(OHIO_2026_PART_YEAR_BANK_INTEREST_AND_DIVIDENDS_METHOD),
+/** Both current originals are required by each distinct combined investment method. */
+export const ohio2026BankInterestAndDividendsMethodByResidency = {
+  full_year_resident: 'oh-2026-full-year-bank-interest-and-cash-dividend-employee-draft-v1',
+  part_year_resident: 'oh-2026-part-year-bank-interest-and-cash-dividend-employee-draft-v1',
+  nonresident: 'oh-2026-nonresident-bank-interest-and-cash-dividend-employee-draft-v1',
+} as const;
+export const Ohio2026BankInterestAndDividendsMethodSchema = z.enum(ohio2026BankInterestAndDividendsMethodByResidency);
+export const Ohio2026BankInterestAndDividendsSourcesSchema = Ohio2026BankInterestEmployeeSourcesSchema.extend({
+  methodId: Ohio2026BankInterestAndDividendsMethodSchema,
   cashDividendOriginal: Ohio2026CashDividendEmployeeSourcesSchema.shape.cashDividendOriginal,
 });
-export type Ohio2026PartYearBankInterestAndDividendsSources = z.infer<typeof Ohio2026PartYearBankInterestAndDividendsSourcesSchema>;
+export type Ohio2026BankInterestAndDividendsSources = z.infer<typeof Ohio2026BankInterestAndDividendsSourcesSchema>;
 
 /** Separate current documentary method; ordinary packets keep their strict schema. */
 export const Ohio2026PaReciprocalSourcesSchema = Ohio2026OrdinarySourcesSchema.omit({ seniorCreditHistory: true }).extend({
