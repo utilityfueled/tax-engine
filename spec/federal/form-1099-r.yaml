@@ -346,6 +346,28 @@ lines:
     testRefs:
       - "tests/engine/federal-pension-box2a-2025.test.ts::reports known survivor pension amounts and a supported Simplified Method"
 
+  - line: "2025-box2a-early-disability"
+    description: "Require the known taxable amount for dated non-IRA Code 2 and Code 3 income"
+    formula: >-
+      A positive distribution on a dated 2025 original with the IRA/SEP/SIMPLE
+      box recorded unchecked and standalone Code 2 or Code 3 requires an
+      actual Box 2a amount or an existing supported taxable-amount method.
+      When Box 2a is blank, preserve that unknown for checked, unchecked, and
+      unknown Box 2b answers. Do not infer the taxable amount from Box 1 or
+      Box 5. Preserve explicit zero, federal withholding, and the separate
+      Code 3 placement of admitted amounts before minimum retirement age on
+      line 1h and at or after it on lines 5a and 5b. The guard does not change
+      the existing eligibility to use a worksheet or the other code paths.
+    irsRef: >-
+      2025 Form 1040 instructions, line 1h and lines 5a and 5b
+      (https://www.irs.gov/pub/irs-prior/i1040gi--2025.pdf#page=25);
+      2025 Instructions for Forms 1099-R and 5498, Boxes 2a, 2b, 5 and
+      Box 7 Codes 2 and 3 (https://www.irs.gov/pub/irs-prior/i1099r--2025.pdf).
+    testRef: "tests/engine/federal-pension-box2a-2025.test.ts::holds a dated 2025 $name with no amount or supported method"
+    testRefs:
+      - "tests/engine/federal-pension-box2a-2025.test.ts::reports known amounts in the existing lines for a dated 2025 $name"
+      - "tests/engine/federal-pension-box2a-2025.test.ts::uses a complete dated Code 2 Simplified Method worksheet"
+
   - line: "2026-pension-source"
     description: "Form 1040 Lines 1h, 5a and 5b require known non-IRA distribution sources for tax year 2026"
     formula: >-

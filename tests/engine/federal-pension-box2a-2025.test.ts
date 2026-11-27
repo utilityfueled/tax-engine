@@ -1,4 +1,4 @@
-// Spec: spec/federal/form-1099-r.yaml, 2025-box2a-ordinary and 2025-box2a-survivor.
+// Spec: spec/federal/form-1099-r.yaml, 2025-box2a-ordinary, 2025-box2a-survivor, 2025-box2a-early-disability.
 import { expect, it } from "vitest";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { calculateForm1099R, getForm1099RTaxabilitySource } from "@/engine/forms/form-1099-r.js";
@@ -40,6 +40,55 @@ function line(result: ReturnType<typeof calculateFederalTax>, form: string, id: 
 
 const missingWorksheet = "2025 Form 1099-R pension with checked Box 2b and missing Box 2a requires a supported taxable-amount worksheet";
 const survivor = { ...scenarios[1], code: "4" };
+const earlyOrDisabilityPensions = [
+  { name: "Code 2 early pension", scenario: { ...scenarios[0], code: "2" }, beforeMinimumRetirementAge: false },
+  { name: "Code 3 disability pension before minimum retirement age", scenario: { ...scenarios[0], code: "3" }, beforeMinimumRetirementAge: true },
+  { name: "Code 3 disability pension at or after minimum retirement age", scenario: { ...scenarios[1], code: "3" }, beforeMinimumRetirementAge: false },
+];
+
+it.each(earlyOrDisabilityPensions)("holds a dated 2025 $name with no amount or supported method", ({ scenario, beforeMinimumRetirementAge }) => {
+  for (const taxableAmountNotDetermined of [true, false, undefined]) {
+    for (const employeeContributions of [undefined, "1200"]) {
+      const input = parsed(scenario, {
+        taxableAmountNotDetermined, employeeContributions,
+        disabilityPensionBeforeMinimumRetirementAge: beforeMinimumRetirementAge,
+      });
+      expect(input.form1099R?.[0]?.taxableAmount).toBeUndefined();
+      expect(input.form1099R?.[0]?.taxableAmountNotDetermined).toBe(taxableAmountNotDetermined);
+      expect(() => calculateFederalTax(input)).toThrow(`Code ${scenario.code} pension requires the actual Box 2a`);
+    }
+  }
+});
+
+it.each(earlyOrDisabilityPensions)("reports known amounts in the existing lines for a dated 2025 $name", ({ scenario, beforeMinimumRetirementAge }) => {
+  for (const taxableAmount of ["4200", "0"]) {
+    const input = parsed(scenario, {
+      taxableAmount, taxableAmountNotDetermined: false,
+      disabilityPensionBeforeMinimumRetirementAge: beforeMinimumRetirementAge,
+    });
+    const result = calculateFederalTax(input);
+    expect(line(result, "1040", "1h") ?? "0").toBe(beforeMinimumRetirementAge ? taxableAmount : "0");
+    expect(line(result, "1040", "5a")).toBe(beforeMinimumRetirementAge ? "0" : "6000");
+    expect(line(result, "1040", "5b")).toBe(beforeMinimumRetirementAge ? "0" : taxableAmount);
+    expect(line(result, "1040", "25b")).toBe("125");
+    expect(line(result, "Form 5329", "4") ?? "0").toBe("0");
+  }
+});
+
+it("uses a complete dated Code 2 Simplified Method worksheet", () => {
+  const { scenario } = earlyOrDisabilityPensions[0];
+  const input = parsed(scenario, {
+    simplifiedMethodCostInPlan: scenario.costInPlan,
+    simplifiedMethodAnnuityStartingDate: "2025-01-15",
+    simplifiedMethodPrimaryAnnuitantAgeAtStartingDate: scenario.age,
+    simplifiedMethodPaymentsReceivedThisYear: 12,
+    simplifiedMethodPriorYearRecovered: "0",
+  });
+  const result = calculateFederalTax(input);
+  expect(line(result, "1040", "5a")).toBe("6000");
+  expect(line(result, "1040", "5b")).toBe("4800");
+  expect(line(result, "1040", "25b")).toBe("125");
+});
 
 it("holds dated 2025 survivor pension taxability when no amount or supported method is supplied", () => {
   for (const taxableAmountNotDetermined of [true, false, undefined]) {

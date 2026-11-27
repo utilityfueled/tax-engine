@@ -377,12 +377,17 @@ export function calculateForm1099R(
       const box2b = form.taxableAmountNotDetermined;
       const ordinaryPensionNeedsAmount = (code === "1" || code === "7")
         && (box2b === true || (box2b === false && !d(form.employeeContributions).gt(0)));
-      return (code === "4" || ordinaryPensionNeedsAmount)
+      const sourceRequiresKnownAmount = code === "2" || code === "3" || code === "4";
+      return (sourceRequiresKnownAmount || ordinaryPensionNeedsAmount)
         && resolveTaxableAmountBeforeQcdSource(form).source === "historical-preview";
     });
     if (unresolvedPension) {
-      if (unresolvedPension.distributionCode?.trim() === "4") {
+      const code = unresolvedPension.distributionCode?.trim();
+      if (code === "4") {
         throw new Error("2025 Form 1099-R Code 4 survivor pension requires the actual Box 2a or a supported taxable-amount worksheet");
+      }
+      if (code === "2" || code === "3") {
+        throw new Error(`2025 Form 1099-R Code ${code} pension requires the actual Box 2a or a supported taxable-amount worksheet`);
       }
       throw new Error(unresolvedPension.taxableAmountNotDetermined
         ? "2025 Form 1099-R pension with checked Box 2b and missing Box 2a requires a supported taxable-amount worksheet"
