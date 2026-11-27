@@ -14,13 +14,34 @@ after correction. A clean archive with an offline frozen installation passed
 all eight static checks, the production web build and 237 tests across the
 three new calculation and billing areas. Unit and coverage runs each passed
 31,198 tests with 81 existing skips. Branch coverage was 88.64%. All 15 official
-sample files matched their recorded hashes. A standalone self-host rehearsal in
-Chromium restored the original file bytes and private saved answers after
-deletion and reload. The test listener closed after the check.
+sample files matched their recorded hashes. All 11 required local checks passed.
+Chromium passed 654 cases in nine standard windows with five existing skips.
+A separate standalone self-host rehearsal restored original file bytes and
+private saved answers after deletion and reload. Both local test listeners
+closed. The exact result manifest SHA-256 is
+`77f3405990e223ff532363647b2d9d01819aa0bf41043fa0080cfb1a374a34be`.
 [IRS Schedule A line 8b](https://www.irs.gov/instructions/i1040sca) ·
 [Current CI](https://github.com/utilityfueled/tax-engine/actions/runs/45987981813) ·
 [Current AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45987981913) ·
 [Current Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45987981858).
+
+At 11:50 UTC, the current CI, AMD64 Web and Docker jobs were queued. The
+previous AMD64 job for `64ca11a71` passed its managed browser job. The browser
+check against the actual runtime image reached two 30-second deadlines while
+the desktop Ohio part-year school cases waited for the filing rejection request.
+The logs establish the deadline location. Timing attribution is still open.
+The Ohio comparison and earlier ARM64 rehearsal are running.
+[Previous AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45981014261) ·
+[Ohio timing comparison](https://github.com/utilityfueled/tax-engine/actions/runs/45982119919) ·
+[Earlier ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/45974073418).
+
+The final annual Form 1040 endpoint and Pennsylvania's return page still show
+2025. The 2026 federal Form 1040 and Ohio return booklet remain draft. Final
+2026 Schedules C, R, SE and 8812 are already recorded in the form inventory.
+[IRS final Form 1040 endpoint](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[IRS 2026 draft](https://www.irs.gov/pub/irs-dft/f1040--dft.pdf) ·
+[Pennsylvania annual return page](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
+[Ohio 2026 draft booklet](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf).
 
 ## November 27 Form 1099-R disability code combinations
 
