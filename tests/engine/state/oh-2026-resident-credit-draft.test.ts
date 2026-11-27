@@ -1,4 +1,4 @@
-/** Spec: spec/state/oh-2026-resident-credit-draft.yaml. Literal expectations precede implementation. */
+/** Specs: spec/state/oh-2026-resident-credit-draft.yaml and oh-2026-return-draft.yaml. */
 import Decimal from 'decimal.js';
 import { describe, expect, it } from 'vitest';
 import { calculateOhio2026ReturnDraftFromSources } from '@/engine/state/oh-engine.js';
@@ -17,6 +17,29 @@ const owner = (p: Packet) => current(current(p.input.ohioResidency).owners[0]);
 const receipt = (p: Packet) => current(credit(p).completedAccount.payments[0]);
 const filed = (p: Packet) => credit(p).filedReturn;
 const account = (p: Packet) => credit(p).completedAccount;
+
+it.each(['part-year', 'nonresident'] as const)('rejects a conflicting Ohio declaration on the Virginia resident-credit draft: %s', declaration => {
+  const p = ohio2026VaResidentCreditFixture();
+  p.input.taxpayer.stateResidency = declaration;
+  rebindOhio2026VaResidentCredit(p);
+  expect(owner(p).status).toBe('full_year_resident');
+  expect(() => run(p)).toThrow(/declared Ohio residency conflicts with the primary taxpayer's confirmed domicile records/i);
+});
+
+it('preserves the recorded Ohio domicile with a matching or omitted declaration', () => {
+  for (const declaration of ['full-year', undefined] as const) {
+    const p = ohio2026VaResidentCreditFixture();
+    if (declaration !== undefined) p.input.taxpayer.stateResidency = declaration;
+    rebindOhio2026VaResidentCredit(p);
+    const before = JSON.stringify(p);
+    const result = run(p);
+    expect(result.residentCredit.toFixed()).toBe('1000');
+    expect(result.incomeTax.toFixed()).toBe('1313');
+    expect(result.filingQualified).toBe(false);
+    expect(JSON.stringify(p)).toBe(before);
+  }
+});
+
 const cases = [
   ['liability-not-gross-WH', '100000', '60000', '1000', '2000', '2313', '0', '1000', '1313', '687'],
   ['Ohio-cap', '100000', '60000', '1800', '2000', '2313', '0', '1388', '925', '1075'],

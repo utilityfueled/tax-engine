@@ -1115,7 +1115,7 @@
     "src/engine/state/oh-2026-earned-school-draft.ts": "b0f156da5598e8d75f41525225e778f5df7837ee46be41c2eb1da83744d18122",
     "src/engine/state/oh-2026-farmer-fisher-estimated-tax.ts": "26a46c32570688d1702deb5df0cdc724300632ddae90ea32110e9693c19ce2fa",
     "src/engine/state/oh-2026-ordinary-estimated-tax.ts": "d85d2efd07474fd40e06ef64e04a1a9e9214543c8f7d8f3d1f729440dfe3ceec",
-    "src/engine/state/oh-2026-ordinary-source.ts": "d2b32ae7a3070627ae67b39f66f2526422f15aeccec3c73416b83610fc79e7f5",
+    "src/engine/state/oh-2026-ordinary-source.ts": "7a1cd5b2da1da3fc83b1f758d509457531555e0aee242b40c457cb5f112dc109",
     "src/engine/state/oh-2026-payment-source.ts": "e1d207f139015818e4f9054542ae53d92379caf60b422a6cdec6683954d6eec1",
     "src/engine/state/oh-2026-qualifying-capital-gain-draft.ts": "2875f7a37623900e2ecbef2f70441236227f8ae9f9361820a05be4be7f534274",
     "src/engine/state/oh-2026-reciprocal-source.ts": "a840059f227a5385b2fc6c9491d650b52ab89d98beea6c8976fa9a4d28268ff0",

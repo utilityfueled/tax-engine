@@ -304,11 +304,14 @@ lines:
   - line: "primary-residency-declaration"
     description: "Reconcile the 2026 primary taxpayer's Ohio declaration with the confirmed Ohio domicile record"
     formula: |
-      In the selected Ohio guide and private ordinary wage-only and Box 1
-      unemployment employee drafts, reconcile any explicit 2026 primary
-      declaration with the same owner's source status after validating the
-      domicile timeline. Reject a conflict for any of the
-      three statuses during confirmation and replay. In the 2026 guide, display
+      In the selected Ohio guide and private ordinary wage-only, Box 1
+      unemployment, and Virginia resident-credit employee drafts, reconcile
+      any explicit 2026 primary declaration with the same owner's source status
+      after validating the domicile timeline. The Virginia resident-credit
+      cohort requires actual full-year Ohio domicile. An explicit part-year or
+      nonresident Ohio declaration holds that draft for reconciliation. Reject
+      a conflict for any of the three statuses during confirmation and replay.
+      In the 2026 guide, display
       a review alert and withhold current confirmation for a conflicting
       declaration, absent or mismatched return year, or stale retained originals.
       Keep prior confirmation as historical evidence and require an explicit
@@ -321,6 +324,7 @@ lines:
       or filing.
     sources:
       - "https://codes.ohio.gov/ohio-revised-code/section-5747.01"
+      - "https://codes.ohio.gov/ohio-revised-code/section-5747.05"
       - "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
     testRef: "tests/guided-interview/guided-ohio-residency.test.ts::rejects a 2026 primary Ohio residency conflict at confirmation and after reopening %s"
     testRefs:
@@ -328,6 +332,8 @@ lines:
       - "tests/engine/state/oh-2026-return-draft.test.ts::reconciles the primary declaration against the ordinary Ohio draft for %s"
       - "tests/engine/state/oh-2026-return-draft.test.ts::permits a separate spouse domicile on the ordinary Ohio joint draft"
       - "tests/engine/state/oh-2026-unemployment-draft.test.ts::reconciles the primary declaration against the ordinary Ohio unemployment draft for %s"
+      - "tests/engine/state/oh-2026-resident-credit-draft.test.ts::rejects a conflicting Ohio declaration on the Virginia resident-credit draft: %s"
+      - "tests/engine/state/oh-2026-resident-credit-draft.test.ts::preserves the recorded Ohio domicile with a matching or omitted declaration"
       - "tests/apps/web/ohio-residency-interactions.test.tsx::shows a retained Ohio residency conflict until the current declaration is reconciled and reconfirmed"
   - line: "AGI"
     description: "Ordinary employee federal and Ohio AGI"
