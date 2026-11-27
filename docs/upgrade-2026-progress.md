@@ -8,12 +8,39 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `183535fb2` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. Exact combined checks are running on `f5493bdc8`. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `183535fb2` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. `f5493bdc8` passed unit and coverage checks and had three stale browser assertions. The corrected exact candidate `a1d7cb0b` is running. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
+
+## November 27 guided commercial vehicle and deduction browser evidence
+
+`8ed502728` connects the guided interview to the verified first-year §45W
+workpaper for one business van. The import reads structured JSON locally.
+The taxpayer saves it and separately confirms it against the matched
+vehicle, owner, activity and cash-ledger records. Reopening discards a
+malformed workpaper and its confirmation while retaining the vehicle and
+ledger. Independent engineering review reproduced the saved-draft defect
+and verified the fix. The bounded synthetic calculation produced $19,000
+in depreciation, $160,000 Schedule C profit, $8,340 tentative minimum tax
+and a $6,000 Schedule 3 credit. The public 2026 calculation and filing gates
+remain closed. [IRS Form 8936 instructions](https://www.irs.gov/instructions/i8936)
+and [IRS Form 4562 instructions](https://www.irs.gov/instructions/i4562).
+
+The exact application revision passed 453 focused tests and all eight
+static checks, including 10,306 spec references and the production web build.
+Physical Chromium at 1280 px and 390 px verified invalid file rejection,
+local import, explicit confirmation, reopening and removal. The isolated
+local listener closed. `a1d7cb0b` updates the three deduction assertions
+that failed in `f5493bdc8`, using exact $15,750 Single and $31,500 joint
+2025 amounts. It also verifies clearing the year and reopening with the
+2026 $16,100 Single amount and the qualification notice. All 36 deductions
+and credits browser tests passed against the preceding production bundle
+with the same deduction implementation. The corrected exact candidate
+passed 60 focused tests and eight static checks. Its combined check is
+running. [IRS Revenue Procedure 2025-32](https://www.irs.gov/irb/2025-45_IRB).
 
 ## November 27 private Schedule R physical proof
 

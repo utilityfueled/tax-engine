@@ -3,9 +3,10 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "183535fb25e1559d4acbb62d208e32c4b30e1a4d",
-    "latestScopedApplicationCommit": "29100a24a250697f9c874f1ce357d119f629900e",
-    "latestCombinedCandidateCommit": "183535fb25e1559d4acbb62d208e32c4b30e1a4d",
-    "latestScopedChecksEvidenceKey": "activeContinuation.nov27PrivateScheduleRPhysicalProof",
+    "latestScopedApplicationCommit": "8ed5027281dfb29d6b435d7d1648650d0da162b2",
+    "latestCombinedCandidateCommit": "a1d7cb0bcb80ee9275667d2d5aa1613f025d504b",
+    "latestScopedChecksEvidenceKey": "activeContinuation.nov27GuidedCommercialWorkpaper",
+    "nov27DeductionBrowserYearEvidenceKey": "activeContinuation.nov27DeductionBrowserYear",
     "latestOfflineAiEvidenceKey": "activeContinuation.nov27OfflineAiQualificationRecheck",
     "latestLocalArm64CapacityEvidenceKey": "activeContinuation.nov27LocalArm64CapacityRecheck",
     "nov27PaymentReceiptsAndForm8863EvidenceKey": "activeContinuation.nov27PaymentReceiptsAndForm8863",
@@ -196,6 +197,60 @@
     ]
   },
   "activeContinuation": {
+    "nov27GuidedCommercialWorkpaper": {
+      "commit": "8ed5027281dfb29d6b435d7d1648650d0da162b2",
+      "verifiedTree": "2e2237114e4d1e84c3cf2b231428e0fdcb12190c",
+      "exactArchiveSha256": "afa7b79670dcd43841c5780e81c0fb5d8aff30fe799fdcf00dae919899a6b94e",
+      "primarySources": [
+        "https://www.irs.gov/instructions/i8936",
+        "https://www.irs.gov/instructions/i4562"
+      ],
+      "exactFocusedTestsPassed": 453,
+      "exactTreeChecksPassed": [
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
+      "repositorySpecReferencesValidated": 10306,
+      "independentEngineeringReviewPassed": true,
+      "archivedExactProductionBuildPassed": true,
+      "physicalChromiumSyntheticUploadViewports": [
+        1280,
+        390
+      ],
+      "physicalChromiumReceiptSha256": "dce3583e4aae04af782a20016acafbb0f6459dd7545a2a005efbebfa30d4aabc",
+      "physicalChromiumListenerClosed": true,
+      "savedReplayDropsMalformedWorkpaperAndConfirmation": true,
+      "independentTaxHumanReviewPassed": false,
+      "filingQualified": false
+    },
+    "nov27DeductionBrowserYear": {
+      "commit": "a1d7cb0bcb80ee9275667d2d5aa1613f025d504b",
+      "verifiedTree": "f9d232398a9aba8c56dcd454ecd4a20950ecdf17",
+      "exactArchiveSha256": "884745fd75e43163a60292750e346f4caf2593ac30686b55fdcfe8098ce2485c",
+      "primarySource": "https://www.irs.gov/irb/2025-45_IRB",
+      "predecessorBrowserStaleAssertionFailures": 3,
+      "precedingProductionBuildChromiumTestsPassed": 36,
+      "exactFocusedTestsPassed": 60,
+      "exactTreeChecksPassed": [
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
+      "repositorySpecReferencesValidated": 10306,
+      "combinedLocalChecks": "running",
+      "filingQualified": false
+    },
     "nov27PrivateScheduleRPhysicalProof": {
       "commit": "29100a24a250697f9c874f1ce357d119f629900e",
       "verifiedTree": "3be4635cefc8c3ebc0287308f806e52bae695eb5",
@@ -251,7 +306,9 @@
       "runnerlessRemoteChecks": {"ci": 46081627667, "amd64Web": 46081627592, "docker": 46081627726},
       "exactUnitTestsPassed": 31414,
       "exactUnitTestsSkipped": 83,
-      "combinedLocalChecks": "running",
+      "exactBranchCoveragePercent": "88.73",
+      "browserStaleDeductionAssertionFailures": 3,
+      "combinedLocalChecks": "unit and coverage passed; combined browser had three stale assertions",
       "qualifiedHumanReviewPassed": false,
       "filingQualified": false
     },
