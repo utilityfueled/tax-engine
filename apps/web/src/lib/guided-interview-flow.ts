@@ -71,7 +71,7 @@ import { studentLoanFactErrors, studentLoanEducationSources, type StudentLoanDat
 import Decimal from "decimal.js";
 import { sumSourceMoney } from "@/utils/sum-source-money";
 import { parseGuidedCurrency, hasGuidedCurrency, parseGuidedDisplayAmount } from "./guided-currency";
-import { personalFactErrors } from "./guided-taxpayer-facts";
+import { clearGuidedDependentAnnualFacts, invalidateEditedDependentOriginals, personalFactErrors } from "./guided-taxpayer-facts";
 import type { EicClaimantEligibilityData } from "./guided-eic-eligibility";
 import { eicHistorySourceValuesChanged, invalidateEicHistorySources } from "./guided-eic-disallowance-history";
 import { allPaymentFactErrors, currentLocalCivilDate, deductionAmountYearErrors, deductionFactErrors, directItemizedAmountFields, educationFactErrors, guidedAmountChanged, guidedDonationValue, hasEnteredAmount, normalizeFederalPaymentReceiptReference, retirementFactErrors } from "./guided-required-facts";
@@ -1885,15 +1885,7 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
             } } : {}),
           } : {}),
           ...(personal.dependents?.length ? {
-            dependents: personal.dependents.map(dependent => ({
-              ...dependent,
-              monthsLivedWithYou: "",
-              qualifiesForCTC: null,
-              qualifiesForODC: null,
-              qualifiesForEIC: null,
-              ctcSsnEligible: null,
-              odcTinEligible: null,
-            })),
+            dependents: personal.dependents.map(clearGuidedDependentAnnualFacts),
           } : {}),
         },
       } : {}),
@@ -2560,7 +2552,9 @@ export function updateSectionData(
   data: unknown,
 ): GuidedFlowState {
   if (sectionId === "personal-info" && data) {
-    data = invalidateEditedShortAccountingPeriod(state.sectionData["personal-info"], data as PersonalInfoData, state.segmentation.filingStatus, state.taxYear);
+    const previous = state.sectionData["personal-info"];
+    const next = invalidateEditedShortAccountingPeriod(previous, data as PersonalInfoData, state.segmentation.filingStatus, state.taxYear);
+    data = state.taxYear === 2026 ? invalidateEditedDependentOriginals(previous, next) : next;
   }
   if (sectionId === "payments" && data && state.taxYear === 2026) {
     const previous = state.sectionData.payments;

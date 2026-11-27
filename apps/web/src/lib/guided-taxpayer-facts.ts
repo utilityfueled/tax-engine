@@ -13,6 +13,66 @@ export function isResidencyMonths(value: string | undefined): boolean {
   return typeof value === "string" && /^(?:[0-9]|1[0-2])$/.test(value);
 }
 
+function clearDependentCreditEligibility(entry: DependentEntryData): DependentEntryData {
+  return { ...entry, qualifiesForCTC: null, qualifiesForODC: null, qualifiesForEIC: null };
+}
+
+export function clearGuidedDependentAnnualFacts(entry: DependentEntryData): DependentEntryData {
+  return { ...clearDependentCreditEligibility(entry), monthsLivedWithYou: "", ctcSsnEligible: null, odcTinEligible: null };
+}
+
+function hasOriginalBlankDependentIdentifier(personal: PersonalInfoData, entry: DependentEntryData, index: number): boolean {
+  return allowsBlankEicChildIdentifier(personal.eicSeparatedSpouseSources, entry, index)
+    || allowsBlankForm8862ChildIdentifier(personal.eicRecertificationSources, entry, index);
+}
+
+function dependentIdentity(entry: DependentEntryData) {
+  const firstName = entry.firstName?.trim().replace(/\s+/g, " ").toLowerCase();
+  const lastName = entry.lastName?.trim().replace(/\s+/g, " ").toLowerCase();
+  const tin = hasTaxId(entry.ssn) ? entry.ssn.replaceAll("-", "") : undefined;
+  return {
+    tin, key: JSON.stringify([tin ?? entry.ssn, firstName, lastName, entry.dateOfBirth]),
+    complete: !!firstName && !!lastName && isActualBirthDate(entry.dateOfBirth, 2026) && (tin !== undefined || entry.ssn === ""),
+    entered: !!(firstName || lastName || entry.ssn || entry.dateOfBirth),
+  };
+}
+
+export function invalidateEditedDependentOriginals(previous: PersonalInfoData | undefined, next: PersonalInfoData): PersonalInfoData {
+  const entries = next.dependents;
+  if (!previous?.dependents?.length || !entries?.length) return next;
+  const before = previous.dependents.map((entry, index) => {
+    const identity = dependentIdentity(entry);
+    const established = identity.complete && (identity.tin !== undefined || hasOriginalBlankDependentIdentifier(previous, entry, index));
+    return { ...identity, entry, established };
+  });
+  const originals = before.filter(identity => identity.established);
+  const initialKeys = new Set(before.filter(identity => !identity.established).map(identity => identity.key));
+  const updated = entries.map(dependentIdentity);
+  const retainedKeys = new Set(updated.filter(identity => identity.complete).map(identity => identity.key));
+  const displaced = originals.filter(original => !retainedKeys.has(original.key));
+
+  const reviewed = entries.map((entry, index): DependentEntryData => {
+    const identity = updated[index];
+    const match = originals.find(original => original.key === identity.key);
+    if (match) {
+      const original = match.entry;
+      const relationshipChanged = !!original.relationship && original.relationship !== entry.relationship;
+      const residenceChanged = isResidencyMonths(original.monthsLivedWithYou) && original.monthsLivedWithYou !== entry.monthsLivedWithYou;
+      return relationshipChanged || residenceChanged ? clearDependentCreditEligibility(entry) : entry;
+    }
+    const sameTin = identity.tin ? originals.find(original => original.tin === identity.tin) : undefined;
+    if (!sameTin && (!displaced.length || !identity.entered || initialKeys.has(identity.key))) return entry;
+
+    // Clear a copied relationship before a partial edit can lose its original identity anchor.
+    const copiedRelationship = sameTin
+      ? !identity.complete && sameTin.entry.relationship === entry.relationship
+      : displaced.some(original => original.entry.relationship === entry.relationship);
+    const reviewed = clearGuidedDependentAnnualFacts(entry);
+    return copiedRelationship ? { ...reviewed, relationship: "" } : reviewed;
+  });
+  return reviewed.some((entry, index) => entry !== entries[index]) ? { ...next, dependents: reviewed } : next;
+}
+
 const stateCodes = new Set("AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY PR VI GU AS MP AA AE AP".split(" "));
 
 export function childCreditExclusionValues(data: PersonalInfoData["childTaxCredit"]) {
@@ -73,8 +133,8 @@ export function personalFactErrors(data: PersonalInfoData | undefined, status: F
   if (!count || !/^\d+$/.test(count) || Number(count) > 20 || Number(count) !== (data?.dependents?.length ?? 0)) {
     errors.dependentCount = "Enter complete details for every dependent";
   }
-  data?.dependents?.forEach((entry, index) => Object.assign(errors, dependentFactErrors(entry, index, taxYear,
-    allowsBlankEicChildIdentifier(data.eicSeparatedSpouseSources, entry, index) || allowsBlankForm8862ChildIdentifier(data.eicRecertificationSources, entry, index))));
+  data?.dependents?.forEach((entry, index) => Object.assign(errors,
+    dependentFactErrors(entry, index, taxYear, hasOriginalBlankDependentIdentifier(data, entry, index))));
   const claimsCtc = data?.dependents?.some((entry) => entry.qualifiesForCTC);
   const claimsOdc = data?.dependents?.some((entry) => entry.qualifiesForODC);
   if (claimsCtc || claimsOdc) {
