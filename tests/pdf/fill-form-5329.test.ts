@@ -14,6 +14,7 @@ import { fillForm5329, FORM_5329_FIELDS } from "@/pdf/fill-form-5329.js";
 import { fillReturn } from "@/pdf/fill-return.js";
 import { formatCurrency } from "@/pdf/pdf-utils.js";
 import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs.js";
+import { disabilityPensionSource } from "../fixtures/form1099r-disability-source.js";
 
 /** Helper: get text value from a filled PDF field. */
 function getFieldText(doc: PDFDocument, fieldName: string): string | undefined {
@@ -47,20 +48,32 @@ it.each([
   { name: "Code 3 with payer reporting the exception", code: "3", terminalIllness: false, exception: "03", tax: "0", attach: false },
   { name: "Code 7 with no Part I calculation", code: "7", terminalIllness: false, exception: undefined, tax: "0", attach: false },
 ])("applies the 2025 Form 5329 review attachment rule for $name", async ({ code, terminalIllness, exception, tax, attach }) => {
+  const taxpayer = earlyDistributionFixture.taxpayer;
+  const recipient = code === "3" ? { ...taxpayer.primary, dateOfBirth: "1970-07-31" } : taxpayer.primary;
+  const statement = {
+    taxYear: 2025,
+    payer: "Fictional Employer Pension",
+    distributionCode: code,
+    distributionDate: "2025-08-01",
+    grossDistribution: "9000",
+    taxableAmount: "9000",
+    taxableAmountNotDetermined: false,
+    federalWithheld: "0",
+    iraSepSimple: false,
+    terminalIllnessExceptionApplies: terminalIllness,
+  };
+  const disabilityOriginal = {
+    ...statement, accountHolder: "primary" as const, payerTin: "11-2345678", accountReference: "synthetic-5329-disability",
+  };
   const input = TaxYearInputSchema.parse({
-    taxpayer: earlyDistributionFixture.taxpayer,
-    form1099R: [{
-      taxYear: 2025,
-      payer: "Fictional Employer Pension",
-      distributionCode: code,
-      distributionDate: "2025-08-01",
-      grossDistribution: "9000",
-      taxableAmount: "9000",
-      taxableAmountNotDetermined: false,
-      federalWithheld: "0",
-      iraSepSimple: false,
-      terminalIllnessExceptionApplies: terminalIllness,
-    }],
+    taxpayer: { ...taxpayer, primary: recipient },
+    form1099R: [code === "3" ? {
+      ...disabilityOriginal,
+      disabilityPensionSource: {
+        ...disabilityPensionSource(disabilityOriginal, recipient, statement.distributionDate),
+        minimumRetirementDate: "2025-07-31",
+      },
+    } : statement],
   });
   const result = calculateFederalTax(input);
   expect(result.form5329?.line2ExceptionNumber).toBe(exception);
