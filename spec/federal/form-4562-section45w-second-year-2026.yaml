@@ -1,0 +1,91 @@
+form: "Form 4562"
+fullName: "Private 2026 second-year listed-property depreciation for a 2025 Section 45W work van"
+taxYear: 2026
+reviewStatus: "independent-review-pending"
+irsReference: "https://www.irs.gov/instructions/i4562"
+notes: |
+  Publication 946 Table A-1 supplies the 20% and 32% five-year GDS rates.
+  Section 45W(d)(1) and the Form 8936 basis instructions require the actual
+  filed Schedule A line 26 basis reduction. Section 168(k)(7) supplies the
+  class election out of bonus. Section 280F treats an ordinary truck or van
+  above the applicable 6,000-pound weight limit as listed transportation
+  property without the passenger dollar ceiling. This workpaper gives no
+  2026 vehicle credit, Form 3800 treatment, tax-return integration, or filing
+  approval. The Part V column identifiers are workpaper references.
+  https://www.irs.gov/pub/irs-pdf/p946.pdf
+  https://www.irs.gov/instructions/i8936
+  https://www.irs.gov/pub/irs-prior/f8936sa--2025.pdf
+  https://www.irs.gov/instructions/i1040gi
+  https://www.govinfo.gov/content/pkg/CFR-2025-title26-vol20/pdf/CFR-2025-title26-vol20-sec301-6102-1.pdf
+  https://uscode.house.gov/us/usc/t26/s45W/
+  https://uscode.house.gov/us/usc/t26/s168/
+  https://uscode.house.gov/us/usc/t26/s280F/
+  https://www.irs.gov/pub/irs-dft/f4562--dft.pdf
+lines:
+  - line: "observation-date"
+    description: "Require the calendar year to be complete as of the caller's observation date"
+    formula: |
+      Use a valid civil date from the private caller's observation context, on
+      or after January 1, 2027, to establish that the full 2026 calendar year
+      has elapsed. The verified original return must actually have been filed
+      after the 2025 closing date and before the observation date. The pure
+      worksheet does not choose an observation date or read a runtime clock.
+    testRef: "tests/engine/forms/form-4562-section45w-second-year-2026.test.ts::requires a closed observation year and an earlier actual original filing"
+  - line: "prior-business-basis"
+    description: "Reconcile the original 2025 business basis after the filed commercial credit"
+    formula: |
+      Match the actual primary sole proprietor, Schedule C activity, underlying
+      asset, VIN and 2025 date placed in service across the original purchase
+      record, Schedule A credit, filed Form 4562 asset workpaper and continued
+      2026 use. Match the 2025 credit and Form 4562 to the same filed calendar
+      return and its verified five-year class election-out. Match the exact
+      original pre-credit basis in Decimal and reduce it by
+      the actual positive Schedule A line 26 claim. Reconcile that reduction
+      to the original asset calculation; this workpaper does not calculate or
+      re-claim the 2025 credit. For actual whole-dollar reporting in this lane,
+      reconcile filed line 21 to the rounded original basis after confirmed
+      zero Section 179. The filed credit must not exceed $7,500 or both of the
+      rounded 30-percent amounts computed from the exact and posted line 21
+      bases. Retain the actual filed amount for the adjustment without assuming
+      the original credit's other limits.
+      Require actual manufacturer truck or van GVWR above 6,000 pounds on a weight
+      record for the same VIN and ordinary listed transportation classification.
+    testRef: "tests/engine/forms/form-4562-section45w-second-year-2026.test.ts::uses the filed credit and original workpapers to determine the second-year deduction"
+  - line: "opening-adjusted-basis"
+    description: "Confirm the prior-year allowed and allowable depreciation"
+    formula: |
+      Require the verified filed election out of 2025 bonus for the five-year
+      class, zero Section 179 and special allowance, and the original five-year
+      GDS 200 percent declining-balance half-year method. Confirm the vehicle
+      was the only eligible asset in the actual 2025 convention inventory and
+      placed in service before the final quarter. Confirm exclusive qualified
+      business use by comparing actual business and total mileage from the same
+      asset in each actual calendar year's log. Require the 2025 log to cover
+      the original service date through December 31 and 2026 to cover January 1
+      through December 31. Require documented exclusively United States use in
+      both years to keep the ordinary GDS lane clear of Section 168(g) ADS
+      requirements. Reject unrelated inventory or mileage records.
+      The prior exact depreciation allowed and allowable must agree with the
+      credit-adjusted table basis multiplied by the original 20% rate. Confirm
+      the corresponding whole-dollar posted Form 4562 amount. Subtract this
+      verified exact depreciation and reconcile the remainder to the carried
+      asset's 2026 opening record. Reject other basis changes, method changes,
+      change in use, disposition or recapture facts outside this worksheet.
+    testRef: "tests/engine/forms/form-4562-section45w-second-year-2026.test.ts::holds inconsistent original identity, elections, convention, use or prior depreciation"
+  - line: "26(h)"
+    description: "Calculate the regular second-year listed-property allowance"
+    formula: |
+      Apply 32% to the unadjusted MACRS table basis after the Section 45W
+      reduction. Keep the previous depreciation out of the table basis and
+      subtract the exact current allowance from the adjusted opening basis.
+      Round the reportable deduction once to dollars under the normal reporting
+      convention, retaining the exact allowance and arithmetic closing basis
+      in the workpaper. Keep original document identifiers out of the audit.
+    testRef: "tests/engine/forms/form-4562-section45w-second-year-2026.test.ts::preserves the exact basis and rounds only the reportable current deduction"
+  - line: "28"
+    description: "Total listed-property depreciation for the one supported asset"
+    formula: |
+      The carried asset has no new bonus or Section 179 component. The second-year
+      regular deduction is the entire single-asset workpaper total. Canonical
+      attribution, other assets, business-use changes and filing remain separate.
+    testRef: "tests/engine/forms/form-4562-section45w-second-year-2026.test.ts::uses the filed credit and original workpapers to determine the second-year deduction"
