@@ -12,8 +12,11 @@ spec references, inventory, scoped lint and the browser source manifest.
 The guided Form 1098 replay held a blank lender and projected the actual name
 after correction. A clean archive with an offline frozen installation passed
 all eight static checks, the production web build and 237 tests across the
-three new calculation and billing areas. All 15 official sample files matched
-their recorded hashes.
+three new calculation and billing areas. The full unit run passed 31,198 tests
+with 81 existing skips. All 15 official sample files matched their recorded
+hashes. Chromium verified a standalone self-host backup restores
+original file bytes and private saved answers after deletion and reload. The
+owned test listener closed after the check.
 [IRS Schedule A line 8b](https://www.irs.gov/instructions/i1040sca) ·
 [Current CI](https://github.com/utilityfueled/tax-engine/actions/runs/45987981813) ·
 [Current AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45987981913) ·
@@ -34,8 +37,9 @@ direct entry behavior. The guided interview still holds the paired codes for rev
 The offline release harness passed 183 tests across native provenance,
 browser recovery observation, CPU diagnostics and archive diagnostics.
 The tracked archive passed all eight static checks, the production web build
-and 31,195 unit tests with 81 existing skips. The full unit and coverage rerun
-uses the established five-worker limit and local fixture listeners.
+and 31,195 tests with 81 existing skips in both the unit and coverage runs.
+Branch coverage reached 88.64% against the 85% gate. Both reruns used the
+established five-worker limit and local fixture listeners.
 The earlier parallel attempt hit timing failures and could not open a loopback
 TLS listener in the sandbox. The previous Docker job for `64ca11a71` passed.
 The current Linux browser and image requirements remain open.
