@@ -918,3 +918,31 @@ from the prepared case before approving a final 2026 transfer.
 [Ohio allocation statute](https://codes.ohio.gov/ohio-revised-code/section-5747.20) ·
 [Ohio credit statute](https://codes.ohio.gov/ohio-revised-code/section-5747.05) ·
 [Draft 2026 IT 1040 instructions](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf).
+
+## November 27 Pennsylvania resident and nonresident investment comparison
+
+For a single taxpayer with $75,000 of verified wages, compare continuous
+Pennsylvania domicile with continuous domicile in a nonreciprocal state.
+The nonresident worked in Pennsylvania and earned $9,000 there. The
+ordinary interest and dividends are $120.11 and $120.19, respectively.
+Neither investment arises from a Pennsylvania business. Derive the
+individual Pennsylvania income lines, taxable income, tax and Schedule SP
+eligibility income under each residency. Confirm the treatment of the
+individual amounts under the final 2026 instructions before approving the
+transfers.
+[Pennsylvania interest guide](https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/interest) ·
+[Pennsylvania dividend guide](https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/dividends).
+
+## November 27 second-year Schedule C and AMT attribution
+
+Carry the verified 2025 work van and its 2026 depreciation into the same
+taxpayer's primary cash Schedule C. Use $166,265 receipts, $125.25
+advertising, $40.25 office expenses and $19.50 supplies. Derive regular
+Schedule C profit, the separate AMT basis and adjustment, the QBI deduction
+and total tax. Check whether the original credit has any new current-year
+effect. Repeat the QBI source check with a break-even Schedule C and a
+separate $40,000 S corporation K-1. Confirm which source supports each
+deduction before approving a federal transfer.
+[IRS Publication 946](https://www.irs.gov/publications/p946) ·
+[Form 6251 instructions](https://www.irs.gov/instructions/i6251) ·
+[26 USC §1016](https://uscode.house.gov/us/usc/t26/s1016/).

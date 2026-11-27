@@ -8,12 +8,46 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `419470095` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. Verify newer revisions locally and qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `419470095` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. The current `6a3d2602c` candidate is in combined testing. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
+
+## November 27 federal attribution of second-year commercial EV depreciation
+
+`6a3d2602c` connects the private second-year worksheet to the actual
+Schedule C cash ledger and the federal AMT adjustment. A complete 2026
+year and matching original 2025 credit and basis records are required.
+The normal saved-input case reports $6,080 on Schedule C line 13, $160,000
+net profit, $26,519 of QBI deduction, $8,340 tentative minimum tax and
+$40,663 total tax. It produces no new Form 3800 credit claim. Independent
+engineering review reproduced an incorrect admission of unrelated
+pass-through QBI when the verified business broke even. A source-identity
+check now rejects that case. The exact revision passed 812 focused tests
+and eight static checks, including validation of 10,299 spec references.
+Combined verification and qualified human review remain open.
+[IRS Publication 946](https://www.irs.gov/publications/p946) ·
+[Form 6251 instructions](https://www.irs.gov/instructions/i6251) ·
+[26 USC §1016](https://uscode.house.gov/us/usc/t26/s1016/).
+
+## November 27 Pennsylvania combined wages, interest and dividends
+
+`cc53d1fe5` admits one verified ordinary Form 1099-DIV with the already
+supported original Form 1099-INT and wage records for continuous
+full-year resident and nonresident private drafts. The resident case
+reports $75,240 of taxable Pennsylvania income and $2,310 tax after
+rounding $120.11 interest and $120.19 dividends separately. The
+nonresident case reports $9,000 of verified Pennsylvania work wages and
+$276 tax. The investment income is excluded from Pennsylvania sourcing
+and included in the $75,240 Schedule SP eligibility income for both
+examples. The part-year and reciprocity controls still apply.
+Independent engineering review, 315 exact focused tests and eight exact
+static checks passed, including 10,296 validated spec references.
+Final form qualification and human review remain open.
+[Pennsylvania interest guide](https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/interest) ·
+[Pennsylvania dividend guide](https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/dividends).
 
 ## November 27 Ohio combined wages, interest and dividends
 
@@ -47,9 +81,10 @@ second-year depreciation and $9,120 remaining basis. The round-up example
 verifies posted Schedule A line 21 separately from exact ledger basis.
 Independent engineering review reproduced and then cleared the chronology,
 domestic-use and rounding defects. All 62 exact focused tests and eight
-static checks passed, including 10,294 spec lines. The latest combined
-unit and coverage checks are running. Canonical attribution, qualified
-human review and filing qualification remain open.
+static checks passed, including 10,294 spec lines. The exact source
+passed 31,388 unit tests with 83 skips and 88.72% branch coverage.
+The federal attribution is recorded above. Qualified human review and
+filing qualification remain open.
 [IRS Publication 946](https://www.irs.gov/publications/p946) ·
 [2025 Schedule A (Form 8936)](https://www.irs.gov/pub/irs-prior/f8936sa--2025.pdf) ·
 [26 USC §1016](https://uscode.house.gov/us/usc/t26/s1016/).
