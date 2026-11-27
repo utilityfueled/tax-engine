@@ -118,6 +118,22 @@ it("requires distinct actual references for matching 2026 estimates", () => {
   expect(() => calculateFederalTax(input)).toThrow(/2026 rule pack .* calculation is unavailable/);
 });
 
+it("keeps unique and zero 2026 payment references out of calculation input", () => {
+  const unique = { date: "2026-04-15", amount: "500.00" };
+  const zero = { date: unique.date, amount: "0.00" };
+  const state = guidedWithPayments(
+    [{ ...unique, receiptReference: "Synthetic unique receipt" }, { ...zero, receiptReference: "Synthetic estimate zero" }],
+    [{ ...zero, receiptReference: "Synthetic extension zero" }],
+    2026,
+  );
+  const estimatedPayments = [{ ...unique, type: "federal" }, { ...zero, type: "federal" }];
+  expect(buildEstimatedPaymentsInput(state.sectionData.payments, 2026)).toEqual(estimatedPayments);
+  const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
+  expect(input.adjustments?.estimatedTaxPayments).toEqual(estimatedPayments);
+  expect(input.adjustments?.extensionPayments).toEqual([{ ...zero, type: "federal" }]);
+  expect(JSON.stringify(input)).not.toMatch(/Synthetic (unique receipt|estimate zero|extension zero)/);
+});
+
 it("reconciles matching 2026 extension payments before transfer", () => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date(2027, 3, 15, 12));

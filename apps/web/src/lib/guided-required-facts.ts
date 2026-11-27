@@ -204,13 +204,15 @@ export function paymentFactErrors(entries: EstimatedPaymentEntry[] | undefined, 
   return errors;
 }
 
-export function federalPaymentReceiptFactErrors(data: PaymentData, taxYear?: number | null): Record<string, string> {
-  if (!supportsFederalPaymentReceiptReferences(taxYear)) return {};
+export function federalPaymentReceiptFacts(data: PaymentData | undefined, taxYear?: number | null) {
   const errors: Record<string, string> = {};
+  const calculationReferences = { estimate: new Map<number, string>(), extension: new Map<number, string>() };
+  if (!data || !supportsFederalPaymentReceiptReferences(taxYear)) return { errors, calculationReferences };
   const referenceFields = new Map<string, string>();
-  const matchingPayments = new Map<string, { errorField: string; reference: string }[]>();
+  const matchingPayments = new Map<string, { kind: FederalPaymentKind; index: number; errorField: string; reference: string }[]>();
 
-  function record(entries: EstimatedPaymentEntry[], prefix: string) {
+  function record(entries: EstimatedPaymentEntry[], kind: FederalPaymentKind) {
+    const prefix = kind === "extension" ? "extension-" : "";
     entries.forEach((entry, index) => {
       const errorField = `${prefix}payment-${index}-receipt-reference`;
       const reference = normalizeFederalPaymentReceiptReference(entry.receiptReference);
@@ -230,27 +232,29 @@ export function federalPaymentReceiptFactErrors(data: PaymentData, taxYear?: num
       if (!amount.gt(0)) return;
       const key = `${entry.date}:${amount.toFixed()}`;
       const group = matchingPayments.get(key) ?? [];
-      group.push({ errorField, reference });
+      group.push({ kind, index, errorField, reference });
       matchingPayments.set(key, group);
     });
   }
 
-  record(data.estimatedPayments ?? [], "");
-  record(data.extensionPayments ?? [], "extension-");
+  record(data.estimatedPayments ?? [], "estimate");
+  record(data.extensionPayments ?? [], "extension");
   for (const group of matchingPayments.values()) {
     if (group.length < 2) continue;
     for (const row of group) {
       if (!row.reference) errors[row.errorField] = "Enter a distinct actual receipt reference for each federal payment with the same date and amount.";
+      else if (taxYear === 2026) calculationReferences[row.kind].set(row.index, `guided-${row.kind}-receipt-${row.index + 1}`);
     }
   }
-  return errors;
+  return { errors, calculationReferences };
 }
 
-export function allPaymentFactErrors(data: PaymentData | undefined, taxYear?: number | null): Record<string, string> {
-  if (!data) return {};
+export function allPaymentFacts(data: PaymentData | undefined, taxYear?: number | null) {
+  const receiptFacts = federalPaymentReceiptFacts(data, taxYear);
+  if (!data) return receiptFacts;
   const errors = paymentFactErrors(data.estimatedPayments, taxYear, "estimate");
   for (const [key, value] of Object.entries(paymentFactErrors(data.extensionPayments, taxYear, "extension"))) errors[`extension-${key}`] = value;
-  Object.assign(errors, federalPaymentReceiptFactErrors(data, taxYear));
+  Object.assign(errors, receiptFacts.errors);
   const credits = (data.priorYearAppliedCredits ?? []).map((entry, index) => {
     const error = amountError(entry.amount, "applied refund amount");
     const sourceTaxYear = Number(entry.sourceTaxYear);
@@ -274,7 +278,11 @@ export function allPaymentFactErrors(data: PaymentData | undefined, taxYear?: nu
       if (!classified.eq(parseGuidedCurrency(data.otherPayments))) errors.otherPayments = "Classify the saved other-payment total as extension payments or prior-year applied refunds. Other credits need their specific supporting forms.";
     }
   }
-  return errors;
+  return { errors, calculationReferences: receiptFacts.calculationReferences };
+}
+
+export function allPaymentFactErrors(data: PaymentData | undefined, taxYear?: number | null): Record<string, string> {
+  return allPaymentFacts(data, taxYear).errors;
 }
 
 export { retirementFactErrors } from "./guided-retirement-facts";

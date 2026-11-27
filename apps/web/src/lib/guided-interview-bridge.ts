@@ -78,7 +78,7 @@ import { buildGuidedEicClaimantEligibility } from "./guided-eic-eligibility";
 import { allowsBlankForm8862ChildIdentifier, type Form8862Data } from "./guided-form-8862";
 import { buildVehicleCreditInput, vehicleFactErrors } from "./guided-vehicle-facts";
 import { buildAdoptionInput, adoptionFactErrors } from "./guided-adoption-facts";
-import { allPaymentFactErrors, assertKnownFacts, currentLocalCivilDate, deductionAmountYearErrors, deductionFactErrors, educationFactErrors, federalPaymentReceiptFactErrors, guidedDonationValue, hasEnteredAmount, paymentFactErrors, readGuidedTangiblePropertyUse, retirementFactErrors } from "./guided-required-facts";
+import { allPaymentFacts, assertKnownFacts, currentLocalCivilDate, deductionAmountYearErrors, deductionFactErrors, educationFactErrors, federalPaymentReceiptFacts, guidedDonationValue, hasEnteredAmount, paymentFactErrors, readGuidedTangiblePropertyUse, retirementFactErrors } from "./guided-required-facts";
 import { buildGuidedMedicalMileage } from "./guided-medical-mileage";
 import { nonitemizedElectionFactErrors } from "./guided-nonitemized-election";
 import { adjustmentFactErrors, householdFactErrors, isDeductibleAlimony, isScheduleH2026CaliforniaPeriod } from "./guided-adjustment-facts";
@@ -534,27 +534,27 @@ export function buildAdjustmentsInput(adjustmentData: AdjustmentData | undefined
 
 function federalPaymentInputs(
   entries: PaymentData["estimatedPayments"] | undefined,
-  taxYear: number | null | undefined,
-  kind: "estimate" | "extension",
+  calculationReferences: ReadonlyMap<number, string>,
 ) {
-  return (entries ?? []).map((entry, index) => ({
-    date: entry.date,
-    amount: toDecimalString(entry.amount),
-    type: "federal" as const,
-    // Receipt originals are checked before conversion and stay in the guided source data.
-    ...(taxYear === 2026 && entry.receiptReference?.trim() ? {
-      receiptReference: `guided-${kind}-receipt-${index + 1}`,
-    } : {}),
-    ...(entry.application?.confirmed === true ? {
-      application: { taxYear: Number(entry.application.taxYear), confirmed: true as const },
-    } : {}),
-  }));
+  return (entries ?? []).map((entry, index) => {
+    const receiptReference = calculationReferences.get(index);
+    return {
+      date: entry.date,
+      amount: toDecimalString(entry.amount),
+      type: "federal" as const,
+      ...(receiptReference ? { receiptReference } : {}),
+      ...(entry.application?.confirmed === true ? {
+        application: { taxYear: Number(entry.application.taxYear), confirmed: true as const },
+      } : {}),
+    };
+  });
 }
 
 export function buildEstimatedPaymentsInput(paymentData: PaymentData | undefined, taxYear?: number | null) {
   if (!paymentData) return [];
-  assertKnownFacts({ ...paymentFactErrors(paymentData.estimatedPayments, taxYear, "estimate"), ...federalPaymentReceiptFactErrors(paymentData, taxYear) });
-  return federalPaymentInputs(paymentData.estimatedPayments, taxYear, "estimate");
+  const receipts = federalPaymentReceiptFacts(paymentData, taxYear);
+  assertKnownFacts({ ...paymentFactErrors(paymentData.estimatedPayments, taxYear, "estimate"), ...receipts.errors });
+  return federalPaymentInputs(paymentData.estimatedPayments, receipts.calculationReferences.estimate);
 }
 
 // ── Retirement income (1099-R) converter ──────────────────────────────────
@@ -864,6 +864,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   let form8880: ReturnType<typeof buildGuidedSaversCredit>;
   let form8911: ReturnType<typeof buildGuidedPersonalEvCharger>;
   let form8919Sources: ReturnType<typeof buildGuidedForm8919ReasonA>;
+  let paymentFacts: ReturnType<typeof allPaymentFacts>;
   let reitPtpLossSource: ReturnType<typeof buildGuidedReitPtpLossSource>;
   try {
     reitPtpLossSource = buildGuidedReitPtpLossSource(state);
@@ -890,7 +891,8 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     assertKnownFacts(investmentInterestFactErrors(deductionData, investData?.childElections, state.taxYear));
     assertKnownFacts(charitableCarryoverFactErrors(deductionData?.charitableCarryoverSources, state.taxYear, segmentation.filingStatus, personalInfo));
     assertKnownFacts(nonW2TaxAllocationErrors(state));
-    assertKnownFacts(allPaymentFactErrors(paymentData, state.taxYear));
+    paymentFacts = allPaymentFacts(paymentData, state.taxYear);
+    assertKnownFacts(paymentFacts.errors);
     assertKnownFacts(estimatedTaxFactErrors(paymentData, state.taxYear, segmentation.filingStatus));
     assertKnownFacts(minimumTaxCreditFactErrors(creditsData?.minimumTaxCredit, state.taxYear, segmentation.filingStatus, personalInfo));
     assertKnownFacts(retirementFactErrors(retirementData?.entries, true, segmentation.filingStatus, state.taxYear, stateReturnData, { data: retirementData?.basisSources, personal: personalInfo, adjustments: adjustmentData }, creditsData));
@@ -1021,7 +1023,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const usesDedicatedReceipts = usesDedicatedStatePaymentReceipts(segmentation.stateCode);
   const supportsEstimateApplication = !usesDedicatedReceipts || (state.taxYear === 2025 && segmentation.stateCode === "OH");
   const estimatedPayments = [
-    ...federalPaymentInputs(paymentData?.estimatedPayments, state.taxYear, "estimate"),
+    ...federalPaymentInputs(paymentData?.estimatedPayments, paymentFacts.calculationReferences.estimate),
     ...(stateReturnData?.stateEstimatedPayments ?? []).map((entry) => {
       const taxYear = supportsEstimateApplication ? confirmedStateEstimatedPaymentYear(entry) : undefined;
       return {
@@ -1033,7 +1035,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
       };
     }),
   ];
-  const extensionPayments = federalPaymentInputs(paymentData?.extensionPayments, state.taxYear, "extension");
+  const extensionPayments = federalPaymentInputs(paymentData?.extensionPayments, paymentFacts.calculationReferences.extension);
   const priorYearAppliedCredits = (paymentData?.priorYearAppliedCredits ?? []).map((entry) => ({ sourceTaxYear: Number(entry.sourceTaxYear), amount: toDecimalString(entry.amount), type: "federal" as const }));
   const paymentAdjustments = { estimatedTaxPayments: estimatedPayments, extensionPayments, priorYearAppliedCredits };
   const form172 = buildCurrentLossOrigin(adjustmentData?.currentLossOrigin, state);
