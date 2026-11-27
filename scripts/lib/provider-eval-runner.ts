@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import Decimal from "decimal.js";
 import { z } from "zod";
-import { AI_PRICES, calculateAiCost, maximumAiRequestCost, type AiTokenUsage } from "../../packages/engine/src/ai-pricing";
+import { AI_PRICES, calculateAiCost, getAiPrice, maximumAiRequestCost, type AiTokenUsage } from "../../packages/engine/src/ai-pricing";
 import { AI_TASKS, type AiTask } from "../../packages/engine/src/ai-task-registry";
 import { AI_PROVIDER_DOCUMENTATION, publicModelLifecycle } from "../../packages/engine/src/ai-provider-documentation";
 import { providerModelCandidates, summarizeProviderModelLiveEvalTemplate, timestampAtOrBefore,
@@ -47,13 +47,15 @@ export interface ProviderEvalTransportResult {
 }
 export type ProviderEvalTransport = (request: ProviderEvalRequest, signal?: AbortSignal) => Promise<ProviderEvalTransportResult>;
 type Evaluation = ReturnType<typeof validateProviderEvalOutput>;
+const beforeSendStop = z.enum(["cancelled", "approval-window-closed", "model-shutdown", "capability-expired", "price-changed"]);
+const notSentReason = z.templateLiteral([beforeSendStop, "-before-send"]);
 export type EvalJournalRecord =
   | { type: "start"; planDigest: string; approvalDigest: string }
   | { type: "preflight"; profileId: string; fixtureId: string; repeat: number; reason: "missing-verified-context" | "invalid-verified-context" | "cancelled"; at: string }
   | { type: "dispatch"; attemptId: string; kind: "capability" | "case"; profileId: string; fixtureId: string | null; repeat: number; startedAt: string; maximumUsd: string; clientRequestId?: string }
   | { type: "result"; attemptId: string; status: ProviderEvalTransportResult["status"]; httpStatus?: number; usage: AiTokenUsage | null;
       elapsedMs: number; reportedModel: string | null; responseReference: string | null; capabilityPassed: boolean; evaluation: Evaluation | null }
-  | { type: "not-sent"; attemptId: string; reason: "cancelled-before-send" }
+  | { type: "not-sent"; attemptId: string; reason: z.infer<typeof notSentReason> }
   | { type: "reconcile"; attemptId: string; evidenceReference: string; billedModel?: string; usage: AiTokenUsage; at: string };
 function profile(id: string): EvalProfile {
   const item = providerModelCandidates.find(item => item.id === id);
@@ -129,14 +131,20 @@ export function validatePlan(value: unknown): ProviderEvalPlan {
 function withinPlanWindow(plan: ProviderEvalPlan, at: string): boolean {
   return timestampAtOrBefore(plan.createdAt, at) && !timestampAtOrBefore(plan.expiresAt, at);
 }
+function withinApprovalWindow(plan: ProviderEvalPlan, approval: ProviderEvalApproval, at: string): boolean {
+  return withinPlanWindow(plan, at) && timestampAtOrBefore(approval.approvedAt, at) && !timestampAtOrBefore(approval.expiresAt, at);
+}
+function withinCapabilityWindow(capability: { checkedAt: string; expiresAt: string }, at: string): boolean {
+  const time = Date.parse(at);
+  return time >= Date.parse(capability.checkedAt) && time < Date.parse(capability.expiresAt);
+}
 function approved(plan: ProviderEvalPlan, value: unknown, at: string): ProviderEvalApproval {
   if (!instant.safeParse(at).success) throw new Error("Approval check requires a valid current timestamp.");
   const parsed = approvalSchema.safeParse(value);
   if (!parsed.success) throw new Error("Explicit, complete live-service approval is required.");
   const approval = parsed.data;
   if (approval.planDigest !== providerEvalDigest(plan) || new Money(approval.maximumProviderUsd).gt(plan.maximumProviderUsd)
-    || approval.maximumRequests > plan.maximumRequests || !timestampAtOrBefore(approval.approvedAt, at)
-    || !withinPlanWindow(plan, at) || timestampAtOrBefore(approval.expiresAt, at)
+    || approval.maximumRequests > plan.maximumRequests || !withinApprovalWindow(plan, approval, at)
     || !timestampAtOrBefore(approval.expiresAt, plan.expiresAt)) {
     throw new Error("Approval does not match the current plan, time or spend limits.");
   }
@@ -274,6 +282,11 @@ export async function executeProviderEval(input: { plan: unknown; approval: unkn
   };
   if (!start.length) await persist({ type: "start", planDigest: providerEvalDigest(plan), approvalDigest: providerEvalDigest(approval) });
   const finish = (stoppedReason: string) => ({ ...summarizeProviderEvalJournal(plan, input.records), stoppedReason });
+  const stopBeforeSend = async (attemptId: string, reason: z.infer<typeof beforeSendStop>) => {
+    // Only this executor can record an unsent attempt. A bare dispatch remains reserved.
+    await persist({ type: "not-sent", attemptId, reason: `${reason}-before-send` });
+    return finish(reason);
+  };
   for (const profileId of plan.profileIds) {
     const item = profile(profileId);
     const providerFixtureIds: string[] = [];
@@ -306,25 +319,31 @@ export async function executeProviderEval(input: { plan: unknown; approval: unkn
       const startedAt = now();
       approval = approved(plan, input.approval, startedAt);
       if (publicModelLifecycle(item.model, startedAt).status === "shutdown") return finish("model-shutdown");
-      if (fixture) {
-        const capability = state.template.availability?.find(evidence => evidence.profileId === profileId && evidence.status === "available");
-        if (!capability) break;
-        if (Date.parse(startedAt) >= Date.parse(capability.expiresAt) || Date.parse(startedAt) < Date.parse(capability.checkedAt)) return finish("capability-expired");
-      }
+      const capability = fixture ? state.template.availability?.find(evidence => evidence.profileId === profileId && evidence.status === "available") : undefined;
+      if (fixture && !capability) break;
+      if (capability && !withinCapabilityWindow(capability, startedAt)) return finish("capability-expired");
       const request = requestFor(item, fixture, attemptId);
       const maximumUsd = maximumProviderAttemptUsd(request, startedAt);
       if (state.dispatchedRequests >= approval.maximumRequests) return finish("request-limit");
       if (new Money(state.knownProviderCostUsd).plus(maximumUsd).gt(approval.maximumProviderUsd)) return finish("budget");
+      const pricingEffectiveFrom = getAiPrice(item.model, startedAt).effectiveFrom;
       if (requiresClientTrace(version, item)) request.clientRequestId = randomUUID();
       await persist({ type: "dispatch", attemptId, kind: request.kind, profileId,
         fixtureId: fixture?.id ?? null, repeat, startedAt, maximumUsd,
         ...(request.clientRequestId ? { clientRequestId: request.clientRequestId } : {}) });
-      if (input.signal?.aborted) {
-        // Only the executor that has yet to call transport can establish this.
-        // A crash with a bare dispatch still leaves an ambiguous, reserved attempt.
-        await persist({ type: "not-sent", attemptId, reason: "cancelled-before-send" });
-        return finish("cancelled");
+      if (input.signal?.aborted) return stopBeforeSend(attemptId, "cancelled");
+      const sendAt = now();
+      if (!instant.safeParse(sendAt).success || !withinApprovalWindow(plan, approval, sendAt)) return stopBeforeSend(attemptId, "approval-window-closed");
+      if (!input.now) {
+        // The default clock cannot distinguish instants within its sampled millisecond.
+        const nextMillisecond = new Date(Date.parse(sendAt) + 1).toISOString();
+        if (!timestampAtOrBefore(nextMillisecond, plan.expiresAt) || !timestampAtOrBefore(nextMillisecond, approval.expiresAt)) {
+          return stopBeforeSend(attemptId, "approval-window-closed");
+        }
       }
+      if (publicModelLifecycle(item.model, sendAt).status === "shutdown") return stopBeforeSend(attemptId, "model-shutdown");
+      if (capability && !withinCapabilityWindow(capability, sendAt)) return stopBeforeSend(attemptId, "capability-expired");
+      if (getAiPrice(item.model, sendAt).effectiveFrom !== pricingEffectiveFrom) return stopBeforeSend(attemptId, "price-changed");
       let result: ProviderEvalTransportResult;
       try { result = await input.transport(request, input.signal); }
       catch { result = { status: "failed", usage: null, elapsedMs: 0, reportedModel: null, responseReference: null, payload: null }; }
@@ -381,7 +400,7 @@ const recordSchema = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("result"), attemptId: z.string(), status: z.enum(["completed", "unavailable", "failed", "incomplete"]),
     httpStatus: evalHttpStatusSchema.optional(), usage: evalUsageSchema.nullable(), elapsedMs: z.number().finite().nonnegative(), reportedModel: z.string().nullable(),
     responseReference: z.string().nullable(), capabilityPassed: z.boolean(), evaluation: evaluationSchema.nullable() }),
-  z.strictObject({ type: z.literal("not-sent"), attemptId: z.string(), reason: z.literal("cancelled-before-send") }),
+  z.strictObject({ type: z.literal("not-sent"), attemptId: z.string(), reason: notSentReason }),
   z.strictObject({ type: z.literal("reconcile"), attemptId: z.string(), evidenceReference: z.string().trim().min(1).max(500),
     billedModel: z.string().min(1).max(200).optional(), usage: evalUsageSchema, at: reconciliationInstant }),
 ]);

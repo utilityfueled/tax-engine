@@ -435,6 +435,117 @@ describe("guarded repeated provider executor", () => {
     const result = await executeProviderEval({ ...state, plan, approval, now: () => time, transport: async () => { calls++; time = "2026-10-26T12:00:00.000Z"; return good; } });
     expect(calls).toBe(1); expect(result.stoppedReason).toBe("capability-expired");
   });
+  it.each([
+    ["unchanged rate", "2026-12-31T23:59:59.999Z", false],
+    ["new rate", "2027-01-01T00:00:00.000Z", true],
+  ] as const)("checks the effective price after durable dispatch (%s)", async (_label, afterAppend, changed) => {
+    const startedAt = "2026-12-31T23:59:59.900Z";
+    const expiresAt = "2027-01-01T01:00:00.000Z";
+    const state = setup("1", startedAt, expiresAt);
+    const plan = createProviderEvalPlan({ runId: "gemini-rate-cutoff", purpose: "capability", profileIds: ["gemini-flash-high"],
+      maximumProviderUsd: "1", maximumRequests: 1, createdAt: startedAt, expiresAt });
+    const approval = { ...state.approval, planDigest: providerEvalDigest(plan), maximumRequests: 1 };
+    let now = startedAt;
+    const transport = vi.fn().mockResolvedValue({ ...good, reportedModel: "gemini-3.8-flash" });
+    const result = await executeProviderEval({ ...state, plan, approval, now: () => now, transport,
+      append: async record => {
+        await state.append(record);
+        if (record.type === "dispatch") now = afterAppend;
+      } });
+    expect(state.records[1]).toMatchObject({ type: "dispatch", startedAt });
+    expect(result.unknownMaximumUsd).toBe("0");
+    validateProviderEvalJournal(plan, state.records);
+    if (changed) {
+      expect(transport).not.toHaveBeenCalled();
+      expect(result).toMatchObject({ stoppedReason: "price-changed", knownProviderCostUsd: "0", dispatchedRequests: 0, notSentRequests: 1 });
+      expect(state.records.at(-1)).toEqual({ type: "not-sent", attemptId: "gemini-flash-high:capability:0", reason: "price-changed-before-send" });
+      const resumed = await executeProviderEval({ ...state, plan, approval, now: () => now, transport });
+      expect(resumed).toMatchObject({ knownProviderCostUsd: "0", unknownMaximumUsd: "0", dispatchedRequests: 0, notSentRequests: 1 });
+      expect(transport).not.toHaveBeenCalled();
+    } else {
+      expect(transport).toHaveBeenCalledTimes(1);
+      expect(result).toMatchObject({ stoppedReason: "completed", knownProviderCostUsd: "0.00045", dispatchedRequests: 1, notSentRequests: 0 });
+    }
+  });
+  it.each([
+    ["approval expiry", "luna-high", at, "2026-10-25T12:00:00.0000001Z", "2026-10-25T13:00:00.000Z", "approval-window-closed"],
+    ["plan expiry", "luna-high", at, "2026-10-25T12:00:00.0000001Z", "2026-10-25T12:00:00.0000001Z", "approval-window-closed"],
+    ["model shutdown", "baseline-gpt-5-mini", "2026-12-10T23:59:59.999Z", "2026-12-11T00:00:00.000Z", "2026-12-11T01:00:00.000Z", "model-shutdown"],
+  ] as const)("holds a durable attempt when its send window closes (%s)", async (_label, profileId, startedAt, afterAppend, expiresAt, reason) => {
+    const state = setup("1", startedAt, expiresAt);
+    const plan = createProviderEvalPlan({ runId: "model-send-window", purpose: "capability", profileIds: [profileId],
+      maximumProviderUsd: "1", maximumRequests: 1, createdAt: startedAt, expiresAt });
+    const approval = { ...state.approval, planDigest: providerEvalDigest(plan), maximumRequests: 1,
+      expiresAt: reason === "approval-window-closed" ? afterAppend : expiresAt };
+    let now = startedAt;
+    const transport = vi.fn().mockResolvedValue(good);
+    const result = await executeProviderEval({ ...state, plan, approval, now: () => now, transport,
+      append: async record => {
+        await state.append(record);
+        if (record.type === "dispatch") now = afterAppend;
+      } });
+    expect(transport).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ stoppedReason: reason, knownProviderCostUsd: "0", unknownMaximumUsd: "0", dispatchedRequests: 0, notSentRequests: 1 });
+    const attemptId = `${profileId}:capability:0`;
+    expect(state.records[1]).toMatchObject({ type: "dispatch", attemptId, startedAt });
+    expect(state.records[2]).toEqual({ type: "not-sent", attemptId, reason: `${reason}-before-send` });
+    validateProviderEvalJournal(plan, state.records);
+  });
+  it.each([
+    ["approval expires inside sampled millisecond", "2026-10-25T12:00:00.0000001Z", "2026-10-25T13:00:00.000Z", false, false],
+    ["plan and approval expire inside sampled millisecond", "2026-10-25T12:00:00.0000001Z", "2026-10-25T12:00:00.0000001Z", false, false],
+    ["both expire at next millisecond", "2026-10-25T12:00:00.001Z", "2026-10-25T12:00:00.001Z", false, true],
+    ["exact injected clock", "2026-10-25T12:00:00.0000001Z", "2026-10-25T12:00:00.0000001Z", true, true],
+  ] as const)("admits a durable send only within the default clock precision (%s)", async (_label, approvalExpiry, planExpiry, exactClock, allowed) => {
+    const startedAt = "2026-10-25T11:59:59.999Z";
+    const { approval: syntheticApproval, records, append } = setup("1", startedAt, planExpiry);
+    const plan = createProviderEvalPlan({ runId: "default-send-clock", purpose: "capability", profileIds: ["luna-high"],
+      maximumProviderUsd: "1", maximumRequests: 1, createdAt: startedAt, expiresAt: planExpiry });
+    const approval = { ...syntheticApproval, planDigest: providerEvalDigest(plan), maximumRequests: 1, expiresAt: approvalExpiry };
+    const transport = vi.fn().mockResolvedValue(good);
+    let exactAt = startedAt;
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      vi.setSystemTime(new Date(startedAt));
+      const result = await executeProviderEval({ plan, approval, records, transport,
+        ...(exactClock ? { now: () => exactAt } : {}),
+        append: async record => {
+          await append(record);
+          if (record.type === "dispatch") {
+            vi.setSystemTime(new Date(at));
+            exactAt = "2026-10-25T12:00:00.00000005Z";
+          }
+        } });
+      expect(transport).toHaveBeenCalledTimes(allowed ? 1 : 0);
+      expect(result.unknownMaximumUsd).toBe("0");
+      if (allowed) {
+        expect(result).toMatchObject({ stoppedReason: "completed", knownProviderCostUsd: "0.00006", dispatchedRequests: 1, notSentRequests: 0 });
+      } else {
+        expect(result).toMatchObject({ stoppedReason: "approval-window-closed", knownProviderCostUsd: "0", dispatchedRequests: 0, notSentRequests: 1 });
+        expect(records[2]).toEqual({ type: "not-sent", attemptId: "luna-high:capability:0", reason: "approval-window-closed-before-send" });
+      }
+      validateProviderEvalJournal(plan, records);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+  it("holds a durable case when capability evidence expires during its write", async () => {
+    const state = setup("1", at, "2026-10-26T13:00:00.000Z");
+    const caseStartedAt = "2026-10-26T11:59:59.999Z";
+    let now = at;
+    const transport = vi.fn(async () => { now = caseStartedAt; return good; });
+    const result = await executeProviderEval({ ...state, now: () => now, transport,
+      append: async record => {
+        await state.append(record);
+        if (record.type === "dispatch" && record.kind === "case") now = "2026-10-26T12:00:00.000Z";
+      } });
+    expect(transport).toHaveBeenCalledTimes(1);
+    expect(result).toMatchObject({ stoppedReason: "capability-expired", knownProviderCostUsd: "0.00006", unknownMaximumUsd: "0", dispatchedRequests: 1, notSentRequests: 1 });
+    const attemptId = "luna-high:case-income-w2-zero-withholding:1";
+    expect(state.records[3]).toMatchObject({ type: "dispatch", attemptId, startedAt: caseStartedAt });
+    expect(state.records[4]).toEqual({ type: "not-sent", attemptId, reason: "capability-expired-before-send" });
+    validateProviderEvalJournal(state.plan, state.records);
+  });
   it("records cancellation during dispatch persistence without sending or reserving provider usage", async () => {
     const state = setup();
     const controller = new AbortController();

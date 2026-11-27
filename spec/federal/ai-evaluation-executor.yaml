@@ -139,6 +139,34 @@ lines:
     description: "No paid request precedes durable accounting identity"
     formula: "A failed or ineffective append prevents dispatch; cancellation and expired capability evidence stop before the next request."
     testRef: "tests/engine/provider-eval-runner.test.ts::requires durable dispatch and current capability evidence before more calls"
+  - line: "dispatch-price-window"
+    description: "Recheck the effective price after the dispatch write"
+    formula: |
+      Before calling transport, compare the approved model's active pricing
+      after durable dispatch with the price used for its reservation. If the
+      price has changed, append an immediate unsent record and stop with no
+      provider request, charge or held usage for that attempt. Preserve the
+      original reservation when the price is unchanged. A bare dispatch
+      remains reserved if the unsent record cannot be persisted, and a resume
+      does not repeat its attempt identifier.
+    irsRef: "https://ai.google.dev/gemini-api/docs/pricing#gemini-3.8-flash"
+    testRef: "tests/engine/provider-eval-runner.test.ts::checks the effective price after durable dispatch (%s)"
+  - line: "dispatch-send-window"
+    description: "Apply existing time limits immediately before transport"
+    formula: |
+      After durable dispatch, sample the clock once before calling transport.
+      Use that instant for the exact approval and plan windows, documented
+      model shutdown, applicable capability age and effective pricing. A
+      window that closes during the write records the attempt as immediately
+      unsent without consuming an additional request or provider cost.
+      The default clock observes only whole milliseconds. Both expiry
+      endpoints must reach the end of its current millisecond, with expiry
+      exactly at the next millisecond admissible. Keep sampled lower bounds,
+      exact injected-clock behavior and historical journal validation.
+    testRef: "tests/engine/provider-eval-runner.test.ts::holds a durable attempt when its send window closes (%s)"
+    testRefs:
+      - "tests/engine/provider-eval-runner.test.ts::holds a durable case when capability evidence expires during its write"
+      - "tests/engine/provider-eval-runner.test.ts::admits a durable send only within the default clock precision (%s)"
   - line: "offline-cli"
     description: "Planning is offline and leaves approval visibly incomplete"
     formula: "Planning creates private exact-plan files without credentials or network; live mode requires all output paths and separate complete approval before dispatch."
