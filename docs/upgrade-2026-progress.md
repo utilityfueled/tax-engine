@@ -8,12 +8,29 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `5c43a5f3a` passed all 11 local checks and the 85% branch gate. Record exact-current checks and qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `1c75284e4` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels, selected Google project access and comparable provider evidence. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
+
+## November 27 Exact combined application verification
+
+The isolated `1c75284e4` archive passed all 11 required local checks,
+with Node 26.13.1, pypdf 6.10.0, a frozen offline installation and 15
+verified official sample hashes. Unit and coverage each passed 31,205
+tests with 81 existing skips. Branch coverage was 88.64% against the
+unchanged 85% gate. The production web build passed. Chromium passed
+654 journeys across nine windows with five existing skips and closed
+its listener. Against the built standalone server, encrypted recovery
+restored original bytes and private facts after deletion, followed by
+listener cleanup. The local manifest SHA-256 is
+`f974416b7aaf8881395c2ebe03d1f60a97e5b34856555b8aed8d85487fd3c3b0`.
+The exact Linux runs were queued at local completion.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45996881174) ·
+[AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45996881286) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45996881014).
 
 ## November 27 Exact education and OpenAI verification
 
