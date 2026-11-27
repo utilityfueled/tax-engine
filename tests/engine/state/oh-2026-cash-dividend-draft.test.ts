@@ -74,6 +74,10 @@ function combinedInvestmentFixture(status: Status = 'part_year_resident') {
     sourceTaxYear: 2026, sourceReference: 'PRIVATE-2026-INT-STATEMENT', payerName: payer, payerTin, accountReference,
     recipient: { ...packet.original.recipient }, currentUncorrectedNonvoidOriginalConfirmed: true,
     allOriginalBoxesKnownConfirmed: true, noOtherOriginalReportingConfirmed: true,
+    otherBoxAmounts: {
+      earlyWithdrawalPenalty: '0', usSavingsBondInterest: '0', federalWithheld: '0',
+      foreignTaxPaid: '0', taxExemptInterest: '0', privateActivityBondInterest: '0', stateWithheld: '0',
+    },
     cashMethodOrdinaryDomesticDepositConfirmed: true, completeActualBankCreditsConfirmed: true,
     credits: [
       { sourceReference: 'PRIVATE-INT-JUNE', accountReference, creditedOn: '2026-06-30', amount: '3000', availableOnCreditDateConfirmed: true },
@@ -139,6 +143,13 @@ describe('Ohio 2026 private ordinary cash dividend draft', () => {
 
   it('holds the combined investment method outside part-year residency', () => {
     expect(() => run(combinedInvestmentFixture('full_year_resident'))).toThrow(/method and confirmed primary domicile differ/);
+  });
+
+  it('holds combined investments with an unknown original bank reporting box', () => {
+    const packet = combinedInvestmentFixture();
+    Reflect.deleteProperty(packet.bankForm, 'federalWithheld');
+    rebindOhio2026Ordinary(packet);
+    expect(() => run(packet)).toThrow(/unknown original boxes/i);
   });
 
   it.each(Object.entries(scenarios) as [Status, (typeof scenarios)[Status]][])('allocates verified ordinary cash dividends for %s', (status, expected) => {

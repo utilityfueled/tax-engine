@@ -138,8 +138,9 @@ function qualifyBankInterest(input: TaxYearInput, facts: OhioResidencyFacts,
   if (facts.unemploymentPaymentSource || facts.unemploymentPaymentSchedule)
     fail('retained unemployment receipts require their separate method');
   if (!Array.isArray(input.form1099Int) || input.form1099Int.length !== 1) fail('one current original Form 1099-INT required');
-  const parsed = Form1099IntSchema.strict().safeParse(input.form1099Int[0]);
-  if (!parsed.success) fail('one current original Form 1099-INT required');
+  const [rawForm] = input.form1099Int;
+  const parsed = Form1099IntSchema.strict().safeParse(rawForm);
+  if (!parsed.success || !rawForm) fail('one current original Form 1099-INT required');
   const form = parsed.data;
   if (form.taxYear !== original.sourceTaxYear || form.accountHolder !== original.recipient.accountHolder
     || !form.payerTin || !/^\d{2}-?\d{7}$/.test(form.payerTin) || !form.accountReference)
@@ -151,10 +152,14 @@ function qualifyBankInterest(input: TaxYearInput, facts: OhioResidencyFacts,
     || identity(original.payerName) !== identity(form.payer) || accountReference !== form.accountReference)
     fail('actual Form 1099-INT recipient, bank or account differs');
   if (isIncompleteInvestmentAccount(accountReference)) fail('a stable account reference is required to match the Form 1099-INT and bank credits');
-  const otherAmounts = [form.earlyWithdrawalPenalty, form.usSavingsBondInterest, form.federalWithheld, form.foreignTaxPaid,
-    form.taxExemptInterest, form.privateActivityBondInterest, form.paDirectObligationInterest, form.stateWithheld];
+  // A generic form default cannot document a blank box on the bound original.
+  const otherAmounts = [rawForm.earlyWithdrawalPenalty, rawForm.usSavingsBondInterest, rawForm.federalWithheld,
+    rawForm.foreignTaxPaid, rawForm.taxExemptInterest, rawForm.privateActivityBondInterest, rawForm.stateWithheld];
+  if (otherAmounts.includes(undefined)) fail('unknown original boxes must be documented for the Form 1099-INT bank interest method');
   if (form.foreignCountry !== undefined || form.state !== undefined || form.privateActivityBondFacts !== undefined
-    || otherAmounts.some(amount => amount !== undefined && !cash(amount).isZero()))
+    || otherAmounts.some(amount => !cash(amount).isZero())
+    || Object.values(original.otherBoxAmounts).some(amount => !cash(amount).isZero())
+    || (form.paDirectObligationInterest !== undefined && !cash(form.paDirectObligationInterest).isZero()))
     fail('other interest or withholding requires its separate Form 1099-INT method');
 
   const box1 = cash(form.interestIncome);

@@ -137,9 +137,26 @@ lines:
       amount that differs from the allocation derived from the original bank
       credits and actual domicile. The existing wage-only draft retains its
       separate admission and the current public gates stay closed.
+      For every Box 1 bank-interest residency method and the combined dividend
+      method, require recorded Decimal zeros for Boxes 2, 3, 4, 6, 8, 9 and 17
+      in the bound original packet and in the return's Box 1 statement. A
+      physically blank original box may be recorded as zero when its absence
+      of reporting is confirmed. Generic form defaults cannot supply original
+      amounts. A previously saved packet without these recorded original
+      amounts stays on hold until confirmed. Pennsylvania-only direct-obligation
+      metadata remains optional and must equal zero when present.
+    sources:
+      - "https://www.irs.gov/instructions/i1099int"
+      - "https://www.irs.gov/pub/irs-pdf/f1099int.pdf"
     testRef: "tests/engine/state/oh-2026-bank-interest-draft.test.ts::holds incomplete contradictory or unsupported bank evidence (%s)"
     testRefs:
       - "tests/engine/state/oh-2026-bank-interest-draft.test.ts::keeps bank originals out of the wage-only method"
+      - "tests/engine/state/oh-2026-bank-interest-draft.test.ts::holds a missing documented zero in %s"
+      - "tests/engine/state/oh-2026-bank-interest-draft.test.ts::holds normalized return defaults without recorded amounts on the original"
+      - "tests/engine/state/oh-2026-bank-interest-draft.test.ts::holds a zero return amount contradicted by a recorded original box"
+      - "tests/engine/state/oh-2026-bank-interest-draft.test.ts::holds an unrecorded state withholding box for %s"
+      - "tests/engine/state/oh-2026-bank-interest-draft.test.ts::accepts recorded zero for documented blank boxes without PA-only metadata"
+      - "tests/engine/state/oh-2026-cash-dividend-draft.test.ts::holds combined investments with an unknown original bank reporting box"
   - line: "ordinary-cash-dividend"
     description: "Private 2026 Ohio ordinary cash dividend draft for each verified residency status"
     formula: >-

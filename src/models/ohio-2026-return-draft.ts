@@ -110,6 +110,15 @@ export const Ohio2026BankInterestEmployeeSourcesSchema = Ohio2026OrdinarySources
   methodId: Ohio2026BankInterestMethodSchema,
   bankInterestOriginal: z.object({
     ...currentInvestmentOriginal,
+    otherBoxAmounts: z.object({
+      earlyWithdrawalPenalty: money,
+      usSavingsBondInterest: money,
+      federalWithheld: money,
+      foreignTaxPaid: money,
+      taxExemptInterest: money,
+      privateActivityBondInterest: money,
+      stateWithheld: money,
+    }).strict(),
     cashMethodOrdinaryDomesticDepositConfirmed: z.literal(true),
     completeActualBankCreditsConfirmed: z.literal(true),
     credits: z.array(availableInvestmentCredit.strict()).min(1).max(366),

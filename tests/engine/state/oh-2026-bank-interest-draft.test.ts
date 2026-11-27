@@ -17,6 +17,9 @@ const declaredResidency = {
   nonresident: 'nonresident',
 } as const;
 
+const bankZeroBoxes = ['earlyWithdrawalPenalty', 'usSavingsBondInterest', 'federalWithheld',
+  'foreignTaxPaid', 'taxExemptInterest', 'privateActivityBondInterest', 'stateWithheld'] as const;
+
 function required<T>(value: T | undefined): T {
   if (value === undefined) throw new Error('Complete fictional bank and residency sources required');
   return value;
@@ -57,6 +60,10 @@ function bankFixture(status: keyof typeof bankMethods = 'part_year_resident') {
     payerName: form.payer, payerTin: required(form.payerTin), accountReference,
     recipient: { accountHolder: 'primary', firstName, lastName, ssn },
     currentUncorrectedNonvoidOriginalConfirmed: true, allOriginalBoxesKnownConfirmed: true,
+    otherBoxAmounts: {
+      earlyWithdrawalPenalty: '0', usSavingsBondInterest: '0', federalWithheld: '0',
+      foreignTaxPaid: '0', taxExemptInterest: '0', privateActivityBondInterest: '0', stateWithheld: '0',
+    },
     noOtherOriginalReportingConfirmed: true, cashMethodOrdinaryDomesticDepositConfirmed: true,
     completeActualBankCreditsConfirmed: true,
     credits: [
@@ -222,6 +229,50 @@ describe('Ohio 2026 private bank interest draft', () => {
     const stale = bankFixture(status);
     stale.form.interestIncome = '4000.01';
     expect(() => dispatch(stale)).toThrow(/original source snapshot is missing or changed/i);
+  });
+
+  // Spec: state/oh-2026-return-draft.yaml#part-year-bank-interest-source-holds.
+  it('holds normalized return defaults without recorded amounts on the original', () => {
+    const p = bankFixture();
+    for (const field of bankZeroBoxes) {
+      if (field !== 'privateActivityBondInterest') Reflect.deleteProperty(p.form, field);
+    }
+    p.input.form1099Int = [Form1099IntSchema.parse(p.form)];
+    Reflect.deleteProperty(p.original, 'otherBoxAmounts');
+    rebindOhio2026Ordinary(p);
+    expect(() => run(p)).toThrow(/complete confirmed current source packets/i);
+  });
+
+  it('holds a zero return amount contradicted by a recorded original box', () => {
+    const p = bankFixture();
+    p.original.otherBoxAmounts.federalWithheld = '0.01';
+    rebindOhio2026Ordinary(p);
+    expect(() => run(p)).toThrow(/other interest or withholding/i);
+  });
+
+  it.each(bankZeroBoxes)('holds a missing documented zero in %s', key => {
+    const p = bankFixture();
+    Reflect.deleteProperty(p.form, key);
+    rebindOhio2026Ordinary(p);
+    expect(() => run(p)).toThrow(/unknown original boxes/i);
+  });
+
+  it.each(['full_year_resident', 'nonresident'] as const)('holds an unrecorded state withholding box for %s', status => {
+    const p = bankFixture(status);
+    Reflect.deleteProperty(p.form, 'stateWithheld');
+    rebindOhio2026Ordinary(p);
+    expect(() => calculateOhio2026ReturnDraftFromSources({ taxInput: p.input, sources: p.sources }))
+      .toThrow(/unknown original boxes/i);
+  });
+
+  it('accepts recorded zero for documented blank boxes without PA-only metadata', () => {
+    const p = bankFixture();
+    for (const key of bankZeroBoxes) p.form[key] = '0.00';
+    Reflect.deleteProperty(p.form, 'paDirectObligationInterest');
+    rebindOhio2026Ordinary(p);
+    const result = run(p);
+    expect(result.incomeTax.toFixed()).toBe('598');
+    expect(result.filingQualified).toBe(false);
   });
 
   it.each<[string, (packet: Packet) => void, RegExp]>([
