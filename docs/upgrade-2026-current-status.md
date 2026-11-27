@@ -48,7 +48,9 @@ Use the linked progress sections when investigating individual packages.
   schema creation on both Linux architectures. The local PostgreSQL
   migration, backup and restore passed with the parent password
   variables unset. The ARM64 fix run passed native archive import
-  and Compose upgrade and recovery, then entered strict Chromium.
+  and Compose upgrade and recovery. Strict Chromium finished all nine
+  windows and cleaned up, with 645 passes, five existing skips and nine
+  deadline failures. The strict gate remains open.
   [ARM64 fix run](https://github.com/utilityfueled/tax-engine/actions/runs/45932508665) ·
   [Current ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45938095409) ·
   [Rehearsal evidence](upgrade-2026-progress.md#november-26-self-host-migration-authentication).

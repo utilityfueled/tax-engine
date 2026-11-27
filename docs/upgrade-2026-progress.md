@@ -135,13 +135,22 @@ restore and cleanup. The forced missing-client control stopped at the
 expected dump stage and left zero schemas. The older AMD64 and ARM64
 runs both failed at `create-schema`. The ARM64 fix run passed native
 archive import and isolated Compose upgrade and recovery. The strict
-browser stage is still running. The current ARM64 run uses main
+browser stage finished with 645 passes, five existing skips and nine
+deadline failures across all nine windows. Cleanup passed. The current ARM64 run uses main
 `969126595`, whose application files match `a6111984c`.
 [Old AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45920349552) ·
 [Old ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45919423965) ·
 [Recovery fix ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45932508665) ·
 [Current ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45938095409) ·
 [Current AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45936627770).
+
+The nine failures spanned Ohio business, resident credit and reciprocity,
+and school district desktop and mobile flows. Matching all 659 case IDs
+against the managed run for `a6111984c` put the nine failing cases at
+7.389–10.250 seconds locally. Across passing pairs, the median native
+duration in each window was 2.40–3.73 times the managed duration. This
+compares different environments and two revisions. The measurements do
+not isolate a cause or qualify the strict 30-second gate.
 
 ## November 26 upper QBI audit transfers
 

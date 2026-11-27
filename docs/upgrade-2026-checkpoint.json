@@ -154,7 +154,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Both strict Linux browser gates and current target image evidence remain open. AMD64 Web 45936627770 covers a6111984c. ARM64 45932508665 passed native archive import and isolated Compose recovery for b496c367d and reached strict Chromium. Current ARM64 45938095409 uses docs-only main 969126595 with application bytes equal to a6111984c. Prior ARM64 45919423965 and AMD64 45920349552 failed at create-schema. A standalone SCRAM 16.14 positive and failure-mode rehearsal passed after the fix.",
+      "Both strict Linux browser gates and current target image evidence remain open. AMD64 Web 45936627770 covers a6111984c. ARM64 45932508665 passed native archive import and isolated Compose recovery for b496c367d. Strict Chromium recorded nine deadline failures, five existing skips and 645 passes. All nine windows finished and cleanup passed. Current ARM64 45938095409 uses docs-only main 969126595 with application bytes equal to a6111984c. Prior ARM64 45919423965 and AMD64 45920349552 failed at create-schema. A standalone SCRAM 16.14 positive and failure-mode rehearsal passed after the fix.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -333,6 +333,17 @@
       "arm64RecoveryFixRun": 45932508665,
       "recoveryFixAmd64WebRun": 45931694869,
       "recoveryFixArm64StagesPassed": ["independent native archive import", "isolated Compose upgrade and recovery"],
+      "recoveryFixArm64ArchiveReceiptSha256": "a0eefeb51346fb0a14a5db88076d3330e1f99be657fa243c20120ccdab714d36",
+      "recoveryFixArm64Browser": {
+        "receiptSha256": "1d85c9b2a886b61e6b9454b119252dc0534e733fc5fa63cf450e6ef7409b236c",
+        "deadlineMs": 30000,
+        "windows": 9,
+        "passed": 645,
+        "failed": 9,
+        "skipped": 5,
+        "cleanupPassed": true,
+        "timingComparison": "All 659 IDs matched the managed a6111984c suite. Median native duration across passing pairs in each window was 2.40–3.73× managed duration. Different environment and revision, diagnostic only."
+      },
       "currentArm64Run": 45938095409,
       "currentArm64RunRevision": "969126595aa5fd3e609b9176a501570b0af61088",
       "currentArm64ApplicationCommit": "a6111984c0f1a96f6ff327ec0143efc46f1f4ea4"
