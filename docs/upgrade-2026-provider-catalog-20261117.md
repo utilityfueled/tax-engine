@@ -94,6 +94,18 @@ for the `gpt-5-mini` alias and dated snapshot shutdown.
 [GPT-6 Sol details](https://developers.openai.com/api/docs/models/gpt-6-sol) ·
 [OpenAI lifecycle](https://developers.openai.com/api/docs/deprecations).
 
+## November 27 public catalog refresh
+
+The public OpenAI and Google catalogs show the same rates and comparison
+lifecycle dates recorded below. OpenAI still documents Luna High and
+Sol Low and High. This check made zero provider account or generation
+requests. Selected Google project access, live comparison receipts,
+and independent held-out review remain required.
+[OpenAI API pricing](https://developers.openai.com/api/docs/pricing) ·
+[OpenAI lifecycle](https://developers.openai.com/api/docs/deprecations) ·
+[Gemini pricing](https://aistudio.google.com/docs/pricing#gemini-3.8-flash) ·
+[Gemini lifecycle](https://ai.google.dev/gemini-api/docs/deprecations).
+
 ## November 26 public prices and comparison availability
 
 OpenAI still lists standard short-context prices per million tokens of
