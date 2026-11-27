@@ -535,12 +535,18 @@ export function buildAdjustmentsInput(adjustmentData: AdjustmentData | undefined
 function federalPaymentInputs(
   entries: PaymentData["estimatedPayments"] | undefined,
   calculationReferences: ReadonlyMap<number, string>,
+  balanceDueReceiptGroups?: ReadonlySet<string>,
+  kind: "estimate" | "extension" = "estimate",
 ) {
   return (entries ?? []).map((entry, index) => {
-    const receiptReference = calculationReferences.get(index);
+    const amount = toDecimalString(entry.amount);
+    const receiptReference = calculationReferences.get(index) ?? (
+      balanceDueReceiptGroups?.size && balanceDueReceiptGroups.has(`${entry.date}:${new Decimal(amount).toFixed()}`)
+        ? `guided-${kind}-receipt-${index + 1}` : undefined
+    );
     return {
       date: entry.date,
-      amount: toDecimalString(entry.amount),
+      amount,
       type: "federal" as const,
       ...(receiptReference ? { receiptReference } : {}),
       ...(entry.application?.confirmed === true ? {
@@ -1022,8 +1028,12 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const scheduleH = buildScheduleHInput(otherTaxesData, state.taxYear);
   const usesDedicatedReceipts = usesDedicatedStatePaymentReceipts(segmentation.stateCode);
   const supportsEstimateApplication = !usesDedicatedReceipts || (state.taxYear === 2025 && segmentation.stateCode === "OH");
+  const form2210 = buildEstimatedTaxFacts(paymentData, state.taxYear, segmentation.filingStatus);
+  const balanceDueReceiptGroups = new Set(form2210?.returnPayments
+    ?.filter(payment => payment.receiptReference)
+    .map(payment => `${payment.date}:${payment.amount}`));
   const estimatedPayments = [
-    ...federalPaymentInputs(paymentData?.estimatedPayments, paymentFacts.calculationReferences.estimate),
+    ...federalPaymentInputs(paymentData?.estimatedPayments, paymentFacts.calculationReferences.estimate, balanceDueReceiptGroups),
     ...(stateReturnData?.stateEstimatedPayments ?? []).map((entry) => {
       const taxYear = supportsEstimateApplication ? confirmedStateEstimatedPaymentYear(entry) : undefined;
       return {
@@ -1035,7 +1045,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
       };
     }),
   ];
-  const extensionPayments = federalPaymentInputs(paymentData?.extensionPayments, paymentFacts.calculationReferences.extension);
+  const extensionPayments = federalPaymentInputs(paymentData?.extensionPayments, paymentFacts.calculationReferences.extension, balanceDueReceiptGroups, "extension");
   const priorYearAppliedCredits = (paymentData?.priorYearAppliedCredits ?? []).map((entry) => ({ sourceTaxYear: Number(entry.sourceTaxYear), amount: toDecimalString(entry.amount), type: "federal" as const }));
   const paymentAdjustments = { estimatedTaxPayments: estimatedPayments, extensionPayments, priorYearAppliedCredits };
   const form172 = buildCurrentLossOrigin(adjustmentData?.currentLossOrigin, state);
@@ -1077,7 +1087,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     },
     w2s,
     ...(scheduleBPartThree ? { scheduleBPartThree } : {}),
-    form2210: buildEstimatedTaxFacts(paymentData, state.taxYear, segmentation.filingStatus),
+    form2210,
     form2555: builtForeignIncome = buildForeignIncomeInput(adjustmentData?.foreignIncome, state),
     ...(form3903 === undefined ? {} : { form3903 }),
     netOperatingLoss: buildGuidedNetOperatingLoss(adjustmentData?.netOperatingLossSources, state.taxYear, segmentation.filingStatus, personalInfo, deductionData, adjustmentData?.k1LossSources, adjustmentData?.codNolSources?.attributeSources),

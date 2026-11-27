@@ -5104,7 +5104,7 @@ function calculateFederalTaxCore(sourceInput: TaxYearInput, marketplace?: Market
       ...(form2210Facts?.priorYearCreditPayments ?? []).map(payment=>({...payment,kind:"prior-year-credit" as const})),
       ...(input.adjustments?.extensionPayments ?? []).filter(payment=>payment.type === "federal")
         .map(payment=>({date:payment.date,amount:payment.amount,kind:"extension" as const})),
-      ...(form2210Facts?.returnPayments ?? []).map(payment=>({...payment,kind:"return" as const})),
+      ...(form2210Facts?.returnPayments ?? []).map(({ date, amount })=>({date,amount,kind:"return" as const})),
     ],
   };
   const householdTax = scheduleH?.totalTax ?? d("0");

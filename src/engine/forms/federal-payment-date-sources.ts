@@ -66,6 +66,26 @@ export function assertFederalPaymentSources(
   }
   const receiptReferences = new Set<string>();
   const receiptByDateAndAmount = new Map<string, boolean>();
+  const assertDistinctPositiveReceipt = (payment: { date: string; amount: string; receiptReference?: string }) => {
+    const amount = d(payment.amount);
+    if (!supportsFederalPaymentReceiptReferences(year) || !amount.gt(0)) return;
+    const reference = normalizeFederalPaymentReceiptReference(payment.receiptReference);
+    if (reference) {
+      if (receiptReferences.has(reference)) {
+        throw new Error("More than one positive federal payment uses the same actual payment receipt reference. Reconcile the original payment before calculating.");
+      }
+      receiptReferences.add(reference);
+    }
+    if (year === 2026) {
+      const key = `${payment.date}:${amount.toFixed()}`;
+      const priorHasReference = receiptByDateAndAmount.get(key);
+      if (priorHasReference !== undefined && (!priorHasReference || !reference)) {
+        throw new Error("Federal payments with the same date and amount require distinct actual receipt references. Reconcile the original payments before calculating.");
+      }
+      receiptByDateAndAmount.set(key, Boolean(reference));
+    }
+  };
+
   for (const payment of datedPayments) {
     if (!actualDate.safeParse(payment.date).success) {
       throw new Error("Federal estimated or extension payment requires its actual calendar date.");
@@ -86,23 +106,14 @@ export function assertFederalPaymentSources(
         throw new Error("Federal payment outside the return year and following year requires its confirmed tax-year application.");
       }
     }
-    const amount = d(payment.amount);
-    if (supportsFederalPaymentReceiptReferences(year) && amount.gt(0)) {
-      const reference = normalizeFederalPaymentReceiptReference(payment.receiptReference);
-      if (reference) {
-        if (receiptReferences.has(reference)) {
-          throw new Error("More than one positive federal estimated or extension payment uses the same actual payment receipt reference. Reconcile the original payment before calculating.");
-        }
-        receiptReferences.add(reference);
+    assertDistinctPositiveReceipt(payment);
+  }
+  if (year === 2026) {
+    for (const payment of input.form2210?.returnPayments ?? []) {
+      if (!actualDate.safeParse(payment.date).success || !isActualPaymentAmount(payment.amount)) {
+        throw new Error("Federal balance-due payment requires its actual calendar date and confirmed nonnegative amount.");
       }
-      if (year === 2026) {
-        const key = `${payment.date}:${amount.toFixed()}`;
-        const priorHasReference = receiptByDateAndAmount.get(key);
-        if (priorHasReference !== undefined && (!priorHasReference || !reference)) {
-          throw new Error("Federal payments with the same date and amount require distinct actual receipt references. Reconcile the original payments before calculating.");
-        }
-        receiptByDateAndAmount.set(key, Boolean(reference));
-      }
+      assertDistinctPositiveReceipt(payment);
     }
   }
   const appliedCredits: { sourceTaxYear: number; amount: Decimal }[] = [];

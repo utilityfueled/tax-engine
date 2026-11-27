@@ -4159,7 +4159,10 @@ export const Form2210Schema = z.object({
   priorYearTaxComputationConfirmed: z.boolean().optional(),
   // Effective applied-credit dates must come from actual payment/return history.
   priorYearCreditPayments: z.array(Form2210PaymentSchema).optional(),
-  returnPayments: z.array(Form2210PaymentSchema).optional(),
+  returnPayments: z.array(Form2210PaymentSchema.extend({
+    /** Identity of the actual processed balance-due payment, if independently known. */
+    receiptReference: z.string().optional(),
+  })).optional(),
   returnFiledDate: Form2210DateSchema.optional(),
   returnPaidInFullDate: Form2210DateSchema.optional(),
 });

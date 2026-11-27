@@ -20,6 +20,19 @@ const raw = (taxYear: 2025 | 2026, adjustmentFacts: object) => ({
 });
 const run = (year: 2025 | 2026, facts = adjustments(), asOfDate?: string) => calculateFederalTax(parseInput(raw(year, facts)), { asOfDate });
 
+function datedPenaltyReturn(year: 2025 | 2026, adjustmentFacts: object, returnPayments: readonly object[]) {
+  const base = raw(year, adjustmentFacts);
+  return calculateFederalTax(parseInput(JSON.parse(JSON.stringify({
+    ...base, w2s: base.w2s.map(w2 => ({ ...w2, federalWithheld: "0" })),
+    form2210: {
+      calendarYearTaxpayer: true, residentReturn: true, farmerOrFisher: false, disasterReliefClaimed: false,
+      waiverRequested: false, calculationMethod: "regular", withholdingMethod: "equal-installments",
+      priorYearTaxStatus: "return-filed", priorYearFullYear: true, priorYearJointReturn: false,
+      priorYearTaxComputationConfirmed: true, priorYearTaxForForm2210: "8000", priorYearAgiForForm2210: "85000", returnPayments,
+    },
+  }))));
+}
+
 describe("Actual federal payment dates and selected return application", () => {
   it("holds a reused actual federal payment receipt before crediting payments", () => {
     for (const taxYear of [2025, 2026] as const) {
@@ -33,6 +46,50 @@ describe("Actual federal payment dates and selected return application", () => {
       ]) {
         expect(() => run(taxYear, payments)).toThrow(/same actual.*receipt reference/i);
       }
+    }
+  });
+
+  it("holds 2026 balance-due duplicates before they reduce the installment penalty", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2027, 3, 10, 12));
+    try {
+      const paid = { date: "2027-04-09", amount: "2000.01" };
+      const extensionPayment = { ...paid, type: "federal", receiptReference: "Fictional-extension-20001" };
+      const actual = datedPenaltyReturn(2026, adjustments([], [extensionPayment]), []);
+      expect(actual.form2210?.requiredAnnualPayment.toFixed()).toBe("8000");
+      expect(actual.form2210?.totalPayments.toFixed()).toBe("2000.01");
+      expect(actual.form2210?.underpayment.toFixed()).toBe("5999.99");
+      const identical = { ...paid, amount: "2000.010" };
+      expect(() => datedPenaltyReturn(2026, adjustments([], [extensionPayment]), [identical])).toThrow(/distinct actual receipt references/u);
+      expect(() => datedPenaltyReturn(2026, adjustments([extensionPayment]), [identical])).toThrow(/distinct actual receipt references/u);
+      expect(() => datedPenaltyReturn(2026, adjustments(), [paid, identical])).toThrow(/distinct actual receipt references/u);
+      expect(() => datedPenaltyReturn(2026, adjustments([], [extensionPayment]), [
+        { ...identical, date: "2027-04-08", receiptReference: " Fictional-extension -20001 " },
+      ])).toThrow(/same actual.*receipt reference/u);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("keeps independently documented 2026 installment payments and legacy 2025 entries", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2027, 3, 10, 12));
+    try {
+      const paid = { date: "2027-04-09", amount: "2000.01" };
+      const extensionPayment = { ...paid, type: "federal", receiptReference: "Fictional-extension-original" };
+      const separate = { ...paid, amount: "2000.010", receiptReference: "Fictional-balance-due-original" };
+      const zero = { ...paid, amount: "0.00", receiptReference: extensionPayment.receiptReference };
+      const result = datedPenaltyReturn(2026, adjustments([], [extensionPayment]), [separate, zero]);
+      const once = datedPenaltyReturn(2026, adjustments([], [extensionPayment]), []);
+      expect(result.form2210?.totalPayments.toFixed()).toBe("4000.02");
+      expect(result.form2210?.underpayment.toFixed()).toBe("3999.98");
+      // April 9 versus April 15, six days at 8% on the separately verified $2,000.01.
+      expect(once.form2210?.exactPenalty.minus(result.form2210?.exactPenalty ?? 0).toFixed(6)).toBe("2.630150");
+      expect(JSON.stringify(result.allLines)).not.toMatch(/fictional-.*-original/iu);
+      const legacy = { date: "2026-04-09", amount: paid.amount };
+      expect(datedPenaltyReturn(2025, adjustments([], [{ ...legacy, type: "federal" }]), [legacy]).form2210?.totalPayments.toFixed()).toBe("4000.02");
+    } finally {
+      vi.useRealTimers();
     }
   });
 

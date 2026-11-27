@@ -3,6 +3,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import Decimal from "decimal.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { calculateForm2210 } from "@/engine/forms/form-2210.js";
+import { assertFederalPaymentSources } from "@/engine/forms/federal-payment-date-sources.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { emptyPaymentData, parseGuidedFlowState, updateSectionData, validateSection, type PaymentData } from "@/lib/guided-interview-flow";
@@ -125,8 +126,15 @@ it("accepts separately confirmed original payment references and holds stale or 
   for (const draft of [state, reopened]) {
     expect(validateSection(draft, "payments").status).toBe("complete");
     const input = buildTaxInputFromGuidedData(draft);
-    expect(input?.form2210?.returnPayments).toEqual([{ date, amount: "50" }, { date, amount: "50" }]);
-    expect(input?.adjustments?.estimatedTaxPayments?.[0]).toEqual({ date, amount: "50.00", type: "federal", application: { taxYear: 2026, confirmed: true } });
+    expect(input?.form2210?.returnPayments).toEqual([
+      { date, amount: "50", receiptReference: "guided-balance-due-receipt-1" },
+      { date, amount: "50", receiptReference: "guided-balance-due-receipt-2" },
+    ]);
+    expect(input?.adjustments?.estimatedTaxPayments?.[0]).toEqual({
+      date, amount: "50.00", type: "federal", receiptReference: "guided-estimate-receipt-1",
+      application: { taxYear: 2026, confirmed: true },
+    });
+    expect(() => assertFederalPaymentSources(TaxYearInputSchema.parse(JSON.parse(JSON.stringify(input))))).not.toThrow();
     expect(JSON.stringify(input)).not.toMatch(/original-estimate|original-return|second-return/i);
   }
 

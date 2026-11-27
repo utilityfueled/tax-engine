@@ -149,7 +149,17 @@ lines:
       is divided by law, not represented as actual payroll dates. Actual-date
       election must reconcile all withholding. Return and extension payments
       stop accrual on their actual effective dates; neither moves the April15 end.
+      For 2026, each positive bank or IRS payment must appear once across
+      federal estimates, extension payments and balance-due return payments.
+      Reject a reused receipt identity even when another field differs.
+      Positive payments with the same actual date and exact amount require
+      separately confirmed original receipts. A guided draft retains the
+      original private references and projects only positional markers for
+      those ambiguous groups. A zero does not create a payment or a match.
     testRef: "tests/engine/forms/form-2210-dated.test.ts::reproduces IRS line 11 Example 1 using dated credit and estimated payments"
+    testRefs:
+      - "tests/engine/federal-payment-date-sources.test.ts::holds 2026 balance-due duplicates before they reduce the installment penalty"
+      - "tests/engine/federal-payment-date-sources.test.ts::keeps independently documented 2026 installment payments and legacy 2025 entries"
 
   - line: "12a-12d"
     description: "Previous overpayment"

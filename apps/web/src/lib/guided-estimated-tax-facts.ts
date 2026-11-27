@@ -51,10 +51,11 @@ export function confirmedReturnPaymentReference(payment: EstimatedTaxReturnPayme
   return parseGuidedCurrency(checked.amount).eq(parseGuidedCurrency(payment.amount)) ? reference : "";
 }
 
-function assertDistinctReturnPayments(data: PaymentData, originals: EstimatedTaxReturnPaymentEntry[], returns: { date: string; amount: string }[]) {
-  if (!returns.some(payment => payment.amount !== "0")) return;
+function reconcileReturnPaymentReceipts(data: PaymentData, originals: EstimatedTaxReturnPaymentEntry[], returns: { date: string; amount: string }[]) {
+  if (!returns.some(payment => payment.amount !== "0")) return returns;
   const references = new Set<string>();
   const matchingPaymentsVerified = new Map<string, boolean>();
+  const matchingReturnPaymentKeys = new Set<string>();
   for (const payment of [...data.estimatedPayments ?? [], ...data.extensionPayments ?? []]) {
     if (!isActualDate(payment.date) || amountError(payment.amount, "payment amount")) continue;
     const amount = parseGuidedCurrency(payment.amount);
@@ -78,9 +79,13 @@ function assertDistinctReturnPayments(data: PaymentData, originals: EstimatedTax
     if ((reference || original.processedReceipt?.confirmedFor) && !verified) {
       throw new Error("Confirm the processed IRS payment reference for the current return payment date and amount before calculating.");
     }
+    if (earlierPaymentsVerified !== undefined) matchingReturnPaymentKeys.add(key);
     matchingPaymentsVerified.set(key, verified);
     if (reference) references.add(reference);
   }
+  return returns.map((payment, index) => matchingReturnPaymentKeys.has(`${payment.date}:${payment.amount}`)
+    ? { ...payment, receiptReference: `guided-balance-due-receipt-${index + 1}` }
+    : payment);
 }
 export const ANNUALIZED_PERIOD_FIELDS = [
   ["adjustedGrossIncome", "Adjusted gross income", true], ["itemizedDeductions", "Itemized deductions, or 0 if you do not itemize", false],
@@ -175,8 +180,8 @@ export function buildEstimatedTaxFacts(
   }
   const withholdingPayments = dated(facts.withholdingPayments, "withholding", true);
   const priorYearCreditPayments = dated(facts.priorYearCreditPayments, "applied-credit", false);
-  const returnPayments = dated(facts.returnPayments, "return payment", false, true);
-  if (year === 2026) assertDistinctReturnPayments(data, facts.returnPayments, returnPayments);
+  const datedReturnPayments = dated(facts.returnPayments, "return payment", false, true);
+  const returnPayments = year === 2026 ? reconcileReturnPaymentReceipts(data, facts.returnPayments, datedReturnPayments) : datedReturnPayments;
   const credits = data.priorYearAppliedCredits ?? [], allocated = credits.map(() => new Decimal(0));
   facts.priorYearCreditPayments.forEach((entry, index) => {
     if (!/^(0|[1-9]\d*)$/.test(entry.appliedCreditIndex)) throw new Error("Link each actual effective-date payment to its original applied-refund source.");
