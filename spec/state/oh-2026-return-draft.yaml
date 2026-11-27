@@ -268,8 +268,8 @@ lines:
       Require a recipient-bound, current uncorrected nonvoid original Form 1099-G
       (Rev. December 2026) for ordinary noncontributory state unemployment insurance.
       Verify every original box, known-zero non-Box-1 income and adjustments, no
-      repayments or unrecovered contributions, and no state withholding even if
-      omitted from the recipient copy. Require a complete original-bound list of
+      repayments or unrecovered contributions, and the original state
+      withholding treatment. Require a complete original-bound list of
       actual dates and positive whole-dollar amounts paid or accrued in calendar
       2026. Require one primary owner, the existing ordinary W2 source admission,
       and a complete domicile timeline. Each unique receipt counts at its actual
@@ -293,6 +293,31 @@ lines:
     testRefs:
       - "tests/engine/state/oh-2026-unemployment-draft.test.ts::includes all verified Box 1 unemployment for a full-year Ohio resident"
       - "tests/engine/state/oh-2026-unemployment-draft.test.ts::holds contradicted full-year unemployment allocations and incomplete original receipts"
+  - line: "ordinary-unemployment-ohio-withholding"
+    description: "Credit verified Ohio unemployment withholding in the 2026 ordinary draft"
+    formula: >-
+      Use the existing confirmed absence of state withholding or require one
+      confirmed Ohio withholding row from the same current Form 1099-G. Match
+      Boxes 11a and 11b to Ohio and the actual payer state identifier, and
+      match the positive Box 12 amount exactly to the confirmed original.
+      Hold incomplete evidence, inconsistent amounts, multiple or non-Ohio
+      rows, and withholding greater than the original gross compensation.
+      Sum actual Ohio wage and unemployment withholding in Decimal and round
+      the combined annual amount once. Residency and receipt dates determine
+      the unemployment allocation, while the full actual Ohio withholding
+      enters settlement for each supported residency. The covered draft reports
+      no underpayment when the annual withholding covers the current liability
+      and records that basis without inferring the actual quarterly timing.
+      This is a private review draft.
+    sources:
+      - "https://codes.ohio.gov/ohio-revised-code/section-5747.065"
+      - "https://codes.ohio.gov/ohio-revised-code/section-5747.09/9-30-2025"
+      - "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf#page=21"
+      - "https://www.irs.gov/instructions/i1099g"
+    testRef: "tests/engine/state/oh-2026-unemployment-draft.test.ts::includes original Ohio unemployment withholding for %s"
+    testRefs:
+      - "tests/engine/state/oh-2026-unemployment-draft.test.ts::holds unbound Ohio unemployment withholding for %s"
+      - "tests/engine/state/oh-2026-unemployment-draft.test.ts::uses Ohio unemployment withholding to cover the remaining annual liability"
   - line: "w2-code-q-admission"
     description: "Require the separate state military compensation method when combat pay is reported"
     formula: "Positive actual W2 Box 12 Code Q identifies nontaxable combat pay from a military employer and contradicts the finite ordinary employee admission. Reject even with matching originals and no retained duty classification. Code Q alone establishes neither duty location nor the treatment of Box 1 or 16. Preserve historical absent Code Q and confirmed zero when all other ordinary facts qualify. Sources verified 2026-11-13: https://www.irs.gov/instructions/iw2w3 and https://tax.ohio.gov/individual/military."

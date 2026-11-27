@@ -45,17 +45,24 @@ export const Ohio2026UnemploymentOriginalSchema = z.object({
   unemploymentCompensation: money, stateLocalIncomeTaxRefund: money.optional(), stateOrLocalTaxRefund: money.optional(),
   federalWithheld: money, rtaaPayments: money, taxableGrants: money, agriculturePayments: money, marketGain: money,
   familyLeaveBenefits: money, tradeOrBusinessRefund: z.literal(false), currentYearRepaid: money, priorYearRepaid: money,
-  unrecoveredAfterTaxContributions: money, stateTaxReporting: z.literal('none'), stateWithheld: money.optional(),
+  unrecoveredAfterTaxContributions: money, stateTaxReporting: z.enum(['none', 'single']),
+  state: z.literal('OH').optional(), statePayerId: reference.optional(), stateWithheld: money.optional(),
 }).strict().refine(form => form.stateLocalIncomeTaxRefund !== undefined || form.stateOrLocalTaxRefund !== undefined);
 
+const unemploymentOriginal = z.strictObject({
+  sourceId: reference, sourceReference: reference,
+  recipient: z.object({ firstName: reference, lastName: reference, ssn: z.string().regex(/^\d{3}-?\d{2}-?\d{4}$/) }).strict(),
+  currentUncorrectedNonvoidOriginalConfirmed: z.literal(true), allOriginalBoxesKnownConfirmed: z.literal(true),
+  ordinaryNoncontributoryStateUnemploymentConfirmed: z.literal(true),
+});
 export const Ohio2026UnemploymentEmployeeSourcesSchema = Ohio2026OrdinarySourcesSchema.omit({ seniorCreditHistory: true }).extend({
   methodId: z.literal('oh-2026-unemployment-employee-draft-v1'),
-  unemploymentOriginal: z.object({
-    sourceId: reference, sourceReference: reference,
-    recipient: z.object({ firstName: reference, lastName: reference, ssn: z.string().regex(/^\d{3}-?\d{2}-?\d{4}$/) }).strict(),
-    currentUncorrectedNonvoidOriginalConfirmed: z.literal(true), allOriginalBoxesKnownConfirmed: z.literal(true),
-    ordinaryNoncontributoryStateUnemploymentConfirmed: z.literal(true), noStateWithholdingConfirmed: z.literal(true),
-  }).strict(),
+  unemploymentOriginal: z.union([
+    unemploymentOriginal.extend({ noStateWithholdingConfirmed: z.literal(true) }),
+    unemploymentOriginal.extend({ ohioWithholding: z.strictObject({
+      statePayerId: reference, amount: money, sourceFactsConfirmed: z.literal(true),
+    }) }),
+  ]),
 }).strict();
 export type Ohio2026UnemploymentEmployeeSources = z.infer<typeof Ohio2026UnemploymentEmployeeSourcesSchema>;
 

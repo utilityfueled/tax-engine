@@ -69,15 +69,25 @@ function qualifyUnemployment(input: TaxYearInput, facts: OhioResidencyFacts, ori
   const box1 = cash(form.data.unemploymentCompensation);
   const otherAmounts = [form.data.stateLocalIncomeTaxRefund, form.data.stateOrLocalTaxRefund, form.data.rtaaPayments,
     form.data.taxableGrants, form.data.agriculturePayments, form.data.marketGain, form.data.familyLeaveBenefits,
-    form.data.currentYearRepaid, form.data.priorYearRepaid, form.data.unrecoveredAfterTaxContributions, form.data.stateWithheld];
+    form.data.currentYearRepaid, form.data.priorYearRepaid, form.data.unrecoveredAfterTaxContributions];
   if (!box1.gt(0) || !box1.isInteger() || cash(form.data.federalWithheld).gt(box1)
     || otherAmounts.some(amount => amount !== undefined && !cash(amount).isZero())) fail('unsupported original amounts require their separate Box 1 unemployment method');
+  const ohioWithholding = cash(form.data.stateWithheld ?? '0');
+  if ('ohioWithholding' in original) {
+    const confirmed = original.ohioWithholding;
+    if (form.data.stateTaxReporting !== 'single' || form.data.state !== 'OH' || form.data.statePayerId !== confirmed.statePayerId
+      || !ohioWithholding.gt(0) || !ohioWithholding.eq(cash(confirmed.amount)) || ohioWithholding.plus(cash(form.data.federalWithheld)).gt(box1)) {
+      fail('actual Ohio unemployment withholding must match the Ohio row, payer state ID and amount on the current Form 1099-G');
+    }
+  } else if (form.data.stateTaxReporting !== 'none' || form.data.state !== undefined || form.data.statePayerId !== undefined || !ohioWithholding.isZero()) {
+    fail('unsupported state withholding requires its separate Box 1 unemployment method');
+  }
   const { unemploymentPaymentSource: payment, unemploymentPaymentSchedule: schedule } = facts;
   const evidence = payment ?? schedule;
   if (!evidence || (payment && schedule) || evidence.originalSourceId !== form.data.sourceId) fail('one complete Box 1 receipt proof matching the current original required');
   const receipts = 'payments' in evidence ? evidence.payments : [evidence];
   for (const receipt of receipts) cash(receipt.amount);
-  return { box1, residentAmount: allocateOhioUnemploymentReceipts(receipts, owner.periods, facts.taxYear, box1) };
+  return { box1, residentAmount: allocateOhioUnemploymentReceipts(receipts, owner.periods, facts.taxYear, box1), ohioWithholding };
 }
 
 const maskedAccountReference = /(?:(?:^|[\s-])(?:[*•●∙⋅·]+|\.{3,}|…)|(?:^|\s)x{4,})(?:[\s-]*\d+)?$/iu;
@@ -248,6 +258,7 @@ interface Projection {
   bankInterestOhioAllocation?: string;
   cashDividendOhioAllocation?: string;
   partYearReciprocalOhioAgi?: string;
+  unemploymentWithholding?: string;
   primaryQualifyingIncome: string; spouseQualifyingIncome?: string;
   seniorCreditEligibleByAge?: true;
   actualBalancePayment?: true;
@@ -389,7 +400,7 @@ function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, res
   const wageTotals = { primary: new Decimal(0), spouse: new Decimal(0) };
   const residentWages = { primary: new Decimal(0), spouse: new Decimal(0) };
   const nonresidentWages = { primary: new Decimal(0), spouse: new Decimal(0) };
-  let withholding = new Decimal(0);
+  let withholding = unemploymentAmounts?.ohioWithholding ?? new Decimal(0);
   const indexes = new Set<number>(), documentIds = new Set<string>();
   for (const employment of source.employmentOriginals) {
     const index = employment.w2Index, w2 = input.w2s[index];
@@ -472,6 +483,7 @@ function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, res
   contexts.set(context, { currentDigest, projection: { ...(actualBalancePayment ? {actualBalancePayment: true as const, originalWithholding: withholding.toFixed()} : {}), filingStatus: filingStatus as Projection['filingStatus'], federalAgi: federalAgi.toFixed(), ...(reciprocal ? { reciprocalWageExclusion: partYearExclusion ?? federalAgi.toFixed() } : {}), ...(paidResident ? { residentCreditIncome: paidResident.income, residentCreditTaxPaid: paidResident.taxPaid } : {}), withholding: roundDollar(withholding).toFixed(), eligibleExemptions: holders.length,
     ...(partYearReciprocal ? { partYearReciprocalOhioAgi: ohioAgi.toFixed() } : {}),
     ...(coupon ? { treasuryCoupon: { deduction: coupon.toFixed(), ohioAgi: ohioAgi.toFixed() } } : {}),
+    ...(unemploymentAmounts?.ohioWithholding.gt(0) ? { unemploymentWithholding: unemploymentAmounts.ohioWithholding.toFixed() } : {}),
     ...(bank ? { bankInterestOhioAllocation: bank.residentAmount.toFixed() } : {}),
     ...(dividend ? { cashDividendOhioAllocation: dividend.residentAmount.toFixed() } : {}),
     ...(seniorCreditEligibleByAge ? { seniorCreditEligibleByAge: true as const } : {}), primaryQualifyingIncome: wageTotals.primary.toFixed(),

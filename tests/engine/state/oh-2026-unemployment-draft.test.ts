@@ -54,7 +54,71 @@ function run(p: Packet) {
   return calculateOhio2026UnemploymentReturnDraft(p.input, p.sources);
 }
 
+function unemploymentWithholdingFixture(status: NonNullable<Parameters<typeof unemploymentFixture>[0]> = 'full_year_resident', wageWithholding = '1000.25') {
+  const packet = unemploymentFixture(status);
+  const statePayerId = 'PRIVATE-OH-WITHHOLDING-ACCOUNT';
+  Object.assign(packet.form, { stateTaxReporting: 'single', state: 'OH', statePayerId, stateWithheld: '25.25' });
+  const w2 = current(packet.input.w2s[0]);
+  const w2Original = current(w2.stateLocalSources);
+  w2.stateTaxWithheld = wageWithholding;
+  w2Original.originalW2.stateTaxWithheld = wageWithholding;
+  current(w2Original.stateRows[0]).withheld = wageWithholding;
+  rebindOhio2026Ordinary(packet);
+  const { noStateWithholdingConfirmed: _noStateWithholding, ...original } = packet.sources.unemploymentOriginal;
+  const sources = { ...packet.sources, unemploymentOriginal: {
+    ...original, ohioWithholding: { statePayerId, amount: '25.25', sourceFactsConfirmed: true },
+  } };
+  return { ...packet, sources };
+}
+
 describe('Ohio 2026 private ordinary Box 1 unemployment draft', () => {
+  it.each([
+    ['full_year_resident', '959', '67'],
+    ['part_year_resident', '572', '454'],
+    ['nonresident', '188', '838'],
+  ] as const)('includes original Ohio unemployment withholding for %s', (status, tax, refund) => {
+    const packet = unemploymentWithholdingFixture(status);
+    const saved = JSON.stringify({ input: packet.input, sources: packet.sources });
+    const reopened = JSON.parse(saved) as Pick<typeof packet, 'input' | 'sources'>;
+    const result = calculateOhio2026UnemploymentReturnDraft(reopened.input, reopened.sources);
+
+    expect(result.incomeTax.toFixed()).toBe(tax);
+    expect(result.withholding.toFixed()).toBe('1026');
+    expect(result.refund.toFixed()).toBe(refund);
+    expect(result).toMatchObject({ filingQualified: false, reviewStatus: 'independent-review-pending' });
+    expect(result.lines.find(line => line.line === 'unemployment-withholding')?.value.toFixed(2)).toBe('25.25');
+    expect(JSON.stringify(result.lines)).not.toContain(packet.form.statePayerId);
+    expect(JSON.stringify(reopened)).toBe(saved);
+  });
+
+  it('uses Ohio unemployment withholding to cover the remaining annual liability', () => {
+    const packet = unemploymentWithholdingFixture('full_year_resident', '939.25');
+    const result = calculateOhio2026UnemploymentReturnDraft(packet.input, packet.sources);
+    expect(result.incomeTax.toFixed()).toBe('959');
+    expect(result.withholding.toFixed()).toBe('965');
+    expect(result.refund.toFixed()).toBe('6');
+    expect(result.underpaymentPenalty.toFixed()).toBe('0');
+    expect(result.lines.find(line => line.line === 'underpayment-penalty')?.formula).toMatch(/annual.*withholding.*covers current liability/i);
+  });
+
+  it.each<[string, (packet: ReturnType<typeof unemploymentWithholdingFixture>) => void]>([
+    ['unconfirmed original', packet => { packet.sources.unemploymentOriginal.ohioWithholding.sourceFactsConfirmed = false; }],
+    ['different amount', packet => { packet.form.stateWithheld = '25.24'; }],
+    ['different payer state ID', packet => { packet.form.statePayerId = 'PRIVATE-OTHER-OH-ACCOUNT'; }],
+    ['missing payer state ID', packet => { delete packet.form.statePayerId; }],
+    ['a non-Ohio reporting row', packet => { packet.form.state = 'VA'; }],
+    ['multiple state rows', packet => { packet.form.stateTaxReporting = 'multiple'; }],
+    ['state and federal withholding above Box 1', packet => {
+      packet.form.stateWithheld = '900.01';
+      packet.sources.unemploymentOriginal.ohioWithholding.amount = '900.01';
+    }],
+  ])('holds unbound Ohio unemployment withholding for %s', (_case, mutate) => {
+    const packet = unemploymentWithholdingFixture();
+    mutate(packet);
+    rebindOhio2026Ordinary(packet);
+    expect(() => calculateOhio2026UnemploymentReturnDraft(packet.input, packet.sources)).toThrow(/sources|required|withholding/i);
+  });
+
   it('assigns gross Box 1 to Ohio only when domiciled there on the receipt date', () => {
     const packet = unemploymentFixture();
     const before = JSON.stringify(packet);

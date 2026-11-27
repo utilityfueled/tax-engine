@@ -74,6 +74,7 @@ export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unkno
   const { partYearReciprocalOhioAgi } = actual;
   const partYearReciprocal = partYearReciprocalOhioAgi !== undefined;
   const unemployment = context.methodId === 'oh-2026-unemployment-employee-draft-v1';
+  const { unemploymentWithholding } = actual;
   const { bankInterestOhioAllocation, cashDividendOhioAllocation } = actual;
   const bankInterest = bankInterestOhioAllocation !== undefined;
   const cashDividend = cashDividendOhioAllocation !== undefined;
@@ -119,6 +120,10 @@ export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unkno
   const underpaymentPenalty = new Decimal(0), latePaymentInterest = new Decimal(0), amountDue = actualBalancePayment ? incomeTax.minus(withholding) : new Decimal(0);
   const refund = actualBalancePayment ? new Decimal(0) : roundDollar(withholding.minus(incomeTax));
   const audit = new AuditTrail();
+  if (unemploymentWithholding !== undefined) {
+    audit.record('OH2026 enacted ordinary draft', 'unemployment-withholding', 'Actual Ohio unemployment withholding',
+      new Decimal(unemploymentWithholding), 'Original Form 1099-G Box 12 verified against the Ohio reporting row; RC5747.065');
+  }
   if (partYearReciprocal && actual.reciprocalWageExclusion !== undefined) {
     audit.record('OH2026 enacted PA part-year reciprocal draft', 'reciprocal-exclusion', 'Actual Pennsylvania-resident Ohio compensation excluded once',
       new Decimal(actual.reciprocalWageExclusion), 'Sum exact ordinary Ohio wages earned and paid while domiciled in PA under RC5747.01(A)(33) and RC5747.05(A)(2). Exclude them from the Ohio AGI and NRC allocation.');
@@ -155,8 +160,10 @@ export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unkno
     ['joint-credit', 'Joint filing credit after preceding credits', baseline.jointFilingCredit, 'Actual each-owner qualifying wages, corrected MAGI and remaining-tax tier/cap; RC5747.05(E)'],
     ['earned-income-credit', 'Actual zero earned income credit', earnedIncomeCredit, 'Complete no-qualifying-child sources and AGI at or above indexed2026 phaseout; no unavailable credit default'],
     ['income-tax', resident ? 'Income tax after actual NRC and resident credit' : 'Income tax after actual NRC', incomeTax, resident ? 'Tax after preceding statutory credits minus actual source NRC and resident credit; RC5747.98' : 'Tax after preceding statutory credits minus actual source NRC; RC5747.98'],
-    ['withholding', 'Actual Ohio compensation withholding', withholding, 'Sum only admitted original OH state rows once, then round whole-dollar total; RC5747.08(H)'],
-    ['underpayment-penalty', 'No current installment underpayment', underpaymentPenalty, actualBalancePayment ? 'Actual liability minus withholding at most500; RC5747.09(B); no estimate obligation in finite source method' : 'Actual equal-quarter compensation withholding covers current liability; RC5747.09; other payment methods unsupported'],
+    ['withholding', unemploymentWithholding === undefined ? 'Actual Ohio compensation withholding' : 'Actual Ohio wage and unemployment withholding', withholding,
+      unemploymentWithholding === undefined ? 'Sum only admitted original OH state rows once, then round whole-dollar total; RC5747.08(H)'
+        : 'Sum original Ohio W-2 withholding and Form 1099-G Box 12 before rounding the annual total; RC5747.08(H) and RC5747.065'],
+    ['underpayment-penalty', 'No current installment underpayment', underpaymentPenalty, actualBalancePayment ? 'Actual liability minus withholding at most500; RC5747.09(B); no estimate obligation in finite source method' : unemploymentWithholding === undefined ? 'Actual equal-quarter compensation withholding covers current liability; RC5747.09; other payment methods unsupported' : 'Annual Ohio wage and unemployment withholding covers current liability; RC5747.09'],
     ['late-interest', 'No unpaid tax or late payment interest', latePaymentInterest, actualBalancePayment ? 'Actual fully matched original balance receipt by Apr15,2027; no overdue interval; RC5747.08(G)' : 'Complete ordinary timely chronology and no unpaid tax; no unknown date default'],
     ['amount-due', actualBalancePayment ? 'Reported return balance, separately paid on actual account' : 'No remaining amount due', amountDue, actualBalancePayment ? 'Income tax minus withholding; actual balance receipt is not withholding or an estimated payment' : 'Source-qualified withholding covers current income tax; no other liability admitted'],
     ['refund', 'Actual ordinary overpayment', refund, actualBalancePayment ? 'Actual balance due branch has no overpayment/refund' : 'Whole-dollar withholding minus income tax, with source-established zero other balance/elections'],
