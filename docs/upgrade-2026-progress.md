@@ -8,12 +8,66 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `134de4dc5` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `f38051759` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
+
+## November 27 exact billing, federal W-2 and Ohio verification
+
+The tracked archive for `f38051759` passed all 11 local release checks
+with Node 26.13.1, pypdf 6.10.0 and 15
+verified official sample-document hashes. Both unit runs passed
+31,267 tests with 83 skips. PostgreSQL cases ran separately. Branch coverage
+was 88.66%. Chromium passed 654 tests with
+5 skips. Standalone encrypted recovery passed and both local listeners closed.
+The offline evaluation artifact check passed. Manifest SHA-256
+`3ed68c8740f621779f84380c0364c1301869fa742f095d5e7c0472d7dc47ee2b`.
+
+GitHub reported CI queued, Docker queued, Web queued when this evidence was recorded. Linux runtime
+and hosted cybersecurity qualification remain open. [CI](https://github.com/utilityfueled/tax-engine/actions/runs/46028969840) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/46028969735) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/46028969754).
+
+## November 27 provider usage receipts, federal W-2s and Ohio unemployment withholding
+
+`e7ea8659c` gives each authoritative provider usage record one settlement
+across owners. The PostgreSQL regression reproduced two charges for the same
+record. Concurrent claims now settle once, and the other hold awaits distinct
+evidence. The original settlement remains replayable. An indexed exact comparison
+also recognizes long historical references with surrounding whitespace. All 89
+focused tests passed on disposable PostgreSQL 16.16. Spec, lint and browser
+source audit checks passed.
+
+`c5229eddb` holds indistinguishable same-owner W-2 originals before 2026 federal
+wages and withholding are totaled. The reproducer doubled $50,000 in wages and
+$9,500 in withholding. Employer address and inactive-service metadata no longer
+make a copy distinct. Different economic originals, matching originals for two
+identified joint filers, and the 2025 path passed. All 63 focused tests, typecheck
+and scoped spec validation passed. [Draft 2026 Form 1040, lines 1a and 25a](https://www.irs.gov/pub/irs-dft/f1040--dft.pdf).
+
+`f38051759` verifies Ohio Form 1099-G withholding against the original state's
+reporting row, payer identifier and amount. The private 2026 draft credits the
+entire verified Ohio withholding for each residency, while domicile and receipt
+dates still determine the income allocation. The fixture adds $1,000.25 in wage
+withholding and $25.25 in unemployment withholding before rounding to $1,026.
+Another fixture credits $965 against $959 of annual liability without inferring
+quarterly payment timing. All 777 focused tests and 35 spec references passed.
+The guided calculation and qualified 2026 filing output remain open.
+[Ohio withholding statute](https://codes.ohio.gov/ohio-revised-code/section-5747.065) ·
+[Ohio draft return instructions](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf#page=21) ·
+[IRS Form 1099-G instructions](https://www.irs.gov/instructions/i1099g).
+
+`71c4736a6` adds the receipt facts to the guided interview for the single-filer,
+part-year Ohio review. It binds one dated payment to the entire original Box 1
+amount and the actual domicile period. Reopening preserves the evidence. An
+unsupported positive Box 1 holds review, and a retained older schedule needs
+explicit removal before entering the current receipt. All 309 scoped tests and
+21 independently rerun tests passed. Full-year and nonresident receipt entry,
+the private-engine connection and filing qualification remain open.
+[Ohio domicile statute](https://codes.ohio.gov/ohio-revised-code/section-5747.20).
 
 ## November 27 Ohio reciprocity, AI dispatch and personal charger credits
 
