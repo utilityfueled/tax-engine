@@ -203,6 +203,36 @@ lines:
       - "Prior year QBI carryforward loss reduces current year QBI"
     testRef: "tests/engine/forms/form-8995.test.ts::Form 8995 Line 16 - QBI loss carryforward"
 
+  - line: "2026-draft-1-14"
+    description: "Show signed source amounts and floored intermediate balances on the 2026 draft lines"
+    formula: >-
+      Lines 1i through 1v report signed QBI by trade or business. Audit
+      additional actual sources as attachment detail and include every source
+      in line 2. Record the prior ordinary QBI loss as a signed amount on line
+      3. Line 4 is max(0, line 2 + line 3) and line 5 is 20% of line 4.
+      Line 6 is current signed qualified REIT dividends and PTP income or
+      loss. Record the separate prior REIT and PTP loss as a signed amount on
+      line 7. Line 8 is max(0, line 6 + line 7), line 9 is 20% of line 8,
+      and line 10 adds lines 5 and 9. Line 11 takes the caller's taxable income
+      before QBI. For Form 1040 or 1040-SR, start from line 11a, subtract
+      line 13a (Schedule 1-A), and subtract Schedule A lines 4, 7, 10, 15,
+      16, and 17z before Section 68 if itemizing, or Form 1040 or 1040-SR
+      lines 12e and 12f otherwise. Line 12 is net capital gain plus qualified
+      dividends.
+      Line 13 is max(0, line 11 - line 12), and line 14 is 20% of line 13.
+    notes: >-
+      Use numbered trade or business labels for the draft audit, including
+      attachment detail. Keep source names out of the serialized draft audit.
+      Preserve the original source facts, existing whole-dollar calculation,
+      signed named net amounts, positive named carry losses, historical audit
+      identifiers, and draft-only status.
+    irsRef: "https://www.irs.gov/pub/irs-dft/f8995--dft.pdf#page=2, lines 1–14; https://www.irs.gov/pub/irs-dft/i8995--dft.pdf#page=5, instructions for lines 1–10; https://www.irs.gov/pub/irs-dft/i8995--dft.pdf#page=6, instructions for lines 11–14"
+    testRef: "tests/engine/forms/form-8995-2026-upper-audit.test.ts::shows signed draft inputs and floors negative balances"
+    testRefs:
+      - "tests/engine/forms/form-8995-2026-upper-audit.test.ts::shows positive draft balances and includes additional source detail in line 2"
+      - "tests/engine/forms/form-8995-2026-upper-audit.test.ts::uses numbered draft source labels without exposing source names"
+      - "tests/engine/forms/form-8995-2026-upper-audit.test.ts::preserves historical 2025 audit IDs and named signed and carry amounts"
+
   - line: "2026-draft-15-19"
     description: "Track the ordinary deduction, active minimum, transfer, and separate losses on annual draft lines"
     formula: >-
