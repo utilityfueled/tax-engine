@@ -30,7 +30,7 @@
     "pinnedSelfHostSchemaEvidenceKey": "activeContinuation.nov26PinnedSelfHostSchema",
     "ohioOrdinaryCashDividendEvidenceKey": "activeContinuation.nov26OhioCashDividend",
     "pennsylvaniaAnnualCashDividendEvidenceKey": "activeContinuation.nov26PaAnnualCashDividend",
-    "latestExactLocalVerificationEvidenceKey": "activeContinuation.nov26DraftFederalTablesAndOhioInvestment.exactLocalEvidence",
+    "latestExactLocalVerificationEvidenceKey": "activeContinuation.nov26Form8919SourceInventory.exactLocalEvidence",
     "paPartYearDividendEvidenceKey": "activeContinuation.nov26PAPartYearCashDividend",
     "currentCombinedAndArmEvidenceKey": "activeContinuation.nov26CombinedEvAiAndArm64",
     "evChargerEvidenceKey": "activeContinuation.nov26PersonalEvCharger",
@@ -154,7 +154,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Both strict Linux browser gates and target image evidence remain open. AMD64 Web 45936627770 covers a6111984c. ARM64 recovery 45932508665 covers b496c367d, the migration authentication fix. Prior ARM64 45919423965 and AMD64 45920349552 failed at create-schema. A standalone SCRAM 16.14 positive and failure-mode rehearsal passed after the fix.",
+      "Both strict Linux browser gates and current target image evidence remain open. AMD64 Web 45936627770 covers a6111984c. ARM64 45932508665 passed native archive import and isolated Compose recovery for b496c367d and reached strict Chromium. Current ARM64 45938095409 uses docs-only main 969126595 with application bytes equal to a6111984c. Prior ARM64 45919423965 and AMD64 45920349552 failed at create-schema. A standalone SCRAM 16.14 positive and failure-mode rehearsal passed after the fix.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -187,7 +187,28 @@
       "independentTaxTestsMovedIntact": true,
       "unitCiRun": 45936627875,
       "amd64WebRun": 45936627770,
-      "exactCombinedRun": "queued after the prior run writes its coverage receipt"
+      "exactLocalEvidence": {
+        "revision": "a6111984c0f1a96f6ff327ec0143efc46f1f4ea4",
+        "requiredCommandsPassed": 11,
+        "unitTestsPassed": 31127,
+        "unitExistingSkips": 81,
+        "coverageTestsPassed": 31127,
+        "coverageExistingSkips": 81,
+        "branchCoveragePercent": "88.62",
+        "branchCoverageThresholdPercent": "85",
+        "specReferencesResolved": 10205,
+        "managedChromiumPassed": 654,
+        "managedChromiumExistingSkips": 5,
+        "managedChromiumBatches": 9,
+        "managedChromiumCleanShutdown": true,
+        "offlineAiArtifactCheckPassed": true,
+        "officialSampleDocuments": 15,
+        "node": "26.13.1",
+        "pypdf": "6.10.0",
+        "manifestSha256": "50f6ab3509028c9ae0e120d32489731c7600a0df9e1e76353ae1301d1611e30a",
+        "managedChromiumSummarySha256": "6248e28c6bd2fafd8a9e28b094800bd3e2ab7614bf293a3c4bb79950c31f987d",
+        "sourceBuildSha256": "af5dab92e177b5db68d211fe5c91281dd92709ea6882d098843f2fc177b8b1e5"
+      }
     },
     "nov26GuidedForm8919Original": {
       "commit": "5f958545d990f1ff423dbf267653b6f0cef9da9a",
@@ -310,7 +331,11 @@
       "localPostgres": "16.14 SCRAM, no parent PGPASSFILE or PGPASSWORD, migration and replay preserved the rows, dump/restore and cleanup passed",
       "forcedFailure": "missing client, dump (command unavailable), zero residual schemas",
       "arm64RecoveryFixRun": 45932508665,
-      "recoveryFixAmd64WebRun": 45931694869
+      "recoveryFixAmd64WebRun": 45931694869,
+      "recoveryFixArm64StagesPassed": ["independent native archive import", "isolated Compose upgrade and recovery"],
+      "currentArm64Run": 45938095409,
+      "currentArm64RunRevision": "969126595aa5fd3e609b9176a501570b0af61088",
+      "currentArm64ApplicationCommit": "a6111984c0f1a96f6ff327ec0143efc46f1f4ea4"
     },
     "nov26UpperQbiAudit": {
       "simpleFormCommit": "07710f086ffde0178f69b100f44e3a81e39f98c8",

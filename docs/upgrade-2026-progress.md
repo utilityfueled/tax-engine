@@ -17,7 +17,13 @@ coverage inventory for the new linked-original helper.
 existing rules and test links preserved. All 22 Form 8919 spec
 references resolve, and the clean inventory check passed. The
 inventory records partial coverage with the packet and e-file
-gates still open. The corrected exact-source run is queued.
+gates still open. Exact `a6111984c` passed all 11 local commands
+and the offline AI artifact check. Unit and coverage each passed
+31,127 tests with 81 existing skips. Branch coverage was 88.62%,
+above the unchanged 85% gate. Chromium passed 654 cases with
+five existing skips across nine windows and shut down cleanly.
+All 10,205 spec references resolved. Node 26.13.1, pypdf 6.10.0
+and 15 verified official sample files were used.
 [Form 8919](https://www.irs.gov/pub/irs-pdf/f8919.pdf) ·
 [2026 Form 1099-NEC instructions](https://www.irs.gov/instructions/i1099mec) ·
 [AMD64 Web CI](https://github.com/utilityfueled/tax-engine/actions/runs/45936627770).
@@ -127,12 +133,15 @@ Disposable PostgreSQL 16.14 with parent `PGPASSFILE` and `PGPASSWORD`
 unset passed migration, preserved rows, fresh-process replay, dump,
 restore and cleanup. The forced missing-client control stopped at the
 expected dump stage and left zero schemas. The older AMD64 and ARM64
-runs both failed at `create-schema`. The new ARM64 run covers the
-recovery fix. Exact local and AMD64 runs cover `c7d851d39`.
+runs both failed at `create-schema`. The ARM64 fix run passed native
+archive import and isolated Compose upgrade and recovery. The strict
+browser stage is still running. The current ARM64 run uses main
+`969126595`, whose application files match `a6111984c`.
 [Old AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45920349552) ·
 [Old ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45919423965) ·
 [Recovery fix ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45932508665) ·
-[Combined AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45932847590).
+[Current ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45938095409) ·
+[Current AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45936627770).
 
 ## November 26 upper QBI audit transfers
 

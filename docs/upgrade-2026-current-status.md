@@ -13,9 +13,10 @@ Use the linked progress sections when investigating individual packages.
   8919 interview, keeping the actual residency fact and separate
   federal-only confirmation. All 60 focused tests passed.
   `a6111984c` binds the six original-source rules to a matching
-  coverage inventory entry, and the clean inventory check passed.
-  The corrected exact local run is queued. Qualified filing and
-  state-source treatment remain open.
+  coverage inventory entry. The corrected exact source passed all
+  11 local commands, with 31,127 unit tests, 88.62% branch coverage,
+  and 654 Chromium cases. Qualified filing and state-source treatment
+  remain open.
   [Guided evidence](upgrade-2026-progress.md#november-26-guided-form-8919-original).
 
 - `c70e28bdf` applies Form 6251's separate-filer high-income
@@ -46,7 +47,10 @@ Use the linked progress sections when investigating individual packages.
 - `b496c367d` fixes the authenticated step that failed during clean
   schema creation on both Linux architectures. The local PostgreSQL
   migration, backup and restore passed with the parent password
-  variables unset. [ARM64 fix run](https://github.com/utilityfueled/tax-engine/actions/runs/45932508665) ·
+  variables unset. The ARM64 fix run passed native archive import
+  and Compose upgrade and recovery, then entered strict Chromium.
+  [ARM64 fix run](https://github.com/utilityfueled/tax-engine/actions/runs/45932508665) ·
+  [Current ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45938095409) ·
   [Rehearsal evidence](upgrade-2026-progress.md#november-26-self-host-migration-authentication).
 
 - `07710f086` and `d92d17742` align the remaining upper draft QBI
