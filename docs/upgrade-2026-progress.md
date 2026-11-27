@@ -8,12 +8,55 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `183535fb2` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. Verify the newer combined revision. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `183535fb2` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. Exact combined checks are running on `f5493bdc8`. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
+
+## November 27 AI offline and native release status
+
+The offline AI check passed all 140 focused tests and found the committed
+evidence in sync. All 240 case labels, including 80 held-out cases, still
+await independent human review. The saved development run has 105 entries
+and zero eligible promotion groups. Five entries failed the privacy
+guard, which retained none of their rejected payloads. The $0.022384
+timeout reserve remains unresolved because the closed-day usage export
+lacks request and project identifiers. No new provider calls ran.
+[Development smoke evidence](upgrade-2026-openai-development-smoke-work.md) ·
+[Exact cost reconciliation](upgrade-2026-ai-exact-daily-cost-work.md).
+
+At the latest check, the existing local ARM64 controller required 512
+GiB free and the shared APFS volume had about 1.94 GiB available. No VM
+state changed. The exact `f5493bdc8` CI, AMD64 Web and Docker jobs had
+no assigned runners. The existing ARM64 strict rehearsal and comparison
+also awaited runners.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/46081627667) ·
+[AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/46081627592) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/46081627726) ·
+[ARM64 strict](https://github.com/utilityfueled/tax-engine/actions/runs/46057962832) ·
+[ARM64 comparison](https://github.com/utilityfueled/tax-engine/actions/runs/46066052234).
+
+## November 27 Form 2210 chronology for actual return events
+
+`f5493bdc8` holds 2026 balance-due payments, filing and full-payment
+events outside the following calendar year or after the trusted
+observation date. The canonical JSON and reopened guided routes share
+the same date validation. A payment dated April 10 passes at the April
+10 observation boundary. A December 31, 2026 entry and a future April
+12, 2027 entry both fail. Actual January 20 filing and full payment
+qualify for the verified early exception in the synthetic calculation.
+The forecast without that proof incurs $2.191781 more penalty. Estimate,
+extension, applied-credit and 2025 handling preserve their existing
+rules.
+
+Three focused cases reproduced the missing date hold. Independent
+engineering review and all 308 exact focused tests passed, with eight
+static checks and 10,302 validated spec references. Current exact
+combined verification is running.
+[IRS Form 2210 instructions](https://www.irs.gov/instructions/i2210) ·
+[26 USC §6654](https://uscode.house.gov/us/usc/119-134/t26/s6654/).
 
 ## November 27 Pennsylvania Schedule A verification reliability
 
@@ -38,8 +81,8 @@ confirmed collisions. It keeps the original references outside the
 calculation input.
 
 All 297 exact focused tests and eight static checks passed, including
-10,301 spec references. Independent review also reproduced the separate
-actual-payment chronology gap and recorded it for follow-up.
+10,301 spec references. Independent review reproduced the separate
+chronology gap resolved in `f5493bdc8`.
 [IRS Form 2210 instructions](https://www.irs.gov/instructions/i2210) ·
 [26 USC §6654](https://uscode.house.gov/us/usc/119-134/t26/s6654/).
 

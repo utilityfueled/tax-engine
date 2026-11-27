@@ -3,9 +3,11 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "183535fb25e1559d4acbb62d208e32c4b30e1a4d",
-    "latestScopedApplicationCommit": "98ee59aea2c3a20a16589cb895fe930bc48c3bc6",
+    "latestScopedApplicationCommit": "f5493bdc88a186d51d08b194881d685aef10cddf",
     "latestCombinedCandidateCommit": "183535fb25e1559d4acbb62d208e32c4b30e1a4d",
-    "latestScopedChecksEvidenceKey": "activeContinuation.nov27Form2210BalanceDueReceipts",
+    "latestScopedChecksEvidenceKey": "activeContinuation.nov27Form2210ActualChronology",
+    "latestOfflineAiEvidenceKey": "activeContinuation.nov27OfflineAiQualificationRecheck",
+    "latestLocalArm64CapacityEvidenceKey": "activeContinuation.nov27LocalArm64CapacityRecheck",
     "nov27PaymentReceiptsAndForm8863EvidenceKey": "activeContinuation.nov27PaymentReceiptsAndForm8863",
     "nov27OhioPennsylvaniaPensionEvidenceKey": "activeContinuation.nov27OhioPennsylvaniaPension",
     "nov27PennsylvaniaNonresidentAndAotcEvidenceKey": "activeContinuation.nov27PennsylvaniaNonresidentAndAotc",
@@ -186,7 +188,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov27CombinedDependentDonationExact",
     "remaining": [
-      "Both strict Linux browser gates and current image evidence remain open. Exact 6a3d2602c runs 46079727247, 46079727243 and 46079727743 were queued without runners. ARM64 strict 46057962832 was pending and the separate comparison 46066052234 was queued. Earlier ARM64 46014076098 passed archive and Compose recovery but failed 11 strict browser cases. Earlier AMD64 46023825170 passed recovery and failed runtime browser and immutable evidence.",
+      "Both strict Linux browser gates and current image evidence remain open. Exact f5493bdc8 CI 46081627667, AMD64 Web 46081627592 and Docker 46081627726 were queued without runners. ARM64 strict 46057962832 was pending and the separate comparison 46066052234 was queued. Earlier ARM64 46014076098 passed archive and Compose recovery but failed 11 strict browser cases. Earlier AMD64 46023825170 passed recovery and failed runtime browser and immutable evidence.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -194,6 +196,45 @@
     ]
   },
   "activeContinuation": {
+    "nov27OfflineAiQualificationRecheck": {
+      "focusedTestsPassed": 140,
+      "committedArtifactsInSync": true,
+      "caseCount": 240,
+      "heldOutCaseCount": 80,
+      "pendingIndependentHumanReviews": 240,
+      "savedDevelopmentEntries": 105,
+      "savedDevelopmentPrivacyGuardRejectedEntries": 5,
+      "savedRejectedPayloads": 0,
+      "promotionEligibleGroups": 0,
+      "unreconciledTimeoutReserveUsd": "0.022384",
+      "usageExportHasProjectAndRequestIdentity": false,
+      "newProviderCalls": 0
+    },
+    "nov27LocalArm64CapacityRecheck": {
+      "existingControllerMinimumHostFreeGiB": 512,
+      "observedHostFreeKiB": 2036000,
+      "repositoryAndTemporaryDirectoryShareVolume": true,
+      "localVmStateChanged": false,
+      "arm64StrictRun": 46057962832,
+      "arm64ComparisonRun": 46066052234,
+      "assignedRunners": 0
+    },
+    "nov27Form2210ActualChronology": {
+      "commit": "f5493bdc88a186d51d08b194881d685aef10cddf",
+      "verifiedTree": "c396ad048c201d1a9a0c10ab33d75e5af1fd5fbf",
+      "primarySources": ["https://www.irs.gov/instructions/i2210", "https://uscode.house.gov/us/usc/119-134/t26/s6654/"],
+      "targetedRedFailuresBeforeFix": 3,
+      "exactFocusedTestsPassed": 308,
+      "repositorySpecReferencesValidated": 10302,
+      "exactTreeChecksPassed": ["typecheck", "contracts", "web-types", "spec", "inventory", "lint", "build", "offline-eval"],
+      "independentEngineeringReviewPassed": true,
+      "projectedMinusVerifiedEarlyExceptionPenalty": "2.191781",
+      "observedDateBoundEnforced": true,
+      "runnerlessRemoteChecks": {"ci": 46081627667, "amd64Web": 46081627592, "docker": 46081627726},
+      "combinedLocalChecks": "running",
+      "qualifiedHumanReviewPassed": false,
+      "filingQualified": false
+    },
     "nov27PennsylvaniaScheduleAReaderReliability": {
       "commit": "58333f258416bd03053b7534bb862c649d5103ed",
       "verifiedTree": "b00da0b0a2991d15969da2a6e0c4aec87bf9e4a3",
@@ -216,7 +257,7 @@
       "singleReceiptUnpaidAmount": "5999.99",
       "twoDistinctReceiptsUnpaidAmount": "3999.98",
       "opaqueCalculationReferencesVerified": true,
-      "actualBalanceDueDateChronology": "separate repair pending",
+      "actualBalanceDueDateChronologyEvidenceKey": "activeContinuation.nov27Form2210ActualChronology",
       "filingQualified": false
     },
     "nov27PrivateForm4952PhysicalProof": {

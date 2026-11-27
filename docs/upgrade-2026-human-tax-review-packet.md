@@ -967,5 +967,10 @@ and one balance-due payment. Use $8,000 of initially unpaid required
 installments. Verify which entry relieves the unpaid amount in each
 case, the effect on the penalty to the observation date, and that a
 repeated receipt does not create a new payment.
+For the observation-date case, compare a verified April 10, 2027
+receipt with a receipt dated April 12 at an April 10 observation date.
+Also check a December 31, 2026 payment entered as balance due. Compare
+the fourth-installment penalty for actual January 20, 2027 filing and
+payment in full with the projection without that confirmation.
 [IRS Form 2210 instructions](https://www.irs.gov/instructions/i2210) ·
 [26 USC §6654](https://uscode.house.gov/us/usc/119-134/t26/s6654/).
