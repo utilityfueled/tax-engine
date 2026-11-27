@@ -14,6 +14,11 @@ Use the linked progress sections when investigating individual packages.
   The existing cooperative calculation remains subject to qualified
   review of the statute and draft ordering. [QBI evidence](upgrade-2026-progress.md#november-26-draft-qbi-form-transfers).
 
+- Exact `32a455f41` passed all 11 local commands. Unit and coverage
+  each passed 31,064 tests with 81 existing skips and 88.59% branch
+  coverage. Managed Chromium passed 654 cases in nine windows with
+  five existing skips and clean shutdown. [Exact verification](upgrade-2026-progress.md#november-26-draft-qbi-form-transfers).
+
 - `f34372189` follows the November 24 federal draft's deduction line
   assignments. `c209b9b00` preserves Ohio draft review for timely filed
   and paid returns observed after April 15. Focused tests and independent
@@ -33,10 +38,11 @@ Use the linked progress sections when investigating individual packages.
 - `810d48f84` identifies failures in the pinned-schema rehearsal by
   stage. An earlier ARM64 run built, booted and imported the image but
   stopped inside that helper. The local SCRAM migration and forced
-  failure controls passed. The AMD64 job covers `c14606b59`. Native
-  ARM64 covers `f34372189` with the same audited application inputs.
+  failure controls passed. A later ARM64 comparison hit the same
+  migration failure. The queued AMD64 job covers `32a455f41` and the
+  queued native ARM64 diagnostic covers `f34372189`.
   [Migration evidence](upgrade-2026-progress.md#november-26-native-migration-failure-diagnostics) ·
-  [AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45920349552) ·
+  [AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45922794522) ·
   [ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45919423965).
 
 - Exact `369c195b2` passed all 11 local checks. Unit and coverage each

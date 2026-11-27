@@ -19,6 +19,22 @@ independent focused tests passed. The browser input hashes and
 diagnostic manifest were verified without altering test budgets.
 The generated coverage inventory adds only the new traceability entry.
 
+The exact source passed all 11 local commands and the offline AI
+artifact check on Node 26.13.1 with Python/pypdf 6.10.0 and 15 pinned IRS
+sample documents. Unit and coverage each passed 31,064 with 81 existing
+skips. Branch coverage was 88.59% against the 85% gate, and all 10,187
+spec references resolved. Managed Chromium passed 654 in nine windows
+with five original skips and clean shutdown. The manifest SHA-256 is
+`03a34f5f45e51f1649a370cfee222a2933ed7a037b1d4cfd8bd51ea3663369b3`.
+
+The first linked-dependency setup loaded React from two trees.
+The physical dependency tree resolved one copy. An initial unit
+run in that checkout hit the existing archive free-space guard
+while a web build was active. Removing generated compilation
+caches restored enough capacity. The 31 archive controls and
+subsequent full unit and coverage checks passed at the existing
+guard and thresholds. The unsuccessful setup logs are retained.
+
 The draft Form 8995-A ordering for combined active minimum and
 cooperative DPAD requires qualified tax review against §199A(a), (g)
 and (i). The direct engine behavior is preserved and the federal
@@ -90,6 +106,10 @@ step failed inside the pinned previous-schema helper before Chromium.
 The retained error gives no internal stage. The helper and candidate
 schema inputs match the earlier successful host PostgreSQL rehearsal.
 [Comparison run](https://github.com/utilityfueled/tax-engine/actions/runs/45906276956).
+
+The later `369c195b2` ARM64 comparison reached the same pinned-schema
+migration failure. The revised diagnostic run is still waiting.
+[Second comparison](https://github.com/utilityfueled/tax-engine/actions/runs/45914423019).
 
 `810d48f84` reports fixed migration stages and command outcomes without
 printing private child output. All 47 focused tests passed and
