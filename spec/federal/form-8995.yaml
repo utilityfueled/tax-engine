@@ -202,3 +202,23 @@ lines:
       - "Only arises when total QBI across all businesses is negative"
       - "Prior year QBI carryforward loss reduces current year QBI"
     testRef: "tests/engine/forms/form-8995.test.ts::Form 8995 Line 16 - QBI loss carryforward"
+
+  - line: "2026-draft-15-19"
+    description: "Track the ordinary deduction, active minimum, transfer, and separate losses on annual draft lines"
+    formula: >-
+      On the 2026 draft, line 15 is the smaller of lines 10 and 14. Line 16
+      is $400 when eligible active QBI is at least $1,000 and zero when known
+      ineligible. If the ordinary amount is already at least $400 and the
+      active facts are unresolved, omit the amount on line 16 and explain the
+      unresolved status in the line 17 audit. Line 17 is the larger amount
+      and feeds Form 1040 line 13b. Record the ordinary QBI carry on line 18
+      and the separate REIT and PTP carry on line 19 as signed losses, printed
+      in parentheses on the draft. Named results retain positive loss magnitudes.
+      Historical audit identifiers, named amounts, and filing and export
+      qualification are unaffected.
+    irsRef: "https://www.irs.gov/pub/irs-dft/f8995--dft.pdf#page=2, lines 15–19; https://www.irs.gov/pub/irs-dft/i8995--dft.pdf#page=6, instructions for lines 15–19"
+    testRef: "tests/engine/forms/qbi-minimum-deduction.test.ts::audits the ordinary, minimum, and final deductions on the 2026 draft lines"
+    testRefs:
+      - "tests/engine/forms/qbi-minimum-deduction.test.ts::reports signed draft loss carryforwards with positive named magnitudes"
+      - "tests/engine/forms/qbi-minimum-deduction.test.ts::keeps an unresolved minimum distinct from confirmed zero"
+      - "tests/engine/forms/qbi-minimum-deduction.test.ts::preserves 2025 final deduction and loss audit identifiers"

@@ -1,0 +1,31 @@
+form: "Form 8995-A"
+fullName: "2026 Qualified Business Income Deduction Draft Audit"
+taxYear: 2026
+irsReference: "https://www.irs.gov/pub/irs-dft/f8995a--dft.pdf"
+sourceRevision: "2026 draft form and Instructions for Form 8995-A posted November 24, 2026"
+retrievedAt: "2026-11-26"
+reviewStatus: "independent-qualified-tax-review-pending"
+notes: |
+  This supplement documents the 2026 draft audit for calculations without
+  cooperative patronage. Historical identifiers and deduction arithmetic are
+  preserved. The interaction of the subsection (a) minimum and the separate
+  subsection (g) deduction requires qualified review before adopting the draft
+  form's cooperative routing. This supplement does not qualify an export.
+lines:
+  - line: "29 and 42"
+    description: "Signed prior and outgoing qualified REIT/PTP losses"
+    formula: "Display the negative prior loss on Line 29 and min(0, Line 28 + Line 29) on Line 42. Preserve the positive loss magnitudes in internal results and keep the ordinary Schedule C loss separate."
+    irsRef: "https://www.irs.gov/pub/irs-dft/f8995a--dft.pdf#page=3"
+    testRef: "tests/engine/forms/form-8995-a-2026-audit.test.ts::audits signed REIT and PTP losses while preserving stored magnitudes"
+  - line: "33"
+    description: "Taxable income figured before the QBI deduction and without regard to section 68"
+    formula: "Audit the supplied income before QBI. For a 1040 nonitemizer it is AGI less Lines 12e, 12f, and 13a. For a 1040 itemizer it is AGI less the itemized amounts before the section 68 limitation and Line 13a."
+    irsRef: "https://www.irs.gov/pub/irs-dft/i8995a--dft.pdf#page=7"
+    testRef: "tests/engine/forms/form-8995-a-2026-audit.test.ts::describes the actual deductions in the pre-QBI taxable income"
+  - line: "37 and 39 through 41"
+    description: "Ordinary deduction, separately determined minimum, and transfer to Form 1040"
+    formula: "Line 37 is the ordinary deduction before DPAD. With no qualifying cooperative input, Line 39 equals Line 37. When supportable from the known active QBI facts, Line 40 is $400 for at least $1,000 of aggregate active QBI and zero otherwise. When eligibility is unresolved and cannot change the existing deduction, omit Line 40 rather than infer a value or reject the calculation. Line 41 is the final deduction after section 199A(i) and transfers to Form 1040 Line 13b."
+    irsRef: "https://www.irs.gov/pub/irs-dft/i8995a--dft.pdf#page=8"
+    testRef: "tests/engine/forms/form-8995-a-2026-audit.test.ts::routes the ordinary and minimum deductions separately in the draft audit"
+    testRefs:
+      - "tests/engine/forms/form-8995-a-2026-audit.test.ts::omits an undetermined minimum without changing the deduction"

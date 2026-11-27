@@ -6981,6 +6981,26 @@
       "knownGaps": []
     },
     {
+      "key": "federal/form-8995-a-2026-audit",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-dft/f8995a--dft.pdf",
+      "specPath": "spec/federal/form-8995-a-2026-audit.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-8995-a-loss-netting",
       "jurisdiction": "federal",
       "taxYear": 2025,

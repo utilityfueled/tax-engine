@@ -8,7 +8,7 @@
  */
 
 import Decimal from "decimal.js";
-import { calculateQBIMinimumDeduction } from "./qbi-minimum-deduction.js";
+import { calculateQBIMinimumDeduction, resolveQBIMinimumForDraftAudit } from "./qbi-minimum-deduction.js";
 import { calculateReitPtpComponent } from "../qbi-reit-ptp.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { zeroFloor, min, sum, roundDollar } from "@/utils/decimal.js";
@@ -64,9 +64,9 @@ export interface Form8995Result {
   netCapitalGainAmount: Decimal;
   /** Line 14: Income limitation (20% of TI minus cap gains) */
   incomeLimitation: Decimal;
-  /** Line 15: Section 199A deduction */
+  /** Section 199A deduction (2025 line 15; 2026 draft line 17) */
   qbiDeduction: Decimal;
-  /** Line 16: QBI loss carryforward (for future years) */
+  /** Positive QBI loss magnitude (2025 line 16; 2026 draft line 18) */
   qbiLossCarryforward: Decimal;
   lines: CalculatedLine[];
 }
@@ -75,6 +75,7 @@ const QBI_RATE = new Decimal("0.20");
 
 export function calculateForm8995(input: Form8995Input): Form8995Result {
   const audit = new AuditTrail();
+  const taxYear = input.taxYear ?? 2025;
 
   // Lines 1-5: QBI from each business
   const qbiAmounts: Decimal[] = [];
@@ -114,8 +115,10 @@ export function calculateForm8995(input: Form8995Input): Form8995Result {
 
   audit.record("Form 8995", "9", "REIT and PTP component (20%)", reitPTPComponent,
     `max(0, ${netReitPtpAmount}) × 20% after the separate prior loss`);
-  audit.record("Form 8995", "reit-ptp-loss-carryforward", "Qualified REIT and PTP loss carryforward", reitPtpLossCarryforward,
-    "The excess of the separately stated loss over current qualified REIT and PTP income carries to the next return");
+  const reitPtpCarryFormula = "The excess of the separately stated loss over current qualified REIT and PTP income carries to the next return";
+  if (taxYear === 2025) {
+    audit.record("Form 8995", "reit-ptp-loss-carryforward", "Qualified REIT and PTP loss carryforward", reitPtpLossCarryforward, reitPtpCarryFormula);
+  }
 
   // Line 10: Combined QBI + REIT/PTP component
   const combinedComponent = qbiComponent.plus(reitPTPComponent);
@@ -138,19 +141,35 @@ export function calculateForm8995(input: Form8995Input): Form8995Result {
   audit.record("Form 8995", "14", "Income limitation (20%)", incomeLimitation,
     `max(0, ${taxableIncomeBeforeQBI} - ${netCapitalGainAmount}) × 20%`);
 
-  // Line 15: QBI deduction = min(combined component, income limitation)
   const ordinaryDeduction = min(combinedComponent, incomeLimitation);
-  const minimum = calculateQBIMinimumDeduction({ taxYear: input.taxYear ?? 2025, ordinaryDeduction,
-    sources: input.qbiSources, priorYearQBILoss: input.priorYearQBILoss, priorYearActiveQBILoss: input.priorYearActiveQBILoss });
+  const minimumInput = { taxYear, ordinaryDeduction,
+    sources: input.qbiSources, priorYearQBILoss: input.priorYearQBILoss, priorYearActiveQBILoss: input.priorYearActiveQBILoss };
+  const minimum = calculateQBIMinimumDeduction(minimumInput);
   audit.merge(minimum.lines);
   const qbiDeduction = minimum.deduction;
-  audit.record("Form 8995", "15", "Section 199A deduction", qbiDeduction,
-    `Ordinary min($${combinedComponent} combined component, $${incomeLimitation} income limit), subject to any applicable section 199A(i) minimum`);
+  if (taxYear === 2026) {
+    audit.record("Form 8995", "15", "QBI deduction before the active business minimum", ordinaryDeduction, "Smaller of line 10 or line 14");
+    const minimumAmount = resolveQBIMinimumForDraftAudit(minimumInput, minimum);
+    if (minimumAmount !== undefined) {
+      audit.record("Form 8995", "16", "Minimum deduction for active qualified business income", minimumAmount,
+        "If eligible active qualified business income is at least $1,000, enter $400; otherwise enter zero");
+    }
+    audit.record("Form 8995", "17", "Section 199A deduction", qbiDeduction, minimumAmount === undefined
+      ? "Transfer to Form 1040 line 13b. Line 16 is unresolved; line 15 is at least $400 and determines line 17."
+      : "Greater of line 15 or line 16. Transfer to Form 1040 line 13b.");
+  } else {
+    audit.record("Form 8995", "15", "Section 199A deduction", qbiDeduction,
+      `Ordinary min($${combinedComponent} combined component, $${incomeLimitation} income limit), subject to any applicable section 199A(i) minimum`);
+  }
 
-  // Line 16: QBI loss carryforward (if total QBI is negative)
-  const qbiLossCarryforward = totalQBI.lessThan(0) ? totalQBI.abs() : new Decimal(0);
-  audit.record("Form 8995", "16", "QBI loss carryforward", qbiLossCarryforward,
+  const signedQbiLoss = totalQBI.lt(0) ? totalQBI : new Decimal(0);
+  const qbiLossCarryforward = signedQbiLoss.abs();
+  audit.record("Form 8995", taxYear === 2026 ? "18" : "16", "QBI loss carryforward", taxYear === 2026 ? signedQbiLoss : qbiLossCarryforward,
     totalQBI.lessThan(0) ? `Total QBI negative: $${totalQBI}` : "No carryforward");
+  if (taxYear === 2026) {
+    const signedReitPtpLoss = netReitPtpAmount.lt(0) ? netReitPtpAmount : new Decimal(0);
+    audit.record("Form 8995", "19", "Qualified REIT and PTP loss carryforward", signedReitPtpLoss, reitPtpCarryFormula);
+  }
 
   return {
     qbiAmounts,

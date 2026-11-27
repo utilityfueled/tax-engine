@@ -11,7 +11,7 @@
  */
 
 import Decimal from "decimal.js";
-import { calculateQBIMinimumDeduction } from "./qbi-minimum-deduction.js";
+import { calculateQBIMinimumDeduction, resolveQBIMinimumForDraftAudit } from "./qbi-minimum-deduction.js";
 import { calculateReitPtpComponent } from "../qbi-reit-ptp.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { zeroFloor, min, max, roundDollar } from "@/utils/decimal.js";
@@ -363,6 +363,8 @@ function computePerEntityComponents(
 
 export function calculateForm8995A(input: Form8995AInput): Form8995AResult {
   const audit = new AuditTrail();
+  const patronageSources = input.patronageSources ?? [];
+  const use2026DraftAudit = input.taxYear === 2026 && patronageSources.length === 0;
 
   // Part IV: Apply aggregation elections before any computation
   const elections = input.aggregationElections ?? [];
@@ -434,8 +436,10 @@ export function calculateForm8995A(input: Form8995AInput): Form8995AResult {
   const { reitPtpAmount, priorYearReitPtpLoss, netReitPtpAmount, reitPTPComponent, reitPtpLossCarryforward } =
     calculateReitPtpComponent(currentReitPtp, input.priorYearReitPtpLoss);
   audit.record("8995-A", "28", "Current qualified REIT dividends and PTP income or loss", reitPtpAmount, "Signed aggregate before the separate prior loss");
-  audit.record("8995-A", "29", "Prior qualified REIT and PTP loss", priorYearReitPtpLoss, "Separate qualified loss from the preceding return");
-  audit.record("8995-A", "30", "Total qualified REIT dividends and PTP income", zeroFloor(netReitPtpAmount), "Current amounts less the separate prior loss, with a zero floor");
+  audit.record("8995-A", "29", "Prior qualified REIT and PTP loss",
+    use2026DraftAudit ? priorYearReitPtpLoss.negated() : priorYearReitPtpLoss, "Separate qualified loss from the preceding return");
+  audit.record("8995-A", "30", "Total qualified REIT dividends and PTP income", zeroFloor(netReitPtpAmount),
+    use2026DraftAudit ? "Add signed lines 28 and 29, with a zero floor" : "Current amounts less the separate prior loss, with a zero floor");
   audit.record("8995-A", "31", "REIT and PTP component", reitPTPComponent, "20% of the nonnegative combined amount");
 
   const combinedComponent = partI.totalComponent.plus(reitPTPComponent);
@@ -444,7 +448,9 @@ export function calculateForm8995A(input: Form8995AInput): Form8995AResult {
 
   // Line 33: Taxable income before QBI
   audit.record("8995-A", "33", "Taxable income before QBI", taxableIncome,
-    "AGI - standard/itemized deduction");
+    use2026DraftAudit
+      ? "Subtract the standard deduction or itemized deductions before section 68 from Form 1040 AGI. Also subtract Schedule 1-A and any applicable nonitemizer charitable deduction"
+      : "AGI - standard/itemized deduction");
 
   // Line 34: Net capital gain
   const netCapitalGainAmount = zeroFloor(input.netCapitalGain).plus(input.qualifiedDividends);
@@ -457,7 +463,6 @@ export function calculateForm8995A(input: Form8995AInput): Form8995AResult {
   audit.record("8995-A", "36", "Income limitation", incomeLimitation, `$${incomeBase} × 20%`);
 
   // ── Schedule D: Patron Reduction ────────────────────────────────────
-  const patronageSources = input.patronageSources ?? [];
   const patronageResults: PatronageCooperativeResult[] = [];
   let totalPatronReduction = new Decimal(0);
   let totalCooperativeDPAD = new Decimal(0);
@@ -498,17 +503,21 @@ export function calculateForm8995A(input: Form8995AInput): Form8995AResult {
 
   // Line 37: QBI deduction before DPAD = min(combined - patron reduction, income limitation)
   const adjustedCombined = zeroFloor(combinedComponent.minus(totalPatronReduction));
-  const minimum = calculateQBIMinimumDeduction({
-    taxYear: input.taxYear ?? 2025, ordinaryDeduction: min(adjustedCombined, incomeLimitation),
+  const ordinaryDeduction = min(adjustedCombined, incomeLimitation);
+  const minimumInput = {
+    taxYear: input.taxYear ?? 2025, ordinaryDeduction,
     sources: input.qbiSources.map(source => ({ ...source, qbi: source.isSST ? source.qbi.times(sstbApplicablePercentage) : source.qbi })),
     priorYearQBILoss: input.priorYearQBILoss, priorYearActiveQBILoss: input.priorYearActiveQBILoss,
-  });
+  };
+  const minimum = calculateQBIMinimumDeduction(minimumInput);
   audit.merge(minimum.lines);
   const qbiDeductionBeforeDPAD = minimum.deduction;
-  audit.record("8995-A", "37", "QBI deduction before DPAD", qbiDeductionBeforeDPAD,
-    totalPatronReduction.isZero()
-      ? `min($${combinedComponent} combined, $${incomeLimitation} income limit), subject to section 199A(i) minimum`
-      : `min($${combinedComponent} combined - $${totalPatronReduction} patron reduction = $${adjustedCombined}, $${incomeLimitation} income limit), subject to section 199A(i) minimum`);
+  const legacyLine37Formula = totalPatronReduction.isZero()
+    ? `min($${combinedComponent} combined, $${incomeLimitation} income limit), subject to section 199A(i) minimum`
+    : `min($${combinedComponent} combined - $${totalPatronReduction} patron reduction = $${adjustedCombined}, $${incomeLimitation} income limit), subject to section 199A(i) minimum`;
+  audit.record("8995-A", "37", "QBI deduction before DPAD",
+    use2026DraftAudit ? ordinaryDeduction : qbiDeductionBeforeDPAD,
+    use2026DraftAudit ? "Smaller of lines 32 and 36" : legacyLine37Formula);
 
   // Line 38: DPAD from cooperatives (capped at TI - Line 37)
   const dpadCap = zeroFloor(taxableIncome.minus(qbiDeductionBeforeDPAD));
@@ -518,17 +527,31 @@ export function calculateForm8995A(input: Form8995AInput): Form8995AResult {
       ? "$0 — no cooperative patronage sources"
       : `min($${totalCooperativeDPAD} total DPAD, $${dpadCap} cap = TI $${taxableIncome} - Line 37 $${qbiDeductionBeforeDPAD})`);
 
-  // Line 39: Total 199A deduction = Line 37 + Line 38
   const qbiDeduction = qbiDeductionBeforeDPAD.plus(cooperativeDPAD);
-  audit.record("8995-A", "39", "Section 199A deduction", qbiDeduction,
-    cooperativeDPAD.isZero()
-      ? `$${qbiDeductionBeforeDPAD} (no DPAD)`
-      : `$${qbiDeductionBeforeDPAD} QBI deduction before DPAD + $${cooperativeDPAD} cooperative DPAD`);
+  if (use2026DraftAudit) {
+    audit.record("8995-A", "39", "QBI deduction before the active QBI minimum", ordinaryDeduction, "Add lines 37 and 38");
+    const draftMinimum = resolveQBIMinimumForDraftAudit(minimumInput, minimum);
+    if (draftMinimum !== undefined) {
+      audit.record("8995-A", "40", "Minimum deduction for active qualified business income", draftMinimum,
+        "$400 if aggregate active QBI is at least $1,000, otherwise zero");
+    }
+    audit.record("8995-A", "41", "Total qualified business income deduction", qbiDeduction,
+      draftMinimum === undefined
+        ? "Ordinary deduction controls with minimum eligibility unresolved. Transfer to Form 1040 line 13b"
+        : "Greater of lines 39 and 40. Transfer to Form 1040 line 13b");
+  } else {
+    audit.record("8995-A", "39", "Section 199A deduction", qbiDeduction,
+      cooperativeDPAD.isZero()
+        ? `$${qbiDeductionBeforeDPAD} (no DPAD)`
+        : `$${qbiDeductionBeforeDPAD} QBI deduction before DPAD + $${cooperativeDPAD} cooperative DPAD`);
+  }
 
   // Carry only the qualified loss remaining after Schedule A then Schedule C.
   const qbiLossCarryforward = partI.lossCarryforward;
-  audit.record("8995-A", input.taxYear === 2026 ? "42" : "40", "Qualified REIT and PTP loss carryforward", reitPtpLossCarryforward,
-    "The negative combined balance carries to the next return separately from trade or business QBI");
+  audit.record("8995-A", input.taxYear === 2026 ? "42" : "40", "Qualified REIT and PTP loss carryforward",
+    use2026DraftAudit ? reitPtpLossCarryforward.negated() : reitPtpLossCarryforward,
+    use2026DraftAudit ? "Carry the negative sum of lines 28 and 29 separately from trade or business QBI, or zero if nonnegative"
+      : "The negative combined balance carries to the next return separately from trade or business QBI");
 
   return {
     businesses: partI.businesses,
