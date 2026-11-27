@@ -8,7 +8,7 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `1cd975b37` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `419470095` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. Verify newer revisions locally and qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
@@ -90,11 +90,13 @@ to Schedule 3. Adding the actual $2,200 child tax credit reduces the limit
 to $7,516. The calculation rejects evidence dated after the calculation date.
 Independent engineering review found and verified the possession-date fix.
 All 137 focused tests and eight exact-tree static checks passed, including
-10,280 spec lines. Exact unit and coverage each passed 31,373 tests with
-83 skips. Branch coverage was 88.71% with unchanged thresholds. The local
-web build passed. Chromium and encrypted recovery verification are
-underway. Qualified human tax review and final filing qualification remain
-open.
+10,280 spec lines. All 11 exact local commands passed. Unit and coverage
+each passed 31,373 tests with 83 skips and 88.71% branch coverage. Chromium
+passed 654 cases with five skips and verified cleanup across all nine
+windows. The standalone app restored the encrypted synthetic backup and
+closed its listener. Fifteen official sample checksums passed. Manifest
+SHA-256 `e1d9899c0cef99c1d7aea8cffd5be83a7ac2b1ecedf2c6cd4c9b5812149e0d05`.
+Qualified human tax review and final filing qualification remain open.
 [IRS commercial clean vehicle credit](https://www.irs.gov/credits-deductions/commercial-clean-vehicle-credit) ·
 [26 USC §38](https://uscode.house.gov/us/usc/t26/s38/) ·
 [Form 6251 instructions](https://www.irs.gov/instructions/i6251).
