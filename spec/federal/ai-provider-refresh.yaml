@@ -1,7 +1,7 @@
 form: "AI-Provider-Refresh"
 fullName: "Dated public provider sources and retired-model execution boundaries"
 taxYear: 2026
-reference: "https://developers.openai.com/api/docs/pricing; https://developers.openai.com/api/docs/deprecations; https://ai.google.dev/gemini-api/docs/pricing; https://ai.google.dev/gemini-api/docs/deprecations; https://aistudio.google.com/api-reference/generate-content; https://generativelanguage.googleapis.com/$discovery/rest?version=v1beta; https://protobuf.dev/programming-guides/json/#presence-and-default-values"
+reference: "https://developers.openai.com/api/docs/pricing; https://developers.openai.com/api/docs/deprecations; https://ai.google.dev/gemini-api/docs/pricing; https://ai.google.dev/gemini-api/docs/deprecations; https://aistudio.google.com/api-reference/generate-content; https://generativelanguage.googleapis.com/$discovery/rest?version=v1beta"
 notes: |
   Public model documentation is not evidence of actual account access, retention
   settings, quality or availability. Preserve the requested baseline even when
@@ -10,6 +10,8 @@ notes: |
   Historical usage remains priced; January projections for a retired model are
   explicitly hypothetical. The known December 11, 2026 GPT-5 Mini shutdown
   applies to both alias and its documented August 7, 2025 snapshot.
+  The ProtoJSON serialization rules permit omitting zero-valued counters
+  without explicit field presence. See https://protobuf.dev/programming-guides/json/#presence-and-default-values.
 lines:
   - line: "public-facts"
     description: "Refresh documentation without inventing account capability results"
