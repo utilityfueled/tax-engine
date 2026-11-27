@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
 import { z } from "zod";
 import { executeAiTask, type AiTaskExecution } from "../../../apps/web/src/lib/ai-task-adapter";
@@ -49,6 +50,44 @@ describe.skipIf(!databaseUrl)("AI credits against isolated PostgreSQL", () => {
   });
   beforeEach(async () => { await pool.query("TRUNCATE hosted_ai_attempts, hosted_ai_reservations, hosted_ai_credit_purchases, hosted_ai_usage_ledger"); });
   afterAll(async () => { await pool.end(); });
+  it("settles an authoritative usage reference only once across concurrent owners", async () => {
+    const firstOwner = base.ownerId;
+    const secondOwner = "different-synthetic-owner";
+    const outcomes = await Promise.all([firstOwner, secondOwner].map(async ownerId => {
+      await ledger.reserve({ ...base, ownerId });
+      await start({ ownerId });
+      await ledger.unknown({ ...first, ownerId });
+      return { ...first, ownerId, usage, accepted: false, final: true, reconciledModelId: "gpt-6-luna" };
+    }));
+    const reference = "synthetic-provider-report:shared-usage-record";
+    const settlements = await Promise.allSettled(outcomes.map((outcome, i) => ledger.settle({
+      ...outcome, reconciliationReference: i === 0 ? reference : ` ${reference} `,
+    })));
+    expect(settlements.filter(result => result.status === "fulfilled")).toHaveLength(1);
+    const winnerIndex = settlements.findIndex(result => result.status === "fulfilled");
+    expect(settlements[1 - winnerIndex]).toMatchObject({ status: "rejected", reason: { message: expect.stringMatching(/reference already/i) } });
+    expect(await ledger.settle({ ...outcomes[winnerIndex], reconciliationReference: ` ${reference} ` }))
+      .toMatchObject({ state: "settled", chargedCents: 1, reservedCents: 0 });
+    const held = await pool.query("SELECT state, included_reserved_cents, included_charge_cents FROM hosted_ai_reservations WHERE owner_id=$1", [outcomes[1 - winnerIndex].ownerId]);
+    expect(held.rows).toEqual([{ state: "reconciliation-required", included_reserved_cents: "2", included_charge_cents: "0" }]);
+  });
+  it("preserves a historical settlement and rejects reuse of its padded reconciliation reference", async () => {
+    await ledger.reserve(base);
+    await start();
+    await ledger.unknown(first);
+    const reference = Array.from({ length: 100 }, (_, i) => createHash("sha512").update(String(i)).digest("base64")).join("");
+    const outcome = { ...first, usage, accepted: false, final: true, reconciledModelId: "gpt-6-luna" };
+    await ledger.settle({ ...outcome, reconciliationReference: reference });
+    await pool.query("UPDATE hosted_ai_attempts SET reconciliation_reference=$1 WHERE owner_id=$2 AND request_id=$3", [
+      `\t\uFEFF${reference}\u00a0 `, first.ownerId, first.requestId,
+    ]);
+    await expect(ledger.settle({ ...outcome, reconciliationReference: reference })).resolves.toMatchObject({ chargedCents: 1 });
+    const next = { ...outcome, requestId: "another-synthetic-attempt" };
+    await ledger.reserve({ ...base, maximumChargeCents: 1, requestId: next.requestId });
+    await start({ requestId: next.requestId });
+    await ledger.unknown(next);
+    await expect(ledger.settle({ ...next, reconciliationReference: reference })).rejects.toThrow(/reference already/i);
+  });
   it("serializes concurrent spend and releases the unused hold after exact settlement", async () => {
     const results = await Promise.all(Array.from({ length: 12 }, (_, i) => ledger.reserve({ ...base, requestId: `parallel-${i}` })));
     expect(results.filter(result => result.accepted)).toHaveLength(1);

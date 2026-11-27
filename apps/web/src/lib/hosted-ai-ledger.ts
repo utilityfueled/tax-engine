@@ -2,6 +2,7 @@ import Decimal from "decimal.js";
 import type { Pool, PoolClient } from "pg";
 import { calculateAiCost, maximumAiRequestCost, type AiTokenUsage } from "@tax-engine/engine/src/ai-pricing";
 import { AI_PROFILES, AI_TASKS, type AiProfileId, type AiTask } from "@tax-engine/engine/src/ai-task-registry";
+import { normalizedReconciliationReferenceSql } from "./hosted-ai-ledger-schema";
 import { withHostedAiStorageMode, type StripeBillingMode } from "./hosted-ai-storage-mode";
 
 const Money = Decimal.clone({ precision: 80 });
@@ -61,6 +62,15 @@ export function createHostedAiLedger(pool: Pick<Pool, "connect">, mode: StripeBi
     const result = await client.query<AttemptRow>(
       "SELECT * FROM hosted_ai_attempts WHERE owner_id=$1 AND request_id=$2 ORDER BY attempt", [input.ownerId, input.requestId]);
     return result.rows;
+  }
+  async function claimReconciliationReference(client: PoolClient, reference: string) {
+    // The two-key lock namespace is separate from the single-key owner locks.
+    await client.query("SELECT pg_advisory_xact_lock(2026, hashtext($1))", [reference]);
+    const used = await client.query(`SELECT 1 FROM hosted_ai_attempts
+      WHERE reconciliation_reference IS NOT NULL
+        AND md5(${normalizedReconciliationReferenceSql}) = md5($1::text)
+        AND ${normalizedReconciliationReferenceSql} COLLATE "C" = $1 LIMIT 1`, [reference]);
+    if (used.rowCount) throw new Error("Authoritative reconciliation reference already verifies another AI attempt.");
   }
   async function finalize(client: PoolClient, reservation: ReservationRow, totalCost: Decimal) {
     const retail = Money.max(1, totalCost.times(100).ceil());
@@ -179,7 +189,8 @@ export function createHostedAiLedger(pool: Pick<Pool, "connect">, mode: StripeBi
         }
         const isReconciliation = attempt.state === "unknown" || (attempt.provider_cost_usd === null
           && (input.reconciliationReference !== undefined || input.reconciledModelId !== undefined));
-        if (isReconciliation && !input.reconciliationReference?.trim()) {
+        const reference = input.reconciliationReference?.trim();
+        if (isReconciliation && !reference) {
           throw new Error("Unknown usage requires an authoritative reconciliation reference.");
         }
         if ((isReconciliation || input.reconciledModelId !== undefined) && input.reconciledModelId !== attempt.model_id) {
@@ -187,7 +198,7 @@ export function createHostedAiLedger(pool: Pick<Pool, "connect">, mode: StripeBi
         }
         const cost = calculateAiCost(attempt.model_id, attempt.started_at.toISOString(), input.usage);
         if (attempt.provider_cost_usd !== null) {
-          if (input.reconciliationReference !== undefined && input.reconciliationReference !== attempt.reconciliation_reference) {
+          if (reference !== undefined && reference !== attempt.reconciliation_reference?.trim()) {
             throw new Error("Conflicting AI settlement reconciliation reference.");
           }
           if ((attempt.state === "accepted") !== input.accepted) throw new Error("Conflicting AI settlement replay.");
@@ -199,10 +210,13 @@ export function createHostedAiLedger(pool: Pick<Pool, "connect">, mode: StripeBi
           if (!input.final || reservation.state !== "reserved") return view(reservation);
         }
         if (!input.final && (input.accepted || input.attempt === 2)) throw new Error("Only a rejected first attempt may escalate.");
-        if (attempt.provider_cost_usd === null) await client.query(`UPDATE hosted_ai_attempts SET state=$4,usage=$5::jsonb,provider_cost_usd=$6,pricing_effective_from=$7,
-          provider_request_id=$8,reconciliation_reference=$9,completed_at=NOW() WHERE owner_id=$1 AND request_id=$2 AND attempt=$3`,
-        [input.ownerId, input.requestId, input.attempt, input.accepted ? "accepted" : "rejected", JSON.stringify(input.usage), cost.providerCostUsd,
-          cost.pricingEffectiveFrom, attempt.provider_request_id ?? input.providerRequestId ?? null, input.reconciliationReference ?? null]);
+        if (attempt.provider_cost_usd === null) {
+          if (reference) await claimReconciliationReference(client, reference);
+          await client.query(`UPDATE hosted_ai_attempts SET state=$4,usage=$5::jsonb,provider_cost_usd=$6,pricing_effective_from=$7,
+            provider_request_id=$8,reconciliation_reference=$9,completed_at=NOW() WHERE owner_id=$1 AND request_id=$2 AND attempt=$3`,
+          [input.ownerId, input.requestId, input.attempt, input.accepted ? "accepted" : "rejected", JSON.stringify(input.usage), cost.providerCostUsd,
+            cost.pricingEffectiveFrom, attempt.provider_request_id ?? input.providerRequestId ?? null, reference ?? null]);
+        }
         if (!input.final) {
           await client.query("UPDATE hosted_ai_reservations SET state='reserved',updated_at=NOW() WHERE owner_id=$1 AND request_id=$2", [input.ownerId, input.requestId]);
           return view({ ...reservation, state: "reserved" });

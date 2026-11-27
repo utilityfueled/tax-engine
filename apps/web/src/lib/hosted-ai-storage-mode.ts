@@ -54,7 +54,8 @@ export async function withHostedAiStorageMode<T>(pool: Pick<Pool, "connect">, mo
   const lost = () => { discard = true; };
   client.on("error", lost);
   try {
-    await client.query("BEGIN");
+    // Reads after acquiring a ledger lock must see the previous holder's commit.
+    await client.query("BEGIN ISOLATION LEVEL READ COMMITTED");
     await requireHostedAiStorageMode(client, mode, initialize);
     const result = await operation(client);
     if (discard) throw new Error("Hosted AI database connection was lost.");

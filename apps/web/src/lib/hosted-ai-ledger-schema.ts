@@ -1,5 +1,8 @@
 import type { Pool } from "pg";
 
+// Match String.trim() for reconciliation references written before normalization.
+export const normalizedReconciliationReferenceSql = String.raw`btrim(reconciliation_reference, U&'\0009\000A\000B\000C\000D\0020\00A0\1680\2000\2001\2002\2003\2004\2005\2006\2007\2008\2009\200A\2028\2029\202F\205F\3000\FEFF')`;
+
 /** Additive migration. Legacy charges remain in the original ledger, never re-priced. */
 export async function ensureHostedAiLedgerSchema(pool: Pick<Pool, "query">) {
   await pool.query(`
@@ -48,5 +51,8 @@ export async function ensureHostedAiLedgerSchema(pool: Pick<Pool, "query">) {
       CHECK (undispatched_at IS NULL OR (state = 'rejected' AND completed_at IS NOT NULL
         AND provider_cost_usd IS NOT DISTINCT FROM 0::numeric AND usage IS NULL
         AND pricing_effective_from IS NULL AND provider_request_id IS NULL AND reconciliation_reference IS NULL));
+    CREATE INDEX IF NOT EXISTS hosted_ai_attempt_reconciliation_reference_idx
+      ON hosted_ai_attempts (md5(${normalizedReconciliationReferenceSql}))
+      WHERE reconciliation_reference IS NOT NULL;
   `);
 }
