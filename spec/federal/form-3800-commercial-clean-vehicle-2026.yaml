@@ -1,0 +1,64 @@
+form: "Form 3800"
+fullName: "Private 2026 direct commercial clean vehicle credit limitation and carryback workpaper"
+taxYear: 2026
+reviewStatus: "independent-review-pending"
+retrievedAt: "2026-11-27"
+irsReference: "https://www.irs.gov/instructions/i3800"
+notes: |
+  IRC 38(b)(37), 38(c)(1), and 39 govern this ordinary business credit.
+  https://uscode.house.gov/us/usc/t26/s38/
+  https://uscode.house.gov/us/usc/t26/s39/
+  https://uscode.house.gov/us/usc/t26/s6417/
+  The 2026 draft Form 8936 identifies direct Part V routing to Form 3800.
+  https://www.irs.gov/pub/irs-dft/f8936--dft.pdf
+  Admit only the primary taxpayer's calendar-year, single, taxable individual
+  return and materially participating sole proprietorship for the verified
+  private 45W source lane. Confirm no other current, passive, carryforward,
+  or incoming carryback credit. No public return, filing export, general
+  credit ordering, tax-exempt 45W, or use of the legacy aggregate input.
+lines:
+  - line: "current-year-allowable"
+    description: "Regular Section 38(c)(1) limitation for the sole direct 2026 credit"
+    formula: |
+      Calculate the only current general business credit using the verified
+      commercial vehicle originals. Require confirmed original VINs from other
+      vehicle claims, including a confirmed empty list, and hold any shared
+      VIN. Require three separate actual same-return workpapers: Form 3800
+      regular tax reconciled with applicable Schedule 2 additions
+      and exclusions; Form 6251 actual AMT and tentative minimum tax; and
+      the allowed credits reducing Section 38 tax, including actually allowed
+      foreign and child credits and excluding general business, prior-year
+      minimum tax, and tax-credit-bond credits. Require each amount, including
+      known zero. Confirm taxable income, tax and credits account for all
+      required asset basis adjustments and their downstream recalculations.
+      This workpaper performs no asset adjustment. Allow the smaller of the
+      tentative credit and net income tax less the greater of tentative
+      minimum tax or 25% of net regular tax above $25,000, floored at zero.
+    testRef: "tests/engine/forms/form-3800-commercial-clean-vehicle-2026.test.ts::applies the ordinary tax limit and the confirmed prior-year capacity"
+  - line: "carryback-to-2025"
+    description: "Apply actual 2025 Section 39(b) capacity before looking forward"
+    formula: |
+      When tentative credit exceeds the 2026 amount allowed, require the
+      original 2025 individual return and confirmed supporting tax and
+      credit-ordering workpapers for the same taxpayer and calendar year.
+      Require the amount available under Section 38(c), the original Section
+      38(a)(1) and (2) ordinary carryforward and current amounts. Verify those
+      workpapers establish eligibility and ordering for this credit, support
+      only ordinary priority credits and exclude the proposed 2026 carryback
+      itself. Confirm zero Section 39(b)(2) earlier-source-year carrybacks
+      because 2025 and 2026 are successive calendar years of this taxpayer.
+      Capacity is the ordinary Section 38(c) limitation less the priority
+      amounts, floored at zero. The amount applied in this workpaper is the
+      smaller of unused 2026 credit and confirmed 2025 capacity.
+      Taxable sole-proprietor 45W is outside the elective-pay tax-exempt cohort
+      in Section 6417(b)(6) and retains the ordinary one-year carryback.
+    testRef: "tests/engine/forms/form-3800-commercial-clean-vehicle-2026.test.ts::holds missing prior-year evidence and distinguishes confirmed zero capacity"
+  - line: "potential-carryforward-to-2027"
+    description: "Balance potentially carried to the first succeeding year"
+    formula: |
+      Subtract the 2025 carryback from the unused 2026 amount. Preserve exact
+      Decimal working values. Carrying any balance into 2027 and later within
+      the 20-year period still depends on subsequent tax capacity, ordering,
+      supporting workpapers and intervening application. No actual claim or
+      qualification is asserted by this calculation.
+    testRef: "tests/engine/forms/form-3800-commercial-clean-vehicle-2026.test.ts::keeps fractional amounts and never treats the whole unused amount as carried forward"
