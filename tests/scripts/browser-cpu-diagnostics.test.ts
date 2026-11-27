@@ -211,6 +211,23 @@ it('settles an unresponsive owned child without waiting indefinitely for close',
   finally { child.emit('close', null, 'SIGKILL'); await pending; }
 });
 
+it('allows the owned Playwright child to close after its graceful interrupt', async () => {
+  vi.useFakeTimers();
+  const child = Object.assign(new EventEmitter(), { stdout: new PassThrough(), stderr: new PassThrough(), kill: vi.fn(), unref: vi.fn() });
+  const controller = new AbortController();
+  const outcome = command('owned-fake-node', [], { cwd: '/', env: {}, signal: controller.signal,
+    stopSignal: 'SIGINT', stopGraceMs: 8_000, spawnChild: () => child }).catch(error => error);
+  try {
+    controller.abort();
+    await vi.advanceTimersByTimeAsync(7_999);
+    expect(child.kill.mock.calls).toEqual([['SIGINT']]);
+    child.emit('close', 130, null);
+    expect(await outcome).toBeInstanceOf(Error);
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(child.kill.mock.calls).toEqual([['SIGINT']]);
+  } finally { child.emit('close', 130, null); await outcome; vi.useRealTimers(); }
+});
+
 import { sanitizeStoredRecord } from '../../scripts/browser-cpu-diagnostics/profile.mjs';
 it('records only fixed rejection reasons and rejects private additions', () => {
   const raw = profile(); raw.timeDeltas[0] = -1;

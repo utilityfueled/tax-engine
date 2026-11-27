@@ -5,12 +5,99 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test, type TestContext } from 'vitest';
 import { recoveryBrowserObservation } from '../../scripts/browser-recovery-observation.mjs';
+import { readArm64WorkerJobBudget, runArm64SchoolWorkerPair, selectArm64SchoolWindow, workerArguments } from '../../scripts/browser-cpu-diagnostics/arm64-school-worker-pair.mjs';
 
 const sourceSha = 'a'.repeat(40);
 const candidateImageId = `sha256:${'b'.repeat(64)}`;
 const firstId = `${'1'.repeat(20)}-${'2'.repeat(20)}`;
 const secondId = `${'3'.repeat(20)}-${'4'.repeat(20)}`;
 const privateText = 'RAW_TEST_INPUT_MUST_STAY_PRIVATE';
+
+test('uses the recorded native job start and rejects stale or late metadata', async () => {
+    const started = Date.parse('2026-11-27T19:22:46Z');
+    const env = { GITHUB_RUN_ID: '46014076098', GITHUB_RUN_ATTEMPT: '2', GITHUB_SHA: sourceSha };
+    const original = { id: 140634639448, run_id: 46014076098, run_attempt: 2, head_sha: sourceSha,
+        name: 'recovery', status: 'in_progress', started_at: new Date(started).toISOString(), completed_at: null };
+    const signal = new AbortController().signal;
+    const read = (now: number, jobs = [original], total = jobs.length, runEnv = env) => readArm64WorkerJobBudget(runEnv, signal, {
+        now: () => now,
+        fetchResponse: async (url: string, request: RequestInit) => {
+            assert.equal(url, 'https://api.github.com/repos/utilityfueled/tax-engine/actions/runs/46014076098/attempts/2/jobs?per_page=100');
+            assert.equal(request.redirect, 'error');
+            assert.equal(new Headers(request.headers).has('Authorization'), false);
+            return Response.json({ total_count: total, jobs });
+        },
+    });
+    const lastStart = started + 55 * 60_000;
+    assert.equal(await read(lastStart), started + 90 * 60_000);
+    await assert.rejects(read(lastStart + 1));
+    // A marker set six minutes after the GitHub job starts would have admitted this late launch.
+    await assert.rejects(read(started + 60 * 60_000));
+    await assert.rejects(read(lastStart, [{ ...original, run_attempt: 1 }]));
+    await assert.rejects(read(lastStart, [{ ...original, run_id: 46014076099 }]));
+    await assert.rejects(read(lastStart, [{ ...original, head_sha: 'e'.repeat(40) }]));
+    await assert.rejects(read(lastStart, [{ ...original, name: 'some other job' }]));
+    await assert.rejects(read(lastStart, [{ ...original, started_at: new Date(lastStart + 1).toISOString() }]));
+    await assert.rejects(read(lastStart, [{ ...original, status: 'completed' }]));
+    await assert.rejects(read(lastStart, [original, { ...original, id: original.id + 1 }]));
+    await assert.rejects(read(lastStart, [original], 2));
+    await assert.rejects(read(lastStart, [original], 1, { ...env, GITHUB_RUN_ATTEMPT: '' }));
+    await assert.rejects(readArm64WorkerJobBudget(env, signal, { fetchResponse: async () => new Response(null, { status: 503 }) }));
+});
+
+test('binds the worker comparison to the original audited school window', () => {
+    const school = 'oh-school-district-part-year-native.spec.ts';
+    const other = 'another-window-case.spec.ts';
+    const rows = Array.from({ length: 131 }, (_, i) => ({
+        id: `${i.toString(16).padStart(20, '0')}-${'1'.repeat(20)}`,
+        file: i === 0 ? school : other,
+        timeout: 30000,
+        expectedStatus: 'passed',
+    }));
+    const audit = { files: { [school]: {}, [other]: { bodyTimeoutMs: 180000 } } };
+    const batch = { rows, bounds: { 'filled-return': 4 } };
+    const cases = rows.map((row, i) => ({ id: row.id, deadlineMs: i === 0 ? 30000 : 180000,
+        status: i === 0 ? 'timedOut' : 'passed', failureClue: i === 0 ? { category: 'timeout' } : undefined }));
+    const summary = { status: 'FAIL', cleanup: true, batchesCompleted: 8, caseCount: 138, failed: 1, skipped: 0 };
+    const observation = { summary, batches: [...Array.from({ length: 7 }, (_, i) => ({ batch: i + 1, cases: [] })), { batch: 8, cases }] };
+    const batches = [...Array.from({ length: 7 }, () => ({ rows: [{}], bounds: {} })), batch];
+    const digest = createHash('sha256').update(cases.map(row => `${row.id}:${row.deadlineMs}\n`).join('')).digest('hex');
+    assert.equal(selectArm64SchoolWindow(observation, batches, audit, digest), batch);
+    assert.throws(() => selectArm64SchoolWindow(observation, batches, audit));
+    assert.throws(() => selectArm64SchoolWindow({ ...observation, summary: { ...summary, cleanup: false } }, batches, audit, digest));
+    assert.throws(() => selectArm64SchoolWindow(observation, batches, { files: { [school]: {}, [other]: {} } }, digest));
+    assert.throws(() => selectArm64SchoolWindow(observation, [...batches.slice(0, 7), { ...batch, rows: rows.slice(1) }], audit, digest));
+    assert.throws(() => selectArm64SchoolWindow(observation, [...batches.slice(0, 7), { ...batch, rows: [{ ...rows[0], id: secondId }, ...rows.slice(1)] }], audit, digest));
+});
+
+test('reconciles both worker legs after separate natural windows with unchanged case limits', async () => {
+    const file = 'oh-school-district-part-year-native.spec.ts';
+    const name = 'synthetic phase case';
+    const row = { key: JSON.stringify(['chromium', file, [name]]), file, id: firstId, timeout: 30000, expectedStatus: 'passed' };
+    const audit = { files: { [file]: { bodyTimeoutMs: 180000 } } };
+    assert.deepEqual(workerArguments(1, '/tmp/list').slice(2), workerArguments(2, '/tmp/list').slice(2));
+    assert.throws(() => workerArguments(3, '/tmp/list'));
+
+    let clock = 0;
+    const executions: number[][] = [];
+    const run = (workers: number, reportedWorkers = workers) => {
+        executions.push([workers, clock]);
+        clock += 290;
+        return { exit: 0, report: { config: { workers: reportedWorkers, projects: [{ retries: 0, repeatEach: 1 }] }, errors: [],
+            suites: [{ title: file, specs: [{ file, title: name, id: firstId, tests: [{ projectName: 'chromium',
+                timeout: 180000, expectedStatus: 'passed', results: [{ status: 'passed', duration: 290, retry: 0,
+                    stdout: [{ text: privateText }] }] }] }] }] } };
+    };
+    const io = { now: () => ({ mono: clock, wall: clock }), sleep: (ms: number) => { clock += ms; },
+        identity: () => {}, alive: () => true, cleanup: () => true, run };
+    const batch = { rows: [row], bounds: { 'filled-return': 0 } };
+    const legs = await runArm64SchoolWorkerPair(batch, audit, io);
+    assert.deepEqual(executions, [[2, 61000], [1, 122290]]);
+    assert.deepEqual(legs.map(leg => [leg.workers, leg.cases[0].deadlineMs]), [[2, 180000], [1, 180000]]);
+    assert.equal(JSON.stringify(legs).includes(privateText), false);
+    await assert.rejects(runArm64SchoolWorkerPair(batch, audit, { ...io, run: (workers: number) => run(workers, 2) }), /Incomplete/);
+    await assert.rejects(runArm64SchoolWorkerPair(batch, audit, { ...io, cleanup: () => false }), /Incomplete/);
+});
 
 async function fixture(t: TestContext) {
   const directory = await mkdtemp(path.join(tmpdir(), 'recovery-browser-observation-'));
@@ -43,7 +130,7 @@ async function fixture(t: TestContext) {
   });
   await save('summary.json', summary);
   await saveBoundReceipt(receipt);
-  const read = (overrides: { sourceSha?: string; candidateImageId?: string } = {}) =>
+  const read = (overrides: { sourceSha?: string; candidateImageId?: string; expectedContainerId?: string } = {}) =>
     recoveryBrowserObservation({ directory, sourceSha, candidateImageId, ...overrides });
   return { read, save, saveBoundReceipt, summary, receipt, directory };
 }
@@ -97,6 +184,7 @@ test('rejects stale and incomplete receipts while preserving a reconciled partia
   const { read, save, saveBoundReceipt, summary, receipt } = await fixture(t);
   await assert.rejects(read({ sourceSha: 'd'.repeat(40) }), /source or image/);
   await assert.rejects(read({ candidateImageId: `sha256:${'d'.repeat(64)}` }), /source or image/);
+  await assert.rejects(read({ expectedContainerId: 'd'.repeat(64) }), /source or image/);
   await save('summary.json', { ...summary, batchesCompleted: 2 });
   await assert.rejects(read());
   await save('summary.json', { ...summary, caseCount: 3 });
@@ -109,7 +197,7 @@ test('rejects stale and incomplete receipts while preserving a reconciled partia
   await saveBoundReceipt({ ...receipt, result: { ...receipt.result, rows: receipt.result.rows.map(row => ({ ...row, results: { 0: row.results[0], length: 1 } })) } });
   await assert.rejects(read(), /case results/);
   await saveBoundReceipt(receipt);
-  const report = await read();
+  const report = await read({ expectedContainerId: 'c'.repeat(64) });
   assert.equal(report.summary.batchesCompleted, 1);
   assert.equal(report.summary.failed, 1);
 });

@@ -70,12 +70,17 @@ async function readJson(file,max=LIMITS.bytes){
  const stat=await lstat(file);need(stat.isFile()&&!stat.isSymbolicLink()&&stat.size<=max);
  const bytes=await readFile(file);need(bytes.length<=max);return JSON.parse(bytes.toString('utf8'));
 }
-export async function readOriginalJobBudget(env, signal, { fetchResponse = globalThis.fetch, now = Date.now, controllerMs = MAX_TOTAL_MS } = {}) {
+export async function readPublicRunJob(env, signal, { jobName, attempt, fetchResponse = globalThis.fetch }) {
+ const run = env.GITHUB_RUN_ID;
+ if (!/^[1-9]\d{0,15}$/u.test(run ?? '') || (attempt !== undefined && !/^[1-9]\d{0,5}$/u.test(attempt))) {
+  return { reason: 'original-job-identity-mismatch' };
+ }
+ const endpoint = attempt === undefined ? 'jobs?filter=latest&per_page=100' : `attempts/${attempt}/jobs?per_page=100`;
  // Read the public GitHub endpoint for the admitted run without credentials.
  let response;
  try {
   response = await fetchResponse(
-   `https://api.github.com/repos/utilityfueled/tax-engine/actions/runs/${env.GITHUB_RUN_ID}/jobs?filter=latest&per_page=100`,
+   `https://api.github.com/repos/utilityfueled/tax-engine/actions/runs/${run}/${endpoint}`,
    {
     redirect: 'error',
     signal: globalThis.AbortSignal.any([signal, globalThis.AbortSignal.timeout(10000)]),
@@ -102,15 +107,20 @@ export async function readOriginalJobBudget(env, signal, { fetchResponse = globa
    chunks.push(chunk);
   }
   const data = JSON.parse(Buffer.concat(chunks).toString('utf8'));
-  need(Number.isSafeInteger(data.total_count) && data.total_count <= 100 && Array.isArray(data.jobs));
-  const jobs = data.jobs.filter(job => job.name === 'Container Recovery, Browser Flows and SBOM');
+  need(Array.isArray(data.jobs) && data.total_count === data.jobs.length && data.jobs.length <= 100);
+  const jobs = data.jobs.filter(job => job?.name === jobName);
   need(jobs.length === 1);
   [job] = jobs;
  } catch {
   return { reason: 'original-job-response-invalid' };
  }
+ return { job };
+}
+export async function readOriginalJobBudget(env, signal, { fetchResponse = globalThis.fetch, now = Date.now, controllerMs = MAX_TOTAL_MS } = {}) {
+ const result = await readPublicRunJob(env, signal, { jobName: 'Container Recovery, Browser Flows and SBOM', fetchResponse });
+ if (!result.job) return result;
  try {
-  return { budget: remainingJobBudget(job, env, now(), controllerMs) };
+  return { budget: remainingJobBudget(result.job, env, now(), controllerMs) };
  } catch {
   return { reason: 'original-job-identity-mismatch' };
  }

@@ -51,9 +51,9 @@ export function options(args) {
     }
     return { args: [...result, '--workers=2', '--retries=0'], utility };
 }
-export function rowsFromReport(report) {
+export function rowsFromReport(report, workers = 2) {
     need(report && Array.isArray(report.suites) && Array.isArray(report.errors) && !report.errors.length, 'Missing/global-error report');
-    need(report.config?.workers === 2 && Array.isArray(report.config.projects) && report.config.projects.length === 1 && report.config.projects.every(p => p.retries === 0 && p.repeatEach === 1), 'Runner concurrency/retry changed');
+    need((workers === 1 || workers === 2) && report.config?.workers === workers && Array.isArray(report.config.projects) && report.config.projects.length === 1 && report.config.projects.every(p => p.retries === 0 && p.repeatEach === 1), 'Runner concurrency/retry changed');
     const rows = [];
     const walk = (suite, titles = []) => {
         const nested = titles.length ? [...titles, suite.title] : [suite.title];
@@ -120,9 +120,9 @@ export function planBatches(rows, audit) {
     return result;
 }
 export const testList = rows => rows.map(r => `[${r.project}] › ${r.file} › ${r.titles.join(' › ')}`).join('\n') + '\n';
-export function reconcile(report, expected, audit, exit) {
+export function reconcile(report, expected, audit, exit, workers = 2) {
     need(exit === 0 || exit === 1, 'Unknown child exit');
-    const got = rowsFromReport(report);
+    const got = rowsFromReport(report, workers);
     exactUnion([got], expected);
     const byKey = new Map(expected.map(r => [r.key, r]));
     let failed = 0, skipped = 0;
@@ -172,7 +172,7 @@ async function naturalWindow(io, prior) {
     return clock;
 }
 /** Process/clock collaborators permit offline tests; actual entry supplies only owned real operations. */
-export async function runSchedule({ batches, expected, audit, io }) {
+export async function runSchedule({ batches, expected, audit, io, workers = 2 }) {
     let prior;
     const outcomes = [];
     let error = null;
@@ -186,7 +186,7 @@ export async function runSchedule({ batches, expected, audit, io }) {
             need(io.alive(), 'Runtime unavailable');
             const child = await io.run(batches[i], i);
             prior = windowClock(io.now(), start);
-            const result = reconcile(child.report, batches[i].rows, audit, child.exit);
+            const result = reconcile(child.report, batches[i].rows, audit, child.exit, workers);
             outcomes.push(result);
             const receipt = { batch: i + 1, start, close: prior, bounds: batches[i].bounds, result };
             await io.record(receipt);

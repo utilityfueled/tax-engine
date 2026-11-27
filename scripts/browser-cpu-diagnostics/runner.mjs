@@ -36,7 +36,8 @@ async function readJson(file, max = LIMITS.bytes) {
 }
 
 /** Only this process's finite child commands are stopped. Captured stderr is never forwarded or saved. */
-export function command(file, args, { cwd, env, signal, timeout = 60000, max = LIMITS.bytes, spawnChild = spawn }) {
+export function command(file, args, { cwd, env, signal, timeout = 60000, max = LIMITS.bytes, spawnChild = spawn,
+  stopSignal = 'SIGTERM', stopGraceMs = 2000 }) {
   return new Promise((resolve, reject) => {
     if (signal.aborted) { reject(new Error('diagnostic-contract-unavailable')); return; }
     const child = spawnChild(file, args, { cwd, env, stdio: ['ignore', 'pipe', 'pipe'] });
@@ -48,14 +49,14 @@ export function command(file, args, { cwd, env, signal, timeout = 60000, max = L
       else resolve({ exit, stdout: output });
     };
     const stop = () => {
-      if (bad || settled) return; bad = true; child.kill('SIGTERM');
+      if (bad || settled) return; bad = true; child.kill(stopSignal);
       hardStop = setTimeout(() => {
         child.kill('SIGKILL');
         forcedClose = setTimeout(() => {
           // No close acknowledgment: do not report confirmed cleanup or wait forever.
           child.stdout.destroy(); child.stderr.destroy(); child.unref(); finish(null, 'cleanup-unconfirmed');
         }, 500);
-      }, 2000);
+      }, stopGraceMs);
     };
     const timer = setTimeout(stop, timeout); signal.addEventListener('abort', stop, { once: true });
     child.stdout.on('data', chunk => { seen += chunk.length; if (seen > max) stop(); else output += chunk.toString('utf8'); });

@@ -19,13 +19,15 @@ async function readReceipt(directory, name) {
     return { bytes, value: JSON.parse(bytes.toString('utf8')) };
 }
 
-export async function recoveryBrowserObservation({ directory, sourceSha, candidateImageId }) {
+/** @param {{directory: string, sourceSha: string, candidateImageId: string, expectedContainerId?: string}} options */
+export async function recoveryBrowserObservation({ directory, sourceSha, candidateImageId, expectedContainerId }) {
     need(typeof sourceSha === 'string' && /^[a-f0-9]{40}$/u.test(sourceSha)
         && typeof candidateImageId === 'string' && /^sha256:[a-f0-9]{64}$/u.test(candidateImageId), 'Invalid recovery source or image');
     const { value: binding } = await readReceipt(directory, 'source-build.json');
     const proof = binding.externalProof;
     need(binding.externalImageId === candidateImageId && Array.isArray(proof) && proof.length === 4
         && typeof proof[0] === 'string' && /^[a-f0-9]{64}$/u.test(proof[0]) && proof[1] === candidateImageId
+        && (expectedContainerId === undefined || proof[0] === expectedContainerId)
         && proof[2] === 'true' && proof[3] === sourceSha, 'Mismatched recovery source or image');
 
     const { bytes: summaryBytes, value: rawSummary } = await readReceipt(directory, 'summary.json');
