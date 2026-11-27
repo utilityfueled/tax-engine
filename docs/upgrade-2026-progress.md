@@ -1,5 +1,29 @@
 # 2026 upgrade implementation evidence
 
+## November 27 Form 1099-R disability code combinations
+
+`881d5f5c2` rejects invalid 2026 Box 7a disability combinations and a
+checked Box 7b on either order of the Code 3 and Code D pair. The direct form
+calculator uses the statement year when its caller omits the return year.
+Valid non-IRA pairs and the 2025 control retained their calculated amounts.
+Six regression cases reproduced before the fix. The Node 26.13.1 package
+check passed 271 tests, all 21 Form 1099-R spec references, inventory, scoped
+lint and the browser source manifest. A separate code review reproduced the
+direct entry behavior. The guided interview still holds the paired codes for review.
+[IRS 2026 Form 1099-R instructions](https://www.irs.gov/instructions/i1099r).
+
+The offline release harness passed 183 tests across native provenance,
+browser recovery observation, CPU diagnostics and archive diagnostics.
+The tracked archive passed all eight static checks. The full unit and coverage
+rerun uses the established five-worker limit and local fixture listeners.
+The earlier parallel attempt hit timing failures and could not open a loopback
+TLS listener in the sandbox. The previous Docker job for `64ca11a71` passed.
+The current Linux browser and image requirements remain open.
+[Current CI](https://github.com/utilityfueled/tax-engine/actions/runs/45986784006) ·
+[Current AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45986784302) ·
+[Current Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45986784130) ·
+[Previous Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45981014183).
+
 ## November 27 Exact Gemini prompt-block settlement
 
 The hosted adapter and offline provider evaluator now retain usage for a

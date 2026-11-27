@@ -3,8 +3,9 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "64ca11a71ab066bbe027d79dd55a3fdbc4331f17",
-    "latestScopedApplicationCommit": "98884bc352565e903a60862ceb722b0b26421689",
-    "latestCombinedCandidateCommit": "64ca11a71ab066bbe027d79dd55a3fdbc4331f17",
+    "latestScopedApplicationCommit": "881d5f5c277cb7544cc977e33e73dd42e2c979bb",
+    "latestCombinedCandidateCommit": "881d5f5c277cb7544cc977e33e73dd42e2c979bb",
+    "code3PairingEvidenceKey": "activeContinuation.nov27Code3PairValidation",
     "paDividendAccountIdentityEvidenceKey": "activeContinuation.nov27PaDividendAccountIdentity",
     "ohioTreasuryEvidenceKey": "activeContinuation.nov27OhioTreasuryDocumentedBoxes",
     "dockerRevisionQueueEvidenceKey": "activeContinuation.nov27DockerVerificationByRevision",
@@ -172,6 +173,25 @@
     ]
   },
   "activeContinuation": {
+    "nov27Code3PairValidation": {
+      "commit": "881d5f5c277cb7544cc977e33e73dd42e2c979bb",
+      "nodeVersion": "26.13.1",
+      "regressionsFailedBeforeImplementation": 6,
+      "focusedTestsPassed": 271,
+      "focusedSpecReferencesPassed": 21,
+      "inventoryAndScopedLintPassed": true,
+      "separateCodeReviewPassed": true,
+      "guidedCode3DPairsQualified": false,
+      "browserSourceAuditSha256": "a600f96a7fb07ad2f09d35137b2d8c7ebffb1ffe02bd371c1309c79229b6a6b7",
+      "releaseHarnessTestsPassed": 183,
+      "exactStaticChecksPassed": 8,
+      "ciRun": 45986784006,
+      "amd64WebRun": 45986784302,
+      "dockerRun": 45986784130,
+      "strictLinuxQualified": false,
+      "qualifiedHumanTaxReview": false,
+      "sourceUrl": "https://www.irs.gov/instructions/i1099r"
+    },
     "nov27GeminiPromptBlockSettlement": {
       "commit": "98884bc352565e903a60862ceb722b0b26421689",
       "specNotesCommit": "dc38459850f7852f8570bb9940044d88603d0377",
