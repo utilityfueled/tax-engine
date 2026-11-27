@@ -18,6 +18,17 @@ lines:
     description: "Reconfirm prior AOTC claim history when the student changes"
     formula: "Bind the prior-claim answer and student credit sources to the actual normalized student TIN. An edit that assigns an answered row to a different or newly identified student retains the old answers for review but requires a fresh claim-count selection and separate confirmation of that student's actual education sources. Retained expenses, institution and 1098-T evidence, timely identification, enrollment, completed education and conviction answers are not sufficient until reviewed for the identified student. A rejected or unconfirmed answer cannot supply a zero or a credit to Form 8863."
     testRef: "tests/guided-interview/guided-aotc-student-history.test.ts::blocks reuse of a different student's zero before federal calculation"
+  - line: "2026-edited-student-expenses"
+    description: "Reconfirm actual 2026 AOTC expenses after a material edit"
+    formula: >-
+      Once a student's 2026 expense amount and eligibility have been entered,
+      a material edit to that amount clears the expense-eligibility answer.
+      Retain the edited amount and prior-claim history. Persist the pending
+      answer on reopen and hold guided calculation until the revised amount is
+      reviewed against the actual records. Initial entry, equivalent monetary
+      formatting, and 2025 behavior are unchanged.
+    irsRef: "2026 draft Form 8863 instructions, Qualified Education Expenses and Part III line 27; https://www.irs.gov/pub/irs-dft/i8863--dft.pdf"
+    testRef: "tests/guided-interview/guided-aotc-student-history.test.ts::holds the revised 2026 AOTC expense after saving and reopening"
   - line: "saved-replay"
     description: "Preserve applicable and pending student history"
     formula: "Preserve the same student's answers across TIN formatting, unrelated edits, remaining-row shifts and saved-interview replay. A prior-claim or source review stays pending after replay. A replacement row for the same student that omits the existing source-review status inherits it. Changing a substantive student source revokes its explicit review; formatting a currency value or editing an independent claim count does not. When an older saved row already requires its claim history reviewed, also require review of its student sources. Retain the unversioned prefilled-zero and retirement-code checks and existing EIC source evidence. Explicitly reselect the count and confirm actual student sources to restore the ordinary Form 8863 path."

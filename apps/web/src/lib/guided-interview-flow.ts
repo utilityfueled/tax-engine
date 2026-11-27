@@ -2271,10 +2271,15 @@ function hsaPayrollW2Originals(entries: W2EntryData[] | undefined, owner: HsaAcc
   }).sort();
 }
 
-function aotcStudentSources(student: EducationStudentData) {
+function aotcStudentSources(student: EducationStudentData, compareExactExpenses = false) {
   const { name: _name, studentTaxId: _tin, priorYearsClaimed: _history,
     requiresPriorYearsConfirmation: _historyPending, qualifiedExpenses, ...sources } = student;
-  return { ...sources, qualifiedExpenses: qualifiedExpenses.trim().replaceAll(",", "") };
+  const text = qualifiedExpenses.trim();
+  if (compareExactExpenses && text) {
+    const amount = parseGuidedDisplayAmount(text);
+    return { ...sources, qualifiedExpenses: amount.isFinite() ? amount.toFixed() : text };
+  }
+  return { ...sources, qualifiedExpenses: text.replaceAll(",", "") };
 }
 
 function educationTin(value: string | undefined): string {
@@ -2417,7 +2422,7 @@ function aotcClaimantOriginals(education: EducationCreditData) {
   };
 }
 
-function retainAotcSources(previous: CreditsData | undefined, next: CreditsData | undefined): CreditsData | undefined {
+function retainAotcSources(previous: CreditsData | undefined, next: CreditsData | undefined, taxYear: GuidedFlowState["taxYear"]): CreditsData | undefined {
   const formerClaimant = previous?.education;
   const currentClaimant = next?.education;
   if (next && formerClaimant && currentClaimant?.aotcClaimantFactsTaxYear !== undefined
@@ -2427,22 +2432,29 @@ function retainAotcSources(previous: CreditsData | undefined, next: CreditsData 
   const previousStudents = previous?.education?.aocStudents;
   if (!previousStudents?.length || !next?.education?.aocStudents.length) return next;
   const studentTin = (entry: EducationStudentData) => educationTin(entry.studentTaxId);
+  const currentYearExpenses = taxYear === 2026;
+  const studentSourcesChanged = (before: EducationStudentData, after: EducationStudentData) =>
+    guidedSourceValuesChanged(aotcStudentSources(before, currentYearExpenses), aotcStudentSources(after, currentYearExpenses));
   const students = next.education.aocStudents.map((student, index) => {
     const former = previousStudents[index];
     const tin = studentTin(student);
     if (!former) return student;
     if (studentTin(former) === tin) {
-      const confirmation = student.sourceFactsConfirmed === undefined ? former.sourceFactsConfirmed : student.sourceFactsConfirmed;
-      if (confirmation === undefined) return student;
-      const changed = guidedSourceValuesChanged(aotcStudentSources(former), aotcStudentSources(student));
-      return { ...student, sourceFactsConfirmed: changed ? null : confirmation };
+      const editedExpenses = currentYearExpenses && /^\d{9}$/u.test(tin)
+        && typeof former.expensesEligibilityConfirmed === "boolean"
+        && hasEnteredAmount(former.qualifiedExpenses) && parseGuidedDisplayAmount(former.qualifiedExpenses).gte(0)
+        && guidedAmountChanged(former.qualifiedExpenses, student.qualifiedExpenses);
+      const current = editedExpenses ? { ...student, expensesEligibilityConfirmed: null } : student;
+      const confirmation = current.sourceFactsConfirmed === undefined ? former.sourceFactsConfirmed : current.sourceFactsConfirmed;
+      if (confirmation === undefined) return current;
+      return { ...current, sourceFactsConfirmed: studentSourcesChanged(former, current) ? null : confirmation };
     }
     // Removing a student can shift a different, unchanged student's row.
     const retained = /^\d{9}$/.test(tin) && previousStudents.find(row => studentTin(row) === tin &&
       row.priorYearsClaimed === student.priorYearsClaimed &&
       Boolean(row.requiresPriorYearsConfirmation) === Boolean(student.requiresPriorYearsConfirmation) &&
       (student.sourceFactsConfirmed === undefined || row.sourceFactsConfirmed === student.sourceFactsConfirmed) &&
-      !guidedSourceValuesChanged(aotcStudentSources(row), aotcStudentSources(student)));
+      !studentSourcesChanged(row, student));
     if (!retained) return requireAotcSourceReview(student);
     return retained.sourceFactsConfirmed === undefined ? student : { ...student, sourceFactsConfirmed: retained.sourceFactsConfirmed };
   });
@@ -2801,7 +2813,7 @@ export function updateSectionData(
     && /^\d{4}$/u.test(previousStudentLoanYear) && previousStudentLoanYear !== nextStudentLoanFacts.sourceTaxYear;
   const benefitSourcesChanged = (sectionId === "income-w2" || sectionId === "income-self-employment") && credits?.dependentCareBenefits;
   const nextCreditsDraft = sectionId === "credits"
-    ? invalidateEditedLlcSources(credits, retainAotcSources(credits, data as CreditsData | undefined)) : credits;
+    ? invalidateEditedLlcSources(credits, retainAotcSources(credits, data as CreditsData | undefined, state.taxYear)) : credits;
   const charger = nextCreditsDraft?.personalEvCharger;
   const chargerOwnerChanged = sectionId === "personal-info" && charger
     && [charger, ...(charger.additionalPortSources?.ports ?? [])].some(({ owner }) => {

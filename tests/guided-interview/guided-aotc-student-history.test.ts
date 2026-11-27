@@ -71,6 +71,41 @@ function calculateAotc(state: GuidedFlowState) {
 }
 
 describe("guided AOTC prior-claim history", () => {
+  it("holds the revised 2026 AOTC expense after saving and reopening", () => {
+    const starting = startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2"], lifeEvents: [], stateCode: null });
+    const starting2026 = withOriginalWages({ ...starting, taxYear: 2026 }, "2026");
+    const student = { ...completeAocEligibility, name: "Jordan Example", qualifiedExpenses: "", priorYearsClaimed: "3" };
+    const initial = updateSectionData(starting2026, "credits", { ...emptyCreditsData, education: {
+      ...emptyCreditsData.education, ...completeEducationClaimant, aotcClaimantFactsTaxYear: 2026, aocStudents: [student],
+    } });
+    const entered = replaceStudents(initial, [{ ...student, qualifiedExpenses: "1000" }]);
+    const entry = creditsFor(entered).education.aocStudents[0];
+    expect(entry.expensesEligibilityConfirmed).toBe(true);
+    expect(buildTaxInputFromGuidedData(entered)?.educationExpenses?.aocStudents[0].qualifiedExpenses).toBe("1000");
+
+    const formatted = replaceStudents(entered, [{ ...entry, qualifiedExpenses: "1,000.00" }]);
+    expect(creditsFor(formatted).education.aocStudents[0].expensesEligibilityConfirmed).toBe(true);
+    expect(buildTaxInputFromGuidedData(formatted)).not.toBeNull();
+    const explicitReview = replaceStudents(entered, [{ ...entry, sourceFactsConfirmed: true }]);
+    const formattedReview = reopen(replaceStudents(explicitReview, [{ ...entry, qualifiedExpenses: "1,000.00" }]));
+    expect(creditsFor(formattedReview).education.aocStudents[0].sourceFactsConfirmed).toBe(true);
+
+    const revised = reopen(replaceStudents(formatted, [{ ...entry, qualifiedExpenses: "4000" }]));
+    const pending = creditsFor(revised).education.aocStudents[0];
+    expect(pending).toMatchObject({ qualifiedExpenses: "4000", priorYearsClaimed: "3" });
+    expect(validateSection(revised, "credits").fieldErrors?.["student-0-expensesEligibilityConfirmed"])
+      .toMatch(/confirm actual.*net qualified expenses/i);
+    expect(buildTaxInputFromGuidedData(revised)).toBeNull();
+
+    const confirmed = reopen(replaceStudents(revised, [{ ...pending, expensesEligibilityConfirmed: true }]));
+    expect(buildTaxInputFromGuidedData(confirmed)?.educationExpenses?.aocStudents[0])
+      .toMatchObject({ qualifiedExpenses: "4000", priorYearsClaimed: 3, expensesEligibilityConfirmed: true });
+
+    const historical = educationInterview();
+    const historicalEdit = replaceStudents(historical.state, [{ ...historical.first, qualifiedExpenses: "1000" }]);
+    expect(calculateAotc(reopen(historicalEdit))).toBe("1000");
+  });
+
   it("holds the same dependent's conflicting 2025 AOTC and ODC timely TIN answers after reopen", () => {
     const { state, first } = educationInterview();
     const personal = state.sectionData["personal-info"];
