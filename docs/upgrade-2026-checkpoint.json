@@ -219,10 +219,22 @@
       "line13Depreciation": "19000",
       "line31NetProfit": "25315.25",
       "recoveredLocalFixtureTestsPassed": 93,
-      "exactUnitAndCoverage": "running",
+      "exactUnitTestsPassed": 31365,
+      "exactUnitTestsSkipped": 83,
+      "exactCoverageBranchPercentReported": 88.70,
+      "exactCoverageExitCode": 1,
+      "exactCoverageFailure": "ENOSPC during report writing",
       "fullFederalForm3800AttributionVerified": false,
       "qualifiedHumanReviewPassed": false,
       "filingQualified": false
+    },
+    "nov27ArchiveCapacityFixture": {
+      "commit": "4443ad091",
+      "focusedTestsPassed": 32,
+      "testedFloorKiB": 1048579,
+      "lintPassed": true,
+      "specInventoryPassed": true,
+      "independentEngineeringReviewPassed": true
     },
     "nov27CommercialVehicleFirstYearDepreciation": {
       "commit": "302dc037a672282061dea9e64b3fc8a13c0bf5f3",

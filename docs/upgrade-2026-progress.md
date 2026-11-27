@@ -30,9 +30,18 @@ checks passed, including 10,276 linked spec lines. The first full-suite
 attempts hit the local loopback restriction and the archive fixture's
 free-space floor. After removing reproducible build copies and rerunning
 with local listener access, all 93 tests for those fixtures passed on
-`75122eee1`. The exact full unit and coverage commands are running.
+`75122eee1`. Its full unit suite passed 31,365 tests with 83 skipped. The
+coverage run reported 88.70% branches before running out of disk space while
+writing the report. The coverage command exited 1 and needs a clean rerun.
 [Schedule C instructions](https://www.irs.gov/instructions/i1040sc) ·
 [Draft 2026 Schedule C](https://www.irs.gov/pub/irs-dft/f1040sc--dft.pdf).
+
+## November 27 archive capacity fixture
+
+Test-only commit `4443ad091` controls the capacity reported to the mocked
+archive workflow. The suite now checks one KiB below the required floor and
+at the exact floor. All 32 focused tests, lint, spec inventory, and an
+independent engineering review passed. The runtime capacity check is intact.
 
 ## November 27 commercial EV first-year depreciation
 
