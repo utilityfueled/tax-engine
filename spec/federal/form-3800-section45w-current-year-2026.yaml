@@ -1,0 +1,55 @@
+form: "Form 3800"
+fullName: "Candidate 2026 ordinary current-year direct Section 45W credit"
+taxYear: 2026
+reviewStatus: "independent-review-pending"
+irsReference: "https://www.irs.gov/instructions/i3800"
+notes: |
+  IRC 38(b)(37) and 38(c)(1) govern the ordinary limitation.
+  See https://uscode.house.gov/us/usc/t26/s38/. Form 6251 line
+  2l and IRC 168(k)(2)(G) govern depreciation for qualifying property with
+  equal regular and AMT bases. See https://www.irs.gov/instructions/i6251
+  and https://uscode.house.gov/us/usc/t26/s168/. This calculation leaves
+  2026 public availability and all filing qualification unchanged. For 2026
+  inflation adjustments see https://www.irs.gov/irb/2025-45_IRB.
+lines:
+  - line: "current-year-section45w"
+    description: "Verified direct credit and post-depreciation ordinary limitation"
+    formula: |
+      Admit one previously reconciled actual primary Schedule C vehicle and
+      prepared direct claim. Bind an original annual log of more than 500 actual
+      participation hours to that taxpayer and activity under Treasury Regulation
+      1.469-5T(a)(1). Reconcile documented eligible-property regular and AMT
+      depreciable bases to the current basis after the same direct claim; use
+      the same qualified depreciation with no asset adjustment on Form 6251
+      line 2l, including when a valid post-2015 class election applies. Recompute
+      regular income tax, AMT/TMT and earlier allowable credits from the actual
+      return after the Schedule C deduction. Compute the ordinary limitation as
+      net income tax less the greater of TMT or 25 percent of net regular tax
+      over $25,000, floored at zero. Use only the full allowed direct credit on
+      Schedule 3 line 6a. Rev. Proc. 2025-32 supplies the 2026 bracket, standard
+      deduction and AMT exemption for the numerical fixture.
+    testRef: "tests/engine/federal-section45w-current-credit-2026.test.ts::uses actual post-depreciation tax and TMT for one fully usable Section 45W credit"
+  - line: "current-year-evidence-hold"
+    description: "Hold missing or competing sources and any credit not fully allowed"
+    formula: |
+      Missing or conflicting direct, participation, qualifying property, credit
+      inventory or equal-basis evidence holds the candidate. Reject a contradictory
+      Section 199A material-participation answer for this same business. Hold when
+      Form 8995-A requires its separate Section 199A wage, unadjusted basis and
+      activity classification evidence. Hold unqualified staged tax-base
+      computations, including NOL, foreign-tax deduction-year replay, Marketplace
+      health coordination, income averaging, claim-of-right comparison and
+      annualized estimated payments. Do not assume other
+      credits, permit competing general business credit or minimum-tax-credit
+      calculations, or guess the Form 3800 base when Schedule 2 Part I has additions
+      other than AMT. If any credit is unused, retain the hold pending actual 2025
+      Section 39 capacity, with no assumed carryback or forward balance. Preserve
+      existing holds for business-use personal vehicle claims and filing exports.
+    testRef: "tests/engine/federal-section45w-current-credit-2026.test.ts::holds unsupported Section 45W evidence and unused current-year credit"
+  - line: "actual-possession"
+    description: "Only an actually placed-in-service vehicle starts the current credit"
+    formula: |
+      For the candidate current-year credit, check that the observed calculation
+      date is valid and on or before today. The confirmed vehicle possession date
+      must be on or before that observation date. See https://www.irs.gov/instructions/i8936.
+    testRef: "tests/engine/federal-section45w-current-credit-2026.test.ts::requires actual commercial vehicle possession by the federal calculation date"

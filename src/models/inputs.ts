@@ -10,6 +10,7 @@ import { MortgageInsurancePrepaidSourcesSchema } from "./mortgage-insurance-prep
 import {PassengerAutoParentSourcesSchema} from './passenger-auto-parent-sources.js';
 import {calculateScheduleCPassengerSources} from '@/engine/schedules/schedule-c-passenger-first-year-sources.js';
 import { ScheduleCSection45WFirstYearSchema } from './schedule-c-section45w-first-year.js';
+import { Section45WCurrentCreditSchema } from './section45w-current-credit.js';
 import { OhioReturnHeaderSourcesSchema } from './ohio-return-header-sources.js';
 import { OhioSchoolDistrictFactsSchema } from './ohio-school-district.js';
 import {PAMarriedOrdinarySourcesSchema} from './pa-married-ordinary-sources.js';
@@ -4686,6 +4687,7 @@ export const Form8936Schema = z.object({
   newCleanVehicles: z.array(NewCleanVehicleSchema).default([]),
   previouslyOwnedCleanVehicles: z.array(PreviouslyOwnedCleanVehicleSchema).default([]),
   commercialCleanVehicles: z.array(CommercialCleanVehicle2026SourceSchema).optional(),
+  commercialCleanVehicleCurrentCredit: Section45WCurrentCreditSchema.optional(),
   /** Prior-year AGI for the lesser-of-two-years MAGI check */
   priorYearAgi: optionalDecimalInput,
   priorYearFilingStatus: FilingStatusSchema.optional(),

@@ -174,6 +174,7 @@ import { calculateForm8862 } from "./forms/form-8862.js";
 import { calculateEicScheduleEInvestment } from "./forms/eic-schedule-e-investment.js";
 import { calculateEicSeparatedSpouseSources } from "./forms/eic-separated-spouse-sources.js";
 import { calculateForm8936 } from "./forms/form-8936.js";
+import { prepareSection45WCurrentYearCredit } from "./forms/form-3800-section45w-current-year-2026.js";
 import { calculateScheduleH } from "./forms/schedule-h.js";
 import { calculateForm2555 } from "./forms/form-2555.js";
 import { calculateForm4684 } from "./forms/form-4684.js";
@@ -304,6 +305,14 @@ function calculateFederalTaxReturn(input: TaxYearInput, context?: { asOfDate?: s
       throw new Error("Form 8911 requires the actual date the charger was ready for use on or before the calculation as-of date.");
     }
   }
+  if (input.form8936?.commercialCleanVehicleCurrentCredit !== undefined) {
+    const today = currentLocalCivilDate();
+    const asOfDate = context?.asOfDate ?? today;
+    if (!isActualDate(asOfDate) || asOfDate > today) throw new Error("Current Section 45W credit requires a valid calculation as-of date on or before today.");
+    if (input.form8936.commercialCleanVehicles?.some(({ datePlacedInService }) => !isActualDate(datePlacedInService) || datePlacedInService > asOfDate)) {
+      throw new Error("Current Section 45W credit requires actual vehicle possession on or before the calculation as-of date.");
+    }
+  }
   if (input.paMarriedOrdinarySources?.paymentSources !== undefined) {
     return calculatePAMarriedOrdinaryReturnWithFederal(input, input.paMarriedOrdinarySources).federal;
   }
@@ -424,6 +433,11 @@ function compareAutomaticReitCashDeduction(input: TaxYearInput, itemized: TaxRet
 }
 
 function calculateFederalTaxForSources(input: TaxYearInput): TaxReturnResult {
+  const section45WCurrentRequested = input.form8936?.commercialCleanVehicleCurrentCredit !== undefined;
+  if (section45WCurrentRequested && (input.netOperatingLoss || input.form172 || input.scheduleJ
+    || claimOfRightStage(input) || input.form2210?.calculationMethod === "annualized")) {
+    throw new Error("Current Section 45W credit requires separately reconciled staged tax-base computations for this return.");
+  }
   if (input.k1CharitableSources && (input.form982NolSources
     || [input.priorYear?.nolCarryforward, input.priorYear?.excessBusinessLossNOL,
       ...(input.scheduleK1Form1041 ?? []).map(row => row.finalYearNOLCarryover)].some(value => !d(value).isZero()))) {
@@ -454,6 +468,7 @@ function calculateFederalTaxForSources(input: TaxYearInput): TaxReturnResult {
   if (input.form982NolSources) calculateCodNolReduction(input);
   const marketplace = input.form7206?.plans?.some(plan => plan.marketplaceCoverage === true && plan.premiumTaxCreditInvolved === true);
   if (!marketplace) return calculateFederalTaxWithNol(input);
+  if (section45WCurrentRequested) throw new Error("Current Section 45W credit requires separately reconciled Marketplace health deduction and premium credit computations.");
   if (![2025,2026].includes(input.taxpayer.taxYear)) throw new Error("Marketplace health coordination supports actual2025 and2026 sources.");
   const familySources = calculateMarketplaceCoverageFamilySources(input);
   if (calculateMarketplaceActualPaidSources(input)) {
@@ -1714,6 +1729,10 @@ function calculateFederalTaxCore(sourceInput: TaxYearInput, marketplace?: Market
   const schedC = calculateScheduleC(input, input.scheduleC, {
     dependentCareBenefitsAdjustment: careBenefitSources.scheduleCAdjustment,
   });
+  const section45WCurrentCredit = prepareSection45WCurrentYearCredit(input, schedC);
+  if (section45WCurrentCredit && hypothetical?.purpose === "foreign-deduction-carryover") {
+    throw new Error("Current Section 45W credit requires separately reconciled foreign-tax deduction-year calculations.");
+  }
   // Add crypto business income (mining/staking + NFT creator sales) to Schedule C net profit
   const cryptoBusinessGross = sum(
     cryptoIncomeResult?.businessMiningGrossReceipts ?? new Decimal(0),
@@ -3370,6 +3389,9 @@ function calculateFederalTaxCore(sourceInput: TaxYearInput, marketplace?: Market
     }
   }
   const { qbiDeduction, form8995Result, form8995AResult } = qbiCalculation;
+  if (section45WCurrentCredit && form8995AResult) {
+    throw new Error("Current Section 45W credit requires separate actual Section 199A basis, wages and activity classification for Form 8995-A.");
+  }
   if (year === 2026 && deductionUsed !== "itemized" && schedA.charitableCarryforward.gt(0)
     && !schedA.nonitemizedCharitableCarryover && !schedA.currentCharitableCandidates && !schedA.priorCashCurrentProperty && !schedA.determinedCharitableFloor) {
     throw new Error("Nonitemized charitable carry requires the complete supported otherwise-allowable source method; retained sources cannot bypass current/prior floor proof");
@@ -3887,6 +3909,9 @@ function calculateFederalTaxCore(sourceInput: TaxYearInput, marketplace?: Market
     d(input.form3800.carryforward).greaterThan(0)
   );
   const hasGBCCarryforward = d(input.priorYear?.generalBusinessCreditCarryforward).greaterThan(0);
+  if (section45WCurrentCredit && (hasK1Box15Credits || input.form3800 || hasGBCCarryforward || input.form8801)) {
+    throw new Error("Current Section 45W credit requires a separate method for any competing business or minimum-tax credit.");
+  }
   const calculateReturnAMT = (directCredit?: Decimal, foreignCreditPartI = d("0"), ordinaryCredits?: Form6251Input["ordinaryForeignTaxCredits"]) => calculateForm6251(
     {
       // Form 6251 starts from AGI less deductions even when Form 1040 floors at zero.
@@ -3898,7 +3923,8 @@ function calculateFederalTaxCore(sourceInput: TaxYearInput, marketplace?: Market
       regularTax: taxWithoutScheduleJ.plus(foreignCreditPartI),
       directCreditElectionForeignTaxCredit: directCredit,
       ordinaryForeignTaxCredits: ordinaryCredits,
-      requiresTentativeMinimumTaxForCredits: input.form8911 !== undefined || input.form8801 !== undefined || hasK1Box15Credits || hasForm3800Input || hasGBCCarryforward,
+      requiresTentativeMinimumTaxForCredits: input.form8911 !== undefined || input.form8801 !== undefined
+        || hasK1Box15Credits || hasForm3800Input || hasGBCCarryforward || section45WCurrentCredit !== undefined,
       filingStatus,
       isItemizing: deductionUsed === "itemized",
       qualifiedDividends,
@@ -4548,7 +4574,10 @@ function calculateFederalTaxCore(sourceInput: TaxYearInput, marketplace?: Market
   const vehicleTaxLiabilityLimit = zeroFloor(improvementTaxLiabilityLimit.minus(preliminaryEnergy.energyImprovementCredit));
   const form8936 = calculateVehicles(vehicleTaxLiabilityLimit, taxBeforeCredits);
   if (form8936?.requiresTransferReconciliation) throw new Error("Actual vehicle transfer reconciliation facts are required");
-  if (form8936?.requiresForm3800) throw new Error("Business clean-vehicle credit requires supported Form 3800 attribution");
+  if (form8936?.requiresForm3800 && !section45WCurrentCredit) throw new Error("Business clean-vehicle credit requires supported Form 3800 attribution");
+  if (section45WCurrentCredit && (!form8936?.tentativeCommercialCleanVehicleCredit?.eq(section45WCurrentCredit) || !partIAdditions.isZero())) {
+    throw new Error("Current Section 45W credit requires the matched direct claim and a separately supported Schedule 2 Part I tax base.");
+  }
   if (form8936) audit.merge(form8936.lines);
 
   // ── Form 8812: Child Tax Credit (nonrefundable + refundable ACTC) ──
@@ -4642,10 +4671,10 @@ function calculateFederalTaxCore(sourceInput: TaxYearInput, marketplace?: Market
 
   // ── Form 3800: General Business Credit ──────────────────
   // Computed after CTC so the limitation can use CTC + other personal credits.
-  // K-1 Box 15 credits and form3800 input are the sources.
+  // Use the source-bound direct credit or the existing K-1 and Form 3800 sources.
   let form3800: ReturnType<typeof calculateForm3800> | undefined;
   let generalBusinessCredit = new Decimal(0);
-  if (hasK1Box15Credits || hasForm3800Input || hasGBCCarryforward) {
+  if (hasK1Box15Credits || hasForm3800Input || hasGBCCarryforward || section45WCurrentCredit) {
     // Carryforward from priorYear overrides form3800.carryforward if both provided
     const gbcCarryforward = hasGBCCarryforward
       ? d(input.priorYear?.generalBusinessCreditCarryforward)
@@ -4654,7 +4683,7 @@ function calculateFederalTaxCore(sourceInput: TaxYearInput, marketplace?: Market
     form3800 = calculateForm3800({
       filingStatus,
       scheduleK1s: input.scheduleK1,
-      currentYearCredits: d(input.form3800?.currentYearCredits),
+      currentYearCredits: section45WCurrentCredit ?? d(input.form3800?.currentYearCredits),
       passiveActivityCredits: d(input.form3800?.passiveActivityCredits),
       carryforward: gbcCarryforward,
       regularTax: incomeTax,
@@ -4663,6 +4692,24 @@ function calculateFederalTaxCore(sourceInput: TaxYearInput, marketplace?: Market
       childTaxCredit,
       otherNonrefundableCredits: otherCredits,
     });
+    if (section45WCurrentCredit) {
+      if (!form3800.allowableCredit.eq(section45WCurrentCredit)) {
+        throw new Error("Unused current Section 45W credit requires actual 2025 Section 39 capacity before federal calculation.");
+      }
+      const section45WAudit = new AuditTrail();
+      section45WAudit.record("Form 3800", "ordinary-section38-limitation", "Ordinary current-year business credit limitation",
+        form3800.creditLimitation, "Net income tax less the greater of tentative minimum tax or 25% of net regular tax above $25,000", {
+          "Net income tax": form3800.netIncomeTax,
+          "Earlier allowable credits": form3800.personalCredits,
+          "Tentative minimum tax": form3800.tentativeMinimumTax,
+          "25% of net regular tax above $25,000": form3800.twentyFivePercentExcess,
+        });
+      section45WAudit.record("Form 3800", "current-year-section45w", "Allowable direct commercial clean vehicle credit",
+        form3800.allowableCredit, "Verified direct credit fully allowed within the current ordinary limitation", {
+          "Verified tentative direct credit": section45WCurrentCredit,
+        });
+      form3800 = { ...form3800, lines: section45WAudit.getLines() };
+    }
     generalBusinessCredit = form3800.allowableCredit;
     audit.merge(form3800.lines);
   }
