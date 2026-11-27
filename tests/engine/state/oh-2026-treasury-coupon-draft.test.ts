@@ -6,6 +6,11 @@ import { calculateOhio2026ReturnDraftFromSources } from '@/engine/state/oh-engin
 import { Form1099IntSchema } from '@/models/inputs.js';
 import { ohio2026OrdinaryFixture, rebindOhio2026Ordinary } from '../../fixtures/oh-2026-ordinary-return.js';
 
+const optionalTreasuryZeroBoxes = [
+  'earlyWithdrawalPenalty', 'federalWithheld', 'foreignTaxPaid',
+  'taxExemptInterest', 'privateActivityBondInterest', 'stateWithheld',
+] as const;
+
 function required<T>(value: T | undefined): T {
   if (value === undefined) throw new Error('Complete fictional current sources required');
   return value;
@@ -33,6 +38,10 @@ function treasuryFixture(couponAmount = '4000', wages = '50000', status: Paramet
       recipient: { accountHolder: 'primary', firstName, lastName, ssn },
       currentUncorrectedNonvoidOriginalConfirmed: true, allOriginalBoxesKnownConfirmed: true,
       noOtherOriginalReportingConfirmed: true,
+      otherBoxAmounts: {
+        interestIncome: '0', earlyWithdrawalPenalty: '0', federalWithheld: '0', foreignTaxPaid: '0',
+        taxExemptInterest: '0', privateActivityBondInterest: '0', stateWithheld: '0',
+      },
       security: {
         sourceReference: 'PRIVATE-TREASURY-CONVENTIONAL-NOTE-RECORD', cusip: '912ZZZZZ0',
         accountReference: required(form.accountReference),
@@ -68,6 +77,44 @@ function withAccountReference(accountReference: string): Packet {
 }
 
 describe('Ohio 2026 private direct Treasury coupon draft', () => {
+  it('holds normalized zeros without recorded Treasury original amounts', () => {
+    const packet = treasuryFixture();
+    for (const field of optionalTreasuryZeroBoxes) {
+      if (field !== 'privateActivityBondInterest') Reflect.deleteProperty(packet.form, field);
+    }
+    packet.input.form1099Int = [Form1099IntSchema.parse(packet.form)];
+    Reflect.deleteProperty(packet.sources.treasuryCouponOriginal, 'otherBoxAmounts');
+    rebindOhio2026Ordinary(packet);
+    expect(() => run(packet)).toThrow(/complete confirmed current source packets/i);
+  });
+
+  it.each(optionalTreasuryZeroBoxes)('holds an omitted Treasury reporting amount in %s', field => {
+    const packet = treasuryFixture();
+    Reflect.deleteProperty(packet.form, field);
+    rebindOhio2026Ordinary(packet);
+    expect(() => run(packet)).toThrow(/unknown original boxes/i);
+  });
+
+  it('holds a zero contradicted by a recorded Treasury original box', () => {
+    const packet = treasuryFixture();
+    packet.sources.treasuryCouponOriginal.otherBoxAmounts.federalWithheld = '0.01';
+    rebindOhio2026Ordinary(packet);
+    expect(() => run(packet)).toThrow(/other interest or withholding/i);
+  });
+
+  it('accepts explicitly confirmed blank Treasury boxes', () => {
+    const packet = treasuryFixture();
+    for (const field of optionalTreasuryZeroBoxes) packet.form[field] = '0.00';
+    packet.form.interestIncome = '0.00';
+    packet.sources.treasuryCouponOriginal.otherBoxAmounts.federalWithheld = '0.00';
+    Reflect.deleteProperty(packet.form, 'paDirectObligationInterest');
+    rebindOhio2026Ordinary(packet);
+    const result = run(packet);
+    expect(result.treasuryCouponDeduction?.toFixed()).toBe('4000');
+    expect(result.ohioAgi.toFixed()).toBe('50000');
+    expect(result.filingQualified).toBe(false);
+  });
+
   it('deducts only the matched direct Treasury coupon included in federal AGI', () => {
     const packet = treasuryFixture();
     packet.input.taxpayer.stateResidency = 'full-year';
@@ -146,6 +193,7 @@ describe('Ohio 2026 private direct Treasury coupon draft', () => {
     ['a mismatched gross coupon', p => { p.sources.treasuryCouponOriginal.receipt.amount = '3999.99'; }, /cash coupon does not reconcile to Box 3/],
     ['zero Box 3', p => { p.form.usSavingsBondInterest = '0'; p.sources.treasuryCouponOriginal.receipt.amount = '0'; }, /cash coupon does not reconcile to Box 3/],
     ['other ordinary interest', p => { p.form.interestIncome = '1'; }, /other interest or withholding requires/],
+    ['an omitted Box 1', p => { Reflect.deleteProperty(p.form, 'interestIncome'); }, /current original Form 1099-INT/],
     ['federal withholding', p => { p.form.federalWithheld = '12'; }, /other interest or withholding requires/],
     ['state withholding', p => { p.form.stateWithheld = '10'; }, /other interest or withholding requires/],
     ['an original state entry', p => { p.form.state = 'OH'; }, /other interest or withholding requires/],

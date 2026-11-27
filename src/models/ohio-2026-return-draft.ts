@@ -61,6 +61,14 @@ export type Ohio2026UnemploymentEmployeeSources = z.infer<typeof Ohio2026Unemplo
 
 /** Separate current Form 1099-INT and actual direct Treasury coupon evidence. */
 const treasuryCusip = z.string().regex(/^912[0-9A-Z]{5}[0-9]$/);
+const investmentInterestOtherBoxes = z.object({
+  earlyWithdrawalPenalty: money,
+  federalWithheld: money,
+  foreignTaxPaid: money,
+  taxExemptInterest: money,
+  privateActivityBondInterest: money,
+  stateWithheld: money,
+}).strict();
 export const Ohio2026TreasuryCouponEmployeeSourcesSchema = Ohio2026OrdinarySourcesSchema.omit({ seniorCreditHistory: true }).extend({
   methodId: z.literal('oh-2026-treasury-coupon-employee-draft-v1'),
   treasuryCouponOriginal: z.object({
@@ -71,6 +79,7 @@ export const Ohio2026TreasuryCouponEmployeeSourcesSchema = Ohio2026OrdinarySourc
     }).strict(),
     currentUncorrectedNonvoidOriginalConfirmed: z.literal(true), allOriginalBoxesKnownConfirmed: z.literal(true),
     noOtherOriginalReportingConfirmed: z.literal(true),
+    otherBoxAmounts: investmentInterestOtherBoxes.extend({ interestIncome: money }),
     security: z.object({
       sourceReference: reference, cusip: treasuryCusip, accountReference: reference,
       issuer: z.literal('us_treasury'), type: z.enum(['treasury_note', 'treasury_bond']),
@@ -110,15 +119,7 @@ export const Ohio2026BankInterestEmployeeSourcesSchema = Ohio2026OrdinarySources
   methodId: Ohio2026BankInterestMethodSchema,
   bankInterestOriginal: z.object({
     ...currentInvestmentOriginal,
-    otherBoxAmounts: z.object({
-      earlyWithdrawalPenalty: money,
-      usSavingsBondInterest: money,
-      federalWithheld: money,
-      foreignTaxPaid: money,
-      taxExemptInterest: money,
-      privateActivityBondInterest: money,
-      stateWithheld: money,
-    }).strict(),
+    otherBoxAmounts: investmentInterestOtherBoxes.extend({ usSavingsBondInterest: money }),
     cashMethodOrdinaryDomesticDepositConfirmed: z.literal(true),
     completeActualBankCreditsConfirmed: z.literal(true),
     credits: z.array(availableInvestmentCredit.strict()).min(1).max(366),

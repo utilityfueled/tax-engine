@@ -233,6 +233,24 @@ lines:
     description: "Hold incomplete, contradictory and uncommon Treasury coupon originals"
     formula: "The separate method retains and binds unchanged canonical federal income, Ohio residency and payment originals with the documentary 1099-INT and security/receipt proof. Hold missing or mismatched recipient, account, custodian, security, date, amount, year, classifications and unsupported sources. A retained Ohio unemployment payment or payment schedule is incompatible with the wages-and-coupon method even if the canonical Form 1099-G is missing. Preserve ordinary wage-only and historical calculation behavior."
     testRef: "tests/engine/state/oh-2026-treasury-coupon-draft.test.ts::requires separate documentary evidence and leaves ordinary and historical routes unchanged"
+  - line: "direct-treasury-coupon-box-evidence"
+    description: "Require documented zeros for the other supported reporting boxes on the original Treasury statement"
+    formula: >-
+      Require recorded Decimal zeros for Boxes 1, 2, 4, 6, 8, 9 and 17 in
+      the bound original Treasury packet and in the retained Form 1099-INT.
+      A verified blank may be recorded as zero. Canonical form defaults
+      are insufficient evidence, so an older packet missing the original
+      amounts stays on hold until confirmed. The Ohio exemption remains
+      limited to the separately verified Box 3 coupon. Optional
+      Pennsylvania direct-obligation metadata must be zero if present.
+    sources:
+      - "https://www.irs.gov/instructions/i1099int"
+      - "https://www.irs.gov/pub/irs-pdf/f1099int.pdf"
+    testRef: "tests/engine/state/oh-2026-treasury-coupon-draft.test.ts::holds normalized zeros without recorded Treasury original amounts"
+    testRefs:
+      - "tests/engine/state/oh-2026-treasury-coupon-draft.test.ts::holds an omitted Treasury reporting amount in %s"
+      - "tests/engine/state/oh-2026-treasury-coupon-draft.test.ts::holds a zero contradicted by a recorded Treasury original box"
+      - "tests/engine/state/oh-2026-treasury-coupon-draft.test.ts::accepts explicitly confirmed blank Treasury boxes"
   - line: "direct-treasury-coupon-account-identity"
     description: "Bind the Treasury coupon to a stable account reference"
     formula: >-
