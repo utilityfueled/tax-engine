@@ -1,5 +1,89 @@
 # 2026 upgrade implementation evidence
 
+## November 27 Ohio bank-interest original box evidence
+
+`856f14cc4` requires seven zero amounts from the original 1099-INT,
+plus matching return amounts, for the private 2026 Box 1 bank-interest
+method. A confirmed blank may be recorded as zero. The return parser's
+defaults cannot supply the original amounts. Incomplete earlier
+packets stay on hold until confirmed. This applies to all three
+residencies and the combined bank-interest and dividend method.
+
+Ten raw-omission controls and a separately reproduced pre-normalized
+input failed against the pre-correction behavior. The confirmed-zero
+control kept $598 in Ohio tax. The normalized-source case and a
+contradictory recorded penny both passed independent rechecks.
+All 283 focused tests, type checks, 32 spec references and scoped lint
+passed. All 11 required local checks and the offline AI artifact
+check passed on the exact combined archive. Unit and coverage each
+passed 31,146 tests with 81 existing skips. Branch coverage was 88.63%,
+and all 10,216 tracked spec references resolved. Chromium passed 654
+cases across nine windows with five existing skips and successful
+cleanup. The runner verified Node 26.13.1, pypdf 6.10.0, and all 15
+sample-document hashes. Exact local manifest SHA-256
+`dc2c28ec6ed09103726a2250c6544fcb109ac0291f519d1ca9b241f289e7ea4c`.
+[IRS Form 1099-INT instructions](https://www.irs.gov/instructions/i1099int) ·
+[Exact GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45960825299) ·
+[AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45960825264) ·
+[ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45960869997).
+
+At the last check, exact CI and AMD64 Web were queued. Exact ARM64
+was pending while the previous native job ran its strict browser
+checks after a successful Compose recovery. The documentation-only
+main push superseded the queued exact Docker build. Linux release
+qualification remains open.
+[Earlier ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45955785929) ·
+[Docker replacement](https://github.com/utilityfueled/tax-engine/actions/runs/45961292227).
+
+## November 27 Ohio IT NRC worksheet applicability
+
+`182f240a7` projects Ohio IT NRC audit and 2025 saved reference PDF
+sections from verified residency. Resident-only households omit the
+worksheet. Full-year nonresidents retain Parts A and C. Part-year
+calculations retain Part B. The admitted 2026 mixed full-year joint
+case keeps the resident spouse's wages in Part A and omits Part B. The
+separately supported 2025 mixed household preserves its resident-spouse
+allocation. The resident-credit calculation, source commitment, tax
+amounts and existing filing gates are preserved.
+
+The new pre-correction Ohio controls failed on the inapplicable rows.
+The 2026 scoped run passed 371 tests, the 2025 integration and PDF run
+passed 381, and independent engineering runs passed 534 and 233,
+respectively. Scoped lint and exact type, inventory and specification
+checks passed. The exact initial full suite caught 26 predecessor
+fingerprint tests. A fresh comparison across 38 synthetic cases proved
+that the changed outputs differ only by numeric IT NRC rows in the
+aggregate audit. The typed calculation, source commitments and all
+other result bytes matched. `8e83c7776` and `9e46a1a57` updated the
+literal fingerprints. All 120 focused fingerprint tests passed. The
+original `182f240a7` archive passed all 654 Chromium cases across nine
+windows, with five existing skips and successful cleanup. Independent
+human tax review and final 2026 Ohio form qualification remain open.
+[Ohio 2026 draft instructions](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf#page=41) ·
+[Final 2025 Ohio IT NRC](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/itnrc.pdf#page=1) ·
+[Exact GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45959427910) ·
+[Exact Web CI](https://github.com/utilityfueled/tax-engine/actions/runs/45959428026).
+
+The November 27 official index recheck still lists 2025 annual Form
+1040 and PA-40. Ohio publishes the 2026 IT 1040 instructions as a
+draft. Final annual form qualification stays open.
+[IRS forms index](https://www.irs.gov/forms-instructions-and-publications?find=1040) ·
+[Pennsylvania PIT index](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
+[Ohio publication alerts](https://tax.ohio.gov/individual/resources/individualincome).
+
+## November 27 exact self-host backup restoration
+
+The `856f14cc4` standalone build passed a synthetic macOS ARM64
+rehearsal with Chromium. It exported an encrypted backup, deleted the
+original return, and restored into an independent browser profile
+with a new workspace ID. Guided data, original PDF bytes and display
+preference matched after reopening. All three review requests returned
+HTTP 200, and each 12-page PDF omitted the private SSN.
+The run passed in 6.45 seconds with no skips or retries, and the
+loopback server exited. Receipt SHA-256
+`0cc543f8b1238b78b86228fc632189bfb5a6319dd3029935fd9a1eab43ff5c71`.
+Strict Linux and physical-device release qualification remain open.
+
 ## November 27 draft Form 8962 repayment transfer
 
 `aa2d431bc` aligns the ordinary and alternative-marriage Form 8962
