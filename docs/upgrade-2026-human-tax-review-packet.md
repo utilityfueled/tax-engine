@@ -763,3 +763,41 @@ resolves the first comparison, such as an amended lender statement or dated
 loan records, and confirm each amount that transfers to Schedule 1-A.
 [Form 1098-VLI instructions](https://www.irs.gov/instructions/i1098vli) ·
 [2026 draft Schedule 1-A](https://www.irs.gov/pub/irs-dft/f1040s1a--dft.pdf).
+
+## November 27 Form 8863 factor precision
+
+For a single primary student with verified refundable AOTC eligibility, a
+$2,500 tentative credit, $85,006 on Form 1040 line 11a, and at least $750 of
+credit-limit worksheet tax, derive Form 8863 lines 7, 8 and 19. Compare the
+exact line 6 factor of `0.4994` with the form's permitted `0.499` display.
+Document where whole-dollar rounding applies and derive both transfer amounts
+using each permitted preparation method. The current private check accepts
+exact-factor workpapers; the shorter factor requires separate review.
+[Final 2026 Form 8863](https://www.irs.gov/pub/irs-prior/f8863--2026.pdf) ·
+[Draft 2026 Form 8863 instructions](https://www.irs.gov/pub/irs-dft/i8863--dft.pdf).
+
+## November 27 commercial clean vehicle credit and carryback
+
+For a single calendar-year taxpayer materially participating in a sole
+proprietorship, consider a qualifying light battery-electric vehicle used
+solely for the business. Assume the actual $25,000 purchase and pre-credit
+tax basis, comparable gasoline vehicle price of $19,000, zero section 179
+deduction, written binding contract and payment on September 30, 2025, and
+possession on February 1, 2026. Derive the tentative section 45W credit and
+compare original payment dates on October 1, 2025 and December 31, 2022
+with the corresponding binding contracts on those dates.
+
+Assume the 2026 workpapers after applying the actual basis treatment report
+$3,000 regular tax for section 38, $1,000 tentative minimum tax, zero AMT,
+and $500 of allowable nonrefundable credits that reduce the limit. There are
+no other business credits. The same taxpayer's 2025 workpapers show a $2,000
+section 38 limitation and $1,000 of credits with priority over this carryback.
+Assume no earlier-source-year carrybacks. Derive the 2026 allowable credit,
+2025 carryback and potential balance into 2027. Verify which vehicle basis
+must be reduced, the timing and amount of the reduction, the original records
+needed for federal attribution, and the credit ordering before approving an
+expected full-return result.
+[26 USC §45W](https://uscode.house.gov/us/usc/t26/s45W/) ·
+[26 USC §38](https://uscode.house.gov/us/usc/t26/s38/) ·
+[26 USC §39](https://uscode.house.gov/us/usc/t26/s39/) ·
+[Draft 2026 Form 3800](https://www.irs.gov/pub/irs-dft/f3800--dft.pdf).

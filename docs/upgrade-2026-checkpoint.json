@@ -2,7 +2,7 @@
   "resume": {
     "asOf": "2026-11-27",
     "branch": "main",
-    "applicationCommit": "85645fdcbca8045e19ab2884e3b19f3bddf5b9b4",
+    "applicationCommit": "35634b84984a6284505ad19bb5a2e969a7bcee47",
     "latestScopedApplicationCommit": "fc0420e56ad478ab0cda4d7fd627e5550999dc4e",
     "latestCombinedCandidateCommit": "35634b84984a6284505ad19bb5a2e969a7bcee47",
     "latestScopedChecksEvidenceKey": "activeContinuation.nov27CommercialCreditCarryover",
@@ -62,7 +62,7 @@
     "pinnedSelfHostSchemaEvidenceKey": "activeContinuation.nov26PinnedSelfHostSchema",
     "ohioOrdinaryCashDividendEvidenceKey": "activeContinuation.nov26OhioCashDividend",
     "pennsylvaniaAnnualCashDividendEvidenceKey": "activeContinuation.nov26PaAnnualCashDividend",
-    "latestExactLocalVerificationEvidenceKey": "activeContinuation.nov27AotcInstitutionExact",
+    "latestExactLocalVerificationEvidenceKey": "activeContinuation.nov27PaymentEducationMortgageExact",
     "paPartYearDividendEvidenceKey": "activeContinuation.nov26PAPartYearCashDividend",
     "currentCombinedAndArmEvidenceKey": "activeContinuation.nov26CombinedEvAiAndArm64",
     "evChargerEvidenceKey": "activeContinuation.nov26PersonalEvCharger",
@@ -110,7 +110,7 @@
     "householdUpkeepEvidenceKey": "activeContinuation.nov25HouseholdUpkeepPrecision",
     "verificationCommit": "cd6e64b972869264f35234e64267c88f36778860",
     "generatedInventoryCommit": "26983a3c48380a3c1ead47a86dbe3977dd02f6bd",
-    "latestLocalChecksEvidenceKey": "activeContinuation.nov27AotcInstitutionExact",
+    "latestLocalChecksEvidenceKey": "activeContinuation.nov27PaymentEducationMortgageExact",
     "vehicleStatementEvidenceKey": "activeContinuation.nov25Form1098Vli",
     "vehicleRefundEvidenceKey": "activeContinuation.nov25Form1098VliCashRefund",
     "vehicleInterestCreditEvidenceKey": "activeContinuation.nov25Form1098VliInterestCredit",
@@ -183,7 +183,7 @@
     "pensionTaxableAmountEvidenceKey": "activeContinuation.nov24ReportedPensionTaxableAmount",
     "completeLocalBaselineEvidenceKey": "activeContinuation.nov24ExactLocalBaselineAndCurrentRuns",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
-    "unitCoverageEvidenceKey": "activeContinuation.nov27AotcInstitutionExact",
+    "unitCoverageEvidenceKey": "activeContinuation.nov27PaymentEducationMortgageExact",
     "remaining": [
       "Both strict Linux browser gates and current image evidence remain open. See activeContinuation.nov27OhioBusinessAndEquityResidency for the current e075fceaf run IDs. The earlier ARM64 strict browser step failed on nine Ohio deadlines. Verified 46005900143 held the active concurrency lease and exact e075fceaf run 46014076098 was pending behind it. Keep both runs in place.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
@@ -376,6 +376,42 @@
       "filingQualified": false,
       "browserSourceAuditSha256": "bd5936f7a0d994c20eabacfa2c439276012f0f55c86a6de9d1a90319090395f2"
     },
+    "nov27PaymentEducationMortgageExact": {
+      "commit": "35634b84984a6284505ad19bb5a2e969a7bcee47",
+      "archiveSha256": "4c3f25fefc51fb4862eb335ec97b01510df7e87b2e4dba2002e2a7c0bd9f7d01",
+      "localManifestSha256": "38471b3fa4dcbdd454130fd4b4e5273757361f6b2d00b7d835ef06922f254339",
+      "requiredLocalChecksPassed": 11,
+      "unitPassed": 31319,
+      "unitSkips": 83,
+      "branchCoveragePercent": 88.67,
+      "chromiumPassed": 654,
+      "chromiumSkipped": 5,
+      "chromiumWindows": 9,
+      "browserSummarySha256": "6248e28c6bd2fafd8a9e28b094800bd3e2ab7614bf293a3c4bb79950c31f987d",
+      "standaloneReceiptSha256": "fd0eb7847e42eb3e517a5c67f23907dcad3fb5a21794a2d2b47aa2b06ec5e749",
+      "standalonePassed": true,
+      "localListenersClosed": true,
+      "paymentReceiptBrowserPassed": true,
+      "paymentProbeLogSha256": "39d666f05f78ecc22b39403253e6d4184b433484421fcf9841d75d3a8f729dd4",
+      "paymentProbeSourceSha256": "e7a479cdabe97d56a665de6c1981bb43d3b2d105766d4681dbdeaee1da143ef6",
+      "remoteWorkflows": {
+        "CI": {
+          "id": 46049711497,
+          "status": "queued",
+          "conclusion": null
+        },
+        "Docker": {
+          "id": 46049711480,
+          "status": "queued",
+          "conclusion": null
+        },
+        "Web": {
+          "id": 46049711489,
+          "status": "queued",
+          "conclusion": null
+        }
+      }
+    },
     "nov27MortgageOriginalIdentity": {
       "commit": "35634b84984a6284505ad19bb5a2e969a7bcee47",
       "source": "https://www.irs.gov/instructions/i1098",
@@ -386,7 +422,8 @@
       "canonicalSpecReferencesValidated": 17,
       "independentReviewPassed": true,
       "typechecksAndScopedLintPassed": true,
-      "combinedExactLocalVerification": "running",
+      "combinedExactLocalVerification": "passed",
+      "exactEvidenceKey": "activeContinuation.nov27PaymentEducationMortgageExact",
       "browserSourceAuditSha256": "0f6574ced709e22a6c6fb0cd57bbde048253fbeea293fd6edae297703e33b972"
     },
     "nov27PaymentReceiptsAndForm8863": {

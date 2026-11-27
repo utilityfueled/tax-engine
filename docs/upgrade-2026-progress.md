@@ -8,7 +8,7 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `85645fdcb` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `35634b849` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
@@ -93,8 +93,15 @@ the line 6 discrepancy and repeated the eight focused candidate cases after
 the correction. The private projection returns the amounts and transfer
 locations. [Final 2026 Form 8863](https://www.irs.gov/pub/irs-prior/f8863--2026.pdf).
 
-The combined local release checks and focused receipt browser rehearsal are
-running on the tracked archive of `35634b849`.
+The tracked archive of `35634b849` passed all 11 local checks. Both unit
+runs passed 31,319 tests with 83 skips and 88.67% branch coverage.
+Chromium passed 654 cases with 5 skips across 9 windows.
+Encrypted standalone backup, deletion and restore passed. The focused
+Chromium rehearsal held a changed receipt through save and reopen, required
+fresh confirmation, and held direct Continue while the change was pending.
+First entry and equivalent typing preserved confirmation. All listeners
+closed. Manifest SHA-256
+`38471b3fa4dcbdd454130fd4b4e5273757361f6b2d00b7d835ef06922f254339`.
 
 ## November 27 AOTC institution replacement
 
