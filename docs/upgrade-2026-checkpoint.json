@@ -6,6 +6,7 @@
     "latestScopedApplicationCommit": "5f958545d990f1ff423dbf267653b6f0cef9da9a",
     "latestCombinedCandidateCommit": "a6111984c0f1a96f6ff327ec0143efc46f1f4ea4",
     "form8919SourceInventoryEvidenceKey": "activeContinuation.nov26Form8919SourceInventory",
+    "latestPublicProviderCatalogEvidenceKey": "activeContinuation.nov26PublicProviderCatalog",
     "guidedForm8919OriginalEvidenceKey": "activeContinuation.nov26GuidedForm8919Original",
     "form8919OriginalEvidenceKey": "activeContinuation.nov26Form8919Original",
     "providerEvaluationWindowEvidenceKey": "activeContinuation.nov26ExactProviderEvaluationWindows",
@@ -161,6 +162,21 @@
     ]
   },
   "activeContinuation": {
+    "nov26PublicProviderCatalog": {
+      "publicDocsRechecked": "2026-11-26",
+      "standardPricingOrder": ["input", "cachedInput", "output"],
+      "shortStandardGpt6Luna": ["0.10", "0.01", "0.50"],
+      "shortStandardGpt61Sol": ["2.00", "0.10", "10.00"],
+      "gemini38FlashThrough20261231": ["0.75", "0.075", "3.75"],
+      "gemini38FlashFrom20270101": ["1.50", "0.15", "7.50"],
+      "gpt5MiniShutdownDate": "2026-12-11",
+      "gemini3FlashPreviewShutdownDateAnnounced": false,
+      "gemini3FlashPreviewListedReplacement": "gemini-3.6-flash",
+      "accountRequestsMade": 0,
+      "generationRequestsMade": 0,
+      "qualificationChanged": false,
+      "evidence": "docs/upgrade-2026-provider-catalog-20261117.md#november-26-public-prices-and-comparison-availability"
+    },
     "nov26Form8919SourceInventory": {
       "commit": "a6111984c0f1a96f6ff327ec0143efc46f1f4ea4",
       "priorInventoryFailureRevision": "5f958545d990f1ff423dbf267653b6f0cef9da9a",

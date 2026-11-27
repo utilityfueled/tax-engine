@@ -94,6 +94,28 @@ for the `gpt-5-mini` alias and dated snapshot shutdown.
 [GPT-6 Sol details](https://developers.openai.com/api/docs/models/gpt-6-sol) ·
 [OpenAI lifecycle](https://developers.openai.com/api/docs/deprecations).
 
+## November 26 public prices and comparison availability
+
+OpenAI still lists standard short-context prices per million tokens of
+$0.10 input, $0.01 cached input and $0.50 output for `gpt-6-luna`, and
+$2.00 input, $0.10 cached input and $10.00 output for `gpt-6.1-sol`.
+OpenAI lists December 11, 2026 as the GPT-5 Mini alias and snapshot
+shutdown date, with GPT-6.1 Terra as the replacement.
+[GPT-6 Luna](https://developers.openai.com/api/docs/models/gpt-6-luna) ·
+[GPT-6.1 Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol) ·
+[OpenAI lifecycle](https://developers.openai.com/api/docs/deprecations).
+
+Google still lists Gemini 3.8 Flash at $0.75 input, $0.075 cached
+input and $3.75 output through December 31, 2026, then $1.50, $0.15
+and $7.50 from January 1, 2027. Google lists Gemini 3.6 Flash as the
+replacement for `gemini-3-flash-preview` and lists no shutdown date
+for the preview. The comparison still needs selected Google project
+access and provider receipts for the exact model used. This refresh
+used public documentation and made zero account or generation
+requests.
+[Gemini prices](https://aistudio.google.com/docs/pricing#gemini-3.8-flash) ·
+[Gemini lifecycle](https://ai.google.dev/gemini-api/docs/deprecations).
+
 Google's published `gemini-3.8-flash` Standard text rates per million
 remain $0.75 input, $0.075 cache read and $3.75 output through December
 31, 2026, then $1.50, $0.15 and $7.50 starting January 1, 2027.
