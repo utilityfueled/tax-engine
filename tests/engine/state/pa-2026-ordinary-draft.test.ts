@@ -190,14 +190,75 @@ function interestAndDividends(withholding: string, status: 'part_year' | 'reside
  return f;
 }
 
-it('PA2026 full-year resident bank interest holds additional investment originals', () => {
- const f = interestAndDividends('2310', 'resident');
- expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources)).toThrow(/full-year resident bank interest.*investment source/i);
+const annualCombinedInvestmentScenarios = [
+ ['resident', '2310', '75240', '120', '0'],
+ ['nonresident', '276', '9000', '0', '120'],
+] as const;
+
+it.each(annualCombinedInvestmentScenarios)('PA2026 annual %s calculates both verified personal investment originals', (status, tax, taxable, included, excluded) => {
+ const f = interestAndDividends(tax, status);
+ const bankCredit = f.residency.interest[0].credits[0];
+ bankCredit.amount = new Decimal(bankCredit.amount).plus('0.11').toFixed();
+ f.input.form1099Int[0].interestIncome = '120.11';
+ f.residency.interest[0].original = structuredClone(f.input.form1099Int[0]);
+ f.residency.dividends[0].credits[1].ordinaryDividends = '40.19';
+ f.input.form1099Div[0].ordinaryDividends = '120.19';
+ f.residency.dividends[0].original = structuredClone(f.input.form1099Div[0]);
+ rebindPA2026Draft(f);
+ const before = JSON.stringify(f);
+ const source = calculatePAResidencySources(f.input, f.residency);
+ expect((status === 'resident' ? source.interest : source.excludedNonPAInterest).toFixed()).toBe('120.11');
+ expect((status === 'resident' ? source.dividends : source.excludedNonPADividends).toFixed()).toBe('120.19');
+ const r = calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources);
+ expect(r.pa.residencyStatus).toBe(status);
+ expect(r.pa.scheduleA.line1.toFixed()).toBe('120');
+ expect(r.pa.scheduleA.reductionAdjustments.map(row => row.amount.toFixed())).toEqual(excluded === '0' ? [] : [excluded]);
+ expect(r.pa.scheduleA.line16.toFixed()).toBe(included);
+ expect(r.pa.scheduleB.line1.toFixed()).toBe('120');
+ expect(r.pa.scheduleB.line4.toFixed()).toBe(excluded);
+ expect(r.pa.scheduleB.line12.toFixed()).toBe(included);
+ expect(r.pa.pa40.interest.toFixed()).toBe(included);
+ expect(r.pa.pa40.dividends.toFixed()).toBe(included);
+ expect(r.pa.pa40.totalPATaxableIncome.toFixed()).toBe(taxable);
+ expect(r.pa.pa40.taxLiability.toFixed()).toBe(tax);
+ expect(r.pa.pa40.stateWithholding.toFixed()).toBe(tax);
+ expect(r.pa.scheduleSP.eligibilityIncome.toFixed()).toBe('75240');
+ expect(r.pa.scheduleSP.taxForgivenessCredit.toFixed()).toBe('0');
+ expect(r.readiness).toMatchObject({ filingEligible: false, fullFederalCalculated: false });
+ expect(r.readiness.blockers).toContain('final-2026-forms-unqualified');
+ expect(() => preparePAOrdinaryReturnReview(f.input)).toThrow(/actual2025 ordinary PDF method only/);
+ expect(JSON.stringify(f)).toBe(before);
 });
 
-it('PA2026 full-year nonresident bank interest holds additional investment originals', () => {
- const f = interestAndDividends('276', 'nonresident');
- expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources)).toThrow(/full-year nonresident bank interest.*investment source/i);
+it.each(annualCombinedInvestmentScenarios)('PA2026 annual %s combination holds the incompatible domicile method', (status, withholding) => {
+ const f = interestAndDividends(withholding, status);
+ expect(calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources).pa.residencyStatus).toBe(status);
+ const residency = f.residency.residency;
+ const period = residency.domicilePeriods[0];
+ if (status === 'resident') {
+  period.state = 'NY';
+  period.daysInPA = 184;
+  residency.paPermanentAbodePeriods = [{ from: '2026-01-01', through: '2026-12-31' }];
+ } else {
+  period.state = 'PA';
+  period.daysInPA = 30;
+ }
+ expect(calculatePAResidencySources(f.input, f.residency).residencyStatus).toBe(status);
+ expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources)).toThrow(/full-year (?:non)?resident bank interest.*domicile/i);
+});
+
+it.each(annualCombinedInvestmentScenarios)('PA2026 annual %s combined originals hold cross-owner and changed dated receipts', (status, withholding) => {
+ const f = interestAndDividends(withholding, status);
+ expect(calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources).pa.residencyStatus).toBe(status);
+ const bankCredit = f.residency.interest[0].credits[0];
+ const amount = bankCredit.amount;
+ bankCredit.amount = new Decimal(amount).plus('0.01').toFixed();
+ expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources)).toThrow(/credits.*reconcile original Box1/i);
+ bankCredit.amount = amount;
+ f.input.form1099Div[0].accountHolder = 'spouse';
+ f.residency.dividends[0].original = structuredClone(f.input.form1099Div[0]);
+ rebindPA2026Draft(f);
+ expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources)).toThrow(/primary|owner/i);
 });
 
 type CashDividendFixture = ReturnType<typeof pa2026OrdinaryCashDividendFixture>;

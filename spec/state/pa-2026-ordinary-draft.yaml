@@ -260,8 +260,9 @@ lines:
       credits totaling $120, line 2 is $120, total PA taxable income and Schedule
       SP eligibility income are each $75,120, and $2,306 withholding covers the
       $2,306 reported PA tax. Schedule A is not required for this $120 original.
-      The annual sole-interest method does not combine cash dividends or other
-      special source or payment methods. Preserve final 2026 filing gates.
+      The separate annual combined-source method covers one documented
+      domestic cash dividend original as well. Other special sources and
+      payment methods remain held. Preserve final 2026 filing gates.
     sources:
       - "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u303s"
       - "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/interest"
@@ -277,7 +278,8 @@ lines:
       one confirmed domicile period outside PA covering the entire tax year
       with a reconciled full-year nonresident declaration, abode and presence.
       Hold statutory nonresidents domiciled in PA, two-period methods, other
-      investment originals, and special sources and payments. Ordinary
+      investment originals outside the separate combined-source method, and
+      special sources and payments. Ordinary
       personal deposits have no PA source for this nonresident. Preserve all
       verified credits in the Schedule A review calculation as the
       nonresidency reduction, with zero PA-40 line 2 and no change to wages or
@@ -372,6 +374,30 @@ lines:
       - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 part-year combined investment sources hold a mismatched %s original"
       - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 reopened part-year %s holds repeated masked dividend account references"
       - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 reopened part-year %s accepts a complete literal dividend account"
+  - line: "annual-ordinary-interest-and-cash-dividends"
+    description: "Private 2026 Pennsylvania annual employee draft with both personal investment originals"
+    formula: |
+      Extend the part-year combination of taxable ordinary bank deposits and
+      domestic corporate cash dividends to one high-wage single owner with
+      confirmed continuous Pennsylvania domicile or continuous domicile
+      outside Pennsylvania consistent with full-year nonresidence. Reuse each
+      existing original, dated amounts, known boxes, exact class calculation,
+      nonbusiness scope and complete annual withholding requirements. For a
+      resident include Schedule A and B totals separately in PA-40; for a
+      nonresident retain the separate nonresidency reductions and include only
+      supported PA-sourced wages. Schedule SP includes both complete annual
+      amounts once, including when the interest and dividends are excluded
+      from PA taxable income. Reject inconsistent domicile or owner, changed
+      credit evidence, additional originals and any other special method.
+      Private state calculation continues to hold full federal and filing use.
+    sources:
+      - "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/interest"
+      - "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/dividends"
+      - "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/tax-forgiveness"
+    testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 annual %s calculates both verified personal investment originals"
+    testRefs:
+      - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 annual %s combination holds the incompatible domicile method"
+      - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 annual %s combined originals hold cross-owner and changed dated receipts"
   - line: "full-year-personal-cash-dividend"
     description: "Include one verified cash-dividend original for a continuous PA resident or nonresident"
     formula: |

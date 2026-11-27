@@ -94,10 +94,10 @@ export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdin
  if (bankInterest && income.residencyStatus !== 'part_year') {
   const [domicile] = r.residency.domicilePeriods;
   const isResident = income.residencyStatus === 'resident';
-  if (r.residency.domicilePeriods.length !== 1 || (domicile?.state === 'PA') !== isResident || cashDividend) {
+  if (r.residency.domicilePeriods.length !== 1 || (domicile?.state === 'PA') !== isResident) {
    fail(isResident
-     ? 'full-year resident bank interest requires continuous Pennsylvania domicile and no additional investment source'
-     : 'full-year nonresident bank interest requires continuous domicile outside Pennsylvania and no additional investment source');
+     ? 'full-year resident bank interest requires continuous Pennsylvania domicile'
+     : 'full-year nonresident bank interest requires continuous domicile outside Pennsylvania');
   }
  }
  if (bankInterest || cashDividend) {
