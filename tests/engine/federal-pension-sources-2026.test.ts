@@ -1,7 +1,8 @@
 // Spec: spec/federal/form-1099-r.yaml. Test-only draft constants.
 import { describe, expect, it, vi } from "vitest";
 import { calculateFederalTax } from "@/engine/federal.js";
-import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs.js";
+import { calculateForm1099R } from "@/engine/forms/form-1099-r.js";
+import { Form1099RSchema, TaxYearInputSchema, type TaxYearInput } from "@/models/inputs.js";
 import { ordinaryIraBasisFixture } from "../fixtures/ira-basis.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
 
@@ -136,6 +137,28 @@ describe("2026 original pension source facts", () => {
 
   it.each([undefined, " ", "Z", "7G7", "76", "7H", "7P"])("requires the actual Box 7a code (%s)", (code) => {
     expect(() => calculate({ distributionCode: code, taxableAmount: "0" })).toThrow(/Box 7a/);
+  });
+
+  it.each(["37", "73", " 3 b "])("rejects a Code 3 pairing the IRS does not permit (%s)", (distributionCode) => {
+    const input = TaxYearInputSchema.parse(pensionInput({ distributionCode, taxableAmount: "4200" }));
+    expect(() => calculateFederalTax(input)).toThrow(/Box 7a.*Code 3.*Code D/);
+  });
+
+  it.each(["3D", "D3", " 3 d "])("preserves the allowed Code 3 and D pair (%s)", (distributionCode) => {
+    const result = calculate({ distributionCode, taxableAmount: "4200" });
+    expect(result.pensionDistributionsTaxable.eq("4200")).toBe(true);
+    expect(result.form1099R?.federalWithholding.eq("99.09")).toBe(true);
+  });
+
+  it.each(["3D", "D3"])("rejects a Code 3 and D pair with a checked IRA box (%s)", (distributionCode) => {
+    const source = Form1099RSchema.parse({ ...pension, taxableAmount: "4200", distributionCode, iraSepSimple: true });
+    expect(() => calculateForm1099R([source], { taxYear: 2026 })).toThrow(/Box 7a.*Box 7b/);
+  });
+
+  it("validates a dated Code 3 pairing in direct aggregation without requiring a return year", () => {
+    const source = Form1099RSchema.parse({ ...pension, taxableAmount: "4200", distributionCode: "37" });
+    expect(() => calculateForm1099R([source])).toThrow(/Box 7a.*Code 3.*Code D/);
+    expect(calculateForm1099R([{ ...source, taxYear: 2025 }]).pensionTaxable.eq("4200")).toBe(true);
   });
 
   it("rejects a source explicitly from a different year", () => {

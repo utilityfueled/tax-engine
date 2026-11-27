@@ -396,6 +396,24 @@ lines:
       - "tests/engine/federal-pension-sources-2026.test.ts::2026 original pension source facts"
       - "tests/engine/federal-pension-sources-2026.test.ts::keeps confirmed ordinary pension amounts and historical omitted checkboxes"
 
+  - line: "2026-box-7a-code-3-pairing"
+    description: "Validate the companion code on a 2026 Form 1099-R disability distribution"
+    formula: >-
+      When Box 7a includes Code 3, accept it as a standalone code or paired
+      only with Code D. Normalize case and spacing and allow either order of
+      the valid pair. Reject other pairings and reject a Code 3 and D pair
+      with a checked Box 7b, since Code D excludes arrangements under sections
+      408 and 408A. Keep the applicable rules for an omitted Box 7b. Validate
+      before choosing a distribution method, using the source year when no
+      return year was supplied. The standalone employer disability
+      payment-period requirements and other Code D methods still apply.
+    irsRef: "2026 Instructions for Forms 1099-R and 5498, Guide to Distribution Codes, Codes 3 and D (https://www.irs.gov/instructions/i1099r)"
+    testRef: "tests/engine/federal-pension-sources-2026.test.ts::rejects a Code 3 pairing the IRS does not permit (%s)"
+    testRefs:
+      - "tests/engine/federal-pension-sources-2026.test.ts::preserves the allowed Code 3 and D pair (%s)"
+      - "tests/engine/federal-pension-sources-2026.test.ts::validates a dated Code 3 pairing in direct aggregation without requiring a return year"
+      - "tests/engine/federal-pension-sources-2026.test.ts::rejects a Code 3 and D pair with a checked IRA box (%s)"
+
   - line: "2026-copy-b-upload-review"
     description: "Retain literal source evidence from a standalone 2026 Form 1099-R Copy B for review"
     formula: >-

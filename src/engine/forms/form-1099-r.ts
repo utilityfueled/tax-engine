@@ -333,6 +333,17 @@ export function calculateForm1099R(
 ): Form1099RResult {
   const hasJointSpouse = options.hasJointSpouse === true;
   const isJointReturn = options.isJointReturn ?? hasJointSpouse;
+  for (const form of forms) {
+    if ((options.taxYear ?? form.taxYear) !== 2026) continue;
+    const code = getUpperDistributionCode(form).replace(/\s+/gu, "");
+    if (!code.includes("3") || code === "3") continue;
+    if (code !== "3D" && code !== "D3") {
+      throw new Error("2026 Form 1099-R Box 7a Code 3 can only be paired with Code D");
+    }
+    if (form.iraSepSimple === true) {
+      throw new Error("2026 Form 1099-R Box 7a Code 3 with Code D cannot have Box 7b checked");
+    }
+  }
   const hasActualQcdSources = forms.some(form => form.qcdSource !== undefined);
   const use2026Rules = options.taxYear === 2026 || (options.taxYear === undefined
     && (hasActualQcdSources || forms.some(form => form.taxYear === 2026 && hasQcdClaim(form))));
