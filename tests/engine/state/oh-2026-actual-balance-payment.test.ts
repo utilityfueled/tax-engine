@@ -22,7 +22,27 @@ it.each([
  expect(r.actualBalancePayment?.methodVersion).toBe('oh-2026-actual-timely-small-balance-v1');expect(r.actualBalancePayment?.status).toBe('actual_paid_on_time');expect(r.actualBalancePayment?.actualPaymentDate).toBe('2027-04-15');expect(r.actualBalancePayment?.actualBalancePaymentApplied.toFixed()).toBe(due);expect(r.actualBalancePayment?.outstandingTaxBalance.toFixed()).toBe('0');
  expect(r.calculationStatus).toBe('incomplete');expect(r.reviewStatus).toBe('independent-review-pending');expect(r.filingQualified).toBe(false);expect(JSON.stringify(p)).toBe(before);
 });
-it.each(['missingAmount','unknownAmount','missingReceipt','expected','partial','excess','receiptCents','originalMismatch','zero','above500','noBalance','overpayment','wrongOwner','wrongName','wrongSsn','wrongYear','inputYear','returnType','receiptKind','missingConfirmation','unconfirmed','invalidDate','dateMismatch','earlyDate','lateDate','afterAsOf','lateFiling','filedFuture','expectedPast','paymentRows','priorReturn','carry','useTax','outgoing','donation','extension','special','snapshot'] as const)('rejects unknown contradictory or unsupported actual payment %s',kind=>{
+it.each([
+  ['full_year_resident', '432', '500'],
+  ['part_year_resident', '59', '500'],
+  ['nonresident', '0', '186'],
+] as const)('replays a timely filed and paid balance after the deadline for %s', (status, withholding, due) => {
+  const p = ohio2026ActualBalanceFixture(status, withholding, due);
+  const onDeadline = run(p);
+  facts(p).currentTiming.asOfDate = '2027-04-16';
+  const result = run(p);
+
+  expect(result.sourceCommitment).not.toBe(onDeadline.sourceCommitment);
+  expect(result.amountDue.toFixed()).toBe(due);
+  expect(result.actualBalancePayment).toEqual(onDeadline.actualBalancePayment);
+  expect(result.actualBalancePayment?.status).toBe('actual_paid_on_time');
+  expect(result.latePaymentInterest.toFixed()).toBe('0');
+  expect(result.underpaymentPenalty.toFixed()).toBe('0');
+  expect(result.calculationStatus).toBe('incomplete');
+  expect(result.reviewStatus).toBe('independent-review-pending');
+  expect(result.filingQualified).toBe(false);
+});
+it.each(['missingAmount','unknownAmount','missingReceipt','expected','partial','excess','receiptCents','originalMismatch','zero','above500','noBalance','overpayment','wrongOwner','wrongName','wrongSsn','wrongYear','inputYear','returnType','receiptKind','missingConfirmation','unconfirmed','invalidDate','dateMismatch','earlyDate','lateDate','afterAsOf','lateFiling','lateFiled','filedFuture','expectedPast','paymentRows','priorReturn','carry','useTax','outgoing','donation','extension','special','snapshot'] as const)('rejects unknown contradictory or unsupported actual payment %s',kind=>{
  const p=ohio2026ActualBalanceFixture(),f=facts(p),pay=payment(p),mutable=pay as unknown as Record<string,unknown>;
  if(kind==='missingAmount')delete mutable.amountAppliedToTax;
  if(kind==='unknownAmount')mutable.amountAppliedToTax=null;
@@ -48,10 +68,11 @@ it.each(['missingAmount','unknownAmount','missingReceipt','expected','partial','
  if(kind==='invalidDate')pay.date=pay.original.date='2027-02-30';
  if(kind==='dateMismatch')pay.original.date='2027-04-14';
  if(kind==='earlyDate')pay.date=pay.original.date='2026-12-31';
- if(kind==='lateDate')pay.date=pay.original.date='2027-04-16';
- if(kind==='afterAsOf')f.currentTiming={kind:'expected',expectedDate:'2027-04-15',asOfDate:'2027-04-14'};
+ if(kind==='lateDate'){pay.date=pay.original.date='2027-04-16';f.currentTiming.asOfDate='2027-04-17';}
+ if(kind==='afterAsOf')f.currentTiming={kind:'filed',filedDate:'2027-04-14',asOfDate:'2027-04-14'};
  if(kind==='lateFiling')f.currentTiming={kind:'expected',expectedDate:'2027-04-16',asOfDate:'2027-04-15'};
- if(kind==='filedFuture')f.currentTiming={kind:'filed',filedDate:'2027-04-15',asOfDate:'2027-04-14'};
+ if(kind==='lateFiled')f.currentTiming={kind:'filed',filedDate:'2027-04-16',asOfDate:'2027-04-17'};
+ if(kind==='filedFuture'){pay.date=pay.original.date='2027-04-14';f.currentTiming={kind:'filed',filedDate:'2027-04-15',asOfDate:'2027-04-14'};}
  if(kind==='expectedPast')f.currentTiming={kind:'expected',expectedDate:'2027-04-14',asOfDate:'2027-04-15'};
  if(kind==='paymentRows')f.paymentRows=[{sourceId:'Private-estimate',sourceReference:'Private-estimate-original',accountHolder:'primary',taxYear:2026,returnType:'it1040',kind:'estimated',date:'2026-04-15',amount:'0',appliedToThisReturnConfirmed:true,original:{...pay.original,kind:'estimated',date:'2026-04-15',amount:'0'}}];
  if(kind==='priorReturn')(f.priorReturn as unknown as Record<string,unknown>).status='filed_return';

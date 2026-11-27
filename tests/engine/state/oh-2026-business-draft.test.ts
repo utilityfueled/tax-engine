@@ -185,6 +185,18 @@ it.each((['nonresident', 'part_year_resident'] as const).map(status => ({status}
   expect(run(other).sourceCommitment).not.toBe(v.sourceCommitment);
   expect(() => calculateFederalTax(p.input)).toThrow(/incomplete; calculation is unavailable/);
 });
+it.each(['nonresident', 'part_year_resident'] as const)('replays a timely filed and paid business balance after the deadline for %s', status => {
+  const p = paidBusiness(status);
+  const onDeadline = run(p);
+  paymentFacts(p).currentTiming.asOfDate = '2027-04-16';
+  const result = run(p);
+
+  expect(result.sourceCommitment).not.toBe(onDeadline.sourceCommitment);
+  expect(result.amountDue?.toFixed()).toBe('300');
+  expect(result.actualBalancePayment).toEqual(onDeadline.actualBalancePayment);
+  expect(result.latePaymentInterest?.toFixed()).toBe('0');
+  expect(result.filingQualified).toBe(false);
+});
 const rejectedBusinessPayments: Array<{label: string; mutate: (p: Packet) => void}> = [
   {label: 'unknown school residency', mutate: p => {delete (p.sources.residencyFacts as Partial<typeof p.sources.residencyFacts>).schoolDistrictStatus;}},
   {label: 'taxing school residency', mutate: p => {p.sources.residencyFacts.schoolDistrictStatus = 'actual_district_sources_required';}},

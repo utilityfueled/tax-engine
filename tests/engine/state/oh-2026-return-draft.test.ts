@@ -285,6 +285,16 @@ describe('Ohio2026 current ordinary source-to-return draft', () => {
     expect(() => run(p)).toThrow();
   });
 
+  it('keeps a timely filed withholding-only return available after the deadline', () => {
+    const p = ohio2026OrdinaryFixture();
+    payments(p).currentTiming = { kind: 'filed', filedDate: '2027-04-15', asOfDate: '2027-04-16' };
+    const result = run(p);
+
+    expect(result.refund.toFixed()).toBe('68');
+    expect(result.latePaymentInterest.toFixed()).toBe('0');
+    expect(result.filingQualified).toBe(false);
+  });
+
   const negatives: Array<[string, (p: Packet) => void]> = [
     ['wrong actual year', p => { p.input.taxpayer.taxYear = 2025; }],
     ['unknown complete inventory', p => { Reflect.deleteProperty(p.sources, 'allIncomeAndAdjustmentOriginalsIncludedConfirmed'); }],
@@ -311,6 +321,7 @@ describe('Ohio2026 current ordinary source-to-return draft', () => {
     ['unknown cash zero', p => { Reflect.deleteProperty(payments(p).balanceFacts, 'useTax'); }],
     ['actual nonzero use tax', p => { payments(p).balanceFacts.useTax = '1'; }],
     ['late expected filing', p => { payments(p).currentTiming = { kind: 'expected', expectedDate: '2027-04-16', asOfDate: '2027-03-01' }; }],
+    ['unfiled expected date passed', p => { payments(p).currentTiming = { kind: 'expected', expectedDate: '2027-04-15', asOfDate: '2027-04-16' }; }],
     ['missing source year', p => { Reflect.deleteProperty(p.input.w2s[0] ?? {}, 'taxYear'); rebindOhio2026Ordinary(p); }],
   ];
   it.each(negatives)('rejects unknown changed or unsupported actual original sources: %s', (_name, mutate) => {

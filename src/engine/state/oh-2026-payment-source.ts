@@ -24,7 +24,8 @@ export function validateOhio2026ActualBalancePaymentSources(input:TaxYearInput):
   if (!person||!/^\d{9}$/.test(ssn(pay.original.accountSsn))||ssn(pay.original.accountSsn)!==ssn(person.ssn)||name(pay.original.accountName)!==name(person.firstName+' '+person.lastName)) fail('actual payment account owner differs');
   const paid=date(pay.date),originalDate=date(pay.original.date),asOf=date(facts.currentTiming.asOfDate);
   const valued=date(facts.currentTiming.kind==='filed'?facts.currentTiming.filedDate:facts.currentTiming.expectedDate);
-  if (paid<'2027-01-01'||paid>'2027-04-15'||paid>asOf||originalDate!==paid||asOf<'2027-01-01'||asOf>'2027-04-15'||valued<'2027-01-01'||valued>'2027-04-15'
+  // The filing and receipt must be timely even when both are observed later.
+  if (paid<'2027-01-01'||paid>'2027-04-15'||paid>asOf||originalDate!==paid||asOf<'2027-01-01'||valued<'2027-01-01'||valued>'2027-04-15'
     ||(facts.currentTiming.kind==='filed'?valued>asOf:valued<asOf)) fail('actual timely payment and filing chronology differs');
   if (pay.original.taxYear!==2026||!new Decimal(pay.original.amount).eq(pay.amountAppliedToTax)||!new Decimal(pay.amountAppliedToTax).gt(0)) fail('actual original payment and positive applied amount must match exactly');
   return facts;

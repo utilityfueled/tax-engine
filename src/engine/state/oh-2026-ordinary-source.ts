@@ -435,7 +435,8 @@ function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, res
   const timing = payments.currentTiming;
   const valuationDate = timing.kind === 'filed' ? timing.filedDate : timing.expectedDate;
   day(valuationDate); day(timing.asOfDate);
-  if (timing.asOfDate < '2027-01-01' || timing.asOfDate > '2027-04-15' || valuationDate < '2027-01-01' || valuationDate > '2027-04-15'
+  // A timely filed return can be observed after the filing deadline.
+  if (timing.asOfDate < '2027-01-01' || valuationDate < '2027-01-01' || valuationDate > '2027-04-15'
     || timing.kind === 'filed' && valuationDate > timing.asOfDate || timing.kind === 'expected' && valuationDate < timing.asOfDate) fail('actual timely current filing chronology required');
   const actualBalancePayment = payments.remainingTaxPayment.status === 'actual_payment';
   if (actualBalancePayment) {
