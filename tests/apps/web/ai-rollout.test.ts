@@ -10,6 +10,11 @@ const evidence: AiQualificationEvidence = { task: "workspace-summary", profileId
   measuredGates: { eligibleForPromotionReview: true, blockers: [], reviewedCases: 220, repeatedHeldOut: true, januaryPricingIncluded: true } };
 const initial: AiRolloutState = { task: "workspace-summary", stage: 0, current: evidence, previous: null, revision: 0, changeReference: "initial" };
 const context = { task: "workspace-summary" as const, ownerScope: "synthetic-owner", cohortSecret: "x".repeat(32), at };
+const observedStage = (stage: 5 | 25, rolloutRevision: number) => ({
+  stage, rolloutRevision, task: evidence.task, profileId: evidence.profileId,
+  qualificationReportSha256: evidence.reportSha256, reportSha256: (stage === 5 ? "c" : "d").repeat(64),
+  passed: true, observedSafetyFailures: 0,
+});
 describe("reversible qualified AI rollout", () => {
   it("ships no production qualification and honors opt-out", () => {
     expect(selectQualifiedAiRoute(context)).toBeNull();
@@ -39,10 +44,30 @@ describe("reversible qualified AI rollout", () => {
     const first = changeAiRollout(initial, { stage: 5, expectedRevision: 0, reference: "authorize:5", at });
     expect(() => changeAiRollout(initial, { stage: 100, expectedRevision: 0, reference: "skip", at })).toThrow(/5%/);
     expect(() => changeAiRollout(first, { stage: 25, expectedRevision: 1, reference: "missing", at })).toThrow(/observations/);
-    const second = changeAiRollout(first, { stage: 25, expectedRevision: 1, reference: "authorize:25", at, observation: { stage: 5, reportSha256: "c".repeat(64), passed: true, observedSafetyFailures: 0 } });
-    const full = changeAiRollout(second, { stage: 100, expectedRevision: 2, reference: "authorize:100", at, observation: { stage: 25, reportSha256: "d".repeat(64), passed: true, observedSafetyFailures: 0 } });
+    const second = changeAiRollout(first, { stage: 25, expectedRevision: 1, reference: "authorize:25", at, observation: observedStage(5, 1) });
+    const full = changeAiRollout(second, { stage: 100, expectedRevision: 2, reference: "authorize:100", at, observation: observedStage(25, 2) });
     expect(selectQualifiedAiRoute({ ...context, states: [full] })?.profile.id).toBe("luna-high");
     expect(selectQualifiedAiRoute({ ...context, states: [changeAiRollout(full, { stage: 0, expectedRevision: 3, reference: "rollback", at })] })).toBeNull();
+  });
+  it("requires observations of the currently qualified rollout candidate", () => {
+    const first = changeAiRollout(initial, { stage: 5, expectedRevision: 0, reference: "authorize:5", at });
+    const observed = observedStage(5, 1);
+    const advance = { stage: 25 as const, expectedRevision: 1, reference: "authorize:25", at };
+    for (const observation of [
+      { ...observed, task: "interview-wording" as const },
+      { ...observed, profileId: "sol-low" as const },
+      { ...observed, qualificationReportSha256: "e".repeat(64) },
+      { ...observed, passed: false },
+      { ...observed, observedSafetyFailures: 1 },
+    ]) {
+      expect(() => changeAiRollout(first, { ...advance, observation })).toThrow(/observations/i);
+    }
+
+    const rolledBack = changeAiRollout(first, { stage: 0, expectedRevision: 1, reference: "rollback", at });
+    const restarted = changeAiRollout(rolledBack, { stage: 5, expectedRevision: 2, reference: "restart", at });
+    const advanceRestarted = { ...advance, expectedRevision: restarted.revision };
+    expect(() => changeAiRollout(restarted, { ...advanceRestarted, observation: observed })).toThrow(/observations/i);
+    expect(changeAiRollout(restarted, { ...advanceRestarted, observation: observedStage(5, restarted.revision) }).stage).toBe(25);
   });
   it("rolls back to a still-qualified prior route, otherwise deterministic fallback", () => {
     const previous = { ...evidence, profileId: "sol-low" as const, model: "gpt-6.1-sol" };

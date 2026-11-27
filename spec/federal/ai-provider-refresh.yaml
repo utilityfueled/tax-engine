@@ -136,3 +136,7 @@ lines:
     description: "Record cancellation after an additive schema migration"
     formula: "Keep the historical attempt states and all recorded usage. Add an optional timestamp for confirmed undispatched rejection. Its database check requires zero cost with no usage, pricing or provider reference and forbids marking a known successful attempt."
     testRef: "tests/apps/web/hosted-ai-ledger.test.ts::adds the undispatched marker without changing historical settled attempts"
+  - line: "rollout-observation-binding"
+    description: "Require reviewed results for the active candidate and stage before expansion"
+    formula: "Before advancing from 5% or 25%, match the reviewed observation to the active task, profile, qualification report hash, stage, and rollout revision. A rollback and restart creates a new rollout revision. Keep the existing passing and zero observed safety failure requirements and preserve immediate rollback."
+    testRef: "tests/apps/web/ai-rollout.test.ts::requires observations of the currently qualified rollout candidate"

@@ -15,6 +15,16 @@ export interface AiRolloutState {
   task: AiTask; stage: 0 | 5 | 25 | 100; current: AiQualificationEvidence | null;
   previous: AiQualificationEvidence | null; revision: number; changeReference: string;
 }
+interface AiRolloutObservation {
+  task: AiTask;
+  profileId: AiProfileId;
+  qualificationReportSha256: string;
+  stage: 5 | 25;
+  rolloutRevision: number;
+  reportSha256: string;
+  passed: boolean;
+  observedSafetyFailures: number;
+}
 
 // No production route has been approved. Adding evidence requires a separate reviewed change.
 export const PRODUCTION_AI_ROLLOUTS: readonly AiRolloutState[] = Object.freeze([]);
@@ -57,16 +67,19 @@ export function selectQualifiedAiRoute(input: {
 /** Changes are data for a separately authorized deployment; this function performs no activation. */
 export function changeAiRollout(state: AiRolloutState, change: {
   stage: 0 | 5 | 25 | 100; expectedRevision: number; reference: string; at: string;
-  observation?: { stage: 5 | 25; reportSha256: string; passed: boolean; observedSafetyFailures: number };
+  observation?: AiRolloutObservation;
 }): AiRolloutState {
   if (change.expectedRevision !== state.revision || !change.reference.trim()) throw new Error("Stale or unauthorized AI rollout change.");
   if (change.stage === 0) return { ...state, stage: 0, revision: state.revision + 1, changeReference: change.reference };
   if (!qualifiedAiEvidence(state.current, state.task, change.at)) throw new Error("AI qualification is missing, expired or changed.");
   const next = state.stage === 0 ? 5 : state.stage === 5 ? 25 : state.stage === 25 ? 100 : null;
   if (change.stage !== next) throw new Error("AI rollout must proceed through 5%, 25%, then 100%.");
-  if (state.stage > 0 && (!change.observation || change.observation.stage !== state.stage
-    || !/^[a-f0-9]{64}$/.test(change.observation.reportSha256) || !change.observation.passed || change.observation.observedSafetyFailures !== 0)) {
-    throw new Error("The previous rollout stage requires reviewed passing observations.");
+  const { observation } = change;
+  if (state.stage > 0 && (!observation || observation.stage !== state.stage
+    || observation.rolloutRevision !== state.revision || observation.task !== state.task
+    || observation.profileId !== state.current.profileId || observation.qualificationReportSha256 !== state.current.reportSha256
+    || !/^[a-f0-9]{64}$/.test(observation.reportSha256) || !observation.passed || observation.observedSafetyFailures !== 0)) {
+    throw new Error("The active rollout stage and candidate require reviewed passing observations.");
   }
   return { ...state, stage: change.stage, revision: state.revision + 1, changeReference: change.reference };
 }
