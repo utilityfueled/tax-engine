@@ -1,5 +1,30 @@
 # 2026 upgrade implementation evidence
 
+## November 27 Actual joint resident election for education credits
+
+`5c43a5f3a` requires an explicit joint resident election for a known nonresident
+2026 claimant with qualifying expenses when the election can affect AOTC or LLC.
+An actual election allows the credit calculation to proceed. An explicit
+declination produces zero. Both regressions reproduced the missing-fact gap
+before the fix. The pinned Node run passed 215 focused tests across the form,
+federal calculation and guided education paths. Spec references, inventory,
+typechecking, scoped lint and browser source verification passed.
+[26 U.S.C. §25A(g)(7)](https://uscode.house.gov/us/usc/t26/s25A/) ·
+[IRS Form 8863 instructions](https://www.irs.gov/instructions/i8863).
+
+## November 27 OpenAI reasoning-token accounting
+
+`db33a939a` gives the hosted and evaluation transports one usage schema. A
+reported reasoning count must fit within the output count. Billing uses the
+output count once. Both regressions reproduced acceptance of contradictory
+usage before the fix. The corrected transports retain the response reference
+for reconciliation after one request. Missing or empty details and valid
+reasoning counts retain their existing price. The focused run passed 91 tests,
+22 spec references, both typechecks, lint, the offline evaluation artifact check
+and the browser source audit. A separate code review checked both transports.
+[OpenAI Responses usage](https://developers.openai.com/api/reference/resources/responses/methods/create) ·
+[OpenAI reasoning guide](https://developers.openai.com/api/docs/guides/reasoning).
+
 ## November 27 Actual unreported mortgage lender
 
 `0d3b374ca` requires a named recipient before qualified unreported mortgage

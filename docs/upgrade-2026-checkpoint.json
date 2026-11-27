@@ -3,8 +3,9 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "0d3b374ca2f07d7446add8e10e365b67611cebd9",
-    "latestScopedApplicationCommit": "0d3b374ca2f07d7446add8e10e365b67611cebd9",
-    "latestCombinedCandidateCommit": "0d3b374ca2f07d7446add8e10e365b67611cebd9",
+    "latestScopedApplicationCommit": "5c43a5f3ad293a070514ba9b52a98d0ccc8c345a",
+    "latestCombinedCandidateCommit": "5c43a5f3ad293a070514ba9b52a98d0ccc8c345a",
+    "educationJointResidentElectionEvidenceKey": "activeContinuation.nov27EducationJointResidentElection",
     "unreportedMortgageLenderEvidenceKey": "activeContinuation.nov27UnreportedMortgageLender",
     "code3PairingEvidenceKey": "activeContinuation.nov27Code3PairValidation",
     "paDividendAccountIdentityEvidenceKey": "activeContinuation.nov27PaDividendAccountIdentity",
@@ -19,6 +20,7 @@
     "form8919SourceInventoryEvidenceKey": "activeContinuation.nov26Form8919SourceInventory",
     "latestPublicProviderCatalogEvidenceKey": "activeContinuation.nov26PublicProviderCatalog",
     "geminiPromptBlockSettlementEvidenceKey": "activeContinuation.nov27GeminiPromptBlockSettlement",
+    "openAiReasoningUsageEvidenceKey": "activeContinuation.nov27OpenAiReasoningUsage",
     "guidedForm8919OriginalEvidenceKey": "activeContinuation.nov26GuidedForm8919Original",
     "form8919OriginalEvidenceKey": "activeContinuation.nov26Form8919Original",
     "providerEvaluationWindowEvidenceKey": "activeContinuation.nov26ExactProviderEvaluationWindows",
@@ -174,6 +176,35 @@
     ]
   },
   "activeContinuation": {
+    "nov27EducationJointResidentElection": {
+      "commit": "5c43a5f3ad293a070514ba9b52a98d0ccc8c345a",
+      "nodeVersion": "26.13.1",
+      "regressionsFailedBeforeImplementation": 2,
+      "focusedTestsPassed": 215,
+      "specReferencesPassed": 36,
+      "inventoryTypecheckAndScopedLintPassed": true,
+      "browserSourceAuditSha256": "3411e8bb3ec7eecb46e99a6d498b67e16827824a8e05c154740e27e779fdf73e",
+      "sources": [
+        "https://uscode.house.gov/us/usc/t26/s25A/",
+        "https://www.irs.gov/instructions/i8863"
+      ]
+    },
+    "nov27OpenAiReasoningUsage": {
+      "commit": "db33a939a821c677f7f55115fd344a48d27d5c2e",
+      "regressionsFailedBeforeImplementation": 2,
+      "focusedTestsPassed": 91,
+      "specReferencesPassed": 22,
+      "typechecksPassed": true,
+      "scopedLintPassed": true,
+      "offlineEvaluationArtifactsPassed": true,
+      "separateCodeReviewPassed": true,
+      "browserSourceAuditSha256": "5de248b67cb8ae3b11871eef842046cfe3d9bbe847ec7d3292e7f929f6d3da4d",
+      "liveProviderCalls": 0,
+      "sources": [
+        "https://developers.openai.com/api/reference/resources/responses/methods/create",
+        "https://developers.openai.com/api/docs/guides/reasoning"
+      ]
+    },
     "nov27UnreportedMortgageLender": {
       "commit": "0d3b374ca2f07d7446add8e10e365b67611cebd9",
       "nodeVersion": "26.13.1",
