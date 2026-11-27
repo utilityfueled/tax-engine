@@ -152,6 +152,14 @@ duration in each window was 2.40–3.73 times the managed duration. This
 compares different environments and two revisions. The measurements do
 not isolate a cause or qualify the strict 30-second gate.
 
+The completed AMD64 fix run on the same `b496c367d` revision passed
+isolated Compose upgrade, recovery and rollback. Strict Chromium
+recorded 643 passes, five existing skips and 11 Ohio deadlines across
+all nine windows. The isolated browser container was removed. Managed
+Linux Chromium recorded 652 passes, five skips and two RRTA saved-PDF
+inspection timeouts. Both strict architectures missed deadlines in
+the same three groups. [AMD64 fix run](https://github.com/utilityfueled/tax-engine/actions/runs/45931694869).
+
 ## November 26 upper QBI audit transfers
 
 `07710f086` follows draft Form 8995 lines 1–14 for individual

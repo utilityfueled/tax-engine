@@ -1,6 +1,6 @@
 # Current 2026 upgrade status
 
-## Resume here · November 26
+## Resume here · November 27
 
 Main is the active branch. The hosted cybersecurity rehearsals are
 deferred at the owner’s direction. Their readiness criteria remain open.
@@ -50,10 +50,24 @@ Use the linked progress sections when investigating individual packages.
   variables unset. The ARM64 fix run passed native archive import
   and Compose upgrade and recovery. Strict Chromium finished all nine
   windows and cleaned up, with 645 passes, five existing skips and nine
-  deadline failures. The strict gate remains open.
+  deadline failures. AMD64 passed Compose upgrade and recovery and
+  finished its strict browser run with 643 passes, five skips and 11
+  Ohio deadline failures. Its managed browser run had two RRTA PDF
+  inspection timeouts. The strict gates remain open.
   [ARM64 fix run](https://github.com/utilityfueled/tax-engine/actions/runs/45932508665) ·
+  [AMD64 fix run](https://github.com/utilityfueled/tax-engine/actions/runs/45931694869) ·
   [Current ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45938095409) ·
   [Rehearsal evidence](upgrade-2026-progress.md#november-26-self-host-migration-authentication).
+
+- The November 27 source check found no final 2026 release for the
+  federal Form 1040, Schedule 1-A, Form 6251 or the selected state
+  annual returns. Ohio still lists the annual individual and school
+  district instructions as drafts. Filing qualification remains open.
+  [IRS Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+  [IRS Schedule 1-A](https://www.irs.gov/pub/irs-pdf/f1040s1a.pdf) ·
+  [IRS Form 6251](https://www.irs.gov/pub/irs-pdf/f6251.pdf) ·
+  [Pennsylvania forms](https://www.pa.gov/agencies/revenue/forms-and-publications) ·
+  [Ohio notices](https://tax.ohio.gov/individual/resources/individualincome).
 
 - `07710f086` and `d92d17742` align the remaining upper draft QBI
   audit rows. The phase-in tests verify lines 12, 25, 26, 27 and 32.

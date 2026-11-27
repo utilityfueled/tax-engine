@@ -332,6 +332,21 @@
       "forcedFailure": "missing client, dump (command unavailable), zero residual schemas",
       "arm64RecoveryFixRun": 45932508665,
       "recoveryFixAmd64WebRun": 45931694869,
+      "recoveryFixAmd64Browser": {
+        "composeUpgradeRecoveryRollback": "passed",
+        "strictLogSha256": "2f0b69964cb12acc28d172b077d98bcca1e9e270ade2b2d78208af668f14ab2f",
+        "strictDeadlineMs": 30000,
+        "strictWindows": 9,
+        "strictPassed": 643,
+        "strictFailed": 11,
+        "strictSkipped": 5,
+        "strictContainerRemoved": true,
+        "managedLogSha256": "a1c7baff83dccb6ac410791e4fc9396462b630ab879f3f380eac78086b866f6f",
+        "managedPassed": 652,
+        "managedFailed": 2,
+        "managedSkipped": 5,
+        "managedFailure": "RRTA bounded saved-PDF inspection timeouts at desktop and mobile widths"
+      },
       "recoveryFixArm64StagesPassed": ["independent native archive import", "isolated Compose upgrade and recovery"],
       "recoveryFixArm64ArchiveReceiptSha256": "a0eefeb51346fb0a14a5db88076d3330e1f99be657fa243c20120ccdab714d36",
       "recoveryFixArm64Browser": {
