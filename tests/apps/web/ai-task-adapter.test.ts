@@ -78,6 +78,50 @@ describe("task-based candidate AI adapter", () => {
     expect(url).not.toContain("fixture-key");
     expect(JSON.parse(options.body).generationConfig).toMatchObject({ thinkingConfig: { thinkingLevel: "HIGH" }, maxOutputTokens: 4096 });
   });
+  it("releases the Gemini hold if reservation crosses the price cutoff", async () => {
+    const december = "2026-12-31T23:59:59.950Z";
+    const january = "2027-01-01T00:00:00.050Z";
+    let currentTime = december;
+    const deps = execution();
+    deps.fetchFn.mockResolvedValue(Response.json({
+      modelVersion: "gemini-3.8-flash",
+      candidates: [{ finishReason: "STOP", content: { parts: [{ text: '{"summary":"Review W-2."}' }] } }],
+      usageMetadata: geminiUsage,
+    }));
+    const beforeAttempt = vi.fn(async (_attempt: unknown) => {
+      currentTime = currentTime === december ? january : "2027-01-02T00:00:00.050Z";
+    });
+    const recordUndispatchedAttempt = vi.fn();
+    const recordAttempt = vi.fn();
+    const recordUnknownAttempt = vi.fn();
+    const run = { ...deps, provider: "google" as const, now: () => currentTime, beforeAttempt,
+      recordUndispatchedAttempt, recordAttempt, recordUnknownAttempt };
+
+    expect(await executeAiTask(request(), run)).toBeNull();
+    expect(deps.fetchFn).not.toHaveBeenCalled();
+    expect(recordAttempt).not.toHaveBeenCalled();
+    expect(recordUnknownAttempt).not.toHaveBeenCalled();
+    expect(recordUndispatchedAttempt).toHaveBeenCalledExactlyOnceWith(beforeAttempt.mock.calls[0][0]);
+
+    const nextResult = await executeAiTask(request(), run);
+    expect(nextResult?.accounting).toMatchObject({ providerCostUsd: "0.00873", pricingEffectiveFrom: "2027-01-01" });
+    expect(deps.fetchFn).toHaveBeenCalledOnce();
+    expect(recordAttempt).toHaveBeenCalledOnce();
+    expect(recordUndispatchedAttempt).toHaveBeenCalledOnce();
+  });
+  it("propagates cancellation during the cutoff hold release", async () => {
+    const controller = new AbortController();
+    const deps = execution();
+    let at = "2026-12-31T23:59:59.950Z";
+    const recordUndispatchedAttempt = vi.fn(async () => { controller.abort(); });
+    await expect(executeAiTask(request({ signal: controller.signal }), {
+      ...deps, provider: "google", now: () => at,
+      beforeAttempt: async () => { at = "2027-01-01T00:00:00.050Z"; },
+      recordUndispatchedAttempt,
+    })).rejects.toHaveProperty("name", "AbortError");
+    expect(deps.fetchFn).not.toHaveBeenCalled();
+    expect(recordUndispatchedAttempt).toHaveBeenCalledOnce();
+  });
   it("settles exact Gemini usage for rejected or missing candidate content", async () => {
     const candidates = [
       { finishReason: "SAFETY" },

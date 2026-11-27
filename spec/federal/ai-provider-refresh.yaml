@@ -41,6 +41,19 @@ lines:
     description: "Bound the authorized hosted hold before dispatch"
     formula: "Price the full input and output ceilings using the most expensive supported input token treatment and regional uplift. Hold the rounded retail ceiling while settling only actual usage. For 24,000 input and 8,192 output Sol tokens the upper bound is $0.222112 or 23 cents."
     testRef: "tests/apps/web/ai-task-adapter.test.ts::reserves the highest priced Sol usage before dispatch"
+  - line: "application-dispatch-price-cutoff"
+    description: "Use the price in effect when the application dispatches a provider request"
+    formula: >-
+      Price the bound before awaiting the ledger reservation. Once the
+      reservation is ready, recheck the selected model's effective price
+      immediately before dispatch. If the price changed while waiting, release
+      the hold as undispatched and return the deterministic fallback. Apply
+      the recorded price only when the dispatch still uses the same price
+      period. A new attempt admitted under the new price uses that price.
+      A cancellation during hold release propagates after the release.
+    testRef: "tests/apps/web/ai-task-adapter.test.ts::releases the Gemini hold if reservation crosses the price cutoff"
+    testRefs:
+      - "tests/apps/web/ai-task-adapter.test.ts::propagates cancellation during the cutoff hold release"
   - line: "hosted-escalation-hold"
     description: "Reserve both potential attempts when escalation is explicitly approved"
     formula: "Add the independent Sol High hold for 24,000 input and 16,384 output tokens, including supported cache writes and regional uplift. Its $0.312224 upper bound rounds to 32 cents, for 33 cents including a one-cent first attempt."

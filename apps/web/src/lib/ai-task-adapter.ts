@@ -1,6 +1,6 @@
 import "server-only";
 import { z } from "zod";
-import { calculateAiCost, maximumAiRequestCost, type AiTokenUsage } from "@tax-engine/engine/src/ai-pricing";
+import { calculateAiCost, getAiPrice, maximumAiRequestCost, type AiTokenUsage } from "@tax-engine/engine/src/ai-pricing";
 import { geminiTextResponseSchema, readGeminiTextResponse } from "@tax-engine/engine/src/ai-gemini-text-response";
 import { assertOpenAiVisibleOutputUsage, openAiUsageSchema } from "@tax-engine/engine/src/ai-openai-usage";
 import { resolveCandidateAiRoute, type AiProvider, type AiTask, type AiProfileId } from "@tax-engine/engine/src/ai-task-registry";
@@ -149,16 +149,23 @@ export async function executeAiTask<T>(request: AiTaskRequest<T>, execution: AiT
     generationConfig: { responseMimeType: "application/json", responseJsonSchema: jsonSchema,
       maxOutputTokens: policy.maxOutputTokens, thinkingConfig: { thinkingLevel: "HIGH" } },
   };
-  const startedAt = (execution.now ?? (() => new Date().toISOString()))();
+  const serializedBody = JSON.stringify(body);
+  const now = execution.now ?? (() => new Date().toISOString());
+  const startedAt = now();
+  const maximumCost = maximumAiRequestCost(profile.model, startedAt, policy.maxInputTokens, policy.maxOutputTokens);
   const attempt: AiAttemptMetadata = { task: request.task, profileId: profile.id, modelId: profile.model, startedAt,
-    maximumChargeCents: maximumAiRequestCost(profile.model, startedAt, policy.maxInputTokens, policy.maxOutputTokens).retailChargeCents,
+    maximumChargeCents: maximumCost.retailChargeCents,
     attempt: execution.escalationCount === 1 ? 2 : 1 };
   const useFallback = await execution.beforeAttempt?.(attempt) === "use-fallback";
-  if (signal.aborted) {
-    if (!useFallback) await execution.recordUndispatchedAttempt?.(attempt);
+  let readyToSend = false;
+  try {
     signal.throwIfAborted();
+    readyToSend = !useFallback && getAiPrice(profile.model, now()).effectiveFrom === maximumCost.pricingEffectiveFrom;
+  } finally {
+    if (!readyToSend && !useFallback) await execution.recordUndispatchedAttempt?.(attempt);
   }
-  if (useFallback) return null;
+  signal.throwIfAborted();
+  if (!readyToSend) return null;
   const started = performance.now();
   let outputText: string;
   let usage: AiTokenUsage;
@@ -169,7 +176,7 @@ export async function executeAiTask<T>(request: AiTaskRequest<T>, execution: AiT
     method: "POST", redirect: "error", signal,
     headers: openai ? { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` }
       : { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-    body: JSON.stringify(body),
+    body: serializedBody,
   });
   if (openai) providerRequestId = readProviderIdentifier(providerResponse.headers.get("x-request-id"), openAiRequestId);
   const payload = await readBoundedResponse(providerResponse);
