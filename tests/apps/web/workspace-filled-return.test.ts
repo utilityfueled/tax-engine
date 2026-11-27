@@ -16,6 +16,7 @@ import type {
 import { buildWorkspaceStructuredFacts } from "@tax-engine/engine";
 import { POST } from "../../../apps/web/src/app/api/workspace/filled-return/route";
 import { buildWorkspaceFilledReturnDownload } from "../../../apps/web/src/lib/workspace-filled-return";
+import { reconcileWorkspaceGuidedState } from "../../../apps/web/src/lib/workspace-guided-state";
 import type { GuidedFlowState } from "../../../apps/web/src/lib/guided-interview-flow";
 import { buildTaxInputFromGuidedData } from "../../../apps/web/src/lib/guided-interview-bridge";
 import { computeGuidedPreviewEvaluation, computeGuidedPreviewOutcome } from "../../../apps/web/src/lib/guided-preview-compute";
@@ -494,6 +495,64 @@ describe("workspace filled return download", () => {
       "personal-info": { ...valid.sectionData["personal-info"]!, dateOfBirth: "" },
     } })).rejects.toThrow(/taxpayer facts/);
   });
+
+  it.each([
+    { label: "conflicting", sourceYear: 2026, yearState: "multiple", blocker: "guided:conflicting-source-years" },
+    { label: "unknown", sourceYear: undefined, yearState: "missing", blocker: "guided:unknown-document-year" },
+  ] as const)("holds a workspace review export for $label original years", async ({ sourceYear, yearState, blocker }) => {
+    const saved = createWorkspace();
+    saved.documents.push(createDocument({ id: "another-original", matchedFixtureId: undefined, taxYear: sourceYear }));
+    const flow = createGuidedFlowState();
+    const hydrated = reconcileWorkspaceGuidedState(saved, flow);
+    expect(hydrated.returnSummary.targetTaxYear).toBe(2025);
+    expect(hydrated.returnSummary.taxYearState).toBe(yearState);
+    expect(hydrated.returnSummary.blockers.map(({ id }) => id)).toContain(blocker);
+    expect(saved.returnSummary.taxYearState).toBe("single");
+
+    const calculation = vi.spyOn(federalEngine, "calculateFederalTax");
+    try {
+      const errors = await Promise.all([hydrated, saved].map(workspace =>
+        buildWorkspaceFilledReturnDownload(workspace, flow).then(() => null, (cause: unknown) => cause)
+      ));
+      for (const error of errors) {
+        expect(error).toBeInstanceOf(Error);
+        expect(error).toHaveProperty("message", expect.stringMatching(/reconcile.*original document.*year.*review PDF/i));
+      }
+      const reopened = await POST(new Request("http://localhost/api/workspace/filled-return", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ workspace: saved, guidedFlowState: flow }),
+      }));
+      expect(reopened.status).toBe(400);
+      expect(reopened.headers.get("x-tax-engine-export-purpose")).toBeNull();
+      expect(calculation).not.toHaveBeenCalled();
+    } finally {
+      calculation.mockRestore();
+    }
+  });
+
+  it("holds a workspace review export when original years cannot be reconciled", async () => {
+    const saved = createWorkspace();
+    saved.documents.push(createDocument({ id: "another-original", taxYear: 2026 }));
+    const flow = createGuidedFlowState();
+    Object.assign(flow, { completedSections: null });
+
+    expect(reconcileWorkspaceGuidedState(saved, flow)).toBe(saved);
+    expect(saved.returnSummary.taxYearState).toBe("single");
+    await expect(buildWorkspaceFilledReturnDownload(saved, flow)).rejects.toThrow(/reconcile.*original document.*year.*review PDF/i);
+  });
+
+  it("preserves review downloads for supported single-year legacy and guided-only workspaces", async () => {
+    const legacy = createWorkspace();
+    const explicit = { ...legacy, documents: [createDocument({ matchedFixtureId: undefined, taxYear: 2025 })] };
+    const guidedOnly = { ...legacy, documents: [] };
+    const flow = createGuidedFlowState();
+    const downloads = await Promise.all([legacy, explicit, guidedOnly].map(workspace => buildWorkspaceFilledReturnDownload(workspace, flow)));
+    for (const download of downloads) {
+      expect(download.fileName).toContain("-2025-review-return.pdf");
+      expect(download.includedForms).toContain("f1040-filled.pdf");
+    }
+  });
+
   it("builds a merged filled-PDF download from a ready workspace", async () => {
     const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), createGuidedFlowState());
     const pdf = await PDFDocument.load(download.contents);

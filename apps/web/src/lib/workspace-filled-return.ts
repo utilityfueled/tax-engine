@@ -51,6 +51,7 @@ import {
   buildTaxInputFromGuidedData,
 } from "@/lib/guided-interview-bridge";
 import type { GuidedFlowState } from "@/lib/guided-interview-flow";
+import { reconcileWorkspaceGuidedState } from "@/lib/workspace-guided-state";
 import { assessReturnReadiness } from "@/utils/return-readiness.js";
 
 export interface WorkspaceFilledReturnDownload {
@@ -672,6 +673,11 @@ function resolveFilledReturnTaxInput(
   if (!guidedFlowState) throw new Error("Complete the required taxpayer facts in the guided interview before exporting a review PDF.");
   if (guidedFlowState.taxYear == null || guidedFlowState.taxYear !== workspace.returnSummary.targetTaxYear) {
     throw new Error("Confirm the interview year and make it agree with the workspace before exporting.");
+  }
+  const reconciled = reconcileWorkspaceGuidedState(workspace, guidedFlowState);
+  // A failed reconciliation returns the saved record with its old summary.
+  if (reconciled === workspace || reconciled.returnSummary.taxYearState !== "single") {
+    throw new Error("Reconcile the original document tax years with the guided return year before exporting a review PDF.");
   }
   const guidedTaxInput = buildTaxInputFromGuidedInterview(guidedFlowState);
   if (!guidedTaxInput) throw new Error("Complete the required taxpayer facts before exporting.");

@@ -129,6 +129,22 @@ lines:
     formula: "A guided year cannot overwrite a different or missing original document year. Conflicting years and unresolved original years retain explicit blockers and cannot produce a preview. Unsupported2026 remains gated even with completed actual facts."
     irsRef: "Form1040 actual year-specific records and existing readiness rules"
     testRef: "tests/apps/web/workspace-guided-year.test.ts::preserves conflicting and unknown original document years instead of adopting the guided year"
+  - line: "review-export-source-year"
+    description: "Require reconciled original years for a workspace review PDF"
+    formula: |
+      Use the existing guided-workspace source-year reconciliation before
+      compiling a review PDF, including when a saved summary still reports one
+      year. Hold conflicting or unknown original source years before calculation
+      and rendering. Hold the export if the saved interview prevents rebuilding
+      the authoritative year summary. A guided selection checks the
+      original years without filling them in. A recognized legacy fixture year,
+      an explicitly matched source year, or a valid guided-only year uses the
+      existing year policy.
+      A review PDF requires a supported mapping for the confirmed year.
+    testRef: "tests/apps/web/workspace-filled-return.test.ts::holds a workspace review export for $label original years"
+    testRefs:
+      - "tests/apps/web/workspace-filled-return.test.ts::holds a workspace review export when original years cannot be reconciled"
+      - "tests/apps/web/workspace-filled-return.test.ts::preserves review downloads for supported single-year legacy and guided-only workspaces"
   - line: "completion"
     description: "Reflect actual guided completion separately from uploads"
     formula: "Revalidate every routed guided section, including unvisited and changed sections. A completed phase alone cannot establish ready status. Guided-only checklist labels describe entered facts, and source review/coverage blockers remain unchanged."
