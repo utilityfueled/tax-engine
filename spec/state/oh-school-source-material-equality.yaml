@@ -10,14 +10,18 @@ notes: |
   sorting with localeCompare, omitted undefined object values, preserved array order,
   and unchanged JSON null/string/Unicode representations. No cache or retained replay.
   Baseline compatibility hashes include all audits and durable commitments; they are
-  unchanged-source compatibility oracles, not independent tax-law expectations.
+  compatibility oracles. Comparing aa2d431bc with 182f240a7 showed that removing
+  only aggregate Ohio IT NRC numeric lines 1–20 from each of the six full-year
+  resident fixtures made their complete outputs byte-identical. The two part-year
+  fixture outputs, the typed IT NRC calculation, and all source commitments retain
+  their original values.
   Fictional fixture monetary oracles remain separately authored in existing source specs.
   The actual unchanged-budget desktop failures are performance RED; algebraic parity
   tests must already pass the unchanged source. No timing/hash-call-count assertions.
 lines:
   - line: "full-output-parity"
     description: "Complete source, federal, adapted state, payment and calculated result parity"
-    formula: "Exact unchanged-source JSON SHA256 and original literal fixture results; input and original captures remain immutable"
+    formula: "Exact current JSON SHA256 and original literal fixture results; input and original captures remain immutable"
     testRef: "tests/engine/state/oh-school-source-material-equality.test.ts::preserves complete school baseline and commitments for %s"
   - line: "normalization"
     description: "Existing canonical material equivalences and exact representations"

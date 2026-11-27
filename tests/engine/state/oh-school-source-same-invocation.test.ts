@@ -17,21 +17,24 @@ function hash(value:unknown){return createHash('sha256').update(JSON.stringify(v
 function record(v:unknown):Record<string,unknown>{if(v===null||typeof v!=='object'||Array.isArray(v))throw Error('Explicit original required');return v as Record<string,unknown>;}
 const cohorts=[...schoolOfficialCases.map(name=>({name:'full-'+name,make:()=>schoolOfficialFixture(name)})),...(['600','500']as const).map(v=>({name:'part-year-'+v,make:()=>schoolDistrictPartYearFixture(v)})),...(['unpaid','expected_payment','actual_payment']as const).map(v=>({name:'balance-'+v,make:()=>schoolBalanceFixture(v)})),{name:'full-nonzero-IT-elections',make:()=>{const x=schoolDistrictSourcesFixture();x.ohioPayments.balanceFacts={...x.ohioPayments.balanceFacts,useTax:'25',outgoingCarryforward:'15',donations:'10'};return x;}},{name:'full-independent-IT-estimates',make:()=>{const x=schoolDistrictEstimatedFixture();x.ohioPayments.paymentRows=structuredClone(x.ohioSchoolDistrict.payments.paymentRows).map((r,i)=>({...r,sourceId:'IT-EST-'+i,returnType:'it1040',original:{...r.original,returnType:'it1040',confirmationNumber:'IT-INDEPENDENT-EST-'+i}}));return x;}}];
 // Exact predecessor digests, with the separately asserted federal Schedule A correction below.
-// Full returns compared with 5a8384ec. Only Schedule B Part III answers and their audit lines changed.
+// Earlier full returns compared with 5a8384ec for Schedule B Part III.
+// aa2d431bc → 182f240a7 complete-byte replay: only 20 numeric NRC audit rows
+// disappear from each full-resident state result; both part-year cases are unchanged.
+// All original source commitments and every other output byte are retained.
 const baselineHashes:Readonly<Record<string,string>>={
-  "full-base": "ba528efb0305b6bb102bf37c3e4fe219a4d55d6b06cf23d0c96200bc7390c836",
-  "full-estimates": "88c7096c19cc07e35cc52c5ab70aa12414c89077dbd384a36d6f223b56d7bd02",
-  "full-outgoing": "f0cb82ccb9fce6813f91ce9a57457d7078f8b1662c822a53841d49c7344434d0",
-  "full-prior": "bd8fb8579d9bfe11a663ad7f82e4ed624e0453db6fe9e4049f1d766dab47f43d",
-  "full-zero-withholding": "d616afa6ffc034d75d6456d64b46b6c5697c6310e48e0de22ea1395ab8a4cb52",
-  "full-municipal-first": "dbf5d2f56b5bfe8262c307622f0ab8f50d9f95fdfec652991c1e42cd4aca3cbc",
+  "full-base": "2892295d5ca111b86e010e61d71179895873e8ebb80cb8f7b2d8c659020a6baf",
+  "full-estimates": "5d93bf0158d41e79415cef0594a3bea6a96eb2cddb9453b104eef8cda9365774",
+  "full-outgoing": "b8932b361fbe306fc01c82c991ca03d11af90bdd4075ed753937ce3da87d8e3c",
+  "full-prior": "02bc6f941c0e5bf0b50505aba1d37320ca9e77cd72818fc51b87ef62e1a1c808",
+  "full-zero-withholding": "15d281af9ec4c40170586f194ddab7dea8ce42cfa0cedb510a91e69c5af7373c",
+  "full-municipal-first": "b231193b5b396db9423036591ea7322bde7913a9fcbd3f2d38f4037902c403db",
   "part-year-600": "c0e51ae1b0500b7d254c25d512972341b971d2b8fd7621585f577cfebf8b60d8",
   "part-year-500": "412a9c187c54f8698235bfb9ac62b392e0339be9d83243ae2d76673577499435",
-  "balance-unpaid": "0f97664d4e890ca19b2513eec6a4af274e3c8d650e25b274baeb15814ceca572",
-  "balance-expected_payment": "e1a2e513f946cee4817bc985169354025ce86e21c5ce59c3c8b56c9d358b4f44",
-  "balance-actual_payment": "e00afa1c3e3f24bf3c738ad26b24eff2976c36f342c341994f0b51a13d7567d2",
-  "full-nonzero-IT-elections": "a4a4882a966aecb926fa655c455ec5a4169158f2e20578019819b8558d50a7c4",
-  "full-independent-IT-estimates": "2c618a27bd1e34a7771b390f58a60c577d5c62a2c54cd1133b85803f1fe45177"
+  "balance-unpaid": "ee3d44ebb9bdb0fa01f0ff224ea117e1be2b58ce1f6932836c0f1835e842a334",
+  "balance-expected_payment": "e4017a08d389eea112aa938466f57e74492f3d9ec20b5ff56e519f07a8206a96",
+  "balance-actual_payment": "fd45d2c6ebaedb3426a142a51e5bfe13b9d8fbc6ffaefeb0367adc231daa8f18",
+  "full-nonzero-IT-elections": "b57e0f891b86b6bed9bf6b74ca0fb6453ce41c257cc290253a23f7f73e7b0758",
+  "full-independent-IT-estimates": "5789c8e422941c7b3c40e6e0536392a19ce5150c4ba6d7a1662f5bfbdd595021"
 };
 const errorOracles=[
   {
@@ -109,7 +112,7 @@ it.each(cohorts.map(c=>[c.name,c]as const))('reuses only one current school proj
 it.each(cohorts.map(c=>[c.name,c]as const))('preserves complete predecessor bytes for %s',(_name,c)=>{
  const input=c.make(),before=JSON.stringify(input),federal=calculateFederalTax(input),fbefore=JSON.stringify(federal);reset();const adapted=buildOhioResidentReturnInput(input,federal);const state=calculateOhioResidentReturn(adapted);const payment=buildOhioPaymentSource(input,input.ohioPayments);
  if(c.name==='full-independent-IT-estimates'){
-  expect(hash({input,adapted,state,payment,school:adapted.schoolDistrictSource})).toBe('2576f28e205505a58dfb114cee8fa1bf62b0caa421f204efac275a521aa16f65');
+  expect(hash({input,adapted,state,payment,school:adapted.schoolDistrictSource})).toBe('4d8dfc6791436639efd81c5ed16f3a2b3ba25b240634a8e52a7eba4f2c5f10f3');
   expect(state.it1040.line15_estimatedPayments.toString()).toBe('400');
   expect(state.it1040.line17_totalPayments.toString()).toBe('3400');
   expect(state.sd100?.line12_estimatedPayments.toString()).toBe('400');

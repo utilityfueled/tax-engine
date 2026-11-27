@@ -28,13 +28,14 @@ function copy<T>(value:T):T{
 }
 // Full-output baselines rebound only after exact1768448b→835e8972 comparison: HSA audit wording and explicit zero trace additions; all monetary/source commitments unchanged.
 // Full returns compared with 5a8384ec. Only Schedule B Part III answers and their audit lines changed.
+// Exact aa2d431bc and 182f240a7 outputs match after removing full-year resident IT NRC lines 1–20 from the aggregate audit.
 const baselineHashes:Readonly<Record<string,string>>={
-  "base": "8be59e570c5f88dfa02dc7fd5bb0cf8f3a826913eae7b3558de924075c2f6917",
-  "estimates": "c563a9b9e2aa0c917b39edccf866789bbb13dd7cd6b33751e6d2e2865b61062b",
-  "outgoing": "461ec39e381cda7a89a70ad0e17e0e6bacba4107561faba49d07c0de4f8d9c18",
-  "prior": "424f400eea640a585971292250b4eaac6f19b2ad237ccbb14377ef08019a1d19",
-  "zero-withholding": "7c9aff663199c94ab9d0ee8d1de06ed2b50533b9033c4351b23880824c357dc3",
-  "municipal-first": "43d5d64fc7d7129ee49911f6688285b0f6122952ea676a57d8fe49419e74d0fb",
+  "base": "f8cda64e133c0054c87549827e170414f863c3a81929fc63d7c34df6d81b0bec",
+  "estimates": "248ebd86023fbd637cc71b567dab35c8dd41aa87cf90898e4d75f39d688f3ddd",
+  "outgoing": "fa0b710337fd9977e783ab44f43adeae37c2514283b77a40f6e6ccb44528747f",
+  "prior": "4908da780f806dca55f2fbe93a0a19f073bc1f598be80c6ae1f17a5ade566024",
+  "zero-withholding": "2e19f02ba5b07803da78d17d52b68decc9c1e842fe5bc4fe3ea3c235a6b038fc",
+  "municipal-first": "ddc1600c59877de93c16be59583867b1b8120139da627064172a3574cac2b9dc",
   "part-year-header-refund100": "8dfb33014be844c29bc1bbd3b363fbded41813c43c5ebd815f74e0af0211c121",
   "part-year-header-covered": "b472fec86b3579c1263acc3106a1e1166ff8fecdfbcc6afa524c464cd5454d48"
 };

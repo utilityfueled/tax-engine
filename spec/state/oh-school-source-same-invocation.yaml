@@ -23,7 +23,7 @@ lines:
     testRef: "tests/engine/state/oh-school-source-same-invocation.test.ts::reuses only one current school projection for %s"
   - line: "complete-output-parity"
     description: "Exact original inputs, federal/state outputs, all audits and durable source commitments"
-    formula: "Complete predecessor JSON SHA256 remains identical in unchanged cases. For independent IT estimates, retain exact predecessor bytes for the input, Ohio adapter, state return and source projections, and assert the corrected federal Schedule A audit and new combined SHA256 explicitly."
+    formula: "Complete predecessor JSON SHA256 remains identical in unchanged cases. For independent IT estimates, retain exact predecessor bytes for the input, Ohio adapter, state return and source projections, and assert the corrected federal Schedule A audit and new combined SHA256 explicitly. For the verified-residency NRC display projection, compare every complete fixture output between aa2d431bc and 182f240a7: remove only the 20 numeric OH-IT-NRC rows from all-resident state audit arrays, or numeric lines 10 through 15 from all-nonresident state audit arrays, leaving part-year arrays and every source commitment unchanged. Require projected predecessor JSON bytes to equal current JSON bytes before refreshing the literal full-output fingerprints."
     testRef: "tests/engine/state/oh-school-source-same-invocation.test.ts::preserves complete predecessor bytes for %s"
   - line: "error-order"
     description: "Every original school, residency, payment, overlay and stale-federal guard retains priority"

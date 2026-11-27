@@ -35,20 +35,21 @@ const cases: Array<{ name: string; input: () => TaxYearInput; tax: string }> = [
 ];
 // Compared with 5a8384ec. Only unanswered Schedule B Part III facts and their prior audit rows changed.
 // Six business cases were compared at 48723b483 and 5f5af1dee. Only the new zero REIT/PTP fields and corrected federal audit rows changed.
+// Compared at aa2d431bc and 182f240a7. Only the inapplicable numeric Ohio NRC audit rows changed.
 const baselineHashes: Readonly<Record<string, string>> = {
   "july100k": "744522685e207a7a80181643abc09c2f47c63990a08ff09567cba0ef9a1a52a1",
   "july400k": "30b7d2967909d38822964f28d54407db0a1ba0f97ed24aa688209bff8aebc2c5",
-  "nr100k": "b9fb2a9618d7e53bd90ba87002bed7a13be8f5e5c2f0376041224f2b6527ad09",
-  "nr400k": "d794a686f56b62d0de0931e39559e0a9d385d5d0cf89e1389bd993ad1534bf07",
-  "ordinary-full_year_resident": "6af458f9aa6bc70ca36e1985065fc3f670786543f798864f4e9497bc9d8cb1dc",
-  "ordinary-nonresident": "c6d1fec08cea72c0fbb4cc99479a2ac32df4309e58a3eba904d54c6d186601e6",
+  "nr100k": "6bd416db0afffa7fde5e70588e8f23681fabc5eb172c0351f1c2c3d3805a5a99",
+  "nr400k": "cd43c16751b39ca3ec1c8490b7cd86a2a5109ce35d745a1fc6bd1e56e3202d0e",
+  "ordinary-full_year_resident": "deaac42386ea754008c9638412d41f9d03eb37be96ccc2f95a03d3292fdd1a09",
+  "ordinary-nonresident": "91f4896e83949fcae9ae2833b85433bec8fc36e98ea87bbb8d21f8916b790124",
   "ordinary-part_year_resident": "8b49a2ecff73e096dd31364684c624fba2242c47a94ee9643f28a5d2b4f34867",
   "py100k": "08931fdad151ccc3c30fc99d5e61f5cd83ae4d330f2436db9a4dcdb4c7fd005b",
   "py400k": "711f4ed9510a14e11ec73e9e7b9003d30751d53e429620feb41f1dc79a87c6d3",
-  "reciprocal-known-zero": "6862ca5ca573a530464cbac2091d1f1dc40bc11a37a9603b83585a078c6a66e8",
-  "reciprocal-refund": "6c3cf5dd5f72187d2ef0607465cefb6f42a385056be3fad143291149b2816a17",
-  "resident-credit": "1fd4f25ed4c2c19fa924d434f1110cba2af463d981264c7ca1c9160fa3d56cef",
-  "school-full-year": "ff3685e83859f4ad9f27de0304caa240c510d13ff551c32ee3943dd14338cc23",
+  "reciprocal-known-zero": "009f54a1814638711d46115f547b92da0815b2a11967ecfd9585eb7a4dbeffe8",
+  "reciprocal-refund": "8ddc1db91baf4c5aa74775e585c30c94193f9c93e6df9c092e78172afa936324",
+  "resident-credit": "9806c8eebf47efb2f5f628f851bbb43aa9ff4bf6ab131c541cd27e938518c118",
+  "school-full-year": "2e60704c880b9a7c632558c586e02f526e6a59e4166229fb580b413a256af374",
   "school-part-year": "64d77ca3eecae11bb20059155bcb793bfa90866790a2c4a053897bc2bf243229"
 };
 function fingerprint(value: unknown): string { return createHash('sha256').update(JSON.stringify(value)).digest('hex'); }
