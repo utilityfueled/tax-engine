@@ -91,13 +91,21 @@ export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdin
   if (!amount(w.box10DependentCareBenefits).isZero()) fail('actual employer benefits require their source method');
   if (w.box12CodeQ !== undefined && !amount(w.box12CodeQ).isZero()) fail('actual combat pay requires its separate compensation method');
  }
+ if (bankInterest && income.residencyStatus === 'nonresident') {
+  fail('nonresident bank interest requires its separate actual source method');
+ }
+ const [domicile] = r.residency.domicilePeriods;
+ if (bankInterest && income.residencyStatus === 'resident'
+  && (r.residency.domicilePeriods.length !== 1 || domicile?.state !== 'PA' || cashDividend)) {
+  fail('full-year resident bank interest requires continuous Pennsylvania domicile and no additional investment source');
+ }
  if (bankInterest || cashDividend) {
   const retainedCompletion = input.paOrdinaryReturnCompletionSources;
-  if ((bankInterest && income.residencyStatus !== 'part_year') || p.paFilingChoice !== 'S' || actualCare || unemployment
+  if (p.paFilingChoice !== 'S' || actualCare || unemployment
     || sources.eitcChildInventory || retainedCompletion?.eitcChildInventory || retainedCompletion?.care?.status === 'actual_expenses'
     || sources.estimatedTaxReview2026 || retainedCompletion?.estimatedTaxReview2026 || p.facts.payments.rows.length) {
    fail(bankInterest
-    ? 'part-year bank interest requires the ordinary high-wage single method without another special source or payment method'
+    ? 'bank interest requires the ordinary high-wage single method without another special source or payment method'
     : 'cash dividends require the ordinary high-wage single method without another special source or payment method');
   }
  }
@@ -106,13 +114,13 @@ export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdin
   if (input.form1099Int.length !== 1 || r.interest.length !== 1 || !interestSource
     || bankInterest.taxYear !== 2026 || bankInterest.accountHolder !== 'primary'
     || !bankInterest.payer.trim() || !bankInterest.accountReference?.trim()) {
-   fail('part-year bank interest requires one actual 2026 Form 1099-INT for the primary owner and original account');
+   fail('bank interest requires one actual 2026 Form 1099-INT for the primary owner and original account');
   }
   const otherAmounts = [bankInterest.earlyWithdrawalPenalty, bankInterest.usSavingsBondInterest, bankInterest.federalWithheld,
    bankInterest.foreignTaxPaid, bankInterest.taxExemptInterest, bankInterest.privateActivityBondInterest, bankInterest.stateWithheld];
   if (!amount(bankInterest.interestIncome).gt(0) || bankInterest.foreignCountry?.trim() || bankInterest.privateActivityBondFacts
     || otherAmounts.some(value => value === undefined || !amount(value).isZero())) {
-   fail('part-year bank interest requires positive Box 1 and known-zero other amounts without specialized source facts');
+   fail('bank interest requires positive Box 1 and known-zero other amounts without specialized source facts');
   }
   const creditReferences = interestSource.credits.map(credit => credit.sourceReference.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase());
   if (new Set(creditReferences).size !== creditReferences.length) fail('conflicting dated bank credits reuse the same actual credit reference');

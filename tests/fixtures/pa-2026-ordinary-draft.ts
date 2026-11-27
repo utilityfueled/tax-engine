@@ -22,13 +22,13 @@ export function rebindPA2026Draft(f:ReturnType<typeof paOrdinaryReturnFixture>){
  f.sources.originalFederalSources=snapshotPAOrdinaryReturnOriginals(f.input);
 }
 
-export function pa2026PartYearBankInterestFixture(status: 'resident' | 'part_year' | 'nonresident' = 'part_year') {
+export function pa2026OrdinaryBankInterestFixture(status: 'resident' | 'part_year' | 'nonresident' = 'part_year') {
  const f = pa2026OrdinaryDraftFixture(status);
  const bank = paOrdinaryResidencyFixture('part_year', 2026);
  const original = { ...bank.input.form1099Int[0], taxYear: 2026 };
  f.input.form1099Int = [original];
  f.input.paResidencySources.interest = [{ ...bank.sources.interest[0], original: structuredClone(original) }];
- f.input.w2s[0].stateTaxWithheld = '1199';
+ f.input.w2s[0].stateTaxWithheld = status === 'resident' ? '2306' : status === 'part_year' ? '1199' : '276';
  rebindPA2026Draft(f);
  return f;
 }

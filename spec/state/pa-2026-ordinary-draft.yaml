@@ -232,7 +232,7 @@ lines:
       tax and withholding, and $75,120 in worldwide Schedule SP eligibility
       income. The same above-$70,244 wage floor still proves zero federal EITC
       without a federal return: ordinary positive interest cannot lower AGI.
-      Hold the full-year and nonresident cohorts, dependent-care, childless
+      Hold the nonresident cohort, dependent-care, childless
       EITC, estimated balance, government unemployment and prepayment methods
       when combined with this new source. Require complete ordinary completion
       facts. Preserve pending final 2026 PA form, mapping and filing gates.
@@ -245,6 +245,32 @@ lines:
     testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 part-year bank interest replays one complete original and its dated credits"
     testRefs:
       - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 part-year bank interest holds %s"
+  - line: "full-year-resident-personal-bank-interest"
+    description: "Transfer one actual 2026 bank-interest original to the full-year resident draft"
+    formula: |
+      Extend the dated personal bank-interest method to an otherwise supported
+      single high-wage owner with one continuous Pennsylvania domicile period.
+      Require the same current uncorrected primary-owner original, confirmed
+      account and known-zero other boxes, dated credit reconciliation, complete
+      annual sources and sufficient reported PA withholding. Require all credits
+      to be within the tax year and reject reused actual credit references.
+      Include every credit in state taxable interest and once in worldwide
+      Schedule SP eligibility income. Use the existing exact Schedule A
+      calculation for PA-40 line 2. With $75,000 in actual wages and two bank
+      credits totaling $120, line 2 is $120, total PA taxable income and Schedule
+      SP eligibility income are each $75,120, and $2,306 withholding covers the
+      $2,306 reported PA tax. Schedule A is not required for this $120 original.
+      The annual sole-interest method does not combine cash dividends or other
+      special source or payment methods. Continue to hold the separate
+      nonresident personal-interest source method and final 2026 filing gates.
+    sources:
+      - "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u303s"
+      - "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/interest"
+      - "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/tax-forgiveness"
+    testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 full-year resident bank interest transfers the complete current original"
+    testRefs:
+      - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 full-year resident bank interest holds %s"
+      - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 bank interest holds the nonresident source method and preserves the statutory exclusion"
   - line: "part-year-personal-cash-dividend"
     description: "Allocate one complete 2026 Box 1a cash-dividend original for a resident moving into Pennsylvania"
     formula: |
