@@ -2,6 +2,7 @@
 import Decimal from "decimal.js";
 import { Schedule1ASchema, type Schedule1AInput, type TaxYearInput } from "@/models/inputs.js";
 import type { QBIDeductionSource } from "./qbi-source-deductions.js";
+import type { Form8919NecSource } from "./form-8919-nec-sources.js";
 import type { calculateUnreportedTipPayroll } from "./unreported-tip-payroll.js";
 import type { ScheduleCResult } from "../schedules/schedule-c.js";
 import { calculateSchedule1A } from "../schedules/schedule-1-a.js";
@@ -20,6 +21,7 @@ interface Params {
   businessSources: QBIDeductionSource[];
   adjustedBusinessSources: QBIDeductionSource[];
   businessDeductionsVerified: boolean;
+  form8919NecSource?: Form8919NecSource;
 }
 const normalized = (value: string) => value.trim().replace(/\s+/g, " ").toLowerCase();
 function requiredAmount(value: string | undefined, label: string): Decimal {
@@ -154,14 +156,27 @@ export function calculateSchedule1AReturn(params: Params) {
     if (overtimeSources.has(id)) throw new Error("Duplicate overtime compensation source.");
     overtimeSources.add(id);
     let gross: Decimal, reported: string | undefined, reportedTips: string | undefined;
+    let form8919Wages = false;
     if (id.startsWith("formW2:")) {
       const source = input.w2s[sourceIndex(id, "formW2")]; sourceIdentity(source, row.owner, year);
       gross = requiredAmount(source.wages, "W2 wages").plus(requiredAmount(row.compensationExcludedFromWages, "payroll compensation exclusions"));
       reported = source.box12CodeTT; reportedTips = source.box12CodeTP;
     } else if (id.startsWith("form1099Nec:")) {
-      const source = input.form1099Nec[sourceIndex(id, "form1099Nec")]; sourceIdentity(source, row.owner, year);
+      const index = sourceIndex(id, "form1099Nec");
+      const source = input.form1099Nec[index]; sourceIdentity(source, row.owner, year);
       gross = requiredAmount(source.nonemployeeCompensation, "NEC gross compensation"); reported = source.qualifiedOvertimeCompensation; reportedTips = source.cashTips;
-      if (params.scheduleC.grossReceipts.lt(sum(...input.form1099Nec.map(form => d(form.nonemployeeCompensation))))) throw new Error("Actual overtime compensation is not reconciled to reported business receipts.");
+      const wageSource = params.form8919NecSource;
+      if (wageSource?.wageNecIndex === index) {
+        form8919Wages = true;
+        if (source.originalForForm8919?.statementReference !== wageSource.statementReference
+          || row.reportingSourceReference !== wageSource.statementReference
+          || !d(row.compensationExcludedFromWages).isZero()) {
+          throw new Error("Form 8919 overtime requires the same original Form 1099-NEC reference and no separate wage exclusions.");
+        }
+      } else if (params.scheduleC.grossReceipts.lt(sum(...input.form1099Nec
+        .filter((_, index) => index !== wageSource?.wageNecIndex).map(form => d(form.nonemployeeCompensation))))) {
+        throw new Error("Actual overtime compensation is not reconciled to reported business receipts.");
+      }
     } else if (id.startsWith("form1099Misc:")) {
       const source = input.form1099Misc[sourceIndex(id, "form1099Misc")]; sourceIdentity(source, row.owner, year);
       gross = requiredAmount(source.otherIncome, "MISC other income"); reported = source.qualifiedOvertimeCompensation; reportedTips = source.cashTips;
@@ -173,7 +188,10 @@ export function calculateSchedule1AReturn(params: Params) {
       if (reportedTips !== undefined && requiredAmount(reportedTips, "original cash tip reporting").plus(reportedPremium).gt(gross)) throw new Error("Distinct original tip and overtime reports exceed the same gross compensation source.");
       if (d(row.qualifiedPremium).gt(reportedPremium)) throw new Error("Qualified overtime premium exceeds actual year-specific reporting.");
     }
-    audit.record("Schedule1-A Source Worksheet", `overtime:${id}`, "Source-bound qualified overtime", row.requiredByFlsa ? d(row.qualifiedPremium) : d(0), "Actual FLSA premium already included in reported compensation");
+    audit.record("Schedule1-A Source Worksheet", `overtime:${id}`, "Source-bound qualified overtime", row.requiredByFlsa ? d(row.qualifiedPremium) : d(0),
+      form8919Wages
+        ? "Actual FLSA premium included in Form 8919 wages. Report on draft Schedule 1-A line 16."
+        : "Actual FLSA premium already included in reported compensation");
   }
   const businessClaims = new Set<string>(), businessReportSources = new Set<string>();
   const limitedBusiness: { sourceId: string; owner: Owner; amount: Decimal }[] = [];

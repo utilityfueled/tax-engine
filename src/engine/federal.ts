@@ -126,6 +126,7 @@ import type { MarketplaceHealthPremiumGroup } from "./forms/marketplace-health-p
 import { calculateMarketplaceHealthLimit, type MarketplaceHealthLimitResult } from "./forms/marketplace-health-limit.js";
 import { calculateUnreportedTipPayroll } from "./forms/unreported-tip-payroll.js";
 import { calculateForm8919 } from "./forms/form-8919.js";
+import { reconcileForm8919NecSources } from "./forms/form-8919-nec-sources.js";
 import { calculateSchedule3, calculateExcessSSWithholding } from "./schedules/schedule-3.js";
 import { calculateSchedule1 } from "./schedules/schedule-1.js";
 import { finalizeSchedule1 } from "./forms/schedule-1-return.js";
@@ -285,6 +286,13 @@ function calculateFederalTaxBeforeOhioSchoolScheduleA(input: TaxYearInput, conte
 
 /** Spec: claim-of-right.yaml. Pub525 compares each method's tax for the year of repayment. */
 function calculateFederalTaxReturn(input: TaxYearInput, context?: { asOfDate?: string }): TaxReturnResult {
+  const form8919ReceiptDate = input.form8919?.reasonANecSource?.determinationReceivedDate;
+  if (form8919ReceiptDate !== undefined && context?.asOfDate !== undefined) {
+    const { asOfDate } = context;
+    if (!isActualDate(asOfDate) || asOfDate > currentLocalCivilDate() || form8919ReceiptDate > asOfDate) {
+      throw new Error("Form 8919 requires the received IRS determination on or before the valid calculation as-of date.");
+    }
+  }
   if (input.form8911 !== undefined) {
     const today = currentLocalCivilDate();
     const asOfDate = context?.asOfDate ?? today;
@@ -629,12 +637,13 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace: (MarketplaceC
 function calculateFederalTaxCore(input: TaxYearInput, marketplace: undefined, hypothetical: ForeignTaxHypotheticalRequest): ForeignTaxHypotheticalContext;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext & { stage: "worksheet-w" | "maximum" | "ordered" }, hypothetical?: undefined, nol?: NolReturnContext & { stage: "final" }): MarketplaceInterim;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceContext & { stage: "final" | "full-repayment" | "actual-cash" | "actual-paid" }): TaxReturnResult;
-function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceContext, hypothetical?: ForeignTaxHypotheticalRequest, nol?: NolReturnContext): TaxReturnResult | MarketplaceInterim | ForeignTaxHypotheticalContext | NolIncomeContext | NolAlternativeIncomeContext {
-  validateForeignTaxDeductionScope(input);
+function calculateFederalTaxCore(sourceInput: TaxYearInput, marketplace?: MarketplaceContext, hypothetical?: ForeignTaxHypotheticalRequest, nol?: NolReturnContext): TaxReturnResult | MarketplaceInterim | ForeignTaxHypotheticalContext | NolIncomeContext | NolAlternativeIncomeContext {
+  validateForeignTaxDeductionScope(sourceInput);
   const ordered = marketplace?.ordered;
   const calculateOrdered = (kind: MarketplaceOrderedKind) => !ordered?.kinds.includes(kind) || ordered.calculating === kind || ordered[kind] !== undefined;
-  const year = input.taxpayer.taxYear;
+  const year = sourceInput.taxpayer.taxYear;
   const constants = getConstants(year);
+  const { businessInput: input, form8919NecSource } = reconcileForm8919NecSources(sourceInput, currentLocalCivilDate());
   if (year === 2026 && input.form3903 && input.form2555) {
     throw new Error("Form 3903 and Form 2555 require a separate allocation from the original foreign income and moving expense records.");
   }
@@ -749,7 +758,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // ── 1099-NEC aggregation (single pass) ──
   const necAgg = (() => {
     let federalWithheld = new Decimal(0);
-    for (const f of input.form1099Nec) {
+    for (const f of sourceInput.form1099Nec) {
       federalWithheld = federalWithheld.plus(d(f.federalWithheld));
     }
     return { federalWithheld };
@@ -3104,7 +3113,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   audit.merge(qbiSourceDeductions.lines);
   if (foreignQbiProfit.get("scheduleC")?.gt(0) && input.schedule1A?.businessTips?.length) throw new Error("Schedule 1-A business tips with foreign Schedule C profit need a separate method");
   const schedule1AReturn = input.schedule1A ? calculateSchedule1AReturn({
-    input, agi, foreignExcludedIncome: form2555IncomeReduction.plus(form2555HousingDeduction), tipPayroll, scheduleC: schedC,
+    input: sourceInput, form8919NecSource, agi, foreignExcludedIncome: form2555IncomeReduction.plus(form2555HousingDeduction), tipPayroll, scheduleC: schedC,
     businessSources: deductionSources, adjustedBusinessSources: qbiSourceDeductions.sources,
     businessDeductionsVerified: qbiSourceDeductions.sourceFactsVerified,
   }) : undefined;

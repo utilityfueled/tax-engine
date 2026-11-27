@@ -672,6 +672,12 @@ export const Form1099NecSchema = z.object({
   payer: z.string(),
   payerTin: z.string().optional(), // Payer's TIN (used for IL Schedule IL-WIT Column B auto-attachment)
   accountHolder: z.enum(["primary", "spouse"]).optional(), // Local owner tag for taxpayer vs spouse attribution on shared returns
+  originalForForm8919: z.object({
+    statementReference: z.string().trim().min(1),
+    recipientTin: z.string().trim().min(1),
+    currentOriginalNoCorrectionsOrVoidsConfirmed: z.boolean(),
+    noDirectSalesOrParachutePaymentConfirmed: z.boolean(),
+  }).strict().optional(),
   nonemployeeCompensation: decimal, // Box 1
   cashTips: reportedTipOrOvertimeAmount.optional(), // 2026 Box1b, included in Box1a compensation.
   qualifiedOvertimeCompensation: reportedTipOrOvertimeAmount.optional(), // 2026 Box1d, included in Box1a compensation.
@@ -3447,6 +3453,20 @@ export const Form8919Schema = z.object({
   wagesNotReportedOnW2: decimal,
   socialSecurityWagesAndTipsAlreadyReported: decimal.optional(),
   rrtaCompensationSubjectToSocialSecurityTax: decimal.optional(),
+  reasonANecSource: z.object({
+    necSourceId: z.string().trim().regex(/^form1099Nec:(0|[1-9][0-9]*)$/),
+    sourceTaxYear: z.literal(2026),
+    statementReference: z.string().trim().min(1),
+    employerEin: z.string().trim().min(1),
+    employerName: z.string().trim().min(1),
+    determinationReference: z.string().trim().min(1),
+    determinationDate: z.iso.date(),
+    determinationReceivedDate: z.iso.date(),
+    employeeDeterminationConfirmed: z.boolean(),
+    allCompensationEmployeeWagesConfirmed: z.boolean(),
+    noEmployeeFicaWithheldConfirmed: z.boolean(),
+    receivedInsteadOfW2Confirmed: z.boolean(),
+  }).strict().optional(),
 });
 
 /** A depreciable asset for per-asset MACRS depreciation computation. */
