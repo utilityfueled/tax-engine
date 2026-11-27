@@ -71,6 +71,23 @@ lines:
     description: "Local run persistence fails closed"
     formula: "Exclusive process lock and synced append-only hash chain; reject modified/torn history and concurrent execution."
     testRef: "tests/engine/provider-eval-journal.test.ts::rejects concurrent and damaged journals without discarding paid attempts"
+  - line: "dispatch-plan-window"
+    description: "Journaled dispatches belong to the exact plan window"
+    formula: >-
+      A plan must expire strictly after creation and at most seven days later.
+      A dispatch may start at plan creation or later and must start strictly
+      before expiry, comparing exact instants without truncating fractional
+      seconds. Check the same window before issuing a request and when reading
+      a journal, including a historical request contract. Compare approval
+      validity at the same precision before dispatch. Keep the existing UTC
+      format for plan and dispatch timestamps. An in-window attempt can still
+      complete or be reconciled after plan expiry under existing settlement rules.
+    testRef: "tests/engine/provider-eval-runner.test.ts::rejects durable dispatch outside the exact plan window"
+    testRefs:
+      - "tests/engine/provider-eval-runner.test.ts::requires a strictly positive exact plan duration"
+      - "tests/engine/provider-eval-runner.test.ts::caps the exact plan duration at seven days"
+      - "tests/engine/provider-eval-runner.test.ts::blocks a dispatch before exact plan creation after recording its run identity"
+      - "tests/engine/provider-eval-runner.test.ts::retains reconciliation after plan expiry for an in-window dispatch"
   - line: "settled-resume"
     description: "Failed outputs retain known charges and completed repeats are not replayed"
     formula: "Each profile/case has exactly three separate attempts; a resume skips every durable dispatch, including failed outputs, and sums all known charges."

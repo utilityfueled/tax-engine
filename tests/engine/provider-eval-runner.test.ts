@@ -9,10 +9,10 @@ import { providerModelCandidates, scoreProviderEvalEntry, summarizeProviderModel
 import { AI_TASKS } from "../../packages/engine/src/ai-task-registry";
 import { PROVIDER_EVAL_CONTRACT } from "../../scripts/lib/provider-eval-contract";
 const at = "2026-10-25T12:00:00.000Z";
-function setup(maximumProviderUsd = "1", start = at) {
+function setup(maximumProviderUsd = "1", start = at, expiresAt = "2026-10-25T13:00:00.000Z") {
   const plan = createProviderEvalPlan({ runId: "test-run", purpose: "smoke", profileIds: ["luna-high"],
     fixtureIds: ["case-income-w2-zero-withholding"], maximumProviderUsd, maximumRequests: 4,
-    createdAt: start, expiresAt: "2026-10-25T13:00:00.000Z" });
+    createdAt: start, expiresAt });
   const approval = { version: 1, planDigest: providerEvalDigest(plan), authorizedBy: "synthetic-test-owner",
     authorizationReference: "test-only-not-live-authority", approvedAt: start, expiresAt: plan.expiresAt,
     maximumProviderUsd, maximumRequests: 4, accountReference: "test-account", syntheticOnly: true };
@@ -105,6 +105,65 @@ describe("guarded repeated provider executor", () => {
     const mislabelled = state.records.map(record => record.type === "dispatch"
       ? { ...record, clientRequestId: "e341945d-1b77-4315-9720-a6761ebd0b11" } : record);
     expect(() => validateProviderEvalJournal(plan, mislabelled)).toThrow(/trace/i);
+  });
+  it("requires a strictly positive exact plan duration", () => {
+    const creation = "2026-10-25T12:00:00.000001Z";
+    const expiry = "2026-10-25T12:00:00.0000011Z";
+    const { plan } = setup("1", creation, expiry);
+    expect(plan.expiresAt).toBe(expiry);
+    expect(() => validatePlan({ ...plan, expiresAt: "2026-10-25T12:00:00.0000010Z" })).toThrow(/within seven days/i);
+    expect(() => validatePlan({ ...plan, expiresAt: "2026-10-25T12:00:00.0000009Z" })).toThrow(/within seven days/i);
+  });
+  it("caps the exact plan duration at seven days", () => {
+    const creation = "2026-10-25T12:00:00.000001Z";
+    const expiry = "2026-11-01T12:00:00.0000010Z";
+    const { plan } = setup("1", creation, expiry);
+    expect(plan.expiresAt).toBe(expiry);
+    expect(() => validatePlan({ ...plan, expiresAt: "2026-11-01T12:00:00.0000011Z" })).toThrow(/within seven days/i);
+  });
+  it("rejects durable dispatch outside the exact plan window", async () => {
+    const creation = "2026-10-25T12:00:00.000001Z";
+    const expiry = "2026-10-25T13:00:00.000002Z";
+    const beforeExpiry = "2026-10-25T13:00:00.0000019Z";
+    const state = setup("1", creation, expiry);
+    let now = creation;
+    const transport = vi.fn(async () => {
+      if (transport.mock.calls.length === 3) now = beforeExpiry;
+      if (transport.mock.calls.length === 4) now = "2026-10-25T13:00:01.000Z";
+      return good;
+    });
+    const result = await executeProviderEval({ ...state, now: () => now, transport });
+    expect(result).toMatchObject({ stoppedReason: "completed", knownProviderCostUsd: "0.00024", productionPromotion: false });
+    expect(now).toBe("2026-10-25T13:00:01.000Z");
+    expect(state.records.at(-2)).toMatchObject({ type: "dispatch", startedAt: beforeExpiry });
+    expect(state.records.at(-1)).toMatchObject({ type: "result", status: "completed" });
+    expect(state.records[1]).toMatchObject({ type: "dispatch", startedAt: creation });
+    validateProviderEvalJournal(state.plan, state.records);
+
+    // Isolate the completed capability probe from the later case attempts.
+    const capabilityJournalAt = (startedAt: string) => state.records.slice(0, 3)
+      .map(record => record.type === "dispatch" ? { ...record, startedAt } : record);
+    for (const startedAt of [creation, "2026-10-25T12:00:00.0000010Z", beforeExpiry]) {
+      const records = capabilityJournalAt(startedAt);
+      validateProviderEvalJournal(state.plan, records);
+      expect(summarizeProviderEvalJournal(state.plan, records).template.availability).toMatchObject([{ status: "available", checkedAt: startedAt }]);
+    }
+    for (const startedAt of ["2026-10-25T12:00:00.0000009Z", expiry, "2026-10-25T13:00:00.0000021Z"]) {
+      const records = capabilityJournalAt(startedAt);
+      expect(() => validateProviderEvalJournal(state.plan, records)).toThrow(/dispatch timestamp is outside the plan window/i);
+      expect(() => summarizeProviderEvalJournal(state.plan, records)).toThrow(/dispatch timestamp is outside the plan window/i);
+    }
+    expect(() => validateProviderEvalJournal(state.plan, capabilityJournalAt("2026-10-25T08:00:00.000001-04:00")))
+      .toThrow(/Invalid ISO datetime/);
+  });
+  it("blocks a dispatch before exact plan creation after recording its run identity", async () => {
+    const creation = "2026-10-25T12:00:00.000001Z";
+    const state = setup("1", creation);
+    const now = vi.fn(() => "2026-10-25T12:00:00.0000009Z").mockReturnValueOnce(creation);
+    const transport = vi.fn().mockResolvedValue(good);
+    await expect(executeProviderEval({ ...state, now, transport })).rejects.toThrow(/approval/i);
+    expect(transport).not.toHaveBeenCalled();
+    expect(state.records.map(record => record.type)).toEqual(["start"]);
   });
   it("keeps expected answers private and derives actual application observations", async () => {
     const state = setup(); const requests: unknown[] = [];
@@ -245,6 +304,16 @@ describe("guarded repeated provider executor", () => {
       stoppedReason: "completed", knownProviderCostUsd: "0.00024", unknownMaximumUsd: "0",
     });
     expect(transport).toHaveBeenCalledTimes(4);
+  });
+  it("retains reconciliation after plan expiry for an in-window dispatch", async () => {
+    const { state, evidence } = await priorVerifiedReceiptAndNextHold();
+    const at = "2026-10-25T09:00:00.000001-04:00";
+    const receipt = reconcileProviderEvalAttempt(state.plan, state.records, { ...evidence(2, "synthetic-post-expiry-receipt"), at });
+    await state.append(receipt);
+    validateProviderEvalJournal(state.plan, state.records);
+    expect(summarizeProviderEvalJournal(state.plan, state.records)).toMatchObject({
+      knownProviderCostUsd: "0.00018", unknownMaximumUsd: "0", bindingBlockers: [], productionPromotion: false,
+    });
   });
   it("keeps a historical early receipt readable and holds further dispatch", async () => {
     const state = setup("1", "2026-10-25T12:00:00.000001Z");

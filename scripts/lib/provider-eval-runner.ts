@@ -120,8 +120,14 @@ export function validatePlan(value: unknown): ProviderEvalPlan {
   if (plan.purpose !== "capability" && !plan.fixtureIds.length) throw new Error("Case execution requires named cases.");
   if (plan.purpose === "capability" && plan.fixtureIds.length) throw new Error("Capability plans cannot contain cases.");
   if (plan.corpusDigest !== providerEvalCorpusDigest() || plan.bindingDigest !== providerEvalDigest(providerEvalBindingManifest) || plan.pricingDigest !== providerEvalDigest(AI_PRICES)) throw new Error("Evaluation plan is stale; corpus, bindings or prices changed.");
-  if (Date.parse(plan.expiresAt) <= Date.parse(plan.createdAt) || Date.parse(plan.expiresAt) - Date.parse(plan.createdAt) > 7 * 86400000) throw new Error("Evaluation plan must expire within seven days.");
+  if (timestampAtOrBefore(plan.expiresAt, plan.createdAt)
+    || !timestampAtOrBefore(plan.expiresAt, plan.createdAt, 7 * 86400000)) {
+    throw new Error("Evaluation plan must expire within seven days.");
+  }
   return plan;
+}
+function withinPlanWindow(plan: ProviderEvalPlan, at: string): boolean {
+  return timestampAtOrBefore(plan.createdAt, at) && !timestampAtOrBefore(plan.expiresAt, at);
 }
 function approved(plan: ProviderEvalPlan, value: unknown, at: string): ProviderEvalApproval {
   if (!instant.safeParse(at).success) throw new Error("Approval check requires a valid current timestamp.");
@@ -129,9 +135,9 @@ function approved(plan: ProviderEvalPlan, value: unknown, at: string): ProviderE
   if (!parsed.success) throw new Error("Explicit, complete live-service approval is required.");
   const approval = parsed.data;
   if (approval.planDigest !== providerEvalDigest(plan) || new Money(approval.maximumProviderUsd).gt(plan.maximumProviderUsd)
-    || approval.maximumRequests > plan.maximumRequests || Date.parse(approval.approvedAt) > Date.parse(at)
-    || Date.parse(plan.createdAt) > Date.parse(at) || Date.parse(approval.expiresAt) <= Date.parse(at)
-    || Date.parse(plan.expiresAt) <= Date.parse(at) || Date.parse(approval.expiresAt) > Date.parse(plan.expiresAt)) {
+    || approval.maximumRequests > plan.maximumRequests || !timestampAtOrBefore(approval.approvedAt, at)
+    || !withinPlanWindow(plan, at) || timestampAtOrBefore(approval.expiresAt, at)
+    || !timestampAtOrBefore(approval.expiresAt, plan.expiresAt)) {
     throw new Error("Approval does not match the current plan, time or spend limits.");
   }
   return approval;
@@ -177,6 +183,7 @@ export function summarizeProviderEvalJournal(plan: ProviderEvalPlan, records: re
   let known = new Money(0); let held = new Money(0); let legacyUnverified = new Money(0); let overrun = false;
   const bindingBlockers = new Set<string>();
   for (const dispatch of dispatches) {
+    if (!withinPlanWindow(plan, dispatch.startedAt)) throw new Error("Journal dispatch timestamp is outside the plan window.");
     const results = records.filter((item): item is Extract<EvalJournalRecord, { type: "result" }> => item.type === "result" && item.attemptId === dispatch.attemptId);
     const reconciliations = records.filter((item): item is Extract<EvalJournalRecord, { type: "reconcile" }> => item.type === "reconcile" && item.attemptId === dispatch.attemptId);
     const [result] = results;
