@@ -1,7 +1,7 @@
 form: "AI-Provider-Refresh"
 fullName: "Dated public provider sources and retired-model execution boundaries"
 taxYear: 2026
-reference: "https://developers.openai.com/api/docs/pricing; https://developers.openai.com/api/docs/deprecations; https://ai.google.dev/gemini-api/docs/pricing; https://ai.google.dev/gemini-api/docs/deprecations; https://aistudio.google.com/api-reference/generate-content; https://generativelanguage.googleapis.com/$discovery/rest?version=v1beta"
+reference: "https://developers.openai.com/api/docs/pricing; https://developers.openai.com/api/docs/deprecations; https://ai.google.dev/gemini-api/docs/pricing; https://ai.google.dev/gemini-api/docs/deprecations; https://aistudio.google.com/api-reference/generate-content; https://generativelanguage.googleapis.com/$discovery/rest?version=v1beta; https://protobuf.dev/programming-guides/json/#presence-and-default-values"
 notes: |
   Public model documentation is not evidence of actual account access, retention
   settings, quality or availability. Preserve the requested baseline even when
@@ -90,11 +90,11 @@ lines:
     testRef: "tests/apps/web/ai-task-adapter.test.ts::reconciles reported Gemini tier and totals before settling usage"
   - line: "gemini-prompt-block-usage"
     description: "Settle known usage on a documented Gemini prompt rejection"
-    formula: "Allow absent or empty candidates with a recognized promptFeedback.blockReason and complete supported usage in the same response. Require an explicit zero candidate token count and settle as rejected. An absent or unspecified block reason, an unknown reason, a contradictory candidate or incomplete usage still requires reconciliation."
+    formula: "Allow absent or empty candidates with a recognized promptFeedback.blockReason and complete supported usage in the same response. Settle as rejected when the candidate token count is explicitly zero or omitted with a reported total equal to prompt tokens plus any reported thought tokens. An absent or unspecified block reason, an unknown reason, a contradictory candidate or incomplete usage still requires reconciliation."
     testRef: "tests/apps/web/ai-task-adapter.test.ts::settles reported usage on a documented Gemini prompt block"
   - line: "gemini-evaluation-usage"
     description: "Apply the same Gemini billing checks in provider evaluations"
-    formula: "Retain known rejected token usage for a documented prompt block. Treat unsupported or contradictory pricing metadata as unknown and never produce a successful evaluation response from that usage."
+    formula: "Retain known rejected token usage for a documented prompt block, including a candidate counter omitted with a reported total that establishes zero candidate tokens. Treat unsupported or contradictory pricing metadata as unknown and never produce a successful evaluation response from that usage."
     testRef: "tests/engine/provider-eval-transport.test.ts::applies Gemini billing checks to blocked evaluation responses"
   - line: "cancel-before-dispatch"
     description: "Distinguish cancellation during reservation from ambiguous provider usage"

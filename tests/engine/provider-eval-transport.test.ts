@@ -150,9 +150,17 @@ describe("official evaluation transport", () => {
         status: "incomplete", usage: { inputTokens: 100, outputTokens: 0, cachedInputTokens: 10 }, payload: null,
       });
     }
+    const usageWithThoughts = { ...usageMetadata, candidatesTokenCount: undefined, thoughtsTokenCount: 3, totalTokenCount: 103 };
+    await expect.soft(evaluate({ ...blocked, usageMetadata: usageWithThoughts })).resolves.toMatchObject({
+      status: "incomplete", usage: { inputTokens: 100, outputTokens: 3, cachedInputTokens: 10 }, payload: null,
+    });
+    await expect.soft(evaluate({ ...blocked, promptFeedback: undefined, candidates: [{ finishReason: "STOP", content: { parts: [{ text: '{}' }] } }],
+      usageMetadata: usageWithThoughts,
+    })).resolves.toMatchObject({ status: "failed", usage: null, payload: null });
     const invalidUsage = [
       { serviceTier: "priority" }, { toolUsePromptTokenCount: 5, totalTokenCount: 105 },
       { totalTokenCount: 99 }, { candidatesTokenCount: 1, totalTokenCount: 101 },
+      { candidatesTokenCount: undefined, thoughtsTokenCount: 3, totalTokenCount: 102 },
     ];
     for (const details of invalidUsage) {
       await expect.soft(evaluate({ ...blocked, candidates: [], usageMetadata: { ...usageMetadata, ...details } }), JSON.stringify(details))

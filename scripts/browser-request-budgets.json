@@ -712,7 +712,7 @@
     "packages/engine/src/ai-application-bindings.ts": "ed80d29263ce5fa1fa429a9a9947d1a50ab32d2fffc44273d72a716cd60ee151",
     "packages/engine/src/ai-application-schemas.ts": "d43a855b1be6e4b23ef59eba817d2ac0ec3f991af97bbca474b128b09f380d9d",
     "packages/engine/src/ai-document-classification-catalog.ts": "081764b14cdfea1726f8109db82682bd37d8b9e45fd33f9802b730e59218d535",
-    "packages/engine/src/ai-gemini-text-response.ts": "d7752035b44ee2b74f91fd0a108f7fa1f863af5648cb57bbbcd178fcfbb68597",
+    "packages/engine/src/ai-gemini-text-response.ts": "87d52c5c1b5c04412d4b091691b3dc25feb6b32244bd1dc6a84c85890ef02035",
     "packages/engine/src/ai-income-source-box-grounding.ts": "dd4d1959b28e54958e615cb9dbb4c84f2a0f03c3d585d038005af7c3560896c2",
     "packages/engine/src/ai-pricing.ts": "264bb3f01d74a2ed4b42f6d4b8d4d10944adb8959e5c18fd0696a71f3a7da3ee",
     "packages/engine/src/ai-provider-documentation.ts": "5df69130fca5a152ba4a5f1b66fd98e203c1d133a8b34163c00ca20761132d1f",

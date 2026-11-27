@@ -162,12 +162,14 @@ describe("task-based candidate AI adapter", () => {
   });
   it("settles reported usage on a documented Gemini prompt block", async () => {
     const promptFeedback = { blockReason: "SAFETY" };
-    const usageMetadata = { promptTokenCount: 1000, cachedContentTokenCount: 200, candidatesTokenCount: 0, totalTokenCount: 1000 };
-    for (const candidates of [undefined, []]) {
+    const usageMetadata = { promptTokenCount: 1000, cachedContentTokenCount: 200, totalTokenCount: 1000 };
+    for (const candidatesTokenCount of [0, undefined]) {
       const deps = execution();
       const recordAttempt = vi.fn();
       const recordUnknownAttempt = vi.fn();
-      deps.fetchFn.mockResolvedValueOnce(Response.json({ modelVersion: "gemini-3.8-flash", candidates, promptFeedback, usageMetadata }));
+      deps.fetchFn.mockResolvedValueOnce(Response.json({ modelVersion: "gemini-3.8-flash", promptFeedback,
+        candidates: candidatesTokenCount === undefined ? [] : undefined, usageMetadata: { ...usageMetadata, candidatesTokenCount },
+      }));
       const result = await executeAiTask(request(), { ...deps, provider: "google", now: () => "2026-11-19T12:00:00Z",
         recordAttempt, recordUnknownAttempt });
       expect(result).toMatchObject({ accepted: false, value: null,
@@ -184,13 +186,16 @@ describe("task-based candidate AI adapter", () => {
       { promptFeedback: { blockReason: "UNDOCUMENTED" } },
       { promptFeedback, candidates: [{ finishReason: "STOP", content: { parts: [{ text: '{"summary":"ok"}' }] } }] },
       { promptFeedback, usageMetadata: { promptTokenCount: 1000 } },
+      { promptFeedback, usageMetadata: { ...usageMetadata, totalTokenCount: 1001 } },
       { promptFeedback, usageMetadata: { ...usageMetadata, candidatesTokenCount: 1, totalTokenCount: 1001 } },
     ];
     for (const supplied of invalidBlocks) {
       const deps = execution();
       const recordAttempt = vi.fn();
       const recordUnknownAttempt = vi.fn();
-      deps.fetchFn.mockResolvedValueOnce(Response.json({ modelVersion: "gemini-3.8-flash", usageMetadata, ...supplied }));
+      deps.fetchFn.mockResolvedValueOnce(Response.json({ modelVersion: "gemini-3.8-flash",
+        usageMetadata: { ...usageMetadata, candidatesTokenCount: 0 }, ...supplied,
+      }));
       await expect(executeAiTask(request(), { ...deps, provider: "google", recordAttempt, recordUnknownAttempt }))
         .rejects.toThrow(/usage requires reconciliation/);
       expect(recordUnknownAttempt).toHaveBeenCalledOnce();

@@ -13,7 +13,7 @@ export const geminiTextResponseSchema = z.object({
   promptFeedback: z.object({ blockReason: promptBlockReason.optional() }).optional(),
   usageMetadata: z.object({
     promptTokenCount: tokenCount,
-    candidatesTokenCount: tokenCount,
+    candidatesTokenCount: tokenCount.optional(),
     cachedContentTokenCount: tokenCount.optional(),
     thoughtsTokenCount: tokenCount.optional(),
     totalTokenCount: tokenCount.optional(),
@@ -30,9 +30,13 @@ export function readGeminiTextResponse(response: z.infer<typeof geminiTextRespon
   if ((candidate && promptBlocked) || (!candidate && !promptBlocked)) throw new Error("Gemini returned inconsistent candidate feedback.");
 
   const { promptTokenCount, candidatesTokenCount, cachedContentTokenCount = 0, thoughtsTokenCount = 0, totalTokenCount } = response.usageMetadata;
-  if (promptBlocked && candidatesTokenCount !== 0) throw new Error("Gemini reported candidate tokens for a blocked prompt.");
+  if (candidatesTokenCount === undefined && (!promptBlocked || totalTokenCount === undefined)) {
+    throw new Error("Gemini did not report a candidate token count or a total for a blocked prompt.");
+  }
+  const candidateTokens = candidatesTokenCount ?? 0;
+  if (promptBlocked && candidateTokens !== 0) throw new Error("Gemini reported candidate tokens for a blocked prompt.");
 
-  const outputTokens = BigInt(candidatesTokenCount) + BigInt(thoughtsTokenCount);
+  const outputTokens = BigInt(candidateTokens) + BigInt(thoughtsTokenCount);
   if (outputTokens > BigInt(Number.MAX_SAFE_INTEGER) || cachedContentTokenCount > promptTokenCount) {
     throw new Error("Gemini returned invalid token counts.");
   }
