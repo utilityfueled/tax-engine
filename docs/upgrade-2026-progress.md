@@ -8,12 +8,67 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `1c75284e4` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `bc9ab6a12` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels, selected Google project access and comparable provider evidence. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
+
+## November 27 Exact payment and retirement verification
+
+The isolated `bc9ab6a12` archive passed all 11 local checks with Node
+26.13.1, pypdf 6.10.0, a frozen offline installation and 15 verified
+official sample hashes. Unit and coverage each passed 31,208 tests
+with 81 existing skips. Branch coverage reached 88.65% against the
+unchanged 85% gate. The production build passed. Chromium passed
+654 journeys across nine windows with five existing skips and closed
+its listener. Against the built standalone server, recovery restored
+original bytes and private facts from the encrypted backup after deletion.
+The standalone listener also closed. The local manifest SHA-256 is
+`45f26d84742656c8e6c57a0367ff71fa64769e68ffb126c4a59000af1fb3dfe9`.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/46003262297) ·
+[AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/46003262144) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/46003262296) ·
+[ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/46005900143).
+
+## November 27 Actual federal estimated and extension payment dates
+
+`bc9ab6a12` requires a 2026 federal estimated or extension payment to be
+dated on or before the calculation's observation date. The normal engine
+holds future rows, including explicit zero, for correction. Actual same-day
+and following-year receipts applied to 2026 remain eligible on their paid
+date. Historical calculations and payment planners retain their existing
+behavior. The regression reproduced a future credit through the normal
+federal entry. The corrected run passed 74 focused and adjacent tests,
+59 Form 1040 spec references, inventory, typecheck, scoped lint and the
+browser source audit.
+[IRS Direct Pay](https://www.irs.gov/payments/direct-pay-help) ·
+[Form 1040 instructions](https://www.irs.gov/instructions/i1040gi) ·
+[Publication 505](https://www.irs.gov/publications/p505).
+
+The Docker build for earlier revision `0d3b374ca` completed successfully.
+That job provides build evidence for its exact source. The strict Linux
+browser and runtime image qualification gates remain open.
+[Earlier Docker build](https://github.com/utilityfueled/tax-engine/actions/runs/45987981858).
+
+The earlier ARM64 run entered strict Chromium. Its current-source successor
+`46005900143` was then queued on `bc9ab6a12` and verified against the exact
+commit. The earlier run kept its active slot.
+[Earlier ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45982831811) ·
+[Current ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/46005900143).
+
+## November 27 Guided Form 1099-R disability annuity codes
+
+`b012dbf74` admits both printed orders of the 2026 Code 3 and Code D pair
+when the confirmed statement meets the existing nonqualified distribution
+rules. Adding the pair keeps the standalone Code 3 evidence requirements
+and account-type checks in effect. Both orders failed before the fix.
+Reopened drafts preserve the printed order and pass the exact Box 2a and
+withholding amounts to the engine. The 136 focused tests, 75 spec
+references, inventory, web typecheck, scoped lint and browser source audit
+passed.
+[IRS 2026 Form 1099-R instructions, Table 1](https://www.irs.gov/instructions/i1099r).
 
 ## November 27 Exact combined application verification
 
