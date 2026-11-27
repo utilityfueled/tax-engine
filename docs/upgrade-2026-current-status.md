@@ -14,6 +14,11 @@ Use the linked progress sections when investigating individual packages.
   The ordinary draft audit uses numbered source labels. All 426
   combined focused tests passed. [QBI transfer evidence](upgrade-2026-progress.md#november-26-upper-qbi-audit-transfers).
 
+- Exact `d92d17742` passed all 11 required local commands. Unit and
+  coverage each passed 31,075 tests with 81 existing skips and 88.60%
+  branch coverage. Managed Chromium passed 654 cases with five
+  original skips and clean shutdown. [Exact local evidence](upgrade-2026-progress.md#november-26-upper-qbi-audit-transfers).
+
 - `dba45278c` combines verified bank interest and ordinary cash
   dividends in the inbound Pennsylvania part-year draft. The source
   checks, state tax and Schedule SP tests passed. Final 2026 filing

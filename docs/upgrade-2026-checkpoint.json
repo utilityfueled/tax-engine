@@ -2,9 +2,9 @@
   "resume": {
     "asOf": "2026-11-26",
     "branch": "main",
-    "applicationCommit": "32a455f41cd8c7a7c8e31ded00b3ad7591cb94d0",
+    "applicationCommit": "d92d17742fcd37d6304127bc258d4cac6c6fa019",
     "latestScopedApplicationCommit": "d92d17742fcd37d6304127bc258d4cac6c6fa019",
-    "latestCombinedCandidateCommit": "32a455f41cd8c7a7c8e31ded00b3ad7591cb94d0",
+    "latestCombinedCandidateCommit": "d92d17742fcd37d6304127bc258d4cac6c6fa019",
     "annualDeductionLinesEvidenceKey": "activeContinuation.nov26AnnualDeductionLines",
     "draftQbiFormsEvidenceKey": "activeContinuation.nov26DraftQbiForms",
     "upperQbiAuditEvidenceKey": "activeContinuation.nov26UpperQbiAudit",
@@ -21,7 +21,7 @@
     "pinnedSelfHostSchemaEvidenceKey": "activeContinuation.nov26PinnedSelfHostSchema",
     "ohioOrdinaryCashDividendEvidenceKey": "activeContinuation.nov26OhioCashDividend",
     "pennsylvaniaAnnualCashDividendEvidenceKey": "activeContinuation.nov26PaAnnualCashDividend",
-    "latestExactLocalVerificationEvidenceKey": "activeContinuation.nov26DraftQbiForms.exactLocalEvidence",
+    "latestExactLocalVerificationEvidenceKey": "activeContinuation.nov26UpperQbiAudit.exactLocalEvidence",
     "paPartYearDividendEvidenceKey": "activeContinuation.nov26PAPartYearCashDividend",
     "currentCombinedAndArmEvidenceKey": "activeContinuation.nov26CombinedEvAiAndArm64",
     "evChargerEvidenceKey": "activeContinuation.nov26PersonalEvCharger",
@@ -164,7 +164,25 @@
       "reviewWorksheet": "docs/upgrade-2026-human-tax-review-packet.md#november-26-upper-qbi-form-transfers",
       "amountsAndArchivedBehaviorPreserved": true,
       "amd64WebRun": 45927516117,
-      "finalFormQualification": "open"
+      "finalFormQualification": "open",
+      "exactLocalEvidence": {
+        "exactRequiredCommandsPassed": 11,
+        "unitAndCoveragePassesEach": 31075,
+        "unitAndCoverageExistingSkipsEach": 81,
+        "branchCoveragePercent": "88.60",
+        "branchCoverageThresholdPercent": "85",
+        "specReferencesResolved": 10192,
+        "offlineAiArtifactCheckPassed": true,
+        "officialSampleDocuments": 15,
+        "managedChromiumPassed": 654,
+        "managedChromiumExistingSkips": 5,
+        "managedChromiumFailures": 0,
+        "managedChromiumWindows": 9,
+        "managedChromiumCleanShutdown": true,
+        "archiveSha256": "11c466e9681052cf8f78d0d35c70fb2e4af0e7665ff6d6fc132ac1fcbfd0e488",
+        "manifestSha256": "482de5b1168c32adc83e999597a48b7be3e18adb1b7fb748d5c470ad3e37ede6",
+        "managedChromiumSourceBuildSha256": "3a294583fd584b6120f6e6fa40581b3548577aeaa24b72b7510a2d1e38f3bdcb"
+      }
     },
     "nov26PACombinedOrdinaryInvestment": {
       "commit": "dba45278c615a38bc0134bbbe3db42599db38142",

@@ -32,6 +32,20 @@ targeted tests passed. Exact inventory and browser input bindings
 were verified. The Pennsylvania package also passed 3,116 tests
 across 176 files.
 
+The exact combined revision `d92d17742` passed all 11 local
+commands and the offline AI artifact check. Unit and coverage
+each passed 31,075 with 81 existing skips and 88.60% branch
+coverage against the 85% gate. All 10,192 spec references
+resolved. Managed Chromium passed 654 in nine windows, with
+five original skips and clean shutdown. Verification used Node
+26.13.1, GNU Coreutils, Python/pypdf 6.10.0, 15 hash-verified
+IRS sample documents and locally managed Chromium. The manifest
+SHA-256 is
+`482de5b1168c32adc83e999597a48b7be3e18adb1b7fb748d5c470ad3e37ede6`.
+Strict Linux evidence and final form qualification remain open.
+[Exact AMD64 CI](https://github.com/utilityfueled/tax-engine/actions/runs/45927516117) ·
+[Prior-source ARM64 diagnostic](https://github.com/utilityfueled/tax-engine/actions/runs/45919423965).
+
 ## November 26 combined Pennsylvania investment sources
 
 `dba45278c` supports one complete original Form 1099-INT and one
