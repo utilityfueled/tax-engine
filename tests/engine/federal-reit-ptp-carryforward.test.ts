@@ -88,15 +88,16 @@ describe("Federal separate REIT and PTP loss carryforward", () => {
     const line = (result: typeof exact, id: string) =>
       result.allLines.find(row => row.form === "1040" && row.line === id)?.value.toFixed();
     expect(exact.form8995?.reitPTPComponent.toFixed()).toBe("200");
+    expect(line(exact, "13b")).toBe("200");
     const openQualified = calculate({ positionEnded: false });
     expect(openQualified.form8995?.reitPTPComponent.toFixed()).toBe("200");
     const completedWindow = calculate({
       heldThrough: "2026-07-30", positionEnded: false, diminishedRiskDays: 46,
     });
-    expect(line(completedWindow, "13")).toBe("0");
+    expect(line(completedWindow, "13b")).toBe("0");
     for (const change of [{ acquiredOn: "2026-05-01" }, { diminishedRiskDays: 1 }, { relatedPaymentAmount: "1000" }]) {
       const excluded = calculate(change);
-      expect(line(excluded, "13")).toBe("0");
+      expect(line(excluded, "13b")).toBe("0");
       expect(excluded.agi.eq(exact.agi)).toBe(true);
       expect(line(excluded, "3b")).toBe("1000");
     }
