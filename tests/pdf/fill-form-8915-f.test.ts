@@ -13,6 +13,7 @@ import {
 } from "@/pdf/fill-form-8915-f.js";
 import { fillReturn } from "@/pdf/fill-return.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
+import { execFileSync } from "../helpers/file-stdin-exec";
 
 async function makeOutputDir() {
   return mkdtemp(join(tmpdir(), "tax-engine-8915f-"));
@@ -215,6 +216,16 @@ describe("Form 8915-F packet reference summary", () => {
       await access(referencePath!);
       const pdfBytes = await readFile(referencePath!);
       expect(pdfBytes.length).toBeGreaterThan(0);
+      const pdfText = execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? "python3", [
+        "-c",
+        "import sys,io; from pypdf import PdfReader; print(' '.join(p.extract_text() or '' for p in PdfReader(io.BytesIO(sys.stdin.buffer.read())).pages))",
+      ], { input: pdfBytes, encoding: "utf8", timeout: 5000 }).replace(/\s+/g, " ");
+      expect(pdfText).toContain("REFERENCE SUMMARY ONLY");
+      expect(pdfText).toContain("Calculation rows");
+      expect(pdfText).toContain("Row 7 - IRA portion of includable amount");
+      expect(pdfText).toContain("Row 1 minus Row 2");
+      expect(pdfText).toContain("Form 1040 Line 4b IRA disaster amount");
+      expect(pdfText).not.toContain("Line 7: IRA portion of includable amount");
     } finally {
       await rm(outputDir, { recursive: true, force: true });
     }

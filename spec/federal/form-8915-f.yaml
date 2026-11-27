@@ -2,6 +2,9 @@ form: "Form 8915-F"
 fullName: "Qualified Disaster Retirement Plan Distributions and Repayments"
 taxYear: 2025
 irsReference: "https://www.irs.gov/instructions/i8915f"
+sourceRevision: "December 2025 final form and instructions; December 2026 draft posted November 23, 2026"
+retrievedAt: "2026-11-27"
+reviewStatus: "draft-source-compared-human-qualification-pending"
 
 notes: |
   Form 8915-F reports qualified disaster distributions from retirement plans
@@ -37,9 +40,30 @@ notes: |
     includable amounts
   - First-time homebuyer distributions in disaster areas (§72(t)(2)(J)(v))
 
+  The active December 2025 final form retains the 2020 disaster and coronavirus
+  paths. The December 2026 draft limits its Part I disaster table and items A–C
+  to 2021 and later disasters, removes coronavirus item D, and retains the
+  $22,000 limit in lines 1a–1e.
+  https://www.irs.gov/pub/irs-pdf/f8915f.pdf
+  https://www.irs.gov/pub/irs-dft/f8915f--dft.pdf
+
+  Draft line 5a totals lines 2–4 in column (a). Line 5b identifies distributions
+  outside the qualifying criteria and line 5c determines the qualified amounts
+  under the available cap. Draft line 6 transfers from column (b) of line 5c.
+  The current final uses line 5b for that transfer. Draft line 7 uses line 5a
+  less line 6 for the nonqualified amount. Printed lines 15 and 26 still
+  transfer taxable non-IRA and IRA amounts to Form 1040 lines 5b and 4b,
+  respectively. Form 8606 lines 15b and 25b still feed printed lines 18 and 19.
+  The separately scoped Part IV line 32 keeps the same IRA and non-IRA
+  destinations. Special and prior-year cases remain subject to final instructions.
+
+  The reference PDF uses internal calculation rows 1–10, each labeled as a
+  row, and retains the existing Form 1040 transfer labels. The December 2026
+  draft is source evidence only. The filing gate remains closed.
+
 businessRuleValidation:
   - rule: "reference-summary-packet"
-    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported Form 8915-F Lines 1 through 10 outputs, per-disaster breakdowns, and normalized carryforward records tied to the current filing year."
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted artifact stays labeled as a non-filing reference summary containing internal calculation rows 1 through 10, per-disaster breakdowns, and normalized carryforward records tied to the current filing year."
     testRef: "tests/pdf/fill-form-8915-f.test.ts::buildForm8915FReferenceSummary keeps the packet artifact reference-only and limited to supported qualified disaster distribution outputs"
 
 lines:
@@ -115,7 +139,7 @@ lines:
 
   - line: "packet"
     description: "Draft packet inclusion rule for supported Form 8915-F qualified disaster retirement distribution activity"
-    formula: "When supported qualified disaster retirement distributions or prior-year deferrals are present, include a non-filing reference-summary PDF in the packet that lists Form 8915-F Lines 1 through 10, per-disaster current-year and prior-year supported computations, and normalized carryforward records for later filing years."
+    formula: "When supported qualified disaster retirement distributions or prior-year deferrals are present, include a non-filing reference-summary PDF in the packet that labels the ten internal calculation rows as rows and lists per-disaster computations and normalized carryforward records for later filing years. Use the actual line numbers only for transfers to Form 1040."
     irsRef: "Form 8915-F Instructions, Parts I-III"
     notes: "This packet slice intentionally emits a deterministic reference summary instead of a filed Form 8915-F so the draft packet stays honest about the supported disaster-distribution scope."
     testRef: "tests/pdf/fill-form-8915-f.test.ts::fillReturn includes a Form 8915-F reference summary when qualified disaster distribution activity is present"

@@ -311,7 +311,7 @@ export async function fillForm8915FReference(
   y -= 16;
 
   ensureSpace(130);
-  y = drawWrappedText(page, "Computed lines", {
+  y = drawWrappedText(page, "Calculation rows", {
     font: bold,
     size: BODY_FONT_SIZE,
     x: PAGE_MARGIN,
@@ -322,7 +322,7 @@ export async function fillForm8915FReference(
 
   for (const line of summary.lines) {
     ensureSpace(110);
-    y = drawWrappedText(page, `Line ${line.line}: ${line.description}`, {
+    y = drawWrappedText(page, `Row ${line.line} - ${line.description}`, {
       font: bold,
       size: BODY_FONT_SIZE,
       x: PAGE_MARGIN,
@@ -338,7 +338,8 @@ export async function fillForm8915FReference(
       maxWidth: PAGE_WIDTH - PAGE_MARGIN * 2 - 12,
       lineHeight: 13,
     });
-    y = drawWrappedText(page, `Formula: ${line.formula}`, {
+    const displayFormula = line.formula.replace(/\bLine (?=\d+\b)/g, "Row ");
+    y = drawWrappedText(page, `Formula: ${displayFormula}`, {
       font: regular,
       size: BODY_FONT_SIZE,
       x: PAGE_MARGIN + 12,
