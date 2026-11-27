@@ -3,9 +3,9 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "183535fb25e1559d4acbb62d208e32c4b30e1a4d",
-    "latestScopedApplicationCommit": "f5493bdc88a186d51d08b194881d685aef10cddf",
+    "latestScopedApplicationCommit": "29100a24a250697f9c874f1ce357d119f629900e",
     "latestCombinedCandidateCommit": "183535fb25e1559d4acbb62d208e32c4b30e1a4d",
-    "latestScopedChecksEvidenceKey": "activeContinuation.nov27Form2210ActualChronology",
+    "latestScopedChecksEvidenceKey": "activeContinuation.nov27PrivateScheduleRPhysicalProof",
     "latestOfflineAiEvidenceKey": "activeContinuation.nov27OfflineAiQualificationRecheck",
     "latestLocalArm64CapacityEvidenceKey": "activeContinuation.nov27LocalArm64CapacityRecheck",
     "nov27PaymentReceiptsAndForm8863EvidenceKey": "activeContinuation.nov27PaymentReceiptsAndForm8863",
@@ -196,6 +196,24 @@
     ]
   },
   "activeContinuation": {
+    "nov27PrivateScheduleRPhysicalProof": {
+      "commit": "29100a24a250697f9c874f1ce357d119f629900e",
+      "verifiedTree": "3be4635cefc8c3ebc0287308f806e52bae695eb5",
+      "primarySources": ["https://www.irs.gov/pub/irs-prior/f1040sr--2026.pdf", "https://www.irs.gov/instructions/i1040sr"],
+      "officialBlankSha256": "945275e6be3cc7353a3faf165ddd7ccb79e3c8a43abe6678d4c47f8207594cb5",
+      "exactFocusedTestsPassed": 139,
+      "repositorySpecReferencesValidated": 10303,
+      "exactTreeChecksPassed": ["typecheck", "contracts", "web-types", "spec", "inventory", "lint", "build", "offline-eval"],
+      "independentEngineeringReviewPassed": true,
+      "privateProofMonetaryFields": 15,
+      "privateProofMarkedPages": 2,
+      "tentativeCredit": "17",
+      "liabilityLimit": "16",
+      "allowedCredit": "16",
+      "qualifiedHumanReviewPassed": false,
+      "publicReviewQualified": false,
+      "filingQualified": false
+    },
     "nov27OfflineAiQualificationRecheck": {
       "focusedTestsPassed": 140,
       "committedArtifactsInSync": true,
@@ -231,6 +249,8 @@
       "projectedMinusVerifiedEarlyExceptionPenalty": "2.191781",
       "observedDateBoundEnforced": true,
       "runnerlessRemoteChecks": {"ci": 46081627667, "amd64Web": 46081627592, "docker": 46081627726},
+      "exactUnitTestsPassed": 31414,
+      "exactUnitTestsSkipped": 83,
       "combinedLocalChecks": "running",
       "qualifiedHumanReviewPassed": false,
       "filingQualified": false

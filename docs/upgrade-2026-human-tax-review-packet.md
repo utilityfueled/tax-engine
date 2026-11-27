@@ -974,3 +974,15 @@ the fourth-installment penalty for actual January 20, 2027 filing and
 payment in full with the projection without that confirmation.
 [IRS Form 2210 instructions](https://www.irs.gov/instructions/i2210) ·
 [26 USC §6654](https://uscode.house.gov/us/usc/119-134/t26/s6654/).
+
+## November 27 Schedule R private Box 2 proof
+
+Use the published 2026 single under-65 example with $16,170 taxable
+disability income, $16,270 adjusted gross income, $500 nontaxable
+Social Security and a $16 credit limit. Confirm the current disability,
+the employer payment and the retained Line B physician statement facts
+independently. Compare a valid prior signature on or after retirement
+with a signature dated before retirement. Derive the tentative, limit
+and allowed lines before any public transfer is qualified.
+[Final Schedule R](https://www.irs.gov/pub/irs-prior/f1040sr--2026.pdf) ·
+[Schedule R instructions](https://www.irs.gov/instructions/i1040sr).

@@ -15,6 +15,24 @@ the latest application revision, exact-source runs and open dependencies. The
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
 
+## November 27 private Schedule R physical proof
+
+`29100a24a` renders a verified single filer under age 65 on the pinned final
+2026 Schedule R. The IRS example reproduces the $17 tentative credit,
+$16 liability limit and $16 allowed credit. The private path requires
+disability during 2026 and a retained same-claimant Line B physician
+statement signed on or after disability retirement during the documented
+prior statement year. Independent review reproduced acceptance of a
+stale statement and verified its rejection after correction. All 15
+monetary fields were reopened and compared. Both pages carry the review
+notice and omit identity and source references.
+
+All 139 exact focused tests and eight static checks passed, including
+10,303 spec references. The proof remains outside the public export and
+filing registries. Human qualification remains open.
+[Final Schedule R](https://www.irs.gov/pub/irs-prior/f1040sr--2026.pdf) ·
+[Schedule R instructions](https://www.irs.gov/instructions/i1040sr).
+
 ## November 27 AI offline and native release status
 
 The offline AI check passed all 140 focused tests and found the committed
