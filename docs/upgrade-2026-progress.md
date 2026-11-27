@@ -1,5 +1,70 @@
 # 2026 upgrade implementation evidence
 
+## Current release checklist
+
+Use the `resume` object in the [checkpoint](upgrade-2026-checkpoint.json) for
+the latest application revision, exact-source runs and open dependencies. The
+[execution brief](upgrade-2026-execution-brief.md) defines completion.
+
+| Package | Remaining release evidence |
+| --- | --- |
+| Baseline and advisories | `5c43a5f3a` passed all 11 local checks and the 85% branch gate. Record exact-current checks and qualify each final runtime image with its SBOM and advisory dispositions. |
+| Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
+| Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
+| AI routing and evaluation | Obtain independent human case labels, selected Google project access and comparable provider evidence. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
+| Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
+| Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
+
+## November 27 Exact education and OpenAI verification
+
+The isolated `5c43a5f3a` archive passed all 11 local checks with a frozen
+offline installation, Node 26.13.1, pypdf 6.10.0 and 15 verified official
+sample files. The unit and coverage runs each passed 31,201 tests with 81
+existing skips. Branch coverage reached 88.64% against the unchanged 85%
+gate. The production web build passed. Managed Chromium passed 654 cases in
+nine windows, retained five skips and closed its listener. The standalone
+server separately restored original bytes and private facts after deletion
+and closed its own listener. The evidence manifest SHA-256 is
+`33311a3f672c2e6f6dd89eba811f6f10947eb8f129910d0e2f8e770ed8093b07`.
+
+## November 27 Ohio same-runner comparison
+
+On `64ca11a71`, full container Chromium failed while managed Chromium
+passed. The six focused business and resident-credit journeys passed three
+in container mode and four in managed mode. Both modes reached the overall
+deadline during the desktop business filing request. The resident-credit
+journey reached its deadline at different actions. All four focused school
+journeys passed in both modes with 10–21 ms filing responses. Median school
+header entry was 5.60 seconds in the full strict run and 3.40–3.46 seconds in
+the focused runs. Renderer runnable wait rose from 24–28 ms focused to
+915 ms in the full run. This measures load sensitivity without identifying
+a shared product bottleneck. The strict release gate remains open.
+[Exact Linux comparison](https://github.com/utilityfueled/tax-engine/actions/runs/45982119919).
+
+## November 27 Form 8915-F source and reference PDF
+
+`1c75284e4` records the November 23 draft and its changes to Part I. The
+listed Form 1040 and Form 8606 transfers retain their destinations. The
+reference PDF now labels the ten internal calculation rows as rows and keeps
+the real Form 1040 transfer labels. The prior wording reproduced in the
+actual PDF. Seventy focused tests and eleven spec references passed, along
+with inventory, typechecking, scoped lint and the browser source audit. The
+December 2026 draft remains source evidence and the filing gate stays closed.
+[IRS draft](https://www.irs.gov/pub/irs-dft/f8915f--dft.pdf) ·
+[Current final revision](https://www.irs.gov/pub/irs-pdf/f8915f.pdf).
+
+## November 27 Provider output with zero visible tokens
+
+`966a9df37` sends contradictory completed text responses to reconciliation
+when OpenAI reports no tokens available for visible output or Gemini reports
+zero candidate tokens. The hosted and evaluation adapters preserve the
+provider reference after one dispatch. Controls preserve reported usage for
+empty, refusal and blocked results. Both regressions reproduced before the
+fix. The 110 focused tests, 23 spec references, typechecks, scoped lint,
+offline artifacts and staged browser source audit passed. No paid calls ran.
+[OpenAI Responses usage](https://developers.openai.com/api/reference/resources/responses/methods/create) ·
+[Gemini usage metadata](https://aistudio.google.com/api-reference/generate-content).
+
 ## November 27 Actual joint resident election for education credits
 
 `5c43a5f3a` requires an explicit joint resident election for a known nonresident
@@ -14640,7 +14705,7 @@ This SBOM is not a vulnerability scan. The temporary test container was removed;
 the local image is retained. No image publication, backup restoration, migration
 rollback or version-to-version upgrade rehearsal is claimed.
 
-## Outstanding release work
+## October 24 baseline release checklist
 
 This branch is an implementation checkpoint, **not completion of the upgrade**.
 No deployment, model promotion, filing enablement or electronic submission occurred.
