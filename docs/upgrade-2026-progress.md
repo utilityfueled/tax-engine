@@ -1,5 +1,81 @@
 # 2026 upgrade implementation evidence
 
+## November 27 Ohio Treasury coupon original box evidence
+
+`cfe394be9` requires recorded zeros in seven additional Form 1099-INT
+boxes for the private Ohio 2026 direct Treasury Box 3 method. Both
+the original packet and the retained return statement must carry the
+amounts. Previously saved packets without recorded original amounts
+stay on hold until confirmed. A verified blank may be recorded as
+Decimal zero. The verified $4,000 coupon and $50,000 Ohio AGI in the
+control are preserved.
+
+Six omitted optional fields reproduced the defect in the original
+qualifier. The exact predecessor also accepted a form pre-normalized
+with default zeros. All 275 focused tests and 33 spec references
+passed, with an independent 16-case engineering run.
+[IRS Form 1099-INT instructions](https://www.irs.gov/instructions/i1099int).
+
+## November 27 Pennsylvania part-year dividend account evidence
+
+`8f9bfc2d8` applies the existing complete account check to the private
+Pennsylvania 2026 part-year cash dividend and combined interest and
+dividend methods. Both reopened masked-account variants reproduced
+the defect before correction. Complete literal references still
+qualify. Four reopened cohorts matched their full predecessor results
+byte for byte. All 268 focused tests, 23 spec references and an
+independent 195-test run passed. All 11 exact local checks and the
+offline AI check passed. Unit and coverage runs each passed 31,161
+tests, with 81 existing skips and 88.63% branch coverage. The spec
+check verified 10,217 tracked references. Chromium passed 654 cases
+with five existing skips across nine windows, and cleanup passed.
+Final state form qualification remains open. The exact evidence
+manifest SHA-256 is
+`504c5502f1693cd258b64e1483546851e27e0639d7ce6e3a0b1e3e3f26476707`.
+[Pennsylvania dividend guide](https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/dividends#Nonresidents-and-Part-Year-Residents) ·
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45965868347) ·
+[Exact Web](https://github.com/utilityfueled/tax-engine/actions/runs/45965868287) ·
+[Exact ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45965920531).
+
+## November 27 Docker verification by revision
+
+`30dec21ce` scopes automatic Docker verification to branch or tag and
+source SHA, matching the ordinary CI and Web workflows. Documentation
+pushes previously superseded exact Docker jobs on the same branch.
+Actionlint and an independent YAML comparison passed. The build
+triggers and build-only job are preserved. Different revisions can
+now use runners concurrently. The exact application run `45965868266`
+and the workflow-change run `45966279469` were both queued after
+the latter push.
+[GitHub Actions concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency).
+
+## November 27 current state-fix portable restore
+
+The exact `8f9bfc2d8` standalone build passed the isolated macOS ARM64
+encrypted backup, original deletion, fresh-profile restore, and
+reopen rehearsal. It restored identical guided data, original PDF
+bytes and display preference. All three generated 12-page review
+PDFs omitted the private SSN. The test passed in 7.10 seconds with
+no skips or retries, and its server exited. Receipt SHA-256
+`08fff8f5415a98d3a7a750447997d77c876364c054508c7b742357acf7f957f4`.
+
+## November 27 previous native ARM64 result
+
+Public run `45955785929` used `7a8325c3a`, which has the same
+application bytes as `aa2d431bc`. Native smoke testing, independent
+archive import, and isolated Compose upgrade and recovery passed.
+Strict Chromium passed 645 cases and skipped five. The timing receipt
+recorded eight timeouts and one other failure. The failed step's
+log also attributes the ninth failure to the 30-second test deadline.
+The nine deadlines affected one part-year business case, two
+reciprocal cases, two resident-credit cases, and four school cases.
+The school phases identify entry and header rendering as the next
+areas for bounded measurement.
+All nine windows completed and cleanup passed. The exact successor
+`45965920531` is queued.
+[Completed native ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45955785929) ·
+[Current native ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45965920531).
+
 ## November 27 Ohio bank-interest original box evidence
 
 `856f14cc4` requires seven zero amounts from the original 1099-INT,

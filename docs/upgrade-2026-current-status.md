@@ -9,6 +9,15 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `cfe394be9` requires seven additional original Form 1099-INT amounts
+  for the private Ohio 2026 Treasury coupon draft. The 275 focused tests
+  passed. [Ohio Treasury evidence](upgrade-2026-progress.md#november-27-ohio-treasury-coupon-original-box-evidence).
+- `8f9bfc2d8` requires a complete account reference for the Pennsylvania
+  2026 part-year dividend and combined investment drafts. The 268
+  focused tests passed. All 11 exact local checks passed, including
+  31,161 unit tests, 88.63% branch coverage and 654 Chromium cases.
+  [Pennsylvania dividend evidence](upgrade-2026-progress.md#november-27-pennsylvania-part-year-dividend-account-evidence).
+
 - `856f14cc4` requires explicit original Form 1099-INT amounts for the
   private 2026 Ohio Box 1 bank-interest method before accepting a
   confirmed zero. All 283 focused tests passed. Earlier packets missing
@@ -25,11 +34,11 @@ Use the linked progress sections when investigating individual packages.
   [Ohio worksheet applicability](upgrade-2026-progress.md#november-27-ohio-it-nrc-worksheet-applicability).
 
 The current exact Linux runs are
-[AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45960825264)
-and [ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45960869997).
+[AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45965868287)
+and [ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45965920531).
 The standalone macOS build restored its encrypted backup into a fresh
-Chromium profile and reopened the return on `856f14cc4`.
-[Exact portable restore](upgrade-2026-progress.md#november-27-exact-self-host-backup-restoration).
+Chromium profile and reopened the return on `8f9bfc2d8`.
+[Exact portable restore](upgrade-2026-progress.md#november-27-current-state-fix-portable-restore).
 The [external actions](upgrade-2026-external-actions.md) record the remaining
 human, form, provider and release decisions.
 
