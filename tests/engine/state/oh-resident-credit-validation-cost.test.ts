@@ -96,16 +96,18 @@ it('resident encoded comparison preserves first errors and immutable originals',
   expect(required(readOhioResidentCreditSource(f.context, f.facts, f.projection).otherStateTaxes[0]).stateCode).toBe('VA');
   expect(JSON.stringify(f.packet)).toBe(before); expect(JSON.stringify(f.projection)).toBe(projectionBefore);
 });
-it('resident complete results and commitments retain predecessor byte fingerprints', () => {
-  // Rebound from 5a8384ec after comparing full JSON. Only Schedule B Part III answers and their audit rows changed.
+it('resident complete results and commitments match the approved worksheet projection', () => {
+  // Projected from aa2d431bc by removing only the 20 numeric aggregate IT NRC rows in each all-resident fixture.
   const cases = [
-    { make: () => ohioResidentCreditFixture(), hash: '1fd4f25ed4c2c19fa924d434f1110cba2af463d981264c7ca1c9160fa3d56cef', payment: 'd2aeaf3a084a69f91b8ce3620ed1e8de30295e17c32b5519596afb50f30eaa09', context: 'b63f2e873e5e39507d2a7ad930e821a9c8722215e145e9f4eceea47bdb60c6ec' },
-    { make: () => ohioResidentCreditFixture('60000.50', '1000.50'), hash: '846a7391ad8a4eaa3b61b7674c4542fd986ee8e44c88ce78ee6f57f590edd783', payment: 'fe3c1e0a24a4cf35218b54e432130ac7347d53a37a78d56ded42c541c43e367b', context: '5aad973ed1050e271b7a0a956d942f35ff5b1d358e2d1dd3b132edc41ae6d1a6' },
-    { make: () => ohioResidentCreditTransactionsFixture(), hash: 'bf3b791ebc7a353f4c30d56bd3d71a52d7c262599f5d9577bae5e1b2b3e3b981', payment: 'db3a90490f23d2f618ff2fbf80a69d8931b0584ed022d5bcb5e177272c4c3c05', context: 'feacd32c4437eae6a72009c1dd4023d588ff65ebc7ab9ab3712bb452cff8aabc' },
+    { make: () => ohioResidentCreditFixture(), hash: '9806c8eebf47efb2f5f628f851bbb43aa9ff4bf6ab131c541cd27e938518c118', payment: 'd2aeaf3a084a69f91b8ce3620ed1e8de30295e17c32b5519596afb50f30eaa09', context: 'b63f2e873e5e39507d2a7ad930e821a9c8722215e145e9f4eceea47bdb60c6ec' },
+    { make: () => ohioResidentCreditFixture('60000.50', '1000.50'), hash: '779c1788ae554244bed7a045b1ba0883b2df644bb2cf6da93a8616dd2c14b2e8', payment: 'fe3c1e0a24a4cf35218b54e432130ac7347d53a37a78d56ded42c541c43e367b', context: '5aad973ed1050e271b7a0a956d942f35ff5b1d358e2d1dd3b132edc41ae6d1a6' },
+    { make: () => ohioResidentCreditTransactionsFixture(), hash: '473c4b1743cfc0031d5e5b4a133e2e3d061bbea4b89b275ac0c05dda8607e6fa', payment: 'db3a90490f23d2f618ff2fbf80a69d8931b0584ed022d5bcb5e177272c4c3c05', context: 'feacd32c4437eae6a72009c1dd4023d588ff65ebc7ab9ab3712bb452cff8aabc' },
   ];
   for (const c of cases) {
     const p = c.make(), before = JSON.stringify(p), federal = calculateFederalTax(p.input), adapted = buildOhioResidentReturnInput(p.input, federal);
     const state = calculateOhioResidentReturn(adapted), payment = buildOhioPaymentSource(p.input, p.input.ohioPayments);
+    expect(state.lines.filter(row => row.form === 'OH-IT-NRC').map(row => row.line)).toEqual(['actual-source-commitment']);
+    expect(state.nonresidentCreditResult?.lines).toHaveLength(20);
     expect(createHash('sha256').update(JSON.stringify({ federal, adapted, state, payment })).digest('hex')).toBe(c.hash);
     expect(payment.sourceDigest).toBe(c.payment); expect(required(adapted.residencyResidentCreditSource).sourceCommitment).toBe(c.context);
     expect(JSON.stringify(p)).toBe(before);

@@ -26,8 +26,13 @@ lines:
     formula: 'Preserve facts/context rejection before projection checks, first expected-key error order, unchanged independent source validation and input immutability. Returned amount rows remain independently copied.'
     testRef: "tests/engine/state/oh-resident-credit-validation-cost.test.ts::resident encoded comparison preserves first errors and immutable originals"
   - line: "complete-output"
-    formula: 'Preserve full federal, adapted, Ohio and payment public output fingerprints and all stored/private context commitment behavior for source-complete ordinary and cents/transaction accounts.'
-    testRef: "tests/engine/state/oh-resident-credit-validation-cost.test.ts::resident complete results and commitments retain predecessor byte fingerprints"
+    formula: >-
+      Preserve all complete federal, adapted, Ohio and payment output bytes and
+      stored/private context commitments for source-complete ordinary and
+      cents/transaction accounts, except for the numeric IT NRC rows omitted
+      from the all-resident aggregate. The typed worksheet and the residency
+      source commitment remain in the output.
+    testRef: "tests/engine/state/oh-resident-credit-validation-cost.test.ts::resident complete results and commitments match the approved worksheet projection"
   - line: "fresh-federal-comparison"
     formula: 'A complete resident-credit source build performs exactly one fresh canonical federal calculation and zero throwaway full-federal SHA operations. Keep all21other actual SHA calls, context/source/payment commitments and stored-facts validation.'
     testRef: "tests/engine/state/oh-resident-credit-federal-work.test.ts::resident source compares full fresh federal material without throwaway hashes"
