@@ -8,12 +8,32 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `f38051759` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `71c4736a6` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
+
+## November 27 exact Ohio guided receipt verification
+
+The tracked archive for `71c4736a6` passed all 11 local release checks
+with Node 26.13.1, pypdf 6.10.0 and 15
+verified official sample-document hashes. Both unit runs passed
+31,270 tests with 83 skips. PostgreSQL cases ran separately. Branch coverage
+was 88.67%. Chromium passed 654 tests with
+5 skips. Standalone encrypted recovery passed and both local listeners closed.
+The desktop and Pixel 7 probe used a seeded synthetic Form 1099-G and confirmed
+receipt entry, autosave, reopen, and allocation after a date edit and renewed
+confirmation. Earlier probe attempts are retained. The successful rerun used the
+same build after fixing the synthetic setup and confirmation sequence. The probe
+listener closed and the offline evaluation artifact check passed. Manifest SHA-256
+`a04fab43d9ec2126795926016ff7c5dbd16e61d71e94553f3e7eb952d43e0733`.
+
+GitHub reported CI queued, Docker queued, Web queued when this evidence was recorded. Linux runtime
+and hosted cybersecurity qualification remain open. [CI](https://github.com/utilityfueled/tax-engine/actions/runs/46031058076) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/46031058011) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/46031057938).
 
 ## November 27 exact billing, federal W-2 and Ohio verification
 
