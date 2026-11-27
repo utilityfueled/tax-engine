@@ -157,6 +157,71 @@ it('collects the four part-year payment facts and clears the view after a same-v
     }
 });
 
+it('captures and reopens one 2026 Ohio part-year unemployment receipt for review', async () => {
+    (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    const form = { ...unemploymentSource, compensation: '1000', sourceTaxYear: '2026', sourceFormRevision: '2026-12', familyLeaveBenefits: '0',
+        stateTaxReporting: 'single' as const, state: 'OH', statePayerId: 'SYNTHETIC-OH', stateWithheld: '25.25' };
+    const original = TaxYearInputSchema.parse({ ...simpleW2Fixture,
+        taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: 2026, stateResidency: 'part-year' },
+        w2s: simpleW2Fixture.w2s.map(wage => ({ ...wage, accountHolder: 'primary', taxYear: 2026 })),
+        form1099G: buildGovernmentPaymentSourceRecords([form]) });
+    const owner = ohioResidencyOwner('primary', 'part_year_resident');
+    owner.periods = owner.periods.map(period => ({ ...period, from: period.from.replace('2025', '2026'), to: period.to.replace('2025', '2026') }));
+    Object.assign(owner.amounts.wages, { federalAmount: '85000', residentAmount: '30000', nonresidentOhioAmount: '10000' });
+    const initial: OhioResidencyDraft = { ...ohioResidencyFacts(), taxYear: '2026', sourceFactsConfirmed: null, owners: [owner],
+        unemploymentPaymentSchedule: { originalStatementFingerprint: 'prior-year-form', allPaymentsIncludedConfirmed: true,
+            payments: [{ sourceReference: 'First old payment', paidOrAccruedOn: '2025-06-30', amount: '500' },
+                { sourceReference: 'Second old payment', paidOrAccruedOn: '2025-07-01', amount: '500' }] } };
+    let saved = initial;
+    function Harness({ draft, input = original }: { draft: OhioResidencyDraft; input?: typeof original }) {
+        const [data, setData] = useState<OhioResidencyDraft | undefined>(draft);
+        return <OhioResidencyDetails data={data} originalInput={input} filingStatus="single" taxYear={2026}
+            onChange={value => { if (value) saved = value; setData(value); }} />;
+    }
+    const control = (label: string) => [...container.querySelectorAll('label')]
+        .find(row => row.querySelector('.guided-field-label')?.textContent === label)?.querySelector<HTMLInputElement | HTMLSelectElement>('input,select');
+    const fields = [
+        ['Unemployment payment record reference', 'Synthetic receipt'],
+        ['Unemployment payment or accrual date', '2026-07-01'],
+        ['Actual unemployment payment amount', '1000'],
+        ['Does this one payment account for all of Form 1099-G Box 1?', 'true'],
+    ];
+    try {
+        await act(async () => root.render(<Harness draft={initial} />));
+        expect(control('Unemployment payment 1 original reference')).toBeUndefined();
+        expect(control(fields[0][0])).toBeUndefined();
+        const remove = [...container.querySelectorAll('button')].find(button => button.textContent === 'Remove saved unemployment payment schedule');
+        expect(remove).toBeDefined();
+        await act(async () => remove?.click());
+        expect(saved.unemploymentPaymentSchedule).toBeUndefined();
+        expect(container.textContent).not.toContain('Enter multiple unemployment payments');
+        for (const [label, value] of fields) {
+            const field = control(label);
+            if (!field) throw new Error(`Missing Ohio receipt control ${label}`);
+            const select = field instanceof HTMLSelectElement;
+            const setter = Object.getOwnPropertyDescriptor(select ? HTMLSelectElement.prototype : HTMLInputElement.prototype, 'value')?.set;
+            await act(async () => { setter?.call(field, value); field.dispatchEvent(new Event(select ? 'change' : 'input', { bubbles: true })); });
+        }
+        const confirm = [...container.querySelectorAll('button')].find(button => button.textContent === 'Confirm actual Ohio residency sources');
+        await act(async () => confirm?.click());
+        expect(saved.sourceFactsConfirmed).toBe(true);
+        expect(container.querySelector('[role="status"]')?.textContent).toContain('unemployment receipt are confirmed for review');
+        await act(async () => root.render(<Harness key="reopened" draft={JSON.parse(JSON.stringify(saved)) as OhioResidencyDraft} />));
+        expect(container.querySelector('[role="status"]')?.textContent).toContain('unemployment receipt are confirmed for review');
+        for (const [label, value] of fields) expect(control(label)?.value.replaceAll(',', '')).toBe(value);
+        const unsupported = TaxYearInputSchema.parse({ ...original, form1099G: buildGovernmentPaymentSourceRecords([{ ...form, state: 'PA' }]) });
+        await act(async () => root.render(<Harness key="unsupported" draft={initial} input={unsupported} />));
+        expect(container.textContent).toMatch(/requires a supported current 2026 Form 1099-G/i);
+        expect(control('primary Unemployment: Full federal source amount')).toBeUndefined();
+    } finally {
+        await act(async () => root.unmount());
+        container.remove();
+    }
+});
+
 // Spec: state/oh-2026-return-draft.yaml#primary-residency-declaration.
 it('shows a retained Ohio residency conflict until the current declaration is reconciled and reconfirmed', async () => {
     (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;

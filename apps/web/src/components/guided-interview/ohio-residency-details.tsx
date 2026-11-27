@@ -3,7 +3,7 @@ import { useState } from 'react';
 import type { TaxYearInput } from '@/models/inputs';
 import { ohioNrcCategories, type OhioNrcCategory } from '@/models/ohio-residency';
 import type { OhioUnemploymentReceipt } from '@/engine/state/oh-residency-source';
-import { emptyOhioResidencyDraft, emptyOhioResidencyOwner, confirmGuidedOhioResidencyFacts, guidedOhio2026ResidencyReviewError, guidedOhioUnemploymentStatement, hasCurrentGuidedOhioUnemploymentEvidence, type OhioResidencyDraft, type OhioUnemploymentPaymentDraft, type OhioUnemploymentPaymentScheduleDraft } from '@/lib/guided-ohio-residency-facts';
+import { emptyOhioResidencyDraft, emptyOhioResidencyOwner, confirmGuidedOhioResidencyFacts, guidedOhio2026ResidencyReviewError, guidedOhioUnemploymentStatement, hasCurrentGuidedOhioUnemploymentEvidence, hasGuidedOhio2026UnemploymentReceiptScope, type OhioResidencyDraft, type OhioUnemploymentPaymentDraft, type OhioUnemploymentPaymentScheduleDraft } from '@/lib/guided-ohio-residency-facts';
 import { BooleanFact, TextFact } from './fact-fields';
 import { CurrencyField } from './currency-field';
 
@@ -61,11 +61,14 @@ export function OhioResidencyDetails({ data, onChange, filingStatus, taxYear, or
     }
     const owners = filingStatus === 'married_filing_jointly' ? ['primary', 'spouse'] as const : ['primary'] as const;
     const needsAmounts = Boolean(data?.owners.some(owner => owner.status !== 'full_year_resident'));
-    const unemployment = taxYear === 2025 && data?.schoolDistrictStatus === 'no_ohio_taxing_district_residency'
-        && !data.businessSources && !data.residentCreditSources ? guidedOhioUnemploymentStatement(originalInput) : undefined;
+    const reviewReceiptScope = taxYear === 2026 && hasGuidedOhio2026UnemploymentReceiptScope(data, originalInput);
+    const staleReviewSchedule = reviewReceiptScope && Boolean(data?.unemploymentPaymentSchedule);
+    const legacyReceiptScope = taxYear === 2025 && originalInput?.taxpayer.taxYear === 2025
+        && data?.schoolDistrictStatus === 'no_ohio_taxing_district_residency' && !data.businessSources && !data.residentCreditSources;
+    const unemployment = reviewReceiptScope || legacyReceiptScope ? guidedOhioUnemploymentStatement(originalInput) : undefined;
     const payment = unemployment && data?.unemploymentPaymentSource?.originalStatementFingerprint === unemployment.fingerprint
         ? data.unemploymentPaymentSource : undefined;
-    const schedule = unemployment && data?.unemploymentPaymentSchedule?.originalStatementFingerprint === unemployment.fingerprint
+    const schedule = legacyReceiptScope && unemployment && data?.unemploymentPaymentSchedule?.originalStatementFingerprint === unemployment.fingerprint
         ? data.unemploymentPaymentSchedule : undefined;
     const reviewError = guidedOhio2026ResidencyReviewError(data, taxYear, originalInput);
     const confirmed = data?.sourceFactsConfirmed === true && !reviewError && hasCurrentGuidedOhioUnemploymentEvidence(data, originalInput);
@@ -143,9 +146,15 @@ export function OhioResidencyDetails({ data, onChange, filingStatus, taxYear, or
                     <button type="button" className="utility-button" onClick={() => editOwner(key, row => { row.periods.push({ from: '', to: '', domicileState: '' }); })}>Add {key} domicile period</button>
                     {needsAmounts && amounts && ohioNrcCategories.map(category => <fieldset key={category}>
                         <legend>{key}: {categoryLabels[category]}</legend>
-                        {category === 'unemployment' && key === 'primary' && unemployment && (owner.status === 'part_year_resident' || owner.status === 'nonresident') ? <>
+                        {category === 'unemployment' && key === 'primary' && reviewReceiptScope && !unemployment ?
+                            <p className="guided-hint">Ohio review requires a supported current 2026 Form 1099-G and one complete receipt.</p>
+                        : category === 'unemployment' && key === 'primary' && unemployment && (owner.status === 'part_year_resident' || owner.status === 'nonresident') ? <>
                             <p className="guided-hint">Verified Form 1099-G Box 1: ${unemployment.amount}</p>
-                            {owner.status === 'part_year_resident' && (data.unemploymentPaymentSchedule ? <>
+                            {reviewReceiptScope && <p className="guided-hint">Record the one payment covering Box 1 for Ohio review.</p>}
+                            {staleReviewSchedule && <button type="button" className="utility-button" onClick={() => edit(copy => { delete copy.unemploymentPaymentSchedule; })}>
+                                Remove saved unemployment payment schedule
+                            </button>}
+                            {owner.status === 'part_year_resident' && !staleReviewSchedule && (legacyReceiptScope && data.unemploymentPaymentSchedule ? <>
                                 {(schedule?.payments ?? [emptyUnemploymentReceipt(), emptyUnemploymentReceipt()]).map((receipt, index) => <div key={index}>
                                     <TextFact label={`Unemployment payment ${index + 1} original reference`} value={receipt.sourceReference} onChange={value => editReceipt(index, 'sourceReference', value)} />
                                     <TextFact label={`Unemployment payment ${index + 1} date paid or accrued`} type="date" value={receipt.paidOrAccruedOn} onChange={value => editReceipt(index, 'paidOrAccruedOn', value)} />
@@ -160,7 +169,7 @@ export function OhioResidencyDetails({ data, onChange, filingStatus, taxYear, or
                                 <TextFact label="Unemployment payment or accrual date" type="date" value={payment?.paidOrAccruedOn ?? ''} onChange={paidOrAccruedOn => editUnemployment({ paidOrAccruedOn })} />
                                 <CurrencyField label="Actual unemployment payment amount" value={payment?.amount ?? ''} onChange={amount => editUnemployment({ amount })} />
                                 <BooleanFact label="Does this one payment account for all of Form 1099-G Box 1?" value={payment?.allPaymentsIncludedConfirmed} onChange={allPaymentsIncludedConfirmed => editUnemployment({ allPaymentsIncludedConfirmed })} />
-                                <button type="button" className="utility-button" onClick={() => editUnemploymentSchedule()}>Enter multiple unemployment payments</button>
+                                {legacyReceiptScope && <button type="button" className="utility-button" onClick={() => editUnemploymentSchedule()}>Enter multiple unemployment payments</button>}
                             </>)}
                         </> : <>
                             <TextFact label={`${key} ${categoryLabels[category]} original source reference`} value={amounts[category].sourceReference} onChange={value => editOwner(key, row => { currentAmounts(row)[category].sourceReference = value; })} />
@@ -178,7 +187,9 @@ export function OhioResidencyDetails({ data, onChange, filingStatus, taxYear, or
                 <BooleanFact label="All actual federal income and adjustment sources included" value={data.allFederalSourcesIncludedConfirmed} onChange={value => edit(copy => { copy.allFederalSourcesIncludedConfirmed = value; })} />
                 <BooleanFact label="Actual sources contain no business income requiring Ohio apportionment" value={data.noBusinessIncomeConfirmed} onChange={value => edit(copy => { copy.noBusinessIncomeConfirmed = value; })} />
             </>}
-            <p role="status">{confirmed ? 'Ohio residency sources explicitly confirmed.' : 'Ohio residency sources need explicit confirmation.'}</p>
+            <p role="status">{confirmed ? reviewReceiptScope && unemployment
+                ? 'Ohio residency and the unemployment receipt are confirmed for review.' : 'Ohio residency sources explicitly confirmed.'
+                : 'Ohio residency sources need explicit confirmation.'}</p>
             <button type="button" className="utility-button" disabled={!originalInput || (taxYear === 2026 && originalInput.taxpayer.taxYear !== 2026)} onClick={() => {
                 if (!originalInput) return;
                 try { const confirmed = confirmGuidedOhioResidencyFacts(originalInput, data); setConfirmationError(null); onChange(confirmed); }

@@ -4,6 +4,8 @@ import { bytesToHex } from '@noble/hashes/utils.js';
 import type {OhioResidentCreditDraft} from './guided-ohio-resident-credit-sources';
 import type { TaxYearInput } from '@/models/inputs';
 import { OhioResidencyFactsSchema, ohioNrcCategories, type OhioNrcCategory, type OhioResidencyFacts } from '@/models/ohio-residency';
+import { Ohio2026UnemploymentOriginalSchema } from '@/models/ohio-2026-return-draft';
+import { currentLocalCivilDate } from '@/utils/civil-date';
 import { calculateOhioITNRC } from '@/engine/state/oh-it-nrc';
 import { allocateOhioUnemploymentReceipts, assertOhio2026PrimaryResidencyDeclaration, ohio2026PrimaryResidencyConflict, type OhioUnemploymentReceipt } from '@/engine/state/oh-residency-source';
 import {calculateFederalTax} from '@/engine/federal';
@@ -69,21 +71,35 @@ function normalizedAmount(value: string): string {
 }
 /** Discover an eligible current original without assigning any residence or payment facts. */
 export function guidedOhioUnemploymentStatement(input: TaxYearInput | null | undefined) {
+    const year = input?.taxpayer.taxYear;
     const originals = input?.form1099G;
     const original = originals?.[0];
-    if (input?.taxpayer.taxYear !== 2025 || input.taxpayer.filingStatus !== 'single' || originals?.length !== 1
+    if ((year !== 2025 && year !== 2026) || !input || input.taxpayer.filingStatus !== 'single' || originals?.length !== 1
         || !original?.sourceId?.trim() || !original.accountReference?.trim()
-        || original.accountHolder !== 'primary' || original.taxYear !== 2025
+        || original.accountHolder !== 'primary' || original.taxYear !== year
         || original.programType !== 'government-unemployment' || original.sourceFactsComplete !== true
         || original.sourceFactsConfirmed !== true || original.actualReceiptConfirmed !== true
         || original.additionalWorksheetRequired !== false || original.tradeOrBusinessRefund !== false
-        || original.stateTaxReporting !== 'none' || original.refundPaymentBasis || original.priorYearRepaymentSource
+        || original.refundPaymentBasis || original.priorYearRepaymentSource
         || original.contributionProgramId !== undefined) return undefined;
     const box1 = new Decimal(original.unemploymentCompensation);
+    const stateWithheld = new Decimal(original.stateWithheld ?? '0');
+    if (year === 2025) {
+        if (original.stateTaxReporting !== 'none' || !stateWithheld.isZero()) return undefined;
+    } else {
+        // The guided adapter can retain absent optional keys as undefined.
+        const presentFacts = Object.fromEntries(Object.entries(original).filter(([, value]) => value !== undefined));
+        if (!Ohio2026UnemploymentOriginalSchema.safeParse(presentFacts).success) return undefined;
+        const federalWithheld = new Decimal(original.federalWithheld);
+        if (federalWithheld.plus(stateWithheld).gt(box1)) return undefined;
+        if (original.stateTaxReporting === 'single') {
+            if (original.state !== 'OH' || !original.statePayerId?.trim() || !stateWithheld.gt(0)) return undefined;
+        } else if (original.state !== undefined || original.statePayerId !== undefined || !stateWithheld.isZero()) return undefined;
+    }
     const otherAmounts = [
         original.currentYearRepaid, original.priorYearRepaid, original.unrecoveredAfterTaxContributions,
         original.stateOrLocalTaxRefund, original.stateLocalIncomeTaxRefund, original.rtaaPayments, original.taxableGrants,
-        original.agriculturePayments, original.marketGain, original.familyLeaveBenefits, original.stateWithheld,
+        original.agriculturePayments, original.marketGain, original.familyLeaveBenefits,
     ];
     if (!box1.gt(0) || !box1.isInteger() || otherAmounts.some(value => !new Decimal(value ?? '0').isZero())) return undefined;
     const { ssn, dateOfBirth } = input.taxpayer.primary;
@@ -96,16 +112,36 @@ export function guidedOhioUnemploymentStatement(input: TaxYearInput | null | und
         fingerprint: bytesToHex(sha256(new TextEncoder().encode(ownedOriginal))),
     };
 }
+function hasPositiveUnemploymentBox1(input: TaxYearInput | null | undefined): boolean {
+    return input?.form1099G?.some(statement => new Decimal(statement.unemploymentCompensation).gt(0)) === true;
+}
+
+export function hasGuidedOhio2026UnemploymentReceiptScope(data: OhioResidencyDraft | undefined, input: TaxYearInput | null | undefined): boolean {
+    if (!data || input?.taxpayer.taxYear !== 2026 || input.taxpayer.filingStatus !== 'single' || input.ohioSchoolDistrict) return false;
+    const [owner] = data.owners;
+    return data.taxYear === '2026' && data.owners.length === 1 && owner?.accountHolder === 'primary'
+        && owner.status === 'part_year_resident' && data.schoolDistrictStatus === 'no_ohio_taxing_district_residency'
+        && !data.businessSources && !data.residentCreditSources
+        && (Boolean(data.unemploymentPaymentSource || data.unemploymentPaymentSchedule) || hasPositiveUnemploymentBox1(input));
+}
+
 function projectUnemployment(data: OhioResidencyDraft, input?: TaxYearInput) {
+    const year = input?.taxpayer.taxYear;
+    const current2026 = year === 2026;
     const proof = data.unemploymentPaymentSource;
     const schedule = data.unemploymentPaymentSchedule;
-    if (proof && schedule) throw new Error('Choose one way to enter actual unemployment payments.');
+    if (!current2026 && proof && schedule) throw new Error('Choose one way to enter actual unemployment payments.');
     const evidence = proof ?? schedule;
     const owner = data.owners[0];
     const allFull = data.owners.every(row => row.status === 'full_year_resident');
-    if (!evidence && (allFull || input?.taxpayer.taxYear !== 2025
-        || !input.form1099G?.some(original => new Decimal(original.unemploymentCompensation).gt(0)))) return undefined;
+    if (!current2026 && !evidence && (allFull || year !== 2025 || !hasPositiveUnemploymentBox1(input))) return undefined;
     const original = guidedOhioUnemploymentStatement(input);
+    if (current2026) {
+        const reviewScope = hasGuidedOhio2026UnemploymentReceiptScope(data, input);
+        if (!evidence && !reviewScope) return undefined;
+        if (!reviewScope || !original) throw new Error('Ohio review requires a supported current 2026 Form 1099-G and one complete receipt for the single part-year taxpayer.');
+        if (schedule) throw new Error('Remove the saved unemployment payment schedule before entering one Ohio review receipt.');
+    }
     if (!original || data.owners.length !== 1 || owner?.accountHolder !== 'primary'
         || (owner.status !== 'part_year_resident' && owner.status !== 'nonresident')
         || data.businessSources || data.residentCreditSources || data.schoolDistrictStatus !== 'no_ohio_taxing_district_residency'
@@ -129,7 +165,10 @@ function projectUnemployment(data: OhioResidencyDraft, input?: TaxYearInput) {
         paidOrAccruedOn: row.paidOrAccruedOn,
         amount: normalizedAmount(row.amount),
     }));
-    const resident = allocateOhioUnemploymentReceipts(rows, owner.periods, 2025, new Decimal(original.amount));
+    if (current2026 && rows.some(row => row.paidOrAccruedOn > currentLocalCivilDate())) {
+        throw new Error('Ohio unemployment receipt dates for review must already have occurred.');
+    }
+    const resident = allocateOhioUnemploymentReceipts(rows, owner.periods, current2026 ? 2026 : 2025, new Decimal(original.amount));
     const linkage = { originalSourceId: original.sourceId, allPaymentsIncludedConfirmed: true as const };
     return {
         amounts: { ...amounts, residentAmount: resident.toFixed() },
@@ -195,7 +234,7 @@ export function ohioResidencyFactErrors(data: OhioResidencyDraft | undefined, ta
         if(businessSource&&businessFederal){const actual=readOhioCanonicalBusinessSource(businessSource,parsed.data,businessFederal.agi);agi=actual.federalAgi;ohioAgi=actual.ohioAgi;}
         calculateOhioITNRC({ taxYear, filingStatus: filingStatus ?? '', federalAgi: agi.toDecimalPlaces(0, Decimal.ROUND_HALF_UP), ohioAgi, taxRemainingBeforeResidencyCredits: '0', residencyFacts: parsed.data,...(businessSource?{businessSource}:{}) });
         if (input) assertOhio2026PrimaryResidencyDeclaration(input.taxpayer, parsed.data);
-        if (unemployment && input) buildOhioResidentReturnInput(input, calculateFederalTax(input), { residency: parsed.data });
+        if (unemployment && input?.taxpayer.taxYear === 2025) buildOhioResidentReturnInput(input, calculateFederalTax(input), { residency: parsed.data });
         return {};
     }
     catch (error) {
@@ -234,6 +273,7 @@ export function guidedOhio2026ResidencyReviewError(
     if (!primaryStatus) return 'Enter the actual primary taxpayer Ohio domicile status and explicitly reconfirm.';
     try {
         assertGuidedOhioOriginals(input, data.originalFederalSources);
+        projectUnemployment(data, input);
         return null;
     } catch (error) {
         if (!(error instanceof Error)) throw error;
