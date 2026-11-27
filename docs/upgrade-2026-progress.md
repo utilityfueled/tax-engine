@@ -8,12 +8,111 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `bc9ab6a12` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `e075fceaf` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels, selected Google project access and comparable provider evidence. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
+
+## November 27 exact Ohio, vehicle loan and AI verification
+
+The tracked `e075fceaf` archive used Node 26.13.1, pypdf 6.10.0, a frozen
+offline install and 15 verified official sample hashes. All 11 required
+local checks and the offline AI artifact check passed. Unit and coverage
+each passed 31,222 tests with 81 existing skips. Branch coverage reached
+88.65% against the unchanged 85% gate. The first unit and browser attempts
+exhausted local disk space. Their logs are preserved alongside the successful
+results after rebuildable outputs were removed from completed archives.
+
+The production build passed. Managed Chromium passed 654 cases across nine
+windows with five existing skips, then closed its listener. The standalone
+rehearsal restored original file bytes and private facts from an encrypted
+backup after deletion and closed its listener. The local manifest SHA-256
+is `ae7dc9e833205cbce14de3f66fd108f300dc4d6e414c127725fb3047b590c592`.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/46009537861) ·
+[AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/46009538581) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/46009537908) ·
+[ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/46014076098).
+
+## November 27 ARM64 strict browser result
+
+The `64ca11a71` ARM64 runtime completed 659 Chromium cases across all
+nine windows. It passed 645, retained five existing skips, and failed nine
+due to the 30-second case deadline. The failures covered one NEW212
+desktop case, two reciprocal employee desktop cases, two resident-credit
+desktop cases and four school district cases. The completed step shows
+missed deadlines without establishing an incorrect tax or filing result.
+The release gate remains open. The following ARM64 run for `bc9ab6a12`
+held the active concurrency lease with a recovery job assigned. The run
+for `e075fceaf` is queued behind it, with both leases verified.
+[ARM64 result](https://github.com/utilityfueled/tax-engine/actions/runs/45982831811/job/140489873433) ·
+[Earlier follow-up](https://github.com/utilityfueled/tax-engine/actions/runs/46005900143) ·
+[Current ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/46014076098) ·
+[Focused Ohio comparison](https://github.com/utilityfueled/tax-engine/actions/runs/45982119919).
+
+## November 27 Ohio business and equity-sale residency declarations
+
+`e075fceaf` applies the existing primary-residency reconciliation to the
+canonical business and resident equity-sale drafts. Four normal-entry
+regressions show that conflicting declarations previously reached calculations.
+The business lane now reports its ordinary validation error, and the equity-sale
+lane returns its existing incomplete response. Matching or omitted declarations
+preserve $1,875 business tax and the documented IT NRC Part B distinction, or
+the $100,000 qualifying deduction and $2,438 equity-sale tax. All 274 focused
+and adjacent Ohio tests, 31 spec references, inventory, typecheck, scoped lint
+and the staged browser source audit passed.
+[Ohio residency law](https://codes.ohio.gov/ohio-revised-code/section-5747.01) ·
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/46009537861) ·
+[AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/46009538581) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/46009537908).
+
+## November 27 Schedule 1-A vehicle loan identity
+
+`15c471606` holds a 2026 actual-source worksheet when two rows identify the
+same loan by lender and account, even when the VIN, borrower or source label
+changes. Both the guided interview and direct calculator regressions failed
+before the fix. Separate accounts, separate lender names and the 2025 path
+retain their results. All 97 focused tests, nine spec references, root
+typecheck, scoped lint and the staged browser source audit passed. In the
+tracked archive of this revision, a full unit attempt hit the sandbox's
+loopback listener restriction. The replacement full run uses local listener
+access on the successor revision.
+[Form 1098-VLI instructions](https://www.irs.gov/instructions/i1098vli) ·
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/46008196461) ·
+[AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/46008196348) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/46008196308).
+
+## November 27 AI rollout and Ohio residency reconciliation
+
+`314a2ace0` binds rollout expansion to passing observations from the active
+task, candidate profile, qualification report, stage and revision. After a
+rollback and restart, earlier observations cannot authorize expansion. All 76
+focused tests, 24 spec references, web typecheck, lint and the offline evaluation
+artifact check passed. The staged browser source audit passed. An independent
+code review confirmed the restart behavior. Human evaluation and promotion
+gates remain open.
+
+`1d7ab0384` holds the Ohio draft when a Virginia resident-credit claim documents
+full-year Ohio domicile but the taxpayer declares part-year or nonresident
+status. Both conflict cases failed before the fix. A consistent declaration
+continues to yield the verified $1,000 credit and $1,313 Ohio tax. All 218
+focused and adjacent tests, 33 spec references, inventory, root typecheck,
+scoped lint and the staged browser source audit passed.
+[Ohio residency law](https://codes.ohio.gov/ohio-revised-code/section-5747.01) ·
+[Ohio resident-credit law](https://codes.ohio.gov/ohio-revised-code/section-5747.05).
+
+The IRS current Form 1040 and Form 6251 endpoints still serve 2025
+finals, while the 2026 PDFs are published as drafts. Pennsylvania's
+individual filing page still links the 2025 PA-40. Ohio's individual
+tax alerts list the 2026 instruction booklet as a draft. Final form
+qualification remains open for the affected return paths.
+[IRS current Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[IRS draft Form 1040](https://www.irs.gov/pub/irs-dft/f1040--dft.pdf) ·
+[IRS current Form 6251](https://www.irs.gov/pub/irs-pdf/f6251.pdf) ·
+[IRS draft Form 6251](https://www.irs.gov/pub/irs-dft/f6251--dft.pdf) ·
+[Pennsylvania filing index](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
+[Ohio individual tax alerts](https://tax.ohio.gov/individual/resources/individualincome).
 
 ## November 27 Exact payment and retirement verification
 

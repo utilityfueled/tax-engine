@@ -750,3 +750,16 @@ instructions and verify capped 2025 repayment on line 29. Record the date
 and revision used in the signed worksheet.
 [2026 draft](https://www.irs.gov/pub/irs-dft/f8962--dft.pdf#page=2) ·
 [Final 2025 Form 8962](https://www.irs.gov/pub/irs-pdf/f8962.pdf).
+
+## November 27 vehicle loan statement reconciliation
+
+For a joint 2026 return, assume one Form 1098-VLI reports $900.25 of
+interest, including $300 paid directly by a third party, and the taxpayer
+deducted $50 of the borrower-paid interest as a business expense. Derive
+the personal interest amount from those facts. Then compare two rows with
+the same lender and account reference and different borrower and VIN labels
+against two loans with separate account references. Identify the record that
+resolves the first comparison, such as an amended lender statement or dated
+loan records, and confirm each amount that transfers to Schedule 1-A.
+[Form 1098-VLI instructions](https://www.irs.gov/instructions/i1098vli) ·
+[2026 draft Schedule 1-A](https://www.irs.gov/pub/irs-dft/f1040s1a--dft.pdf).

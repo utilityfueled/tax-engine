@@ -747,11 +747,15 @@ open. [Pennsylvania filing instructions](https://www.pa.gov/content/dam/copapwp-
 | Runtime verification | Qualify the strict browser suite on the exact release image at the existing deadlines. On `9df3b108`, all 11 local checks, full GitHub CI, Docker and managed Chromium passed. Strict AMD64 passed 635 with 15 failures, and native ARM64 passed 641 with nine failures. Each retained five existing skips. Image smoke, isolated recovery and independent archive verification passed. AMD64 produced both candidate-bound SBOM formats. Strict browser qualification remains open. [AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45248565507/job/137951759372) · [Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45249178673/job/137962428976). |
 | Stripe Sandbox checkout and credits | The bound `522cf4b1` test-mode Preview created one real Sandbox Session for the $19 monthly Starter line. Stripe confirmed an attached test customer and the configured return URLs. The landing page displayed Starter and $19, and its Back link reached the exact cancel URL. Stripe later confirmed that the Session expired unpaid at its original scheduled time with no PaymentIntent or subscription. Complete the remaining conditional postal, success-return and signed-delivery checks on an exact protected test build. Verify the resulting entitlement and receipts in scoped synthetic records. Positive credit effects still require the isolated test path. [Checkout evidence](upgrade-2026-progress.md#november-22-stripe-sandbox-checkout-and-source-recheck). |
 
-The current final Form 2210 instructions still cover 2025. The IRS
-quarterly rates index currently ends with the fourth quarter of 2026.
-A positive penalty balance that enters 2027 requires the published
-first-quarter rate. [Current Form 2210 instructions](https://www.irs.gov/pub/irs-pdf/i2210.pdf) ·
-[Quarterly rates](https://www.irs.gov/payments/quarterly-interest-rates).
+The current final Form 2210 instructions still cover 2025. Revenue Ruling
+2026-25 established the 8% individual underpayment rate for the first quarter
+of 2027. The draft calculations already use the published rate through
+April 15 for federal estimated-tax underpayments under section 6621(b)(2)(B).
+Review the final 2026 forms and instructions and independently derive the
+expected worksheets before qualifying their filing outputs.
+[Current Form 2210 instructions](https://www.irs.gov/pub/irs-pdf/i2210.pdf) ·
+[Revenue Ruling 2026-25](https://www.irs.gov/pub/irs-drop/rr-26-25.pdf) ·
+[November 26 implementation evidence](upgrade-2026-progress.md#november-26-published-2027-underpayment-rate).
 
 For 2026 farmland elections, the existing Publication 505 worksheet
 uses 75% of the full-year Form 1062 line 14 when it calculates the
