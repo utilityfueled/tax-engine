@@ -74,7 +74,7 @@ import { parseGuidedCurrency, hasGuidedCurrency, parseGuidedDisplayAmount } from
 import { personalFactErrors } from "./guided-taxpayer-facts";
 import type { EicClaimantEligibilityData } from "./guided-eic-eligibility";
 import { eicHistorySourceValuesChanged, invalidateEicHistorySources } from "./guided-eic-disallowance-history";
-import { allPaymentFactErrors, currentLocalCivilDate, deductionAmountYearErrors, deductionFactErrors, directItemizedAmountFields, educationFactErrors, guidedAmountChanged, guidedDonationValue, hasEnteredAmount, retirementFactErrors } from "./guided-required-facts";
+import { allPaymentFactErrors, currentLocalCivilDate, deductionAmountYearErrors, deductionFactErrors, directItemizedAmountFields, educationFactErrors, guidedAmountChanged, guidedDonationValue, hasEnteredAmount, normalizeFederalPaymentReceiptReference, retirementFactErrors } from "./guided-required-facts";
 import { clearMedicalMileageConfirmations, guidedMedicalMileageErrors, medicalMileageOriginals, type MedicalMileageDraft } from "./guided-medical-mileage";
 import { nonitemizedElectionFactErrors } from "./guided-nonitemized-election";
 import {
@@ -2536,6 +2536,24 @@ function invalidateChangedRetirementOwners(entries: RetirementEntryData[], befor
   return updated.some((entry, index) => entry !== entries[index]) ? updated : entries;
 }
 
+function invalidateEditedFederalPaymentReceipts(previous: EstimatedPaymentEntry[] | undefined, rows: EstimatedPaymentEntry[]) {
+  if (!previous?.length || !rows.length) return rows;
+  return rows.map((entry, index) => {
+    const application = entry.application;
+    const formerReference = normalizeFederalPaymentReceiptReference(previous[index]?.receiptReference);
+    const reference = normalizeFederalPaymentReceiptReference(entry.receiptReference);
+    if (application?.confirmed !== true || !formerReference || formerReference === reference) return entry;
+
+    // Deleting or moving a row can put a different, unchanged payment at this index.
+    const matchesOriginal = (row: EstimatedPaymentEntry) => normalizeFederalPaymentReceiptReference(row.receiptReference) === reference
+      && row.date === entry.date && !guidedAmountChanged(row.amount, entry.amount)
+      && row.application?.taxYear === application.taxYear && row.application?.confirmed === true;
+    if (previous.filter(matchesOriginal).length === 1 && rows.filter(matchesOriginal).length === 1) return entry;
+
+    return { ...entry, application: { ...application, confirmed: null } };
+  });
+}
+
 export function updateSectionData(
   state: GuidedFlowState,
   sectionId: string,
@@ -2543,6 +2561,15 @@ export function updateSectionData(
 ): GuidedFlowState {
   if (sectionId === "personal-info" && data) {
     data = invalidateEditedShortAccountingPeriod(state.sectionData["personal-info"], data as PersonalInfoData, state.segmentation.filingStatus, state.taxYear);
+  }
+  if (sectionId === "payments" && data && state.taxYear === 2026) {
+    const previous = state.sectionData.payments;
+    const payments = data as PaymentData;
+    data = {
+      ...payments,
+      estimatedPayments: invalidateEditedFederalPaymentReceipts(previous?.estimatedPayments, payments.estimatedPayments),
+      ...(payments.extensionPayments ? { extensionPayments: invalidateEditedFederalPaymentReceipts(previous?.extensionPayments, payments.extensionPayments) } : {}),
+    };
   }
   if (sectionId === "income-self-employment" && data) {
     const before = state.sectionData["income-self-employment"]?.cardTipSource;

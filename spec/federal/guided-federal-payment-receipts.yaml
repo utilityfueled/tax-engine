@@ -38,3 +38,20 @@ lines:
       - "tests/guided-interview/guided-federal-payment-receipts.test.ts::requires distinct actual references for matching 2026 estimates"
       - "tests/guided-interview/guided-federal-payment-receipts.test.ts::keeps unique and zero 2026 payment references out of calculation input"
       - "tests/guided-interview/guided-estimated-tax-facts.test.ts::accepts separately confirmed original payment references and holds stale or repeated proof"
+
+  - line: "2026-edited-receipt-application"
+    description: Reconfirm the applied return year after replacing a known 2026 payment receipt
+    formula: >-
+      Replacing or removing the known receipt reference for a 2026 estimate or
+      extension clears that payment's return-year confirmation. Keep the
+      entered date, exact amount, payment category and applied year visible.
+      Pending confirmation persists through reopen and holds guided input
+      until explicitly restored. Keep initial reference entry, equivalent
+      reference formatting, unchanged payment originals and 2025 behavior.
+      The 2026 estimate and extension editors apply a completed receipt
+      edit when the user leaves the field or presses Enter. Intermediate
+      keystrokes cannot change the original used for comparison.
+    irsRef: "IRS Direct Pay payment-specific confirmations and the tax period for a payment; https://www.irs.gov/payments/direct-pay-help"
+    testRef: "tests/guided-interview/guided-federal-payment-return-year.test.ts::requires new application confirmation when a known 2026 receipt changes"
+    testRefs:
+      - "tests/apps/web/guided-federal-payment-receipts.test.tsx::commits only the completed 2026 estimate and extension receipt edits"

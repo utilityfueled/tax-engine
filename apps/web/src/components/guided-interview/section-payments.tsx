@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { EstimatedTaxSourceDetails } from "./estimated-tax-source-details";
 import { RetroShell } from "@/components/retro-shell";
 import {
@@ -60,11 +61,33 @@ function PaymentReceiptReference({ label, entry, taxYear, onUpdate }: {
   taxYear?: number | null;
   onUpdate: (entry: EstimatedPaymentEntry) => void;
 }) {
+  const [draft, setDraft] = useState<string | null>(null);
   if (!supportsFederalPaymentReceiptReferences(taxYear)) return null;
+  const savedReference = entry.receiptReference ?? "";
+  const commitOnBlur = taxYear === 2026;
   return <label className="guided-field">
     <span className="guided-field-label">{label} receipt reference</span>
-    <input className="guided-input" value={entry.receiptReference ?? ""}
-      onChange={event => onUpdate({ ...entry, receiptReference: event.target.value })} />
+    <input
+      className="guided-input"
+      value={commitOnBlur ? draft ?? savedReference : savedReference}
+      onChange={event => {
+        const receiptReference = event.currentTarget.value;
+        if (commitOnBlur) setDraft(receiptReference);
+        else onUpdate({ ...entry, receiptReference });
+      }}
+      onBlur={event => {
+        if (!commitOnBlur) return;
+        const receiptReference = event.currentTarget.value;
+        setDraft(null);
+        if (receiptReference !== savedReference) onUpdate({ ...entry, receiptReference });
+      }}
+      onKeyDown={event => {
+        if (commitOnBlur && event.key === "Enter" && !event.nativeEvent.isComposing) {
+          event.preventDefault();
+          event.currentTarget.blur();
+        }
+      }}
+    />
     <span className="guided-field-hint">Use one consistent reference from your records for each processed IRS payment. Payments with the same date and amount need separate references.</span>
   </label>;
 }
