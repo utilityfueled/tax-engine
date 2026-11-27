@@ -25,9 +25,27 @@ describe("Schedule 8812 actual identity and payroll facts",()=>{
   it("excludes a known ineligible child's CTC without inventing ODC",()=>{
     expect(calculateFederalTax(fixture({dependents:[{...child,ctcSsnEligible:false}]})).childTaxCredit.toString()).toBe("0");
   });
-  it("allows a joint return with one actual valid SSN and both timely TINs",()=>{
-    const r=calculateFederalTax(fixture({filingStatus:"married_filing_jointly",primary:{...simpleW2Fixture.taxpayer.primary,employmentValidSsnIssuedByDueDate:false,tinIssuedByDueDate:true},spouse:{firstName:"Synthetic",lastName:"Spouse",ssn:"999-88-6666",dateOfBirth:"1990-01-01",employmentValidSsnIssuedByDueDate:true,tinIssuedByDueDate:true}}));
-    expect(r.childTaxCredit.toString()).toBe("1780"); // Draft bracket calculation: ($50,000 - $32,200) × 10%; final-form qualification remains gated.
+  it("uses the draft tax table to split the credit with one valid SSN and two timely joint filer TINs", () => {
+    const result = calculateFederalTax(fixture({
+      filingStatus: "married_filing_jointly",
+      primary: {
+        ...simpleW2Fixture.taxpayer.primary,
+        employmentValidSsnIssuedByDueDate: false,
+        tinIssuedByDueDate: true,
+      },
+      spouse: {
+        firstName: "Synthetic",
+        lastName: "Spouse",
+        ssn: "999-88-6666",
+        dateOfBirth: "1990-01-01",
+        employmentValidSsnIssuedByDueDate: true,
+        tinIssuedByDueDate: true,
+      },
+    }));
+    expect(result.taxableIncome.toFixed()).toBe("17800");
+    expect(result.ordinaryTax.toFixed()).toBe("1783");
+    expect(result.childTaxCredit.toFixed()).toBe("1783");
+    expect(result.form8812?.actc.toFixed()).toBe("417");
   });
   it("refuses an unknown timely TIN for the other joint filer",()=>{
     expect(()=>calculateFederalTax(fixture({filingStatus:"married_filing_jointly",spouse:{firstName:"Synthetic",lastName:"Spouse",ssn:"999-88-6666",dateOfBirth:"1990-01-01",employmentValidSsnIssuedByDueDate:false}}))).toThrow(/TIN.*unknown|unknown.*TIN/i);

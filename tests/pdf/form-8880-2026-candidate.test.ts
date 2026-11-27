@@ -18,7 +18,7 @@ import { foreignTaxDirectCreditFixture } from "../fixtures/foreign-tax-direct-cr
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
 import fixture from "./sources/form-8880-2026.json";
 
-// Use the draft statutory-rate preview only inside this test suite.
+// Use the draft 2026 rule pack only inside this test suite.
 vi.mock("@/models/constants.js", async (importOriginal) => {
   const original = await importOriginal<typeof import("@/models/constants.js")>();
   const { FEDERAL_2026_CONSTANTS } = await import("@/models/federal-2026-indexed.js");
@@ -123,8 +123,8 @@ const priorRothCreditFields = {
   name: "Jane Doe", ssn: "REDACTED",
   line1a: "2000", line1b: "", line2a: "0", line2b: "", line3a: "2000", line3b: "",
   line4a: "500", line4b: "", line5a: "1500", line5b: "", line6a: "1500", line6b: "",
-  line7: "1500", line8: "30000", line9: "1", line10: "150", line11: "1420", line12: "150",
-  worksheet1: "1420", worksheet2: "0", worksheet3: "1420",
+  line7: "1500", line8: "30000", line9: "1", line10: "150", line11: "1423", line12: "150",
+  worksheet1: "1423", worksheet2: "0", worksheet3: "1423",
 };
 
 describe("Final 2026 Form 8880 physical candidate", () => {
@@ -219,8 +219,8 @@ describe("Final 2026 Form 8880 physical candidate", () => {
     const { input, source } = ordinarySourceFixture();
     const result = calculateFederalTax(TaxYearInputSchema.parse(input));
     const value = (form: string, line: string) => result.allLines.find(row => row.form === form && row.line === line)?.value.toFixed();
-    expect(result.incomeTaxSourceStatus).toBe("statutory-rate-preview");
-    expect(value("1040", "18")).toBe("2500"); // $39,000 − $16,100, then $1,240 + 12% of $10,500.
+    expect(result.incomeTaxSourceStatus).toBe("draft-year-tax-table");
+    expect(value("1040", "18")).toBe("2503"); // Draft Tax Table, $22,900–$22,950, single.
     expect(value("Sched 3", "4")).toBe("200");
 
     const { document, schedule3Line4 } = await fillForm88802026OrdinaryCandidate(input, source, await readFile(blank));
@@ -229,8 +229,8 @@ describe("Final 2026 Form 8880 physical candidate", () => {
       name: "Jane Doe", ssn: "REDACTED",
       line1a: "0", line1b: "", line2a: "2500", line2b: "", line3a: "2500", line3b: "",
       line4a: "0", line4b: "", line5a: "2500", line5b: "", line6a: "2000", line6b: "",
-      line7: "2000", line8: "39000", line9: "1", line10: "200", line11: "2500", line12: "200",
-      worksheet1: "2500", worksheet2: "0", worksheet3: "2500",
+      line7: "2000", line8: "39000", line9: "1", line10: "200", line11: "2503", line12: "200",
+      worksheet1: "2503", worksheet2: "0", worksheet3: "2503",
     };
     const directory = await mkdtemp(join(tmpdir(), "form-8880-original-"));
     try {
@@ -253,8 +253,8 @@ describe("Final 2026 Form 8880 physical candidate", () => {
       name: "Jane Doe", ssn: "REDACTED",
       line1a: "2000", line1b: "", line2a: "0", line2b: "", line3a: "2000", line3b: "",
       line4a: "0", line4b: "", line5a: "2000", line5b: "", line6a: "2000", line6b: "",
-      line7: "2000", line8: "30000", line9: "1", line10: "200", line11: "1420", line12: "200",
-      worksheet1: "1420", worksheet2: "0", worksheet3: "1420",
+      line7: "2000", line8: "30000", line9: "1", line10: "200", line11: "1423", line12: "200",
+      worksheet1: "1423", worksheet2: "0", worksheet3: "1423",
     };
     const directory = await mkdtemp(join(tmpdir(), "form-8880-roth-original-"));
     try {

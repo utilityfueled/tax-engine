@@ -71,7 +71,7 @@ lines:
     testRef: "tests/engine/federal-foreign-tax-carryover.test.ts::recomputes deduction selection without changing the actual election"
   - line: "canonical-supported-years"
     description: "Year-aware ordinary limit and carry conservation"
-    formula: "2025 actual TaxTable and2026 indexed statutory preview both feed the hypothetical regular tax; one current source and each prior vintage are counted exactly once."
+    formula: "The year's ordinary-tax method feeds the hypothetical regular tax, including the final 2025 Tax Table or draft 2026 Tax Table and worksheet. Count one current source and each prior vintage exactly once."
     testRef: "tests/engine/federal-foreign-tax-carryover.test.ts::absorbs actual prior carry in both supported years without granting a credit"
   - line: "canonical-itemized"
     description: "Retain actual supported itemized allocation in the credit-election pass"

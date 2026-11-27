@@ -68,7 +68,7 @@ it("combines the two filers independently and keeps Code Q out of taxable wages"
   }
   const draft = calculateFederalTax(choose(actualReturn(false, 2026), true));
   expect(line(draft, "1i")?.toFixed(2)).toBe("1250.50");
-  expect(draft.earnedIncomeCredit.toFixed()).toBe("249"); // Statutory 0.0765 × 3250.50.
+  expect(draft.earnedIncomeCredit.toFixed()).toBe("251"); // Draft EIC Table, $3,250–$3,300, no children.
 });
 
 it("keeps an election that reduces the credit", () => {

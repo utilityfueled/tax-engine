@@ -1,5 +1,5 @@
 form: "EIC Table and statutory credit limitation"
-fullName: "Published 2025 EIC worksheet lookups and isolated 2026 statutory calculation"
+fullName: "Published 2025 and draft 2026 EIC worksheet lookups and statutory credit limitation"
 taxYear: 2025
 irsReference: "https://www.irs.gov/publications/p596"
 notes: |
@@ -19,11 +19,10 @@ notes: |
   published cells must match, not only selected examples. This reproduces the
   final 2025 table. The August 28 draft Publication 1040 (2026) matches all
   11,240 cells under this method using 2026 constants, including eight last
-  intervals. See docs/upgrade-2026-draft-federal-tables-work.md. The final 2026
-  table remains unqualified.
-  Isolated 2026 uses the correctly limited statutory formula rounded to dollars
-  and the independently indexed constants. Public 2026 availability stays gated
-  until final table/form and human qualification. No 2025 table is reused in2026.
+  intervals. The November 24 draft Form 1040 instructions independently show
+  the annual 2026 table and worksheet method. The 2026 table is used only for
+  the draft calculation. Public 2026 availability stays gated until final
+  table/form and human qualification.
 lines:
   - line: "publishedTable"
     description: "Final 2025 table amount for the applicable filing-status and child column"
@@ -52,17 +51,20 @@ lines:
       - "Positive cents rounding to zero produce zero, never a fabricated first-row amount"
       - "Published completed-phaseout thresholds take precedence over a bucket value"
     testRef: "tests/engine/forms/eic-credit-table.test.ts::preserves cents and applies every final interval cutoff"
-  - line: "isolated2026Statute"
-    description: "Correct the statutory phase-out ceiling without claiming a final2026 table"
-    formula: "roundDollar(max(0,min(rate*min(earned,earned ceiling),rate*earned ceiling-phaseout reduction)))"
-    irsRef: "IRC32(a)(1)-(2); RevProc2025-32 section3.06"
+  - line: "draft2026Table"
+    description: "Use the 2026 draft table for independent earned and applicable AGI lookups"
+    formula: "Use 2026 indexed parameters and the printed $50 income intervals and partial interval cutoffs. Take min(table(earned income), table(max(earned income, AGI))). Retain exact inputs and mark the audit as draft."
+    irsRef: "https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf#page=54, draft EIC table pp. 53–64; https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf#page=51, Worksheet A/B; IRS Rev. Proc. 2025-32 section 3.06; IRC § 32(a)"
     edgeCases:
-      - "Earned1000 and AGI30000 with one child retains340 under the statutory formula"
-      - "Three-child maximum8230.50 rounds8231, matching indexed maximum"
-      - "No public readiness or final table qualification is enabled"
-    testRef: "tests/engine/forms/eic-credit-table.test.ts::applies the independent statutory ceiling in isolated2026"
+      - "Every printed interval and column agrees at the first and last eligible dollar, including eight partial intervals"
+      - "Single with one child credits $43 for $100 of earned income and AGI"
+      - "Earned $1,000 and AGI $30,000 with one child retains $349 under the draft table"
+      - "Three-child maximum $8,230.50 rounds to $8,231, matching the indexed maximum"
+    testRef: "tests/engine/forms/eic-credit-table.test.ts::uses the 2026 draft table for separate earned and AGI lookups"
+    testRefs:
+      - "tests/engine/forms/eic-credit-table.test.ts::matches every published 2026 draft EIC table cell and partial interval"
   - line: "tableSourceBounds"
-    description: "Keep the final2025 table isolated from other years and preserve source cents"
-    formula: "Reject an unavailable table year or invalid finite income/child count; retain the exact original income in the audit"
-    irsRef: "Publication596 (2025), final EIC Table; original Form1040 source conventions"
+    description: "Keep each EIC table year-specific and preserve source cents"
+    formula: "Reject an unavailable table year or invalid finite income or child count. Retain the exact original income in the audit."
+    irsRef: "Publication596 (2025), final EIC Table; draft 2026 Form 1040 instructions, EIC Table; original Form1040 source conventions"
     testRef: "tests/engine/forms/eic-credit-table.test.ts::rejects unavailable years and invalid table inputs without modifying original cents"

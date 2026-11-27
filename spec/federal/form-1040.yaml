@@ -485,7 +485,7 @@ lines:
   # ── Tax ──────────────────────────────────────────────────
   - line: "16"
     description: "Tax"
-    formula: "Applicable QDCG or ScheduleD Tax Worksheet; ordinary steps use final-year Tax Table below100000 and Tax Computation Worksheet otherwise. Foreign exclusions use the same sources for both stacked and excluded income. Final2026 table remains unavailable: indexed-rate preview is explicitly unqualified."
+    formula: "Applicable QDCG or Schedule D Tax Worksheet. Ordinary steps use the applicable Tax Table below $100,000 and the Tax Computation Worksheet otherwise. Foreign exclusions use the same sources for both stacked and excluded income. The 2026 calculation uses the draft table and worksheet until final qualification."
     irsRef: "Form 1040 Instructions, Line 16; QDCG Worksheet"
     inputs:
       - "Line 15 (taxable income)"

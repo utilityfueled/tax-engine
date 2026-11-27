@@ -30,3 +30,8 @@ lines:
     formula: "Record the January 1 through April 15, 2027 rate authority in the revised 2026 draft rule pack. The 2025 pack retains its separate authorities. Keep 2026 eligibility for calculation and filing under the existing readiness gates."
     irsRef: "Rev. Rul. 2026-25 and IRC6621(b)(2)(B)"
     testRef: "tests/models/rule-packs.test.ts::records the new Form 2210 rate for 2026 without qualifying the annual return"
+  - line: "2026-draft-tax-and-credit-tables"
+    description: "Version the draft Tax and Earned Income Credit tables separately from final-year sources"
+    formula: "The 2026 rule pack records both draft publication and instruction revisions. Its calculation status stays incomplete and filing stays gated. Historical packs do not adopt 2026 draft source metadata."
+    irsRef: "https://www.irs.gov/pub/irs-dft/p1040--dft.pdf; https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf"
+    testRef: "tests/models/rule-packs.test.ts::records the draft 2026 Tax and EIC tables without qualifying the annual return"

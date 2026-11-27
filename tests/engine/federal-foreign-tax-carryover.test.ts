@@ -21,9 +21,10 @@ function ordinary(year=2025,stateTaxes='0') {
 const line=(result:ReturnType<typeof calculateFederalTax>,id:string)=>result.allLines.find(row=>row.form==='Foreign Deduction Carryover WS'&&row.line===id)?.value.toFixed();
 describe('Canonical deduction-year foreign carryover',()=>{
   it('absorbs actual prior carry in both supported years without granting a credit',()=>{
-    for(const [year,tax,limit,used,left] of [[2025,'13455','673','73','127'],[2026,'13170','659','59','141']] as const){
+    for(const [year,tax,limit,used,left] of [[2025,'13455','673','73','127'],[2026,'13176','659','59','141']] as const){
       const input=ordinary(year);const before=JSON.stringify(input);const result=calculateFederalTax(input);
-      // 2025 TaxTable84250–84300 single13455. 2026:1240+4560+33500*.22=13170.
+      // The single column gives $13,455 on the final 2025 $84,250–$84,300 row
+      // and $13,176 on the draft 2026 $83,900–$83,950 row.
       // Foreign ratio .05 after prescribed deduction rounding; multiply and round once.
       expect(result.totalTaxBeforeCredits.toFixed()).toBe(tax);expect(result.foreignTaxCredit.isZero()).toBe(true);
       expect(line(result,'21')).toBe(limit);expect(line(result,'absorbed')).toBe(used);

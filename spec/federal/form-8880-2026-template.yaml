@@ -62,9 +62,9 @@ lines:
       line 18 preview for worksheet line 1, explicit zero from Schedule 3 lines
       1–3, 6d and 6l for line 2, and their difference for line 3 and form line 11.
       Require positive line 12 and reconcile it to Schedule 3 line 4. Redact the
-      SSN and mark both saved pages for review only. The missing annual tax table
-      holds public dispatch and exports. The fixture uses the existing draft
-      statutory-rate preview with a test-only rule-data mock.
+      SSN and mark both saved pages for review only. The missing final 2026 tax
+      table holds public dispatch and exports. The fixture uses the draft Tax
+      Table with a test-only rule-data mock.
     irsRef: "2026 Form 8880 face and integrated instructions. IRS 2026 W-2 instructions, Box 12 (https://www.irs.gov/instructions/iw2w3). IRS Notice 2025-67, §402(g) regular deferral limit (https://www.irs.gov/pub/irs-drop/n-25-67.pdf)."
     testRef: "tests/pdf/form-8880-2026-candidate.test.ts::projects an original Code D W-2 into the saved credit and worksheet"
   - line: "ordinary-roth-projection"

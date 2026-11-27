@@ -121,6 +121,12 @@ lines:
     irsRef: "https://www.irs.gov/instructions/i1040s8, Taxpayer Identification Number Requirements, Credit Limit Worksheet B, Earned Income Worksheet"
     testRef: "tests/engine/federal-ctc-facts.test.ts::Schedule 8812 actual identity and payroll facts"
 
+  - line: "2026-draft-tax-table-credit-split"
+    description: "Apply the draft ordinary tax table to the joint return credit limit"
+    formula: "For a joint return with $50,000 in wages, a $32,200 standard deduction, one qualifying child and no other credits affecting the limitation, the draft tax table gives $1,783 for taxable income of at least $17,800 but less than $17,850. Schedule 8812 lines 13 and 14 use $1,783. The remaining $417 of the $2,200 credit is refundable because both the earned income calculation and the per-child cap exceed it."
+    irsRef: "https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf#page=75; https://www.irs.gov/pub/irs-dft/f1040s8--dft.pdf"
+    testRef: "tests/engine/federal-ctc-facts.test.ts::uses the draft tax table to split the credit with one valid SSN and two timely joint filer TINs"
+
   - line: "2026-qualifying-child-age"
     description: "Validate the actual date of birth before counting a claimed child on line 4"
     formula: "A 2026 CTC or ACTC claim needs a real calendar birth date no later than December 31, 2026. Rev. Rul. 2003-72 applies age attainment on the child's birthday for section 24. A child born December 31, 2009 has reached age 17 by year end and conflicts with an affirmative CTC claim. A child born January 1, 2010 reaches age 17 in 2027. Reject missing, impossible and future dates and conflicting affirmative claims. Do not infer an ODC claim. Continue to recognize an independently confirmed ODC claim with a timely TIN and preserve the child SSN and newborn exception requirements. Historical calculation is unchanged."

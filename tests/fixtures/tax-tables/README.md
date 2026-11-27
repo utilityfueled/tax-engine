@@ -13,5 +13,9 @@ against both integer endpoints and compare QSS with the published joint column.
 2025 source is Publication1040(2025), whose first12pages are the table;
 2022–2024 source is the respective Tax and EIC Tables, table pages3–14.
 The source archive is local `.local/upgrade-evidence/<year>-tax-tables.pdf`.
-The final 2026 table fixture is pending publication. The draft comparison is
-recorded in `docs/upgrade-2026-draft-federal-tables-work.md`.
+`2026-draft.json` is independently extracted from printed pages 2–13 of the
+August 28 draft Publication 1040. Its SHA-256 is
+`afb147e72e8d437ed967025e6fc1071f70c3349ae48ab4f90ebe3e60014c4169`.
+The pypdf layout and PDF.js coordinate extractions agreed on every cell.
+See `docs/upgrade-2026-draft-federal-tables-work.md` for the source PDF hash
+and extraction evidence. The final 2026 table fixture is pending publication.

@@ -9,6 +9,8 @@ import { d } from "@/utils/decimal.js";
 import { fictionalEmptyEicHistory } from "../../fixtures/eic-disallowance.js";
 
 const published: { rows: string[][] } = JSON.parse(readFileSync(new URL("../../fixtures/eic-table-2025.json", import.meta.url), "utf8"));
+const draft: { rows: string[][]; partialIntervals: Array<{ lower: string; cutoff: string; column: number; credit: string }> } =
+  JSON.parse(readFileSync(new URL("../../fixtures/eic-table-2026-draft.json", import.meta.url), "utf8"));
 const limits = [["19104", "50434", "57310", "61555"], ["26214", "57554", "64430", "68675"]];
 function result(income: string, children = 0, joint = false, agi = income) {
   return calculateEic({ filingStatus: joint ? "married_filing_jointly" : "single", qualifyingChildren: children,
@@ -57,7 +59,7 @@ it("preserves cents and applies every final interval cutoff", () => {
   }
 });
 
-it("applies the independent statutory ceiling in isolated2026", () => {
+it("uses the 2026 draft table for separate earned and AGI lookups", () => {
   const claimantInput = { taxpayer: { taxYear: 2026, filingStatus: "single" as const,
     primary: { firstName: "Fictional", lastName: "Claimant", ssn: "111-22-3333", dateOfBirth: "1990-01-02", employmentValidSsnIssuedByDueDate: true } },
     eic: { claimantEligibility: { sourceTaxYear: 2026, sourceReference: "Actual synthetic claimant record", sourceFactsConfirmed: true,
@@ -65,15 +67,48 @@ it("applies the independent statutory ceiling in isolated2026", () => {
   const base = { filingStatus: "single" as const, qualifyingChildren: 1, earnedIncome: d("1000"), agi: d("30000"),
     investmentIncome: d(0), mfsEicEligible: false, claimantInput,
     disallowanceInput: { taxpayer: claimantInput.taxpayer, sources: fictionalEmptyEicHistory(claimantInput.taxpayer) } };
-  expect(calculateEic(base, FEDERAL_2026_CONSTANTS).credit.toFixed()).toBe("340");
+  const actual = calculateEic(base, FEDERAL_2026_CONSTANTS);
+  expect(actual.credit.toFixed()).toBe("349");
+  expect(actual.lines.find(row => row.form === "EIC" && row.line === "27a")?.formula).toContain("2026 draft EIC table");
+  expect(actual.lines.filter(row => row.form === "EIC Table" && row.line.endsWith(":credit")).map(row => row.value.toFixed()))
+    .toEqual(["349", "3447"]);
+  const firstBoundary = calculateEic({ ...base, earnedIncome: d("100"), agi: d("100") }, FEDERAL_2026_CONSTANTS);
+  expect(firstBoundary.credit.toFixed()).toBe("43");
   const maximum = calculateEic({ ...base, qualifyingChildren: 3, earnedIncome: d("20000"), agi: d("20000") }, FEDERAL_2026_CONSTANTS);
   expect(maximum.credit.toFixed()).toBe("8231");
   expect(maximum.maxCredit.toFixed()).toBe("8231");
 });
 
+it("matches every published 2026 draft EIC table cell and partial interval", () => {
+  expect(draft.rows).toHaveLength(1405);
+  expect(draft.partialIntervals).toHaveLength(8);
+  function lookup(income: string, column: number) {
+    return calculateEicCreditTable({ income: d(income), filingStatus: column < 4 ? "single" : "married_filing_jointly",
+      qualifyingChildren: column % 4, lookup: "earned" }, FEDERAL_2026_CONSTANTS).credit.toFixed();
+  }
+  for (const [lower, upper, ...credits] of draft.rows) {
+    expect(credits).toHaveLength(8);
+    for (const [column, expected] of credits.entries()) {
+      const partial = draft.partialIntervals.find(row => row.lower === lower && row.column === column);
+      const lastEligible = d(partial?.cutoff ?? upper).minus(1).toFixed();
+      expect(lookup(lower, column), `${lower}, column ${column}`).toBe(expected);
+      expect(lookup(lastEligible, column), `${lastEligible}, column ${column}`).toBe(expected);
+    }
+  }
+  for (const { lower, cutoff, column, credit } of draft.partialIntervals) {
+    expect(lookup(d(lower).minus(".50").toFixed(), column)).toBe(credit);
+    expect(lookup(d(cutoff).minus(".51").toFixed(), column)).toBe(credit);
+    expect(lookup(d(cutoff).minus(".50").toFixed(), column)).toBe("0");
+    expect(lookup(cutoff, column)).toBe("0");
+  }
+  expect(lookup(".49", 0)).toBe("0");
+  expect(lookup(".50", 0)).toBe("2");
+});
+
 it("rejects unavailable years and invalid table inputs without modifying original cents", () => {
   const base = { income: d("5000.49"), filingStatus: "single" as const, qualifyingChildren: 0, lookup: "earned" as const };
-  expect(() => calculateEicCreditTable(base, FEDERAL_2026_CONSTANTS)).toThrow(/only available for2025/);
+  expect(() => calculateEicCreditTable(base, { ...getConstants(2025), taxYear: 2027 })).toThrow(/EIC table.*available/);
+  expect(() => getConstants(2026)).toThrow(/2026 rule pack.*incomplete/);
   for (const income of [d("NaN"), d("Infinity"), d("-Infinity")]) {
     expect(() => calculateEicCreditTable({ ...base, income }, getConstants(2025))).toThrow(/finite actual income/);
   }

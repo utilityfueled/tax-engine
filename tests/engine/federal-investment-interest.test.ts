@@ -44,7 +44,9 @@ describe("Investment interest federal source coordination",()=>{
       form4952Amt:{...source(2026),investmentInterestExpense:"5000",electedPreferentialIncome:"5000"},
       amtCapitalGains:{sourceTaxYear:2026,sourceReference:"Synthetic actual AMT worksheets",sourceFactsConfirmed:true,
         qualifiedDividends:"10000",netCapitalGain:"0",section1250Gain:"0",collectiblesGain:"0"}};
-    const result=calc(current);expect(result.form4952?.taxYear).toBe(2026);expect(line(result,"47")).toBe("4552");
+    // After the $5,000 deduction, the $45,000 taxable income includes $5,000 at 0%.
+    // The draft 2026 single column gives $4,555 at $40,000–$40,050, below $5,155 if all were ordinary.
+    const result=calc(current);expect(result.form4952?.taxYear).toBe(2026);expect(line(result,"47")).toBe("4555");
     expect(()=>calc({...current,form4952:{...current.form4952,netCapitalGainFromInvestmentProperty:undefined}})).toThrow(/actual|source/i);
     expect(()=>calc({...current,form4952:{...current.form4952,sourceTaxYear:2025}})).toThrow(/year/i);
   });

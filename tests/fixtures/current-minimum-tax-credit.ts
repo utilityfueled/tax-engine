@@ -96,7 +96,7 @@ export function actualCurrentMtc2026Input(options: { reversal?: boolean; priorAv
   if (prior !== '0') {
     input.form8801!.priorYear = 2025;
     input.form8801!.unusedMinimumTaxCreditCarryforward = prior;
-    attributes.regular!.records = [{ ...codAttributeRecord('minimum_tax_credit', prior, options.reversal ? '10596' : '0'),
+    attributes.regular!.records = [{ ...codAttributeRecord('minimum_tax_credit', prior, options.reversal ? '10602' : '0'),
       sourceId: 'actual-origin-2022', originTaxYear: 2022,
       history: [2023, 2024, 2025].map(taxYear => ({ taxYear, used: '0', reduced: '0', expired: '0',
         sourceReference: `Actual filed${taxYear} original2022 reconciliation` })),

@@ -27,7 +27,7 @@ it('uses the 2026 wage base under isolated constants', () => {
   expect(value(run('184499'))).toBe('267.939');
 });
 
-it('uses the 2026 statutory brackets for confirmed ordinary preferential periods in isolation', () => {
+it('uses the 2026 draft return worksheet for confirmed ordinary preferential periods', () => {
   const periods = [
     period('30000', { qualifiedDividends: '5000' }),
     period('60000', { qualifiedDividends: '10000', netCapitalGain: '2500' }),
@@ -44,5 +44,5 @@ it('uses the 2026 statutory brackets for confirmed ordinary preferential periods
     facts: { annualizedIncomePeriods: periods, ordinaryPreferentialPeriodsConfirmed: true },
   });
   expect(result.lines.filter(row => /^14[abcd]$/.test(row.line)).map(row => row.value.toFixed()))
-    .toEqual(['16170', '20750', '28424', '32234']);
+    .toEqual(['16176', '20756', '28424', '32234']);
 });

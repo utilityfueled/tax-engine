@@ -35,19 +35,18 @@ export function calculateUnroundedTaxFromBrackets(
 }
 
 type OrdinaryTaxConstants = Pick<YearConstants, "taxYear" | "taxBrackets">;
-export type RegularIncomeTaxSource = "final-year-tax-table" | "statutory-rate-preview";
+export type RegularIncomeTaxSource = "final-year-tax-table" | "draft-year-tax-table";
 
-/** A published table and an indexed-rate preview have different source status. */
+/** A final table and a draft table have different source status. */
 export function regularIncomeTaxSource(constants: OrdinaryTaxConstants): RegularIncomeTaxSource {
   if ([2022, 2023, 2024, 2025].includes(constants.taxYear)) return "final-year-tax-table";
-  if (constants.taxYear === 2026) return "statutory-rate-preview";
+  if (constants.taxYear === 2026) return "draft-year-tax-table";
   throw new Error(`Federal tax table is unavailable for year ${constants.taxYear}`);
 }
 
 /**
- * Form1040 line16 and ordinary-tax worksheet steps. Final2022–25 interval
- * arithmetic is checked against every independently extracted published cell.
- * 2026 remains a statutory-rate preview until its final table is available.
+ * Form 1040 line 16 and ordinary-tax worksheet steps. The interval arithmetic
+ * matches every independently extracted final 2022–2025 and draft 2026 cell.
  * Spec: spec/federal/tax-table.yaml.
  */
 export function calculateRegularIncomeTax(
@@ -56,10 +55,10 @@ export function calculateRegularIncomeTax(
   constants: OrdinaryTaxConstants,
 ): Decimal {
   if (!taxableIncome.isFinite()) throw new Error("Taxable income must be finite");
-  const source = regularIncomeTaxSource(constants);
+  regularIncomeTaxSource(constants);
   const income = roundDollar(zeroFloor(taxableIncome));
   const brackets = constants.taxBrackets[filingStatus];
-  if (source === "statutory-rate-preview" || income.gte("100000")) {
+  if (income.gte("100000")) {
     return calculateTaxFromBrackets(income, brackets);
   }
   let midpoint: Decimal;

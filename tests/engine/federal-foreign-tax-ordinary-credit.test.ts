@@ -32,9 +32,9 @@ it('routes actual ordinary regular and AMT credits with separate carry histories
  expect(result.allLines.filter(row=>row.form==='Form 6251'&&row.line==='8')).toHaveLength(1);
  expect(result.allLines.some(row=>row.form==='Form 1116')).toBe(false);expect(JSON.stringify(input)).toBe(before);
  const next=calculateFederalTax(fixture(2026));
- // Statutory2026 preview: taxable83900; 12400*.10+38000*.12+33500*.22=13170.
- // Foreign net8390; ratio .1 =>1317. AMT(100000-90100)*.26=2574; .1=>257.
- expect(next.ordinaryTax.toFixed()).toBe('13170');expect(next.foreignTaxCredit.toFixed()).toBe('1317');
+ // Draft 2026 Tax Table, single, $83,900–$83,950 gives $13,176.
+ // The 10% foreign ratio gives $1,318 after rounding. AMT is ($100,000 - $90,100) × 26%, with a $257 credit after rounding.
+ expect(next.ordinaryTax.toFixed()).toBe('13176');expect(next.foreignTaxCredit.toFixed()).toBe('1318');
  expect(next.foreignTaxOrdinaryCredit?.amt.creditAllowed.toFixed()).toBe('257');expect(next.foreignTaxOrdinaryCredit?.amt.currentCarryforward.toFixed()).toBe('643');
 });
 it('rejects source context conflicts instead of using the historical estimate',()=>{

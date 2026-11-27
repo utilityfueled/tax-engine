@@ -143,12 +143,11 @@ export function calculateEic(input: EicInput, constants: YearConstants): EicResu
 
   // IRC32(a)(2) limits phase-in by the MAXIMUM less phaseout. A low-earned,
   // higher-AGI return must not subtract phaseout from its smaller phase-in.
-  // Final2025 uses the actual published table; isolated2026 uses the corrected
-  // statutory formula until that year's own final table is qualified.
   const rawMaximum = creditRate.times(earnedIncomeAmount);
   const rawCredit = Decimal.max(ZERO, Decimal.min(phaseInCredit, rawMaximum.minus(phaseOutReduction)));
   let credit = roundDollar(rawCredit);
-  if (constants.taxYear === 2025) {
+  const usesDraft2026Table = constants.taxYear === 2026;
+  if (constants.taxYear === 2025 || usesDraft2026Table) {
     const earned = calculateEicCreditTable({ income: input.earnedIncome, filingStatus: input.filingStatus, qualifyingChildren: input.qualifyingChildren, lookup: "earned" }, constants);
     const agi = calculateEicCreditTable({ income: phaseOutIncome, filingStatus: input.filingStatus, qualifyingChildren: input.qualifyingChildren, lookup: "agi" }, constants);
     credit = Decimal.min(earned.credit, agi.credit);
@@ -205,8 +204,9 @@ export function calculateEic(input: EicInput, constants: YearConstants): EicResu
     });
 
   audit.record("EIC", "27a", "Earned Income Credit", credit,
-    constants.taxYear === 2025 ? "Smaller of the final2025 earned-income and applicable AGI table amounts"
-      : `Isolated statutory result: roundDollar(max(0,min($${phaseInCredit},$${rawMaximum} − $${phaseOutReduction}))); final table unqualified`,
+    usesDraft2026Table ? "Smaller of the earned-income and applicable AGI amounts from the 2026 draft EIC table"
+      : constants.taxYear === 2025 ? "Smaller of the final2025 earned-income and applicable AGI table amounts"
+        : `Isolated statutory result: roundDollar(max(0,min($${phaseInCredit},$${rawMaximum} − $${phaseOutReduction}))); final table unqualified`,
     {
       "Filing status": input.filingStatus,
       "Qualifying EIC children": input.qualifyingChildren.toString(),

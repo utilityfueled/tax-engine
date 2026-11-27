@@ -19,20 +19,20 @@ it('retains isolated2026 positive signed generation and current tax', () => {
     result.form6251!.amt, result.currentMinimumTaxCredit!.sourceCalculation.minTaxCreditFromSourceYear,
     result.currentMinimumTaxCredit!.currentCreditUsed, result.currentMinimumTaxCredit!.followingYearPool,
     result.carryforwards.minimumTaxCredit, result.totalTax].map(value => value.toFixed()))
-    .toEqual(['16100', '83900', '300000', '54574', '41404', '41404', '0', '41404', '41304', '54574']);
+    .toEqual(['16100', '83900', '300000', '54574', '41398', '41398', '0', '41398', '41298', '54574']);
   expect(result.currentMinimumTaxCredit!.sourceCalculation.netMinTaxOnExclusionItems.toFixed()).toBe('0');
   expect(JSON.stringify(input)).toBe(before);
 });
 
 it('retains actual2022 sources at isolated2026 aggregate zero and dollar boundaries', () => {
-  for (const [prior, currentCarry, pool, remainingCod] of [['52000', '41404', '0', '300'], ['52001', '41405', '1', '297']] as const) {
+  for (const [prior, currentCarry, pool, remainingCod] of [['52000', '41398', '0', '300'], ['52001', '41399', '1', '297']] as const) {
     const input = actualCurrentMtc2026Input({ reversal: true, priorAvailable: prior }), before = JSON.stringify(input);
     const result = calculateFederalTax(input);
     expect([result.form6251!.amti, result.form6251!.tentativeMinimumTax, result.form6251!.amt,
       result.currentMinimumTaxCredit!.sourceCalculation.exclusionOnlyAMTI, result.currentMinimumTaxCredit!.signedCurrentAdjustment,
       result.form8801!.creditAllowed, result.form8801!.carryforwardToNextYear, result.currentMinimumTaxCredit!.followingYearPool,
       result.carryforwards.minimumTaxCredit, result.codAttributeReduction!.regular.unreducedExclusion, result.totalTax].map(value => value.toFixed()))
-      .toEqual(['100000', '2574', '0', '300000', '-41404', '10596', currentCarry, pool, '0', remainingCod, '2574']);
+      .toEqual(['100000', '2574', '0', '300000', '-41398', '10602', currentCarry, pool, '0', remainingCod, '2574']);
     expect(input.form982AttributeSources.regular!.records![0]!.originTaxYear).toBe(2022);
     expect(input.form982AttributeSources.regular!.records![0]!.history!.map(row => row.taxYear)).toEqual([2023, 2024, 2025]);
     expect(JSON.stringify(input)).toBe(before);

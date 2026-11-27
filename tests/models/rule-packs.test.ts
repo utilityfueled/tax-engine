@@ -74,4 +74,21 @@ describe("explicit federal rule packs", () => {
     expect(annual.calculationStatus).toBe("incomplete");
     expect(annual.filingQualified).toBe(false);
   });
+
+  it("records the draft 2026 Tax and EIC tables without qualifying the annual return", () => {
+    const publication = "https://www.irs.gov/pub/irs-dft/p1040--dft.pdf";
+    const instructions = "https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf#page=54";
+    const annual = getRulePack(2026);
+    expect(annual.sources).toContainEqual(expect.objectContaining({
+      url: publication,
+      revision: "2026 draft dated August 28, 2026",
+    }));
+    expect(annual.sources).toContainEqual(expect.objectContaining({
+      url: instructions,
+      revision: "2026 draft dated November 24, 2026",
+    }));
+    expect(getRulePack(2025).sources.map(source => source.url)).not.toContain(publication);
+    expect(annual.calculationStatus).toBe("incomplete");
+    expect(annual.filingQualified).toBe(false);
+  });
 });
