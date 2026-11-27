@@ -1,5 +1,48 @@
 # 2026 upgrade implementation evidence
 
+## November 26 guided Form 8919 original
+
+`5f958545d` lets federal-only, non-joint filers capture a verified
+original Form 1099-NEC in the existing Form 8919 draft interview.
+The linked original feeds employee wages, federal withholding and
+one separately confirmed, source-matched FLSA overtime claim.
+A separate federal-only confirmation preserves genuine residency
+answers. A selected or saved state return and actual state reporting
+hold this path. Invalid edits retain the original facts and reset
+their confirmation. The 2026 calculation and filled PDF release
+gates remain in place. All 60 focused tests and the web typecheck
+passed. The exact-source combined local run is queued behind the
+existing browser window. [Form 8919](https://www.irs.gov/pub/irs-pdf/f8919.pdf) ·
+[2026 Form 1099-NEC instructions](https://www.irs.gov/instructions/i1099mec) ·
+[AMD64 Web CI](https://github.com/utilityfueled/tax-engine/actions/runs/45935692352).
+
+## November 26 separate-filer AMT income addition
+
+`c70e28bdf` applies the high-income Form 6251 line 4 addition for
+married filers submitting separate returns. The IRS draft 2026
+example adds $10,000 to $660,200, which yields $670,200 of AMT income
+and $185,211 of tentative minimum tax. The final 2025 example takes
+$920,350 to $925,350. The engine applies the adjustment after the
+actual line 2f deduction. The tentative worksheet for the alternative
+NOL deduction still uses lines 1 through 3. The draft line 1a audit
+references Schedule 1-A line 43. Twelve tests reproduced the
+omission or old draft label. All 253 focused and 86 independent
+tests passed, with 23 validated spec references. Qualified tax
+review and final 2026 filing remain open.
+[IRC §55](https://uscode.house.gov/us/usc/119-142/t26/s55/) ·
+[Draft 2026 instructions](https://www.irs.gov/pub/irs-dft/i6251--dft.pdf#page=10) ·
+[Final 2025 instructions](https://www.irs.gov/pub/irs-pdf/i6251.pdf#page=9).
+
+## November 26 Ohio IT NRC nonresident audit
+
+`b8c06840f` shows Ohio IT NRC Section I lines 1–9 and 16–20
+when all owners are verified full-year nonresidents. Seven tests
+reproduced the extra part-year rows before the fix. All 410 focused
+tests and 174 independent spot checks passed. The change preserves
+the credit amounts, part-year and mixed joint audit rows, business
+Sections II and III, and 2025 behavior. Final Ohio forms and export
+qualification remain open. [Ohio draft instructions, page 41](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf#page=41).
+
 ## November 26 Form 8919 original and offline evaluation windows
 
 `63efb2e25` counts a verified 2026 Form 8919 Reason A original

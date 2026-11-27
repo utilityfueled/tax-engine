@@ -9,6 +9,23 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `5f958545d` adds linked Form 1099-NEC draft facts to the Form
+  8919 interview, keeping the actual residency fact and separate
+  federal-only confirmation. All 60 focused tests passed. Exact
+  local checks follow the existing Chromium run. Qualified filing
+  and state-source treatment remain open.
+  [Guided evidence](upgrade-2026-progress.md#november-26-guided-form-8919-original).
+
+- `c70e28bdf` applies Form 6251's separate-filer high-income
+  adjustment and leaves the tentative alternative NOL base intact.
+  The published 2026 draft example and the final 2025 example
+  both match. [AMT evidence](upgrade-2026-progress.md#november-26-separate-filer-amt-income-addition).
+
+- `b8c06840f` omits Ohio IT NRC part-year lines from full-year
+  nonresident draft audits. It preserves the credit amounts and
+  part-year or mixed-joint rows. All 410 focused tests passed.
+  [Ohio IT NRC evidence](upgrade-2026-progress.md#november-26-ohio-it-nrc-nonresident-audit).
+
 - `63efb2e25` reconciles Form 8919 wages with the 2026 original
   1099-NEC, preserves withholding and routes eligible overtime to
   draft Schedule 1-A. `b1878ddd0` enforces exact offline evaluation

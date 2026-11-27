@@ -2,11 +2,14 @@
   "resume": {
     "asOf": "2026-11-26",
     "branch": "main",
-    "applicationCommit": "63efb2e25e9d98159e874fa243828e9d9120607f",
-    "latestScopedApplicationCommit": "63efb2e25e9d98159e874fa243828e9d9120607f",
-    "latestCombinedCandidateCommit": "63efb2e25e9d98159e874fa243828e9d9120607f",
+    "applicationCommit": "5f958545d990f1ff423dbf267653b6f0cef9da9a",
+    "latestScopedApplicationCommit": "5f958545d990f1ff423dbf267653b6f0cef9da9a",
+    "latestCombinedCandidateCommit": "5f958545d990f1ff423dbf267653b6f0cef9da9a",
+    "guidedForm8919OriginalEvidenceKey": "activeContinuation.nov26GuidedForm8919Original",
     "form8919OriginalEvidenceKey": "activeContinuation.nov26Form8919Original",
     "providerEvaluationWindowEvidenceKey": "activeContinuation.nov26ExactProviderEvaluationWindows",
+    "ohioNonresidentNrcAuditEvidenceKey": "activeContinuation.nov26OhioNonresidentNrcAudit",
+    "form6251SeparateFilerEvidenceKey": "activeContinuation.nov26MfsAmtIncomeAddition",
     "draftFederalTableAndOhioInvestmentEvidenceKey": "activeContinuation.nov26DraftFederalTablesAndOhioInvestment",
     "migrationPoolAuthenticationEvidenceKey": "activeContinuation.nov26SelfHostMigrationAuthentication",
     "annualDeductionLinesEvidenceKey": "activeContinuation.nov26AnnualDeductionLines",
@@ -149,7 +152,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Both strict Linux browser gates and target image evidence remain open. AMD64 Web 45932847590 covers c7d851d39. ARM64 recovery 45932508665 covers b496c367d, the migration authentication fix. Prior ARM64 45919423965 and AMD64 45920349552 failed at create-schema. A standalone SCRAM 16.14 positive and failure-mode rehearsal passed after the fix.",
+      "Both strict Linux browser gates and target image evidence remain open. AMD64 Web 45935692352 covers 5f958545d. ARM64 recovery 45932508665 covers b496c367d, the migration authentication fix. Prior ARM64 45919423965 and AMD64 45920349552 failed at create-schema. A standalone SCRAM 16.14 positive and failure-mode rehearsal passed after the fix.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -157,6 +160,50 @@
     ]
   },
   "activeContinuation": {
+    "nov26GuidedForm8919Original": {
+      "commit": "5f958545d990f1ff423dbf267653b6f0cef9da9a",
+      "focusedTestsPassed": 60,
+      "postCleanupEngineTestsPassed": 9,
+      "independentEngineeringReview": "passed after restoring declared residency and adding separate affirmative federal scope",
+      "webTypecheckPassed": true,
+      "scopedLintErrors": 0,
+      "unitCiRun": 45935692317,
+      "amd64WebRun": 45935692352,
+      "localExactChecks": "queued behind c7d851d39 Chromium",
+      "scope": "federal-only draft fact collection for non-joint filers, with state filings and actual state-source reporting held",
+      "sourceLinks": [
+        "https://www.irs.gov/pub/irs-pdf/f8919.pdf",
+        "https://www.irs.gov/instructions/i1099mec",
+        "https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf#page=110"
+      ]
+    },
+    "nov26MfsAmtIncomeAddition": {
+      "commit": "c70e28bdf808575b43aec83967bc7a618cbe3cc7",
+      "federalFocusedTestsPassed": 253,
+      "independentTestsPassed": 86,
+      "updatedFixtureTestsPassed": 17,
+      "scopedSpecRefsPassed": 23,
+      "unitCiRun": 45935208230,
+      "amd64WebRun": 45935206985,
+      "redCasesBeforeFix": 12,
+      "draft2026Example": { "preliminaryAmti": "660200", "line4": "670200", "tentativeMinimumTax": "185211" },
+      "final2025Example": { "preliminaryAmti": "920350", "line4": "925350" },
+      "preserved": "ATNOLD uses the tentative lines 1–3 total, unaffected taxpayers retain their audit layout, and filing qualification remains open",
+      "sourceLinks": [
+        "https://uscode.house.gov/us/usc/119-142/t26/s55/",
+        "https://www.irs.gov/pub/irs-dft/i6251--dft.pdf#page=10",
+        "https://www.irs.gov/pub/irs-pdf/i6251.pdf#page=9"
+      ]
+    },
+    "nov26OhioNonresidentNrcAudit": {
+      "commit": "b8c06840f138baa6243e2417443f09e6da0bfef1",
+      "focusedTestsPassed": 410,
+      "independentSpotCheckTestsPassed": 174,
+      "redCasesBeforeFix": 7,
+      "rowsAfterFix": "IT NRC Section I lines 1–9 and 16–20 for all verified full-year nonresident owners",
+      "preserved": "amounts, part-year and mixed-joint rows, business sections II/III, 2025 behavior and export gates",
+      "source": "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf#page=41"
+    },
     "nov26Form8919Original": {
       "commit": "63efb2e25e9d98159e874fa243828e9d9120607f",
       "focusedTestsPassed": 116,

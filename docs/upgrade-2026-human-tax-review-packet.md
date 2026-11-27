@@ -712,3 +712,17 @@ $69,700 taxable income and $77 of additional payroll tax. Record
 the final 2026 Schedule 1-A line and authority for the transfer.
 [Form 8919](https://www.irs.gov/pub/irs-pdf/f8919.pdf) ·
 [Draft Schedule 1-A instructions](https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf#page=110).
+
+## November 26 separate-filer Form 6251 line 4
+
+Derive the beginning, rate and cap of the high-income Form 6251
+line 4 adjustment for separate filers in 2025 and 2026. Recompute
+the IRS worked examples beginning at $920,350 in 2025 and $660,200
+in 2026. Then use the 2026 $670,200 tentative base with line 2f
+deductions of $10,000 and $30,000. Record the tentative AMT income
+used to calculate the line 2f limit, the final line 4 addition, and
+the actual line 4 for each case. Confirm the enhanced senior
+deduction's line reference for the final 2026 form separately.
+[IRC §55](https://uscode.house.gov/us/usc/119-142/t26/s55/) ·
+[Draft 2026 instructions](https://www.irs.gov/pub/irs-dft/i6251--dft.pdf#page=10) ·
+[Final 2025 instructions](https://www.irs.gov/pub/irs-pdf/i6251.pdf#page=9).
