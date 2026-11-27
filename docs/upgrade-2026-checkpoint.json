@@ -3,8 +3,10 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "85645fdcbca8045e19ab2884e3b19f3bddf5b9b4",
-    "latestScopedApplicationCommit": "85645fdcbca8045e19ab2884e3b19f3bddf5b9b4",
-    "latestCombinedCandidateCommit": "85645fdcbca8045e19ab2884e3b19f3bddf5b9b4",
+    "latestScopedApplicationCommit": "35634b84984a6284505ad19bb5a2e969a7bcee47",
+    "latestCombinedCandidateCommit": "35634b84984a6284505ad19bb5a2e969a7bcee47",
+    "latestScopedChecksEvidenceKey": "activeContinuation.nov27MortgageOriginalIdentity",
+    "nov27PaymentReceiptsAndForm8863EvidenceKey": "activeContinuation.nov27PaymentReceiptsAndForm8863",
     "nov27OhioPennsylvaniaPensionEvidenceKey": "activeContinuation.nov27OhioPennsylvaniaPension",
     "nov27PennsylvaniaNonresidentAndAotcEvidenceKey": "activeContinuation.nov27PennsylvaniaNonresidentAndAotc",
     "nov27AotcInstitutionEvidenceKey": "activeContinuation.nov27AotcInstitution",
@@ -89,7 +91,6 @@
     "latestSchedule8812AndNativeTimingEvidenceKey": "activeContinuation.nov26Schedule8812AndNativeTiming",
     "ohioUnemploymentEducatorHoursAndForm4137EvidenceKey": "activeContinuation.nov26OhioUnemploymentEducatorHoursAndForm4137",
     "latestFederalAnnualSourceEvidenceKey": "activeContinuation.nov25FederalAnnualSourceRefresh",
-    "latestScopedChecksEvidenceKey": "activeContinuation.nov26SourcesAndOfflineBilling",
     "combinedHsaOhioAiEvidenceKey": "activeContinuation.nov25HsaOhioAiFollowUp",
     "pensionOriginalReconfirmationEvidenceKey": "activeContinuation.nov25PensionOriginalReconfirmation",
     "longTermCareStatementIntakeEvidenceKey": "activeContinuation.nov25LongTermCareStatementIntake",
@@ -334,6 +335,43 @@
           "status": "queued",
           "conclusion": null
         }
+      }
+    },
+    "nov27MortgageOriginalIdentity": {
+      "commit": "35634b84984a6284505ad19bb5a2e969a7bcee47",
+      "source": "https://www.irs.gov/instructions/i1098",
+      "relatedSource": "https://www.irs.gov/publications/p1099",
+      "guidedAndDirectDuplicateRegressionsReproduced": true,
+      "focusedTestsPassed": 116,
+      "guidedSpecReferencesValidated": 8,
+      "canonicalSpecReferencesValidated": 17,
+      "independentReviewPassed": true,
+      "typechecksAndScopedLintPassed": true,
+      "combinedExactLocalVerification": "running",
+      "browserSourceAuditSha256": "0f6574ced709e22a6c6fb0cd57bbde048253fbeea293fd6edae297703e33b972"
+    },
+    "nov27PaymentReceiptsAndForm8863": {
+      "federalPaymentReceipts": {
+        "commit": "9c77011076fa3360a80483a82c62ec0939986b9b",
+        "source": "https://www.irs.gov/payments/direct-pay-help",
+        "bothEditorsAndCanonicalReopenChecked": true,
+        "focusedTestsPassed": 40,
+        "independentFocusedTestsPassed": 6,
+        "specReferencesValidated": 3,
+        "scopedLintAndWebTypecheckPassed": true,
+        "browserSourceAuditSha256": "e3f5450156467bfcfed81e65c767969c1885cb84eaf14b51824f14ee2bdfbbd9"
+      },
+      "form8863": {
+        "commit": "eb43afafe008f7131fc52a700501c4d74b22e709",
+        "source": "https://www.irs.gov/pub/irs-prior/f8863--2026.pdf",
+        "pinnedBlankSha256": "290771de5dbbbede2de9e7cb2ba8a7d51a08aa10e89b4ed74cfdbdb631af167f",
+        "privateExactFactorWholeDollarTransfersOnly": true,
+        "focusedTestsPassed": 118,
+        "independentFocusedTestsPassed": 8,
+        "specReferencesValidated": 8,
+        "typecheckAndScopedLintPassed": true,
+        "browserSourceAuditSha256": "d5a499450a48d287c3649165b02dd36121738b9f7a19f03f579cb339a96ad828",
+        "filingQualified": false
       }
     },
     "nov27AotcInstitution": {

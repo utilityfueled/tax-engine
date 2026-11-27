@@ -15,6 +15,46 @@ the latest application revision, exact-source runs and open dependencies. The
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
 
+## November 27 Form 1098 original identity
+
+`35634b849` makes the 2026 guided intake and mortgage-interest calculator compare lender
+names after normalizing case and whitespace for duplicate account checks.
+Two otherwise identical Forms 1098 previously reached the calculation with
+the same actual account and an extra space in the lender name. The direct
+calculator reproduced $200 on Schedule A line 8a from two copies of one
+$100.10 statement. The check preserves original lender text and accepts
+distinct actual accounts. Both regression tests failed before the fix.
+All 116 focused tests passed, along with guided and canonical spec
+validation, lint, typechecking and independent engineering review.
+The IRS requires an account number when a filer
+reports multiple accounts for the same borrower.
+[Form 1098 instructions](https://www.irs.gov/instructions/i1098) ·
+[General Instructions for Certain Information Returns](https://www.irs.gov/publications/p1099).
+
+## November 27 payment receipt replacement and private Form 8863 transfers
+
+`9c7701107` requires a fresh 2026 return-year confirmation when the user
+replaces or removes a known estimated or extension payment receipt reference.
+Both editors apply an edit on blur or Enter. Initial typing and equivalent
+formatting preserve confirmation. The React regression reproduced the prior
+intermediate-keystroke error, then passed with 40 focused cases, three linked
+spec checks and web typechecking. Independent review repeated six focused cases.
+[IRS Direct Pay help](https://www.irs.gov/payments/direct-pay-help).
+
+`eb43afafe` verifies two transfers privately for a single primary AOTC student
+with a current original Form 1098-T. The check matches confirmed workpapers
+to the canonical 2026 snapshot and reconciles the exact printed line 6 factor,
+line 8 to Form 1040 line 29, and line 19 to Schedule 3 line 3. It holds the
+IRS-permitted shorter factor when that factor differs from the exact value.
+All 118 focused tests passed with the pinned PDF interpreter, along with
+TypeScript, lint and eight linked spec checks. Independent review reproduced
+the line 6 discrepancy and repeated the eight focused candidate cases after
+the correction. The private projection returns the amounts and transfer
+locations. [Final 2026 Form 8863](https://www.irs.gov/pub/irs-prior/f8863--2026.pdf).
+
+The combined local release checks and focused receipt browser rehearsal are
+running on the tracked archive of `35634b849`.
+
 ## November 27 AOTC institution replacement
 
 `85645fdcb` requires fresh 2026 Form 1098-T and related eligibility answers
