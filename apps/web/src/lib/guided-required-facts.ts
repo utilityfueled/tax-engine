@@ -1,6 +1,10 @@
 import { resolveCharitableRecipient } from "@/utils/charitable-recipient";
 import { CharitableTangiblePropertyUseSchema } from "@/models/inputs";
-import { repeatedFederalAppliedCreditIndices } from "@/engine/forms/federal-payment-date-sources";
+import {
+  normalizeFederalPaymentReceiptReference,
+  repeatedFederalAppliedCreditIndices,
+  supportsFederalPaymentReceiptReferences,
+} from "@/engine/forms/federal-payment-date-sources";
 import { valueOrdinaryTangibleProperty } from "@/utils/charitable-current-receipts";
 import { currentLocalCivilDate, isActualDate } from "@/utils/civil-date";
 import { sumSourceMoney, sumSourceMoneyValues } from "@/utils/sum-source-money";
@@ -9,7 +13,7 @@ import type { DeductionData, DonationEntryData, EstimatedPaymentEntry, PaymentDa
 import { parseGuidedCurrency, parseGuidedDisplayAmount } from "./guided-currency";
 import { mortgageWorksheetFactErrors } from "./guided-mortgage-worksheet";
 
-export { currentLocalCivilDate, isActualDate };
+export { currentLocalCivilDate, isActualDate, normalizeFederalPaymentReceiptReference, supportsFederalPaymentReceiptReferences };
 
 export function hasEnteredAmount(value: string | undefined): boolean {
   return typeof value === "string" && value.trim() !== "";
@@ -171,14 +175,6 @@ export function deductionFactErrors(data: DeductionData | undefined, taxYear?: n
 }
 
 export type FederalPaymentKind = "estimate" | "extension";
-
-export function supportsFederalPaymentReceiptReferences(taxYear: number | null | undefined): boolean {
-  return taxYear === 2025 || taxYear === 2026;
-}
-
-export function normalizeFederalPaymentReceiptReference(reference: unknown): string {
-  return typeof reference === "string" ? reference.replace(/\s+/g, "").toUpperCase() : "";
-}
 
 export function federalPaymentDateNeedsApplication(date: string, taxYear?: number | null, kind?: FederalPaymentKind): boolean {
   if (taxYear == null || !isActualDate(date) || date.startsWith("0000-")) return false;

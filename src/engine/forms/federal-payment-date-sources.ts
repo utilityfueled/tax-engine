@@ -10,6 +10,14 @@ function isActualPaymentAmount(amount: string): boolean {
   return typeof amount === "string" && /^\d+(?:\.\d+)?$/u.test(amount) && d(amount).isFinite();
 }
 
+export function supportsFederalPaymentReceiptReferences(taxYear: number | null | undefined): boolean {
+  return taxYear === 2025 || taxYear === 2026;
+}
+
+export function normalizeFederalPaymentReceiptReference(reference: unknown): string {
+  return typeof reference === "string" ? reference.replace(/\s+/g, "").toUpperCase() : "";
+}
+
 /** Find ambiguous applied credits after source-year and amount validation. */
 export function repeatedFederalAppliedCreditIndices(
   credits: readonly ({ sourceTaxYear: number; amount: Decimal } | undefined)[],
@@ -42,6 +50,7 @@ export function assertPriorReturnCreditSource(
 
 export function assertFederalPaymentSources(input: Pick<TaxYearInput, "taxpayer" | "adjustments" | "form2210">): void {
   const year = input.taxpayer.taxYear;
+  const receiptReferences = new Set<string>();
   for (const payment of [...(input.adjustments?.estimatedTaxPayments ?? []), ...(input.adjustments?.extensionPayments ?? [])]) {
     if (payment.type !== "federal") continue;
     if (!actualDate.safeParse(payment.date).success) {
@@ -58,6 +67,15 @@ export function assertFederalPaymentSources(input: Pick<TaxYearInput, "taxpayer"
       const paidYear = Number(payment.date.slice(0, 4));
       if (paidYear !== year && paidYear !== year + 1) {
         throw new Error("Federal payment outside the return year and following year requires its confirmed tax-year application.");
+      }
+    }
+    if (supportsFederalPaymentReceiptReferences(year) && d(payment.amount).gt(0)) {
+      const reference = normalizeFederalPaymentReceiptReference(payment.receiptReference);
+      if (reference) {
+        if (receiptReferences.has(reference)) {
+          throw new Error("More than one positive federal estimated or extension payment uses the same actual payment receipt reference. Reconcile the original payment before calculating.");
+        }
+        receiptReferences.add(reference);
       }
     }
   }

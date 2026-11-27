@@ -4162,6 +4162,8 @@ const TaxPaymentEntrySchema = z.object({
   amount: decimal,
   type: z.enum(["federal", "state"]),
   state: z.string().optional(),
+  /** Optional reference from the actual federal payment record. */
+  receiptReference: z.string().optional(),
   /** Actual payment record confirms the return that received this payment. */
   application: z.strictObject({ taxYear: z.number().int(), confirmed: z.literal(true) }).optional(),
 });

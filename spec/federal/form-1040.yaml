@@ -614,6 +614,8 @@ lines:
       - "tests/engine/federal-payment-date-sources.test.ts::credits only nonnegative amounts actually carried over from the preceding return"
       - "tests/engine/federal-payment-date-sources.test.ts::holds a positive prior-return credit that conflicts with a sole taxpayer's no-return history"
       - "tests/engine/federal-payment-date-sources.test.ts::holds indistinguishable positive 2026 federal applied credits before line 26"
+      - "tests/engine/federal-payment-date-sources.test.ts::holds a reused actual federal payment receipt before crediting payments"
+      - "tests/engine/federal-payment-date-sources.test.ts::credits distinct receipts with matching dates and amounts and preserves unbound payments"
     notes: |
       Final 2025 Form 1040 instructions (https://www.irs.gov/instructions/i1040gi),
       Line 26 and Schedule 3 line 10, distinguish estimates from payments made
@@ -640,6 +642,18 @@ lines:
       and a year application do not establish timely payment, an extension or
       eligibility for late relief. The Form 2210 timing method retains its
       separate scope and reconciliations. No federal filing or export gate is changed.
+      For 2025 and 2026, preserve an optional receipt reference from the actual
+      federal payment record on imported estimate and extension rows. Hold
+      repeated nonblank references across positive federal rows within either
+      payment list or across both lists before computing credits. Compare
+      references without whitespace or case differences, as in guided intake.
+      Preserve distinct references with matching dates and amounts, legacy rows
+      without a reference, explicit zero amounts and state payment treatment.
+      Do not print the receipt reference in an audit or error. An IRS Direct
+      Pay confirmation number identifies one payment. Draft 2026 Form 1040
+      (https://www.irs.gov/pub/irs-dft/f1040--dft.pdf) line 26 and Schedule 3
+      (https://www.irs.gov/pub/irs-dft/f1040s3--dft.pdf) line 10 retain the
+      separate estimate and extension entries.
 
   - line: "26-review-packet"
     description: "Paid federal estimates on the workspace review return"

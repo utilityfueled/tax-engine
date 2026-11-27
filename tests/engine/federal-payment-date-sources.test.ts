@@ -8,6 +8,7 @@ vi.mock("@/models/constants.js", async importOriginal => {
 });
 
 import { calculateFederalTax, TaxYearInputSchema, type TaxYearInput } from "../../src/index.js";
+import { parseInput } from "../../src/ingest/loader.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
 
 const estimate = { date: "2026-01-15", amount: "125.37", type: "federal" } as const;
@@ -17,9 +18,46 @@ const raw = (taxYear: 2025 | 2026, adjustmentFacts: object) => ({
   ...simpleW2Fixture, taxpayer: { ...simpleW2Fixture.taxpayer, taxYear },
   w2s: simpleW2Fixture.w2s.map(w2 => ({ ...w2, taxYear })), adjustments: adjustmentFacts,
 });
-const run = (year: 2025 | 2026, facts = adjustments()) => calculateFederalTax(TaxYearInputSchema.parse(raw(year, facts)));
+const run = (year: 2025 | 2026, facts = adjustments()) => calculateFederalTax(parseInput(raw(year, facts)));
 
 describe("Actual federal payment dates and selected return application", () => {
+  it("holds a reused actual federal payment receipt before crediting payments", () => {
+    for (const taxYear of [2025, 2026] as const) {
+      const actual = { ...estimate, date: `${taxYear}-04-15`, receiptReference: "fictional-confirmation-070" };
+      const repeated = { ...actual, receiptReference: "  FICTIONAL-confirmation- 070  " };
+      const conflicting = { ...repeated, date: `${taxYear}-06-15`, amount: "126.38" };
+      for (const payments of [
+        adjustments([actual, repeated]),
+        adjustments([], [actual, repeated]),
+        adjustments([actual], [conflicting]),
+      ]) {
+        expect(() => run(taxYear, payments)).toThrow(/same actual.*receipt reference/i);
+      }
+    }
+  });
+
+  it("credits distinct receipts with matching dates and amounts and preserves unbound payments", () => {
+    for (const taxYear of [2025, 2026] as const) {
+      const unbound = { ...estimate, date: `${taxYear}-04-15` };
+      const first = { ...unbound, receiptReference: "fictional-confirmation-070" };
+      const second = { ...unbound, receiptReference: "fictional-confirmation-071" };
+      const zero = { ...first, amount: "0.00" };
+      const state = { ...first, type: "state", state: "WA" };
+      const baseline = run(taxYear).totalPayments;
+      for (const payments of [
+        adjustments([first], [second]),
+        adjustments([unbound], [unbound]),
+        adjustments([first, zero, state], [second]),
+      ]) {
+        const result = run(taxYear, payments);
+        expect(result.estimatedTaxPayments.toFixed()).toBe("125.37");
+        expect(result.allLines.find(line => line.form === "Sched 3" && line.line === "10")?.value.toFixed()).toBe("125.37");
+        expect(result.totalPayments.minus(baseline).toFixed()).toBe("250.74");
+        expect(JSON.stringify(result.allLines)).not.toContain(first.receiptReference);
+      }
+    }
+  });
+
   it("credits only nonnegative amounts actually carried over from the preceding return", () => {
     for (const taxYear of [2025, 2026] as const) {
       const facts = (amount: string, sourceTaxYear = taxYear - 1) => ({
