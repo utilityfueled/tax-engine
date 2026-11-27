@@ -1,7 +1,7 @@
 // Spec: spec/federal/guided-input.yaml
 import { describe, expect, it } from "vitest";
 import { buildDonationsInput, buildEducationInput, buildEstimatedPaymentsInput, buildForm1098Inputs, buildRetirementInputs, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
-import { computeDeductionComparison, emptyCreditsData, emptyDeductionData, emptyEducationStudent, emptyRetirementEntry, validateSection, loadGuidedFlowState } from "@/lib/guided-interview-flow";
+import { computeDeductionComparison, emptyCreditsData, emptyDeductionData, emptyEducationStudent, emptyRetirementEntry, validateSection, loadGuidedFlowState, saveGuidedFlowState, updateSectionData, type DonationEntryData, type GuidedFlowState } from "@/lib/guided-interview-flow";
 import { calculateFederalTax } from "@/engine/federal";
 import { parseInput } from "@/ingest/loader";
 import { simpleW2Fixture } from "../fixtures/simple-w2";
@@ -16,6 +16,73 @@ const stateWith = (section: string, data: unknown) => {
 };
 
 describe("required guided source facts", () => {
+  it("reconfirms the holding-period and valuation facts after changing a 2026 noncash gift date", () => {
+    const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null });
+    state.taxYear = 2026;
+    state.sectionData["income-w2"] = { entries: [{ ...completeW2Entry, sourceTaxYear: "2026", wages: "100000", federalWithheld: "10000" }] };
+    const stock: DonationEntryData = { ...donation, organization: "Original Foundation", type: "appreciated_stock", amount: "5000", costBasis: "800",
+      date: "2026-06-04", isLongTermCapitalGain: true, isPrivateFoundation: true, recipientCategory: "private-nonoperating",
+      qualifiedAppreciatedStock: true, cashAmountBasis: undefined };
+    const cash: DonationEntryData = { ...donation, date: "2026-06-04", amount: "111", cashAmountBasis: "net-contribution" };
+    const otherStock = { ...stock, organization: "Separate Foundation", date: "2026-04-22" };
+    const deductions = { ...emptyDeductionData, method: "itemized" as const, charitableContributions: "10111", donationEntries: [stock, otherStock, cash] };
+    state.sectionData.deductions = deductions;
+    expect(buildTaxInputFromGuidedData(state)?.donations?.[0]?.isLongTermCapitalGain).toBe(true);
+
+    let value: string | null = null;
+    const storage = { getItem: () => value, setItem: (_key: string, next: string) => { value = next; },
+      removeItem: () => { value = null; }, clear: () => { value = null; }, key: () => null, length: 0 } satisfies Storage;
+    const reopen = (draft: GuidedFlowState) => {
+      const target = { storageKey: "donation-date" };
+      expect(saveGuidedFlowState(storage, target, draft)).toBe(true);
+      const reopened = loadGuidedFlowState(storage, target);
+      if (!reopened) throw new Error("Expected the edited donation to reopen");
+      return reopened;
+    };
+    const changed = { ...stock, date: "2026-01-04" };
+    const next = reopen(updateSectionData(reopen(state), "deductions", { ...deductions, donationEntries: [otherStock, changed, cash] }));
+    expect(validateSection(next, "deductions").fieldErrors).toHaveProperty("donation-1-capital-gain");
+    expect(buildTaxInputFromGuidedData(next)).toBeNull();
+    expect(next.sectionData.deductions?.donationEntries).toEqual([otherStock, { ...changed, isLongTermCapitalGain: null,
+      qualifiedAppreciatedStock: null }, cash]);
+
+    const reviewed = updateSectionData(next, "deductions", { ...deductions, donationEntries: [otherStock,
+      { ...changed, isLongTermCapitalGain: false, qualifiedAppreciatedStock: null }, cash] });
+    expect(buildTaxInputFromGuidedData(reviewed)?.donations?.[1]).toMatchObject({ amount: "5000", costBasis: "800", isLongTermCapitalGain: false });
+
+    const sameValueStock = { ...stock, date: "2026-04-22", isLongTermCapitalGain: false, qualifiedAppreciatedStock: null };
+    const sameValueDeductions = { ...deductions, charitableContributions: "10000", donationEntries: [stock, sameValueStock] };
+    const sameValueState = reopen({ ...state, sectionData: { ...state.sectionData, deductions: sameValueDeductions } });
+    const remaining = { ...sameValueDeductions, charitableContributions: "5000" };
+    const copiedDate = { ...stock, date: sameValueStock.date };
+    const ambiguous = reopen(updateSectionData(sameValueState, "deductions", { ...remaining, donationEntries: [copiedDate] }));
+    expect(validateSection(ambiguous, "deductions").fieldErrors).toHaveProperty("donation-0-capital-gain");
+    expect(buildTaxInputFromGuidedData(ambiguous)).toBeNull();
+    expect(ambiguous.sectionData.deductions?.donationEntries).toEqual([{ ...copiedDate, isLongTermCapitalGain: null, qualifiedAppreciatedStock: null }]);
+
+    const reconfirmed = updateSectionData(ambiguous, "deductions", { ...remaining, donationEntries: [sameValueStock] });
+    expect(buildTaxInputFromGuidedData(reconfirmed)?.donations?.[0]).toMatchObject({ dateOfDonation: sameValueStock.date, isLongTermCapitalGain: false });
+    const retained = updateSectionData(sameValueState, "deductions", { ...remaining, donationEntries: [sameValueStock] });
+    expect(retained.sectionData.deductions?.donationEntries).toEqual([sameValueStock]);
+
+    const matchingAnswers = reopen({ ...state, sectionData: { ...state.sectionData,
+      deductions: { ...sameValueDeductions, donationEntries: [stock, copiedDate] } } });
+    const held = updateSectionData(matchingAnswers, "deductions", { ...remaining, donationEntries: [copiedDate] });
+    expect(buildTaxInputFromGuidedData(held)).toBeNull();
+    const originalRow = matchingAnswers.sectionData.deductions?.donationEntries?.[1];
+    if (!originalRow) throw new Error("Expected an original noncash gift row");
+    const kept = updateSectionData(matchingAnswers, "deductions", { ...remaining, donationEntries: [originalRow] });
+    expect(kept.sectionData.deductions?.donationEntries).toEqual([copiedDate]);
+
+    const initial = { ...state, sectionData: { ...state.sectionData, deductions: { ...deductions, donationEntries: [{ ...stock, date: "" }, otherStock, cash] } } };
+    expect(updateSectionData(initial, "deductions", deductions).sectionData.deductions?.donationEntries).toEqual(deductions.donationEntries);
+    const cashDateEdit = { ...cash, date: "2026-01-03" };
+    expect(updateSectionData(state, "deductions", { ...deductions, donationEntries: [stock, otherStock, cashDateEdit] })
+      .sectionData.deductions?.donationEntries?.[2]).toEqual(cashDateEdit);
+    expect(updateSectionData({ ...state, taxYear: 2025 }, "deductions", { ...deductions, donationEntries: [changed, otherStock, cash] })
+      .sectionData.deductions?.donationEntries?.[0]).toEqual(changed);
+  });
+
   it("uses the net cash gift on Schedule A and preserves the net object contract", () => {
     const gift = { ...donation, amount: "70", cashAmountBasis: "gross-payment" as const, cashBenefitValue: "40", cashExcessGiftIntended: true };
     const deductions = { ...emptyDeductionData, method: "itemized" as const, charitableContributions: "70", donationEntries: [gift] };

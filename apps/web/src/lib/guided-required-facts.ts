@@ -26,6 +26,61 @@ export function guidedAmountChanged(before: string | undefined, after: string | 
     || !parseGuidedDisplayAmount(before).eq(parseGuidedDisplayAmount(after));
 }
 
+export function invalidateEditedNoncashDonationDates(previous: DonationEntryData[] | undefined, next: DonationEntryData[]): DonationEntryData[] {
+  if (!previous?.length || !next.length) return next;
+  const sameGift = (original: DonationEntryData, gift: DonationEntryData) => original.type === gift.type
+    && original.organization?.trim() === gift.organization?.trim()
+    && !guidedAmountChanged(original.amount, gift.amount) && !guidedAmountChanged(original.costBasis, gift.costBasis);
+  const sameDatedAnswers = (original: DonationEntryData, gift: DonationEntryData) => {
+    const originalUse = original.tangiblePropertyUse;
+    const giftUse = gift.tangiblePropertyUse;
+    return original.isLongTermCapitalGain === gift.isLongTermCapitalGain
+      && (original.qualifiedAppreciatedStock ?? null) === (gift.qualifiedAppreciatedStock ?? null)
+      && originalUse?.sourceReference === giftUse?.sourceReference
+      && originalUse?.doneeUse === giftUse?.doneeUse
+      && originalUse?.ordinaryWholeInterestConfirmed === giftUse?.ordinaryWholeInterestConfirmed
+      && originalUse?.noAdditionalValuationRuleConfirmed === giftUse?.noAdditionalValuationRuleConfirmed;
+  };
+  const unmatched = new Set(previous.keys());
+  const retained = new Set<number>();
+  const keepOriginal = (index: number, originalIndex: number) => {
+    unmatched.delete(originalIndex);
+    retained.add(index);
+  };
+  const giftCandidates = (gift: DonationEntryData) => [...unmatched].filter(candidate => sameGift(previous[candidate], gift));
+  const differentActualDate = (original: DonationEntryData, gift: DonationEntryData) =>
+    isActualDate(original.date) && original.date !== gift.date;
+
+  next.forEach((gift, index) => {
+    const originalIndex = [...unmatched].find(candidate => previous[candidate] === gift);
+    if (originalIndex !== undefined) keepOriginal(index, originalIndex);
+  });
+  next.forEach((gift, index) => {
+    if (retained.has(index)) return;
+    const candidates = giftCandidates(gift);
+    const otherDates = candidates.filter(candidate => differentActualDate(previous[candidate], gift));
+    const originalIndex = candidates.find(candidate => previous[candidate].date === gift.date
+      && (gift.type === "cash" || !otherDates.length || (sameDatedAnswers(previous[candidate], gift)
+        && !otherDates.some(other => sameDatedAnswers(previous[other], gift)))));
+    if (originalIndex !== undefined) keepOriginal(index, originalIndex);
+  });
+
+  return next.map((gift, index) => {
+    if (retained.has(index) || !gift.type || gift.type === "cash") return gift;
+    const candidates = giftCandidates(gift);
+    const positionalOriginal = unmatched.has(index) ? previous[index] : undefined;
+    const reviewDate = candidates.length
+      ? candidates.some(candidate => differentActualDate(previous[candidate], gift))
+      : positionalOriginal?.type && positionalOriginal.type !== "cash" && differentActualDate(positionalOriginal, gift);
+    if (!reviewDate) return gift;
+
+    return { ...gift, isLongTermCapitalGain: null,
+      ...(gift.qualifiedAppreciatedStock !== undefined ? { qualifiedAppreciatedStock: null } : {}),
+      ...(gift.tangiblePropertyUse !== undefined ? { tangiblePropertyUse: undefined } : {}),
+    };
+  });
+}
+
 export const directItemizedAmountFields = [
   "medicalExpenses", "stateLocalTaxes", "realEstateTaxes", "personalPropertyTaxes", "gamblingLosses", "gamblingExpenses",
 ] as const;

@@ -74,7 +74,7 @@ import { parseGuidedCurrency, hasGuidedCurrency, parseGuidedDisplayAmount } from
 import { clearGuidedDependentAnnualFacts, invalidateEditedDependentOriginals, personalFactErrors } from "./guided-taxpayer-facts";
 import type { EicClaimantEligibilityData } from "./guided-eic-eligibility";
 import { eicHistorySourceValuesChanged, invalidateEicHistorySources } from "./guided-eic-disallowance-history";
-import { allPaymentFactErrors, currentLocalCivilDate, deductionAmountYearErrors, deductionFactErrors, directItemizedAmountFields, educationFactErrors, guidedAmountChanged, guidedDonationValue, hasEnteredAmount, normalizeFederalPaymentReceiptReference, retirementFactErrors } from "./guided-required-facts";
+import { allPaymentFactErrors, currentLocalCivilDate, deductionAmountYearErrors, deductionFactErrors, directItemizedAmountFields, educationFactErrors, guidedAmountChanged, guidedDonationValue, hasEnteredAmount, invalidateEditedNoncashDonationDates, normalizeFederalPaymentReceiptReference, retirementFactErrors } from "./guided-required-facts";
 import { clearMedicalMileageConfirmations, guidedMedicalMileageErrors, medicalMileageOriginals, type MedicalMileageDraft } from "./guided-medical-mileage";
 import { nonitemizedElectionFactErrors } from "./guided-nonitemized-election";
 import {
@@ -2578,6 +2578,7 @@ export function updateSectionData(
     const next = data as DeductionData;
     data = {
       ...next,
+      ...(state.taxYear === 2026 && next.donationEntries ? { donationEntries: invalidateEditedNoncashDonationDates(previousDeductions.donationEntries, next.donationEntries) } : {}),
       ...(previousDeductions.manualWinningsTaxYear !== undefined ? { manualWinningsTaxYear: annualConfirmationAfterEdit(
         previousDeductions.manualWinningsTaxYear, next.manualWinningsTaxYear,
         guidedAmountChanged(previousDeductions.gamblingWinnings, next.gamblingWinnings),
