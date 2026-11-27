@@ -92,8 +92,9 @@ export async function rehearsePreviousSchema({ previousRevision, candidateRevisi
       else if (Number.isInteger(error.code)) commandStatus = 'exited';
       else if (error.code === 'ENOENT') commandStatus = 'unavailable';
       else commandStatus = 'failed';
-      throw new Error('Bounded previous-schema command failed; private output omitted');
     }
+    // The command outcome is public. The raw child-process error can carry private input and output.
+    throw new Error('Bounded previous-schema command failed; private output omitted');
   }
   async function columns() {
     const result = await admin.query('SELECT table_name,column_name FROM information_schema.columns WHERE table_schema=$1 ORDER BY table_name,ordinal_position', [schema]);
