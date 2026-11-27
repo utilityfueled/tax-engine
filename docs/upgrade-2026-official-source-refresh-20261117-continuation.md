@@ -128,6 +128,21 @@ print 2025. The final Schedule EIC is pinned as a disabled candidate.
 [Instructions](https://www.irs.gov/pub/irs-pdf/i1040gi.pdf) ·
 [Tax/EIC tables](https://www.irs.gov/pub/irs-pdf/i1040tt.pdf).
 
+## November 27 annual availability recheck
+
+- The [current IRS Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) is for
+  2025. The [separate 2026 Form 1040](https://www.irs.gov/pub/irs-dft/f1040--dft.pdf)
+  carries the draft filing restriction.
+- The [Pennsylvania personal income tax page](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax)
+  still links the 2025 PA-40 for filing. The [2026 estimated-tax instructions](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2026/2026_rev-413i.pdf)
+  cover estimating payments.
+- The [Ohio annual return bundle](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/1040-bundle.pdf)
+  still identifies the 2025 IT 1040. The [2026 changes notice](https://tax.ohio.gov/individual/who-must-file/whats-new)
+  gives the updated rate and return-line references for 2026 calculation work.
+
+The annual filing qualification checklist remains open for all three
+jurisdictions. The draft and preview mappings remain review outputs.
+
 ## November 20 annual availability recheck
 
 The regular copies of Form 1040, its instructions, the Tax/EIC tables, and
