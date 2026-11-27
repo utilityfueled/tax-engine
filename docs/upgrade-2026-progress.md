@@ -15,6 +15,26 @@ the latest application revision, exact-source runs and open dependencies. The
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
 
+## November 27 Ohio combined wages, interest and dividends
+
+`5680b9900` adds full-year resident and nonresident methods to the 2026
+private Ohio path for actual W-2 wages, one ordinary Form 1099-INT and
+one ordinary Form 1099-DIV. Each form still reconciles independently.
+The part-year method retains its existing identifier, and existing
+wage allocation and reciprocity holds apply.
+
+With $50,000 of reported wages and $4,000.25 on each investment form, the
+resident case verifies $58,001 of Ohio adjusted gross income and $1,152 of
+tax. The nonresident case retains $10,000 of actual Ohio wages, excludes
+the ordinary investment income from Ohio allocation and verifies a
+`0.8275` credit ratio, $953 credit and $199 remaining tax. All 831 Ohio
+focused tests and eight exact static checks passed, including 10,295 spec
+lines. The draft path remains subject to human review and final form
+qualification.
+[Ohio allocation statute](https://codes.ohio.gov/ohio-revised-code/section-5747.20) ·
+[Ohio credit statute](https://codes.ohio.gov/ohio-revised-code/section-5747.05) ·
+[Draft 2026 IT 1040 instructions](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf).
+
 ## November 27 commercial EV second-year depreciation
 
 `18b582a5a` implements the private 2026 second-year Form 4562 worksheet for

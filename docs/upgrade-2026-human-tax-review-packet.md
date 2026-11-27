@@ -900,3 +900,21 @@ original exact basis of $10,001.50, filed line 21 of $10,002 and filed line
 whole-dollar amount. [IRS Publication 946](https://www.irs.gov/publications/p946) ·
 [2025 Schedule A (Form 8936)](https://www.irs.gov/pub/irs-prior/f8936sa--2025.pdf) ·
 [26 USC §1016](https://uscode.house.gov/us/usc/t26/s1016/).
+
+## November 27 Ohio wages with interest and dividends
+
+For a single taxpayer without other income or dependents, use $50,000 of
+verified W-2 wages, $4,000.25 of ordinary taxable bank interest and
+$4,000.25 of ordinary cash dividends. Compare the full-year Ohio resident
+with a full-year nonresident domiciled in a nonreciprocal state. For the
+nonresident, assume original employer records establish $10,000 of wages
+from actual Ohio work and the investments have no Ohio business source.
+Derive adjusted gross income, the Ohio wage and nonbusiness investment
+amounts, the tax before credit, and the nonresident credit ratio and tax
+before payments.
+Compare separately rounded original items with the draft amounts and
+identify which rounding step controls the ratio. Document any differences
+from the prepared case before approving a final 2026 transfer.
+[Ohio allocation statute](https://codes.ohio.gov/ohio-revised-code/section-5747.20) ·
+[Ohio credit statute](https://codes.ohio.gov/ohio-revised-code/section-5747.05) ·
+[Draft 2026 IT 1040 instructions](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf).

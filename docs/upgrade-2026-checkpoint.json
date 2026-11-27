@@ -3,9 +3,9 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "41947009527b5ba1fb5386c06180ed9f1551e0cd",
-    "latestScopedApplicationCommit": "18b582a5a95fadfe9a5022c5e13249485b5bd13b",
+    "latestScopedApplicationCommit": "5680b9900f286bafad7adeab119c9027eff46744",
     "latestCombinedCandidateCommit": "41947009527b5ba1fb5386c06180ed9f1551e0cd",
-    "latestScopedChecksEvidenceKey": "activeContinuation.nov27CommercialVehicleSecondYear",
+    "latestScopedChecksEvidenceKey": "activeContinuation.nov27OhioCombinedOrdinaryResidencies",
     "nov27PaymentReceiptsAndForm8863EvidenceKey": "activeContinuation.nov27PaymentReceiptsAndForm8863",
     "nov27OhioPennsylvaniaPensionEvidenceKey": "activeContinuation.nov27OhioPennsylvaniaPension",
     "nov27PennsylvaniaNonresidentAndAotcEvidenceKey": "activeContinuation.nov27PennsylvaniaNonresidentAndAotc",
@@ -194,6 +194,22 @@
     ]
   },
   "activeContinuation": {
+    "nov27OhioCombinedOrdinaryResidencies": {
+      "commit": "5680b9900f286bafad7adeab119c9027eff46744",
+      "verifiedTree": "b838cf061fe71c9009463efb90c303f80e137661",
+      "primarySources": ["https://codes.ohio.gov/ohio-revised-code/section-5747.20", "https://codes.ohio.gov/ohio-revised-code/section-5747.05", "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf"],
+      "exactFocusedTestsPassed": 831,
+      "repositorySpecReferencesValidated": 10295,
+      "exactTreeChecksPassed": ["typecheck", "contracts", "web-types", "spec", "inventory", "lint", "build", "offline-eval"],
+      "independentEngineeringReviewPassed": true,
+      "unchangedPartYearMethodVerified": true,
+      "residentDraftTax": "1152",
+      "nonresidentDraftCreditRatio": "0.8275",
+      "nonresidentDraftTaxCredit": "953",
+      "nonresidentDraftTax": "199",
+      "qualifiedHumanReviewPassed": false,
+      "filingQualified": false
+    },
     "nov27CommercialVehicleSecondYear": {
       "commit": "18b582a5a95fadfe9a5022c5e13249485b5bd13b",
       "verifiedTree": "473b68de0a670001c4b3f1af9e5ae5df32b5d4e0",
@@ -205,7 +221,9 @@
       "verifiedDepreciation2025": "3800",
       "exactDepreciation2026": "6080",
       "basisAfterDepreciation2026": "9120",
-      "latestLocalFullUnitAndCoverage": "running",
+      "exactUnitTestsPassed": 31388,
+      "exactUnitTestsSkipped": 83,
+      "latestLocalCoverage": "running",
       "canonicalAttributionSupported": false,
       "qualifiedHumanReviewPassed": false,
       "filingQualified": false
