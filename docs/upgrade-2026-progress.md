@@ -30,10 +30,14 @@ previous AMD64 job for `64ca11a71` passed its managed browser job. The browser
 check against the actual runtime image reached two 30-second deadlines while
 the desktop Ohio part-year school cases waited for the filing rejection request.
 The logs establish the deadline location. Timing attribution is still open.
-The Ohio comparison and earlier ARM64 rehearsal are running.
+The earlier ARM64 rehearsal also failed strict runtime-image Chromium, with
+nine Ohio deadline misses across business, resident-credit, reciprocal and
+school cases. The Ohio comparison's managed job passed and its runtime-image
+job is still running. The next ARM64 rehearsal is queued on `64ca11a71`.
 [Previous AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45981014261) ·
 [Ohio timing comparison](https://github.com/utilityfueled/tax-engine/actions/runs/45982119919) ·
-[Earlier ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/45974073418).
+[Earlier ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/45974073418) ·
+[Queued ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/45982831811).
 
 The final annual Form 1040 endpoint and Pennsylvania's return page still show
 2025. The 2026 federal Form 1040 and Ohio return booklet remain draft. Final
