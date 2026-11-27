@@ -103,6 +103,63 @@ it('PA2026 part-year cash dividend replays one complete original and its dated c
  expect(JSON.stringify(f.input)).toBe(before);
 });
 
+function partYearInterestAndDividends(withholding: string) {
+ const f = pa2026OrdinaryCashDividendFixture();
+ const bank = pa2026PartYearBankInterestFixture();
+ f.input.form1099Int = bank.input.form1099Int;
+ f.residency.interest = bank.input.paResidencySources.interest;
+ f.input.w2s[0].stateTaxWithheld = withholding;
+ rebindPA2026Draft(f);
+ return f;
+}
+
+it('PA2026 part-year combines separately reconciled interest and dividends', () => {
+ const f = partYearInterestAndDividends('1200');
+ const facts = confirmGuidedPAOrdinaryReturnFacts(f.input, { ...f.facts, sourceFactsConfirmed: null });
+ const completion = confirmGuidedPAOrdinaryReturnCompletionSources(f.input, { ...f.sources, sourceFactsConfirmed: null }, facts);
+ const before = JSON.stringify(f.input);
+ const result = calculatePA2026OrdinaryDraft(f.input, buildGuidedPAOrdinaryReturnFacts(f.input, facts), buildGuidedPAOrdinaryReturnCompletionSources(f.input, completion, facts));
+ expect(result.pa.residencyStatus).toBe('part_year');
+ expect(result.pa.scheduleA.line1.toFixed()).toBe('120');
+ expect(result.pa.scheduleA.reductionAdjustments.map(row => row.amount.toFixed())).toEqual(['80']);
+ expect(result.pa.scheduleA.line16.toFixed()).toBe('40');
+ expect(result.pa.scheduleB.line1.toFixed()).toBe('120');
+ expect(result.pa.scheduleB.line4.toFixed()).toBe('80');
+ expect(result.pa.scheduleB.line12.toFixed()).toBe('40');
+ expect(result.pa.pa40.interest.toFixed()).toBe('40');
+ expect(result.pa.pa40.dividends.toFixed()).toBe('40');
+ expect(result.pa.pa40.totalPATaxableIncome.toFixed()).toBe('39080');
+ expect(result.pa.pa40.taxLiability.toFixed()).toBe('1200');
+ expect(result.pa.pa40.stateWithholding.toFixed()).toBe('1200');
+ expect(result.pa.pa40.totalAmountDue.toFixed()).toBe('0');
+ expect(result.pa.scheduleSP.eligibilityIncome.toFixed()).toBe('75240');
+ expect(result.dependencyProof.federalEarnedIncomeCredit.toFixed()).toBe('0');
+ expect(result.readiness).toMatchObject({ filingEligible: false, fullFederalCalculated: false });
+ expect(result.readiness.blockers).toContain('final-2026-forms-unqualified');
+ expect(JSON.stringify(f.input)).toBe(before);
+});
+
+it('PA2026 part-year combined interest and dividends require withholding for both classes', () => {
+ const f = partYearInterestAndDividends('1199');
+ expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources)).toThrow(/withholding must cover/i);
+});
+
+it.each([
+ ['1099-INT', (f: ReturnType<typeof partYearInterestAndDividends>) => {
+  f.input.form1099Int[0].interestIncome = '121';
+  f.residency.interest[0].original = structuredClone(f.input.form1099Int[0]);
+ }, /credits.*reconcile original Box1/i],
+ ['1099-DIV', (f: ReturnType<typeof partYearInterestAndDividends>) => {
+  f.input.form1099Div[0].ordinaryDividends = '121';
+  f.residency.dividends[0].original = structuredClone(f.input.form1099Div[0]);
+ }, /distributions.*reconcile.*Box1a/i],
+] as const)('PA2026 part-year combined investment sources hold a mismatched %s original', (_kind, change, error) => {
+ const f = partYearInterestAndDividends('1200');
+ change(f);
+ rebindPA2026Draft(f);
+ expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources)).toThrow(error);
+});
+
 it('PA2026 part-year cash dividend outside the resident period enters Schedule SP only', () => {
  const f = pa2026OrdinaryCashDividendFixture();
  f.residency.dividends[0].credits[1].creditedOn = '2026-06-30';
@@ -150,11 +207,6 @@ const unsupportedCashDividends: Array<[string, (f: ReturnType<typeof pa2026Ordin
   f.residency.dividends[0].credits.push({ sourceReference: 'Fictional empty statement period', creditedOn: '2026-03-31', ordinaryDividends: '0', capitalGainDistributions: '0' });
  }, /positive dated.*cash/i],
  ['insufficient actual withholding', f => { f.input.w2s[0].stateTaxWithheld = '1197'; }, /withholding must cover/i],
- ['a simultaneous bank interest original', f => {
-  const bank = pa2026PartYearBankInterestFixture();
-  f.input.form1099Int = bank.input.form1099Int;
-  f.residency.interest = bank.input.paResidencySources.interest;
- }, /one additional investment original/i],
 ];
 it.each(unsupportedCashDividends)('PA2026 part-year cash dividend holds %s', (_scenario, change, expected) => {
  const f = pa2026OrdinaryCashDividendFixture();

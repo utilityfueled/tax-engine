@@ -65,7 +65,6 @@ export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdin
  const roots=new Set(['taxpayer','w2s','paResidencySources','paOrdinaryReturnFacts','paOrdinaryReturnCompletionSources','standardDeductionFacts','deductionElection','childTaxCredit','scheduleBPartThree']);
  const [bankInterest] = input.form1099Int;
  const [cashDividend] = input.form1099Div;
- if (bankInterest && cashDividend) fail('the ordinary part-year method requires one additional investment original');
  if (bankInterest) roots.add('form1099Int');
  if (cashDividend) roots.add('form1099Div');
  if(actualCare)roots.add('dependentCare');
