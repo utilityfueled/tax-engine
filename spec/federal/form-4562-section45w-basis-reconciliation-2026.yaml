@@ -1,0 +1,50 @@
+form: "Form 4562"
+fullName: "Private 2026 commercial clean vehicle basis reconciliation before depreciation"
+taxYear: 2026
+reviewStatus: "independent-review-pending"
+retrievedAt: "2026-11-27"
+irsReference: "https://www.irs.gov/instructions/i8936"
+notes: |
+  Section 45W(d)(1) applies rules like the basis reduction in 30D(f)(1).
+  https://uscode.house.gov/us/usc/t26/s45W/
+  https://uscode.house.gov/us/usc/t26/s30D/
+  The IRS instructions require reducing basis by the per-vehicle amount on
+  Schedule A (Form 8936) line 26 when the credit is claimed. The private
+  workpaper admits one supported 2026 direct vehicle claim of the primary
+  individual sole proprietor and ends before depreciation, tax, and filing.
+  No transfer, other claiming method, passenger classification, depreciation
+  election, filing-map qualification, or public full-return attribution.
+lines:
+  - line: "verified-asset-identity"
+    description: "Reconcile the original vehicle, taxpayer, and Schedule C activity"
+    formula: |
+      Confirm fresh original records for commercial eligibility, the prepared
+      Schedule A claim position, Schedule C activity, and Form 4562's underlying
+      vehicle asset record. Match the same original taxpayer reference across
+      all four records, the same activity reference between Schedule C and the
+      vehicle asset, and the actual VIN and 2026 service date across vehicle,
+      commercial owner, claim and asset evidence. The original commercial
+      owner record and vehicle must reference the same possession record.
+      Reconcile the original pre-credit basis and
+      verify the asset basis has not already been reduced for this credit or
+      current depreciation. Do not infer linkage from dates or dollar amounts.
+    testRef: "tests/engine/forms/form-4562-section45w-basis-reconciliation-2026.test.ts::holds stale commercial owner evidence after a coordinated vehicle replacement"
+  - line: "section45w-basis-reduction"
+    description: "Use the actual direct Schedule A line 26 claim"
+    formula: |
+      An actual positive prepared Schedule A direct claim must equal the newly
+      computed exact tentative 45W credit for this VIN, with no competing
+      clean-vehicle claim. A separate verified no-claim position must show an
+      explicit zero and requires no reduction even when the tentative credit is
+      positive. Omitted, contradictory, unverified, or unsupported positions
+      require review. The general business credit amount utilized in a given
+      year is not an input to the vehicle basis reduction.
+    testRef: "tests/engine/forms/form-4562-section45w-basis-reconciliation-2026.test.ts::separates an actual claim from positive tentative credit or zero eligibility"
+  - line: "basis-after-section45w"
+    description: "Exact vehicle basis after the Section 45W adjustment"
+    formula: |
+      Subtract the verified actual direct claim amount from original pre-credit
+      basis using Decimal before depreciation. Leave any other basis effects
+      to their own workpapers. Preserve exact working precision and include no
+      source identifiers or document references in the returned audit.
+    testRef: "tests/engine/forms/form-4562-section45w-basis-reconciliation-2026.test.ts::reconciles the actual direct claim to a single original depreciation asset"
