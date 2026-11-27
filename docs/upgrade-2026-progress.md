@@ -1,5 +1,29 @@
 # 2026 upgrade implementation evidence
 
+## November 26 combined checks for recovery and tax inputs
+
+All 11 local checks passed on exact application revision `369c195b2`
+with Node 26.13.1, pypdf 6.10.0, GNU coreutils and 15 verified official
+sample documents. Unit and coverage each passed 31,042 tests with 81
+existing environment skips. Branch coverage was 88.59% against the
+85% gate. All 10,180 spec references resolved. Managed Chromium passed
+654 cases in nine windows, with five existing skips, zero failures and
+clean shutdown. The offline AI evaluation artifacts matched their
+source.
+
+The first combined unit and coverage attempt ran out of disk space.
+The repeat freed generated Webpack caches, kept the original logs, and
+used the same test thresholds and timeouts. The evidence manifest
+SHA-256 is `3cd85d2a0aa99c8760fe84bd2ef585ed9d630a66b6dcc41dc84ccc0bc453ac5d`.
+The source and browser build receipt SHA-256 is
+`0b3b16f7721a7c984716b1536fefc6fb055a7f940a2e1d6eb8cabec4e46c7333`.
+
+The exact AMD64 and ARM64 jobs were queued with zero steps completed
+at the last check. Strict Linux, runtime image and clean-profile
+Compose qualification remain open.
+[AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45914249027) ·
+[ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45914423019).
+
 ## November 26 W-2G Box 1 and guided money totals
 
 `b7f9c76b2` rejects negative W-2G Box 1 winnings in both schema
@@ -60,6 +84,15 @@ The pinned focused run passed 189 cases, and 41 focused cases passed
 after the interview guidance update. Qualified independent tax review
 and final form qualification remain open.
 [Independent review worksheet](upgrade-2026-human-tax-review-packet.md#november-26-marketplace-estimate-exception).
+
+The combined recovery and Marketplace revision `6f6749286` passed
+31,037 unit tests and 654 managed Chromium cases. It retained 81 unit
+and five browser environment skips. All nine browser windows completed
+and the runner closed cleanly. Browser summary SHA-256
+`6248e28c6bd2fafd8a9e28b094800bd3e2ab7614bf293a3c4bb79950c31f987d`.
+The corrected unit run supplied GNU utilities for the shell fixtures.
+Coverage on this revision ran out of local storage, so the release
+check uses the coverage result on the successor.
 
 ## November 26 combined local checks for the rate and filing changes
 

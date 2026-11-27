@@ -9,6 +9,12 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- Exact `369c195b2` passed all 11 local checks. Unit and coverage each
+  passed 31,042 tests with 81 existing skips, at 88.59% branch coverage.
+  Managed Chromium passed 654 cases in nine windows with five existing
+  skips and clean shutdown. Both strict Linux jobs are queued.
+  [Exact evidence](upgrade-2026-progress.md#november-26-combined-checks-for-recovery-and-tax-inputs).
+
 - `b7f9c76b2` rejects negative W-2G winnings before federal
   aggregation. `369c195b2` preserves exact guided Schedule C receipts
   and reconciles other payments to the cent. All 287 combined focused

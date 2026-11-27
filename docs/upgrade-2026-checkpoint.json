@@ -15,7 +15,7 @@
     "pinnedSelfHostSchemaEvidenceKey": "activeContinuation.nov26PinnedSelfHostSchema",
     "ohioOrdinaryCashDividendEvidenceKey": "activeContinuation.nov26OhioCashDividend",
     "pennsylvaniaAnnualCashDividendEvidenceKey": "activeContinuation.nov26PaAnnualCashDividend",
-    "latestExactLocalVerificationEvidenceKey": "activeContinuation.nov26RateAndFilingCombinedLocal",
+    "latestExactLocalVerificationEvidenceKey": "activeContinuation.nov26RecoveryTaxInputsCombinedLocal",
     "paPartYearDividendEvidenceKey": "activeContinuation.nov26PAPartYearCashDividend",
     "currentCombinedAndArmEvidenceKey": "activeContinuation.nov26CombinedEvAiAndArm64",
     "evChargerEvidenceKey": "activeContinuation.nov26PersonalEvCharger",
@@ -147,6 +147,29 @@
     ]
   },
   "activeContinuation": {
+    "nov26RecoveryTaxInputsCombinedLocal": {
+      "applicationCommit": "369c195b248a0d5e9010140139ae89e2f5edeab1",
+      "archiveSha256": "27d4fb4f0cce7fa919a7a05674fefc52fd20f525e79a4a426f67b1c79c9660b2",
+      "manifestSha256": "3cd85d2a0aa99c8760fe84bd2ef585ed9d630a66b6dcc41dc84ccc0bc453ac5d",
+      "localChecksPassed": 11,
+      "unitAndCoveragePassesEach": 31042,
+      "unitAndCoverageExistingSkipsEach": 81,
+      "branchCoveragePercent": "88.59",
+      "branchCoverageThresholdPercent": "85",
+      "specReferencesResolved": 10180,
+      "officialSampleDocuments": 15,
+      "managedChromiumPasses": 654,
+      "managedChromiumExistingSkips": 5,
+      "managedChromiumFailures": 0,
+      "managedChromiumWindows": 9,
+      "managedChromiumCleanup": true,
+      "managedChromiumSourceBuildSha256": "0b3b16f7721a7c984716b1536fefc6fb055a7f940a2e1d6eb8cabec4e46c7333",
+      "offlineAiEvaluationArtifactSync": "passed",
+      "amd64WebRun": 45914249027,
+      "arm64RecoveryRun": 45914423019,
+      "linuxStrictQualification": "queued",
+      "releaseReady": false
+    },
     "nov26W2gGuidedExactMoney": {
       "w2gCommit": "b7f9c76b22d4341c90b00e1aa0e65daffc4bd4e7",
       "guidedCommit": "369c195b248a0d5e9010140139ae89e2f5edeab1",
