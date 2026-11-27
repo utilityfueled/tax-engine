@@ -323,9 +323,14 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
     } else if (entry.simplifiedMethod !== undefined && !earlyPension2026) {
       fail("taxable-worksheet", "Reconcile the saved Simplified Method worksheet with the original statement year, distribution code and Box 2b answer.");
     }
-    const code3Statement = taxYear === 2026 && entry.sourceTaxYear === "2026" && code === "3";
+    const is2026Statement = taxYear === 2026 && entry.sourceTaxYear === "2026";
+    const code3Statement = is2026Statement && code === "3";
+    const code3WithCodeD = is2026Statement && (code === "3D" || code === "D3");
     if (!/^[1-9ABCDEFGHJKLMNPQRSTUWY]{1,2}$/.test(code)) fail("code", "Enter the actual Form 1099-R distribution code from Box 7 (2026 Box 7a).");
-    else if (!code3Statement && !qualifiedLumpSum && !qcdStatement && !["1", "2", "4", "7", "G", "H", "1D", "2D", "4D", "7D", "D1", "D2", "D4", "D7"].includes(code)) fail("code", "This distribution code needs its actual basis, Roth, disability, QCD or other special worksheet; the ordinary guided route cannot calculate it yet.");
+    else if (!code3Statement && !code3WithCodeD && !qualifiedLumpSum && !qcdStatement
+      && !["1", "2", "4", "7", "G", "H", "1D", "2D", "4D", "7D", "D1", "D2", "D4", "D7"].includes(code)) {
+      fail("code", "This distribution code needs its actual basis, Roth, disability, QCD or other special worksheet; the ordinary guided route cannot calculate it yet.");
+    }
     if (code3Statement || entry.code3DisabilitySource !== undefined) {
       try {
         buildGuidedDisabilityPensionSource(entry.code3DisabilitySource, guidedDisabilityPensionOriginal(

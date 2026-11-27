@@ -424,6 +424,57 @@ it("carries a printed space in confirmed retirement codes through 2025 and 2026 
   }
 });
 
+// Spec: spec/federal/guided-input.yaml, retirement-2026-disability-code-d-pair
+it("carries either printed Code 3 and D order through the reopened 2026 retirement interview", () => {
+  const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
+  state.taxYear = 2026;
+  const statement = {
+    ...completeRetirementSource, sourceTaxYear: "2026",
+    grossDistribution: "1000", taxableAmount: "900.25", federalWithheld: "125",
+  };
+  for (const [printedCode, distributionCode] of [["3 D", "3D"], ["D 3", "D3"]]) {
+    state.sectionData["income-retirement"] = { entries: [{ ...statement, distributionCode: printedCode }] };
+    const reopened = loadGuidedFlowState({ getItem: () => JSON.stringify(state) } as unknown as Storage, "retirement");
+    if (!reopened) throw new Error("Could not reopen the guided retirement draft");
+    expect(reopened.sectionData["income-retirement"]?.entries[0]?.distributionCode).toBe(printedCode);
+    expect.soft(validateSection(reopened, "income-retirement").status, printedCode).toBe("complete");
+    const built = buildTaxInputFromGuidedData(reopened);
+    expect.soft(built?.form1099R?.[0], printedCode).toMatchObject({
+      taxYear: 2026, distributionCode, taxableAmount: "900.25", federalWithheld: "125",
+      iraSepSimple: false, eligibleGovernmental457bPlan: false,
+    });
+    if (!built) continue;
+    const input = TaxYearInputSchema.parse(built);
+    expect(input.form1099R?.[0]?.disabilityPensionSource).toBeUndefined();
+    const result = calculateForm1099R(input.form1099R, { taxYear: 2026 });
+    expect(result.pensionTaxable.toFixed(2)).toBe("900.25");
+    expect(result.federalWithholding.toFixed(2)).toBe("125.00");
+  }
+});
+
+it("retains the guided Code D classifications and standalone Code 3 payment-period requirement", () => {
+  const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
+  state.taxYear = 2026;
+  const statement = { ...completeRetirementSource, sourceTaxYear: "2026" };
+  const cases = [
+    [{ distributionCode: "3 D", isIraSepSimple: true }, "retirement-0-nonqualified-plan"],
+    [{ distributionCode: "D 3", eligibleGovernmental457bPlan: true, governmental457bTransferredTaxableAmount: "0" }, "retirement-0-nonqualified-plan"],
+    [{ distributionCode: "3" }, "retirement-0-code3-disability"],
+    [{ distributionCode: "3 7" }, "retirement-0-code"],
+  ] as const;
+  for (const [change, field] of cases) {
+    state.sectionData["income-retirement"] = { entries: [{ ...statement, ...change }] };
+    const validation = validateSection(state, "income-retirement");
+    expect(validation.status).toBe("partial");
+    expect(validation.fieldErrors).toHaveProperty(field);
+    expect(buildTaxInputFromGuidedData(state)).toBeNull();
+  }
+  state.taxYear = 2025;
+  state.sectionData["income-retirement"] = { entries: [{ ...completeRetirementSource, distributionCode: "3 D" }] };
+  expect(validateSection(state, "income-retirement").fieldErrors).toHaveProperty("retirement-0-code");
+  expect(buildTaxInputFromGuidedData(state)).toBeNull();
+});
+
 it("keeps the 2026 qualified lump-sum reporting decision for a spaced Code A pair", () => {
   const statement = { ...completeRetirementSource, sourceTaxYear: "2026", distributionCode: "4 A" };
   expect(() => buildRetirementInputs([statement], "single", 2026)).toThrow(/actual reporting method/i);

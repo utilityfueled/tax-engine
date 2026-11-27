@@ -398,7 +398,7 @@
     "apps/web/src/lib/guided-required-facts.ts": "18bbec4c2aad5c46ad16472811c005d3f68817720784a6c6b6034299d88c4938",
     "apps/web/src/lib/guided-retirement-disability.ts": "0d13498e8cf1696f142e968fe572164060023bd16474a668c595a52f8b9bf1b0",
     "apps/web/src/lib/guided-retirement-education.ts": "432a50c3680c96bfc970c44d677d198047432dc4cee1aaaec708814f04d7dfc0",
-    "apps/web/src/lib/guided-retirement-facts.ts": "a9fc1af03e7d24b4fda6e14169797843675623456bd8c34f12c15900bbc36c9a",
+    "apps/web/src/lib/guided-retirement-facts.ts": "0cecf40a048dc73f3dac5343867fceb2e61f74471f885b4381c71b13eb4d2781",
     "apps/web/src/lib/guided-retirement-first-home.ts": "618201085030b49f6baddca26fbff8b4826a02d009bdf8d00f8bcbb7a94518dc",
     "apps/web/src/lib/guided-retirement-source-inputs.ts": "c186bfe0f0520e4080925f5da1d516c200fd121e46b21f77cd9ae8f11cfc174b",
     "apps/web/src/lib/guided-retirement-withholding-reconciliation.ts": "7a3a85da5022cde89a5901c983b66eea0e9ef74b72880a43ef4a3d4225b7d1c2",

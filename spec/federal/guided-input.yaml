@@ -82,6 +82,20 @@ lines:
     formula: "For 2025 Box 7 and 2026 Box 7a, preserve the source-entered code and document review text. Treat a single printed space between two code characters like adjacent characters for guided validation, method selection and canonical calculation input. Retain code order and the existing allowed combinations, year restrictions and worksheet requirements. Hold unsupported or missing codes and missing Box 2a when the selected method requires it. Preserve an explicit supported zero."
     irsRef: "Form 1099-R instructions, distribution code table and Box 7 (2025) or Box 7a (2026); https://www.irs.gov/pub/irs-prior/i1099r--2025.pdf; https://www.irs.gov/instructions/i1099r"
     testRef: "tests/guided-interview/guided-retirement-source-facts.test.ts::carries a printed space in confirmed retirement codes through 2025 and 2026 guided input"
+  - line: "retirement-2026-disability-code-d-pair"
+    description: "Admit a confirmed 2026 disability distribution paired with Code D"
+    formula: >-
+      On a 2026 return, admit a 2026 Form 1099-R reporting Codes 3 and D in
+      either order through the existing guided nonqualified distribution path.
+      Retain the literal saved code and pass the normalized code in the same
+      order with the actual Box 2a and Box 4 amounts. Require the existing
+      non-IRA and non-governmental-457(b) classifications and source
+      confirmations. Use the documented employer payment period for standalone
+      Code 3 only. Preserve the existing guided admission for 2025.
+    irsRef: "2026 Instructions for Forms 1099-R and 5498, Table 1, Codes 3 and D: https://www.irs.gov/instructions/i1099r"
+    testRef: "tests/guided-interview/guided-retirement-source-facts.test.ts::carries either printed Code 3 and D order through the reopened 2026 retirement interview"
+    testRefs:
+      - "tests/guided-interview/guided-retirement-source-facts.test.ts::retains the guided Code D classifications and standalone Code 3 payment-period requirement"
   - line: "retirement-source-identity"
     description: "Distinguish original statements by source year, recipient, payer and account reference"
     formula: "Compare actual same-year and same-recipient retirement statements using the payer's nine-digit TIN without hyphens and the trimmed case-insensitive local account reference. Repeated identities stay unresolved until the original or correction is reconciled. Each joint-return recipient may have their own statement with the same payer and local account label. Preserve the source-entered TIN and account reference for the other original-source checks. When the interview updates a statement, a change of recipient, normalized payer TIN, normalized account reference or normalized annuity contract reference clears this original's Simplified Method Box 1 coverage confirmation. A change to the taxpayer in the selected recipient role also requires fresh coverage. Preserve the worksheet facts for review, subject to the existing statement-year reset for annual facts. Equivalent formatting, row order, independently added statements and edits to unrelated worksheet details on an individually retained original preserve coverage. If a replacement cannot be distinguished from a copied or reassigned confirmation, require fresh coverage on the affected statements. This includes a simultaneous removal of a reviewed original and a substantive worksheet change under a retained identity whose previous review cannot establish those facts. General source review alone cannot establish coverage for the edited original, including after reopening. A saved draft without prior versions does not identify past changes."
