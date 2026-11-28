@@ -3,6 +3,7 @@ import {ordinarySourcePrecision}from '@/engine/state/pa-ordinary-source-precisio
 import {statePaymentFactErrors}from './guided-state-facts';
 import type { CreditsData, FilingStatus, RetirementEntryData, StateReturnData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
+import { requireObserved2026QcdTransferDate } from "@/models/qcd-transfer-date-2026.js";
 import { isBeforeAge59AndHalfDate } from "@/utils/retirement-age";
 import { amountError, currentLocalCivilDate, guidedAmountChanged, hasEnteredAmount, isActualDate } from "./guided-required-facts";
 import { buildGuidedIraBasisSources, type GuidedIraBasisContext } from "./guided-ira-basis";
@@ -351,7 +352,11 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
       else {
         if (basisBound || entry.isIraSepSimple !== true || entry.iraBasisConfirmedZero !== true) fail("qcd-basis", "This QCD worksheet requires an actual ordinary traditional IRA with zero nondeductible owner basis.");
         for (const [field, label] of retirementQcdTextFields) if (!qcd[field]?.trim()) fail(`qcd-${field}`, `Enter the ${label.toLowerCase()}.`);
-        if (!isActualDate(qcd.distributionDate) || !qcd.distributionDate?.startsWith(`${entry.sourceTaxYear}-`)) fail("qcd-date", "Enter the actual QCD transfer date in this return year.");
+        try {
+          requireObserved2026QcdTransferDate(qcd.distributionDate, currentLocalCivilDate());
+        } catch (error) {
+          fail("qcd-date", error instanceof Error ? error.message : "Enter the actual QCD transfer date in this return year.");
+        }
         for (const [field, label] of retirementQcdAmounts) {
           const problem = amountError(qcd[field], label.toLowerCase());
           if (problem) fail(`qcd-${field}`, problem);

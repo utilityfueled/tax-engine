@@ -1,6 +1,6 @@
 import { assertPAGuidedPaymentBoundary } from "../fixtures/assert-pa-guided-payment-boundary";
 // Spec: spec/federal/guided-input.yaml, retirement-ira-checkbox
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { buildGuidedFactAnswers, buildGuidedSyntheticDocuments, buildRetirementInputs, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { Form1099RSchema, TaxYearInputSchema } from "@/models/inputs";
 import { calculateFederalTax } from "@/engine/federal";
@@ -627,6 +627,33 @@ function jointQcdDraft() {
   state.sectionData["personal-info"] = personal;
   return { state, personal };
 }
+
+it("holds a future 2026 QCD transfer after saving and reopening the guide", () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 10, 28, 12));
+  try {
+    const reopenedWithTransferDate = (distributionDate: string) => {
+      const { state } = jointQcdDraft();
+      const confirmed = updateSectionData(state, "income-retirement", {
+        entries: [{ ...qcdStatement, qcdSource: { ...qcdWorksheet, distributionDate } }],
+      });
+      const reopened = parseGuidedFlowState(JSON.stringify(confirmed));
+      if (!reopened) throw new Error("Could not reopen the guided QCD records.");
+      return reopened;
+    };
+    const future = reopenedWithTransferDate("2026-12-31");
+    expect(future.sectionData["income-retirement"]?.entries[0]?.qcdSource?.distributionDate).toBe("2026-12-31");
+    expect.soft(validateSection(future, "income-retirement").status).toBe("partial");
+    expect.soft(buildTaxInputFromGuidedData(future)).toBeNull();
+
+    const sameDay = reopenedWithTransferDate("2026-11-28");
+    expect(validateSection(sameDay, "income-retirement").status).toBe("complete");
+    expect(buildTaxInputFromGuidedData(sameDay)?.form1099R?.[0]?.qcdSource?.distributionDate).toBe("2026-11-28");
+    expect(buildTaxInputFromGuidedData(reopenedWithTransferDate(""))).toBeNull();
+  } finally {
+    vi.useRealTimers();
+  }
+});
 
 it("revokes old QCD evidence when the same household role is a different person", () => {
   const { state, personal } = jointQcdDraft();

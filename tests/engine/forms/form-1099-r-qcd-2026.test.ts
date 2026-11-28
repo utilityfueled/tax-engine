@@ -55,6 +55,25 @@ it("reconciles the published 2026 QCD adjustment", () => {
   expect(result.iraTaxable.eq("4000")).toBe(true);
 });
 
+it("uses an actual as-of date for direct 2026 QCD aggregation", () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 9, 30, 12));
+  try {
+    const original = Form1099RSchema.parse({ ...statement, qcdSource });
+    const future = Form1099RSchema.parse({ ...statement, qcdSource: { ...qcdSource, distributionDate: "2026-10-31" } });
+    const earlier = { ...options, asOfDate: "2026-10-29" };
+    const invalid = { ...options, asOfDate: "2026-02-30" };
+    const later = { ...options, asOfDate: "2026-10-31" };
+    expect.soft(() => calculateForm1099R([future], options)).toThrow(/QCD.*on or before/i);
+    expect.soft(() => calculateForm1099R([original], earlier)).toThrow(/QCD.*on or before/i);
+    expect.soft(() => calculateForm1099R([original], invalid)).toThrow(/QCD.*as-of date/i);
+    expect.soft(() => calculateForm1099R([future], later)).toThrow(/QCD.*as-of date/i);
+    expect(calculateForm1099R([original], options).iraQualifiedCharitableDistributions.toFixed()).toBe("2500");
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
 it("applies each owner adjustment once across multiple statements", () => {
   const primaryAmounts = ["3000", "3500"];
   const primary = primaryAmounts.map((amount, index) => Form1099RSchema.parse({
@@ -184,6 +203,23 @@ it("carries the verified QCD into the parsed federal return", () => {
   expect(result.iraDistributionsGross.toString()).toBe("6500");
   expect(result.iraDistributionsTaxable.toString()).toBe("4000");
   expect(result.agi.toString()).toBe("89000");
+});
+
+it("uses the federal caller date for the actual 2026 QCD transfer", () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 10, 28, 12));
+  try {
+    const actual = federalInput();
+    const future = federalInput({
+      form1099R: [{ ...statement, qcdSource: { ...qcdSource, distributionDate: "2026-12-31" } }],
+    }, "1956-06-10");
+    expect.soft(() => calculateFederalTax(future)).toThrow(/QCD.*on or before/i);
+    expect.soft(() => calculateFederalTax(actual, { asOfDate: "2026-10-29" })).toThrow(/QCD.*on or before/i);
+    expect.soft(() => calculateFederalTax(future, { asOfDate: "2026-12-31" })).toThrow(/QCD.*as-of date/i);
+    expect(calculateFederalTax(actual, { asOfDate: "2026-10-30" }).iraDistributionsTaxable.toFixed()).toBe("4000");
+  } finally {
+    vi.useRealTimers();
+  }
 });
 
 it("checks the actual owner age at transfer and closes Schedule 1's standalone fallback", () => {

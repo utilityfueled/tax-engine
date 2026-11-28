@@ -153,6 +153,7 @@ import type { QBIBusinessSource } from "./forms/form-8995-a.js";
 import { reconcileQualifiedPtpLossSource } from "./qbi-ptp-loss-source.js";
 import { assertUniqueDirectReitDividend, resolveQualifiedReitBox5 } from "./qbi-reit-dividend-source.js";
 import {
+  assert2026QcdTransferDates,
   calculateForm1099R,
   isIraForm1099RDistribution,
   resolveQualifiedRothDistributionAmount,
@@ -306,6 +307,7 @@ function calculateFederalTaxReturn(input: TaxYearInput, context?: { asOfDate?: s
     input = datedInput;
   }
   assertCode3DisabilityPensionSources(input, context?.asOfDate);
+  assert2026QcdTransferDates(input, context?.asOfDate);
   const form8919ReceiptDate = input.form8919?.reasonANecSource?.determinationReceivedDate;
   if (form8919ReceiptDate !== undefined && context?.asOfDate !== undefined) {
     const { asOfDate } = context;

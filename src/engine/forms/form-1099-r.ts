@@ -11,6 +11,8 @@ import Decimal from "decimal.js";
 import { FEDERAL_2026_CONSTANTS } from "@/models/federal-2026-indexed.js";
 import type { Form1099R, TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
+import { requireObserved2026QcdTransferDate } from "@/models/qcd-transfer-date-2026.js";
+import { currentLocalCivilDate } from "@/utils/civil-date.js";
 import { d, sum } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import {
@@ -102,6 +104,7 @@ interface RetirementAggregationOptions {
   hasValidatedIraBasisSources?: boolean;
   isJointReturn?: boolean;
   hasJointSpouse?: boolean;
+  asOfDate?: string;
   qcdReturnContext?: Pick<TaxYearInput, "taxpayer" | "form8606" | "form8606ByOwner" | "iraBasisSources"
     | "adjustments" | "iraDeductionWorksheet" | "donations">;
 }
@@ -109,6 +112,14 @@ interface RetirementAggregationOptions {
 function hasQcdClaim(form: Form1099R): boolean {
   return form.qcdSource !== undefined || hasQualifiedCharitableDistributionCode(form)
     || !d(form.qualifiedCharitableDistribution).isZero();
+}
+
+export function assert2026QcdTransferDates(input: Pick<TaxYearInput, "taxpayer" | "form1099R">, asOfDate?: string): void {
+  if (input.taxpayer.taxYear !== 2026 || asOfDate === undefined) return;
+  const today = currentLocalCivilDate();
+  for (const { qcdSource } of input.form1099R ?? []) {
+    if (qcdSource) requireObserved2026QcdTransferDate(qcdSource.distributionDate, today, asOfDate);
+  }
 }
 
 function actualCalendarDate(value: string | undefined): Date | undefined {
@@ -183,6 +194,7 @@ function resolve2026QcdSources(
   const transferReferences = new Set<string>();
   const underlyingTransfers = new Set<string>();
   const byOwner = new Map<QcdOwner, { worksheet: string; prior: Decimal; current: Decimal; transfers: Decimal }>();
+  const today = currentLocalCivilDate();
 
   for (const form of forms.filter(hasQcdClaim)) {
     const source = form.qcdSource;
@@ -219,12 +231,11 @@ function resolve2026QcdSources(
       || source.allOwnerTransfersAndContributionsConfirmed !== true) {
       throw new Error("2026 Form 1099-R QCD requires all eligibility, acknowledgment and owner worksheet confirmations");
     }
-    const transferDate = actualCalendarDate(source.distributionDate);
-    if (!transferDate || transferDate.getUTCFullYear() !== 2026
-      || (form.distributionDate !== undefined && form.distributionDate !== source.distributionDate)) {
-      throw new Error("2026 Form 1099-R QCD requires a valid distribution date matching the original date when supplied");
+    const distributionDate = requireObserved2026QcdTransferDate(source.distributionDate, today, options.asOfDate);
+    if (form.distributionDate !== undefined && form.distributionDate !== distributionDate) {
+      throw new Error("2026 Form 1099-R QCD requires the transfer date to match the original distribution date when supplied.");
     }
-    if (input && !qcdAgeEligible(input.taxpayer[owner]?.dateOfBirth, transferDate)) {
+    if (input && !qcdAgeEligible(input.taxpayer[owner]?.dateOfBirth, new Date(`${distributionDate}T00:00:00Z`))) {
       throw new Error("2026 Form 1099-R QCD owner must have attained age 70½ by the actual distribution date");
     }
     const amount = d(source.transferAmount);

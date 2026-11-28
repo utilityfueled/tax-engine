@@ -27,6 +27,21 @@ lines:
       supported-basis coordination for a separate method. Historical results
       retain their existing behavior.
     testRef: "tests/engine/forms/form-1099-r-qcd-2026.test.ts::holds Code Y without an actual owner worksheet"
+  - line: "observed-transfer-date"
+    description: "Use only an actual transfer completed by the calculation date"
+    formula: >-
+      Require the explicit supported 2026 trustee transfer date on or before
+      the local civil calculation date. Include a transfer completed on that
+      date. Check the same requirement in guided draft replay, the standalone
+      retirement calculation and the whole federal return. The federal or
+      standalone caller may narrow observation to a valid earlier date, but
+      cannot supply a date after today. Hold missing, impossible, wrong-year
+      and future dates without replacing them. This rule does not change the
+      historical retirement calculation.
+    testRef: "tests/guided-interview/guided-retirement-source-facts.test.ts::holds a future 2026 QCD transfer after saving and reopening the guide"
+    testRefs:
+      - "tests/engine/forms/form-1099-r-qcd-2026.test.ts::uses an actual as-of date for direct 2026 QCD aggregation"
+      - "tests/engine/forms/form-1099-r-qcd-2026.test.ts::uses the federal caller date for the actual 2026 QCD transfer"
   - line: "current-owner-exclusion"
     description: "Calculate the exclusion using each owner's actual adjustment worksheet"
     formula: >-
