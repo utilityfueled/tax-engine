@@ -1,7 +1,7 @@
 import Decimal from "decimal.js";
 import type { Form1099SA, Form8889Input } from "@/models/inputs";
 import { parseGuidedCurrency } from "./guided-currency";
-import { amountError, isActualDate } from "./guided-required-facts";
+import { amountError, currentLocalCivilDate, isActualDate } from "./guided-required-facts";
 import { hsaTimelyCorrectionErrors, type HsaTimelyExcessCorrection, type HsaCorrectionRecipient } from "./guided-hsa-excess-correction-facts";
 
 export interface HsaMedicalEligibility {
@@ -63,9 +63,11 @@ export function hsaDistributionFactErrors(records: HsaDistributionSource[] | und
   const eventIds = new Set<string>();
   const statements = new Set<string>();
   const validRollovers: string[] = [];
+  const reviewDate = taxYear === 2026 ? currentLocalCivilDate() : undefined;
   for (const [index, record] of records.entries()) {
     const prefix = `hsaDistribution-${index}`;
     const add = (field: string, message: string) => { errors[`${prefix}-${field}`] = message; };
+    const observedThrough = record.distributionCode === "1" || record.distributionCode === "3" ? reviewDate : undefined;
     if (!record.id || ids.has(record.id)) add("id", "Keep each original Form 1099-SA only once, with a unique source identifier.");
     ids.add(record.id);
     if (record.sourceTaxYear !== String(taxYear)) add("year", "Enter the actual statement tax year; it must match this return.");
@@ -94,6 +96,7 @@ export function hsaDistributionFactErrors(records: HsaDistributionSource[] | und
       if (!event.id || eventIds.has(event.id)) add(`${eventKey}-id`, "Keep each dated distribution once, with a unique identifier.");
       eventIds.add(event.id);
       if (!isActualDate(event.distributionDate) || !event.distributionDate.startsWith(`${taxYear}-`) || (dateOfBirth !== undefined && isActualDate(dateOfBirth) && event.distributionDate < dateOfBirth)) add(`${eventKey}-date`, "Enter the actual distribution date in this return year, after the owner's birth date.");
+      else if (observedThrough && event.distributionDate > observedThrough) add(`${eventKey}-date`, "Enter the date the HSA distribution was actually received, on or before today's local date.");
       const validAmounts = ["grossDistribution", "medicalExpenses", "rolloverAmount"].every(field => {
         const error = amountError(event[field as "grossDistribution" | "medicalExpenses" | "rolloverAmount"], field);
         if (error) add(`${eventKey}-${field}`, error);
@@ -108,7 +111,9 @@ export function hsaDistributionFactErrors(records: HsaDistributionSource[] | und
       if (medical.plus(rollover).gt(gross)) add(`${eventKey}-allocation`, "Medical and rollover amounts assigned to this distribution cannot exceed its actual gross amount or use the same dollars twice.");
       if (medical.gt(0) && medicalFields.some(field => typeof event.medicalEligibility?.[field] !== "boolean")) add(`${eventKey}-medical`, "Answer every medical expense eligibility question; a blank answer is unknown.");
       if (rollover.gt(0)) {
-        if (!isActualDate(event.rolloverReceivedDate)) add(`${eventKey}-rolloverDate`, "Enter the actual date the receiving HSA received the rollover.");
+        const receivedDate = event.rolloverReceivedDate ?? "";
+        if (!isActualDate(receivedDate)) add(`${eventKey}-rolloverDate`, "Enter the actual date the receiving HSA received the rollover.");
+        else if (observedThrough && receivedDate > observedThrough) add(`${eventKey}-rolloverDate`, "Enter the actual rollover receipt date on or before today's local date.");
         for (const field of ["rolloverToSameOwnerHsa", "noOtherRolloverInPrior12Months"] as const) if (typeof event[field] !== "boolean") add(`${eventKey}-${field}`, "Confirm the actual rollover ownership and preceding twelve-month history.");
         if (isActualDate(event.distributionDate) && qualifiedRollover(event).gt(0)) validRollovers.push(event.distributionDate);
       }

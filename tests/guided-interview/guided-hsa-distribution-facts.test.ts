@@ -1,12 +1,12 @@
 // Spec: spec/federal/guided-hsa-distributions.yaml
-import { expect, it } from "vitest";
-import { buildHsaDistributionInputs, hsaDistributionFactErrors, type HsaDistributionSource } from "@/lib/guided-hsa-distribution-facts";
+import { expect, it, vi } from "vitest";
+import { buildHsaDistributionInputs, hsaDistributionFactErrors, type HsaDistributionEvent, type HsaDistributionSource } from "@/lib/guided-hsa-distribution-facts";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
-import { emptyAdjustmentData } from "@/lib/guided-interview-flow";
+import { emptyAdjustmentData, validateSection } from "@/lib/guided-interview-flow";
 import { Form1099SASchema, TaxYearInputSchema } from "@/models/inputs";
 import { calculateFederalTax } from "@/engine/federal";
 import { calculateForm1099SA } from "@/engine/forms/form-1099-sa";
-import { completeHsaSources, startCompleteInterview } from "./complete-facts";
+import { completeHsaSources, completeW2Entry, startCompleteInterview } from "./complete-facts";
 const medical = { qualifiedExpense: true, beneficiaryEligible: true, incurredAfterHsaEstablished: true, notReimbursedElsewhere: true, notDeductedOnScheduleA: true };
 const source: HsaDistributionSource = { id: "source1", sourceTaxYear: "2025", accountOwner: "primary", payer: "Actual HSA bank", payerTin: "12-3456789", accountReference: "actual-source-account", accountType: "hsa", distributionCode: "1", grossDistribution: "1000.10", earningsOnExcessContributions: "0", trusteeToTrusteeTransfer: false, sourceFactsConfirmed: true,
   events: [{ id: "event1", distributionDate: "2025-04-01", grossDistribution: "1000.10", medicalExpenses: "800.05", medicalEligibility: medical, rolloverAmount: "0" }] };
@@ -83,6 +83,80 @@ it("uses actual rollover dates and taxable post-age65 amounts", () => {
   expect(buildHsaDistributionInputs([late], "primary", 2025, "1960-06-01").form8889).toMatchObject({ rolloverDistributions: "0", distributionsAfterAge65: "180" });
   const prior = { ...current, events: [current.events[0]!, { ...current.events[1]!, noOtherRolloverInPrior12Months: null }] };
   expect(Object.keys(hsaDistributionFactErrors([prior], "primary", 2025, "1960-06-01")).length).toBeGreaterThan(0);
+});
+
+const currentRollover: HsaDistributionEvent = {
+  id: "event1", distributionDate: "2026-11-26", grossDistribution: "100.10", medicalExpenses: "0",
+  rolloverAmount: "100.10", rolloverReceivedDate: "2026-11-27", rolloverToSameOwnerHsa: true, noOtherRolloverInPrior12Months: true,
+};
+
+function interviewWithHsaEvent(event: HsaDistributionEvent, distributionCode: "1" | "3" = "1", taxYear = 2026) {
+  const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2"], lifeEvents: ["hsa-contributions"], stateCode: null });
+  state.taxYear = taxYear;
+  state.sectionData["income-w2"] = { entries: [{ ...completeW2Entry, wages: "85000", medicareWages: "85000", socialSecurityWages: "85000", federalWithheld: "15000" }] };
+  state.sectionData.adjustments = { ...emptyAdjustmentData, hsaAccounts: [{
+    ...completeHsaSources, contributionTaxYear: String(taxYear), priorYearSourceTaxYear: String(taxYear - 1), hasDistributions: true,
+    distributions: [{ ...source, sourceTaxYear: String(taxYear), distributionCode, grossDistribution: event.grossDistribution, events: [event] }],
+  }] };
+  return state;
+}
+
+it("holds future ordinary 2026 HSA distributions in the guide and bridge", () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 10, 27, 12));
+  try {
+    for (const code of ["1", "3"] as const) {
+      const event = { ...currentRollover, distributionDate: "2026-11-28", rolloverAmount: "0", rolloverReceivedDate: undefined };
+      const state = interviewWithHsaEvent(event, code);
+      const validation = validateSection(state, "adjustments");
+      expect.soft(validation.status).toBe("partial");
+      expect.soft(validation.fieldErrors?.["hsa-0-hsaDistribution-0-event-0-date"]).toBeDefined();
+      expect.soft(buildTaxInputFromGuidedData(state)).toBeNull();
+    }
+  } finally { vi.useRealTimers(); }
+});
+
+it("holds a future receiving HSA rollover date in the guide and bridge", () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.stubEnv("TZ", "America/New_York");
+  vi.setSystemTime(new Date("2026-11-28T01:00:00Z"));
+  try {
+    expect(new Date().getDate()).toBe(27);
+    const state = interviewWithHsaEvent({ ...currentRollover, rolloverReceivedDate: "2026-11-28" });
+    const validation = validateSection(state, "adjustments");
+    expect.soft(validation.status).toBe("partial");
+    expect.soft(validation.fieldErrors?.["hsa-0-hsaDistribution-0-event-0-rolloverDate"]).toBeDefined();
+    expect.soft(buildTaxInputFromGuidedData(state)).toBeNull();
+  } finally {
+    vi.useRealTimers();
+    vi.unstubAllEnvs();
+  }
+});
+
+it("accepts observed same-day and following-year rollover dates and preserves missing facts", () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 10, 27, 12));
+  try {
+    const sameDayEvent = { ...currentRollover, distributionDate: "2026-11-27" };
+    const sameDay = interviewWithHsaEvent(sameDayEvent);
+    expect(validateSection(sameDay, "adjustments").status).toBe("complete");
+    expect(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(sameDay)).form8889ByOwner?.primary?.rolloverDistributions).toBe("100.1");
+    for (const event of [{ ...sameDayEvent, distributionDate: "" }, { ...sameDayEvent, rolloverReceivedDate: undefined }]) {
+      const state = interviewWithHsaEvent(event);
+      expect(validateSection(state, "adjustments").status).toBe("partial");
+      expect(buildTaxInputFromGuidedData(state)).toBeNull();
+    }
+
+    vi.setSystemTime(new Date(2027, 0, 16, 12));
+    const followingYear = interviewWithHsaEvent({ ...currentRollover, distributionDate: "2026-12-31", rolloverReceivedDate: "2027-01-15" });
+    expect(validateSection(followingYear, "adjustments").status).toBe("complete");
+    const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(followingYear));
+    expect(input.form1099SA?.[0]?.taxYear).toBe(2026);
+    expect(input.form8889ByOwner?.primary?.rolloverDistributions).toBe("100.1");
+
+    const legacy = interviewWithHsaEvent({ ...currentRollover, distributionDate: "2025-11-26", rolloverReceivedDate: "2025-11-27" }, "1", 2025);
+    expect(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(legacy)).form8889ByOwner?.primary?.rolloverDistributions).toBe("100.1");
+  } finally { vi.useRealTimers(); }
 });
 
 it("binds actual distributions to the owner return and preserves contradictory saved records", () => {

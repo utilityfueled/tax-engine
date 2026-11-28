@@ -49,3 +49,18 @@ lines:
       projection. Undated historical return inputs may retain an unknown year.
     irsRef: "Form 1099-SA (Rev. April 2025), For calendar year, https://www.irs.gov/pub/irs-pdf/f1099sa.pdf; 2026 instructions, https://www.irs.gov/instructions/i1099sa"
     testRef: "tests/guided-interview/guided-hsa-distribution-facts.test.ts::preserves the confirmed calendar year for ordinary and disability statements"
+  - line: "observed-distribution-and-rollover-dates"
+    description: "Require actual received distributions and completed rollovers for ordinary 2026 guided HSA statements"
+    formula: >-
+      On a 2026 guided return, a code 1 or code 3 distribution date must be in
+      the return year and on or before the local review date. A positive
+      rollover needs the actual receiving HSA's receipt date on or before that
+      same cutoff. Hold future or missing dates until the taxpayer provides
+      received evidence. Same-day receipts and completed following-year
+      receipts within 60 days retain the ordinary rollover rules. Preserve
+      zero and the existing 2025 and separate code 2 treatment.
+    irsRef: "2026 Form 8889 lines 14a and 14b, https://www.irs.gov/pub/irs-prior/f8889--2026.pdf; Publication 969, Rollovers, https://www.irs.gov/publications/p969"
+    testRef: "tests/guided-interview/guided-hsa-distribution-facts.test.ts::holds future ordinary 2026 HSA distributions in the guide and bridge"
+    testRefs:
+      - "tests/guided-interview/guided-hsa-distribution-facts.test.ts::holds a future receiving HSA rollover date in the guide and bridge"
+      - "tests/guided-interview/guided-hsa-distribution-facts.test.ts::accepts observed same-day and following-year rollover dates and preserves missing facts"
