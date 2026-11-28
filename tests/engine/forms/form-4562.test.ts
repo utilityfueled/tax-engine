@@ -183,6 +183,31 @@ describe("Form 4562 depreciation and section 179 summary", () => {
     expect(result.lines.find(line => line.line === "22")?.value.toFixed()).toBe("100000000000000000001.27");
   });
 
+  it("Form 4562 exactly sums rounded deductions in each per-asset subtotal", () => {
+    const largeBasis = "1000000000000000000000";
+    const current = { placedInServiceDate: "2026-03-01", recoveryPeriod: "5", method: "200DB" } as const;
+    const prior = { ...current, placedInServiceDate: "2025-03-01" };
+    const straightLine = { ...current, method: "SL" } as const;
+    const listed = { ...current, isListedProperty: true, isPassengerAutomobile: false, businessUsePercentage: 100 };
+    const result = calculateForm4562({
+      taxYear: 2026,
+      assets: [
+        { ...prior, costBasis: largeBasis }, { ...prior, costBasis: "3" },
+        { ...current, costBasis: largeBasis }, { ...current, costBasis: "5" },
+        { ...straightLine, costBasis: largeBasis }, { ...straightLine, costBasis: "10" },
+        { ...listed, costBasis: largeBasis }, { ...listed, costBasis: "5" },
+      ],
+    });
+
+    expect(result.assetResults.map(asset => asset.depreciation.toFixed())).toEqual([
+      "320000000000000000000", "1", "200000000000000000000", "1", "100000000000000000000", "1",
+    ]);
+    expect(result.listedPropertyResults.map(asset => asset.depreciation.toFixed())).toEqual(["200000000000000000000", "1"]);
+    expect([result.line17, result.line19, result.line20, result.line21, result.line22].map(value => value.toFixed())).toEqual([
+      "320000000000000000001", "200000000000000000001", "100000000000000000001", "200000000000000000001", "820000000000000000004",
+    ]);
+  });
+
   it("Form 4562 Lines 42 through 44 - amortization totals stay separate from the line 22 depreciation bridge", () => {
     const result = calculateForm4562({
       section179ExpenseDeduction: "540000",

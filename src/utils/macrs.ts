@@ -31,6 +31,7 @@ import {
   type MACRSConvention,
 } from "@/models/constants.js";
 import { d, roundDollar } from "@/utils/decimal.js";
+import { sumSourceMoneyValues } from "@/utils/sum-source-money.js";
 import { resolveMACRSAssetBasisSources, type MACRSBasisSourceAmounts, type MACRSBasisSourceStatus } from "@/models/macrs-asset-basis-sources.js";
 
 import { resolveMACRSDispositionSources } from "@/models/macrs-disposition-sources.js";
@@ -201,9 +202,9 @@ export function computeAggregateDepreciation(
     midQuarterRequired ? "midQuarter" : undefined;
 
   // --- Step 2: Compute per-asset depreciation (non-listed property only) ---
-  let priorYearAssets = ZERO;
-  let currentYearGds = ZERO;
-  let currentYearAds = ZERO;
+  const priorYearDeductions: Decimal[] = [];
+  const currentYearGdsDeductions: Decimal[] = [];
+  const currentYearAdsDeductions: Decimal[] = [];
   const assetResults: AssetDepreciationResult[] = [];
 
   for (const asset of assets) {
@@ -226,11 +227,11 @@ export function computeAggregateDepreciation(
     const isRealProperty = result.recoveryPeriod === 27.5 || result.recoveryPeriod === 39;
 
     if (!isCurrentYear) {
-      priorYearAssets = priorYearAssets.plus(result.depreciation);
+      priorYearDeductions.push(result.depreciation);
     } else if (isRealProperty || result.method === "SL") {
-      currentYearAds = currentYearAds.plus(result.depreciation);
+      currentYearAdsDeductions.push(result.depreciation);
     } else {
-      currentYearGds = currentYearGds.plus(result.depreciation);
+      currentYearGdsDeductions.push(result.depreciation);
     }
   }
 
@@ -239,7 +240,10 @@ export function computeAggregateDepreciation(
 
   return {
     basisSourceStatus: assets.length > 0 && assets.every(asset => asset.basisSources !== undefined) ? "documented_first_year" : "legacy_unqualified",
-    priorYearAssets, currentYearGds, currentYearAds, assetResults,
+    priorYearAssets: sumSourceMoneyValues(priorYearDeductions),
+    currentYearGds: sumSourceMoneyValues(currentYearGdsDeductions),
+    currentYearAds: sumSourceMoneyValues(currentYearAdsDeductions),
+    assetResults,
     midQuarterRequired, listedProperty,
   };
 }
@@ -470,7 +474,6 @@ export function computeListedPropertyAggregation(
   taxYear: number,
   conventionOverride?: MACRSConvention,
 ): ListedPropertyAggregation {
-  let totalDepreciation = ZERO;
   const results: ListedPropertyResult[] = [];
 
   for (const asset of assets) {
@@ -482,10 +485,9 @@ export function computeListedPropertyAggregation(
     if (!result || result.depreciation.isZero()) continue;
 
     results.push(result);
-    totalDepreciation = totalDepreciation.plus(result.depreciation);
   }
 
-  return { totalDepreciation, results };
+  return { totalDepreciation: sumSourceMoneyValues(results.map(result => result.depreciation)), results };
 }
 
 // ---------------------------------------------------------------------------

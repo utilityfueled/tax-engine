@@ -203,7 +203,7 @@ lines:
 
   - line: "17"
     description: "MACRS deductions for assets placed in service before the current tax year"
-    formula: "When per-asset detail is provided: sum of MACRS depreciation for all assets with placedInServiceYear < taxYear using Pub 946 percentage tables. Otherwise: validated Form 4562 line 17 total."
+    formula: "When per-asset detail is provided: exactly sum the rounded MACRS deductions for all assets with placedInServiceYear < taxYear using Pub 946 percentage tables. Otherwise: validated Form 4562 line 17 total."
     irsRef: "Form 4562, Line 17; IRS Publication 946, Tables A-1, A-5, A-6, A-7a, A-8"
     inputs:
       - "Per-asset: costBasis, placedInServiceDate, recoveryPeriod, method, convention"
@@ -217,7 +217,7 @@ lines:
 
   - line: "19"
     description: "Current-year MACRS depreciation under the general depreciation system"
-    formula: "When per-asset detail is provided: sum of MACRS depreciation for current-year GDS assets (200% DB or 150% DB, half-year convention). Otherwise: validated aggregate of line 19 column (g)."
+    formula: "When per-asset detail is provided: exactly sum the rounded MACRS deductions for current-year GDS assets (200% DB or 150% DB, half-year convention). Otherwise: validated aggregate of line 19 column (g)."
     irsRef: "Form 4562, Line 19, column (g); IRS Publication 946, Tables A-1, A-5"
     inputs:
       - "Per-asset: costBasis, placedInServiceDate, recoveryPeriod, method, convention"
@@ -225,11 +225,11 @@ lines:
     edgeCases:
       - "A new 7-year asset placed in the current year gets 14.29% first-year depreciation under 200% DB half-year"
       - "A new 5-year farm asset using 150% DB gets 15.00% first-year depreciation"
-    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Lines 17, 19, 20 - per-asset computation replaces summary totals when assets provided"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 exactly sums rounded deductions in each per-asset subtotal"
 
   - line: "20"
     description: "Current-year MACRS depreciation under the alternative depreciation system"
-    formula: "When per-asset detail is provided: sum of MACRS depreciation for current-year ADS / straight-line assets and current-year real property. Otherwise: validated aggregate of line 20 column (g)."
+    formula: "When per-asset detail is provided: exactly sum the rounded MACRS deductions for current-year ADS / straight-line assets and current-year real property. Otherwise: validated aggregate of line 20 column (g)."
     irsRef: "Form 4562, Line 20, column (g); IRS Publication 946, Tables A-6, A-7a, A-8"
     inputs:
       - "Per-asset: costBasis, placedInServiceDate, recoveryPeriod, method, convention"
@@ -241,12 +241,11 @@ lines:
 
   - line: "21"
     description: "Listed property depreciation"
-    formula: "Validated Form 4562 line 21 amount, which comes from Part V line 28"
-    irsRef: "Form 4562, Line 21"
+    formula: "Exactly sum the supported rounded listed-property deductions on line 28, and carry that subtotal to line 21. When no per-asset listed-property results apply, carry the validated Part V summary under the existing input method."
+    irsRef: "Form 4562, Lines 21 and 28"
     inputs:
       - "Validated listed property depreciation"
-    notes: "This supported slice accepts the Part V line 28 carryforward amount directly instead of rebuilding the listed-property detail tables."
-    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Line 22 - total deduction sums section 179, depreciation, MACRS, and listed property"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 exactly sums rounded deductions in each per-asset subtotal"
 
   - line: "22"
     description: "Total depreciation and section 179 deduction"
