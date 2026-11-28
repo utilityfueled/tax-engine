@@ -17,6 +17,18 @@ the latest application revision, exact-source runs and open dependencies. The
 
 ## November 27 state disclosures, HSA originals and AI receipt binding
 
+`adf5bd9ca` rejects 2026 Form 1099-R Code H when the statement identifies
+an IRA source. It also rejects invalid H combinations before canonical
+classification. Valid H now continues to report pension gross, including
+H4/4H through the dated canonical path. Valid Code G IRA rollovers and
+undated saved inputs retain their existing behavior. All 346 exact focused
+tests, eight static checks and 10,313 spec references passed. Independent
+engineering review reran 115 tests and verified rejection before the gross
+split. Full local checks are running on this revision, and the separate native
+ARM64 run was dispatched.
+[IRS Form 1099-R instructions](https://www.irs.gov/instructions/i1099r) ·
+[ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/46090231433).
+
 `01a215a63` names the selected 2026 PA-40 and Ohio IT 1040 draft
 scenarios in public support. It lists full-year resident, part-year
 resident and nonresident methods, and limits the Ohio IT NRC credit
@@ -49,6 +61,34 @@ before another mock dispatch. Historical hashes retain their original
 bytes. All 152 exact focused tests, eight static checks and the separate
 evaluator type check passed. Independent engineering review reran 64
 mock tests. These fixtures record no live provider usage or human labels.
+
+`9710b719b` adds an explicit append-only correction for a historical
+model-bound receipt whose reference already collided when the correction was
+recorded. Replay verifies the original conflict and the new reference, retains
+the original receipt in the collision index, and preserves other attempts'
+holds and the corrected attempt's response status. The synthetic fixture
+records $0.00019 before resuming with only repeat 3. A separate attempt keeps
+its $0.0111056 hold. If a later response reuses the correction reference,
+replay reinstates the hold and the one-correction rule leaves it unresolved.
+All 158 exact focused tests, eight static checks, 10,311 spec references and
+the separate evaluator type check passed. Independent engineering review
+passed. The correction used no live provider calls and does not resolve the
+outstanding $0.022384 live usage reservation.
+
+The November 27 official annual-form refresh still found 2025 at the IRS
+final Form 1040 endpoint alongside the 2026 draft. Pennsylvania's personal
+income tax page and Ohio's annual IT 1040 listing still identify the 2025
+annual returns. This was a check of those release channels. The federal,
+Pennsylvania and Ohio 2026 annual filing maps remain gated.
+[IRS final endpoint](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[IRS 2026 draft](https://www.irs.gov/pub/irs-dft/f1040--dft.pdf) ·
+[Pennsylvania DOR](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
+[Ohio forms listing](https://tax.ohio.gov/business/get-a-form).
+
+The public npm registry reported zero advisories for the unchanged lockfile
+across 550 total packages and 457 production packages on November 27. Each
+command exited successfully. Final runtime image scans and disposition of their
+findings remain release requirements.
 
 ## November 27 full browser collection correction
 

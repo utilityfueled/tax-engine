@@ -3,10 +3,13 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "dcfd227f5febe42d318ac8f4ebf1f7fd048caa53",
-    "latestScopedApplicationCommit": "b53b8fcefd1f02000531d33746156a2e37df5f8a",
-    "latestCombinedCandidateCommit": "dcfd227f5febe42d318ac8f4ebf1f7fd048caa53",
+    "latestScopedApplicationCommit": "adf5bd9caf2416e7b1f33929daba5cacfbcffdb6",
+    "latestCombinedCandidateCommit": "adf5bd9caf2416e7b1f33929daba5cacfbcffdb6",
     "nov27FullBrowserCollectionEvidenceKey": "activeContinuation.nov27FullBrowserCollection",
-    "latestScopedChecksEvidenceKey": "activeContinuation.nov27GuidedHsaStatementYear",
+    "latestScopedChecksEvidenceKey": "activeContinuation.nov27RetirementCodeHSource",
+    "nov27RetirementCodeHSourceEvidenceKey": "activeContinuation.nov27RetirementCodeHSource",
+    "nov27AiReceiptCorrectionEvidenceKey": "activeContinuation.nov27AiReceiptCorrection",
+    "nov27PublicAdvisoryCountsEvidenceKey": "activeContinuation.nov27PublicAdvisoryCounts",
     "nov27StateSupportResidencyEvidenceKey": "activeContinuation.nov27StateSupportResidency",
     "nov27AiReceiptAttemptBindingEvidenceKey": "activeContinuation.nov27AiReceiptAttemptBinding",
     "nov27GuidedCommercialWorkpaperEvidenceKey": "activeContinuation.nov27GuidedCommercialWorkpaper",
@@ -283,6 +286,60 @@
         "separateAssumedUsd": "0.00006",
         "subsequentDispatches": 0
       },
+      "liveProviderCalls": 0,
+      "humanQualification": false
+    },
+    "nov27RetirementCodeHSource": {
+      "commit": "adf5bd9caf2416e7b1f33929daba5cacfbcffdb6",
+      "verifiedTree": "f4bc77228e01b85f648de982878016ca56b58e71",
+      "exactArchiveSha256": "091a69385d2584409b09e57ed1d440d23f03d5776d72b976c5c3f7eaa0d740b6",
+      "primarySource": "https://www.irs.gov/instructions/i1099r",
+      "originalTargetedRedFailures": 4,
+      "invalidCombinationRedFailures": 2,
+      "exactFocusedTestsPassed": 346,
+      "repositorySpecReferencesValidated": 10313,
+      "exactTreeChecksPassed": [
+        "typecheck", "contracts", "web-types", "spec", "inventory", "lint", "build", "offline-eval"
+      ],
+      "independentEngineeringReviewPassed": true,
+      "independentFocusedTestsPassed": 115,
+      "localCombinedStatus": "running",
+      "localEvidenceMarker": "nov27-guided-retirement-rollover-path",
+      "arm64NativeRun": "https://github.com/utilityfueled/tax-engine/actions/runs/46090231433",
+      "filingQualified": false
+    },
+    "nov27PublicAdvisoryCounts": {
+      "checkedOn": "2026-11-27",
+      "commit": "9710b719b4ba316763aed1f946017ef906d1a5dd",
+      "lockfileBlob": "e8777bdb0123eafb9f66d70bac024c6cc0b2ba7f",
+      "registry": "https://registry.npmjs.org",
+      "allPackages": 550,
+      "productionPackages": 457,
+      "allAdvisories": 0,
+      "productionAdvisories": 0,
+      "allReportSha256": "de746d7d71ffdaf5af79a33ed1befeab253126887ed0266a0c73a6669acd22c4",
+      "productionReportSha256": "6fcc111dec2dfd70251de6ec8d02da52d1cb895435e6fd58a15b242fda14f111",
+      "finalImageScanPassed": false
+    },
+    "nov27AiReceiptCorrection": {
+      "commit": "9710b719b4ba316763aed1f946017ef906d1a5dd",
+      "verifiedTree": "3bd6fa4fe03f59a9cb60fa447f3739fa188ce0c7",
+      "exactArchiveSha256": "dfcd81cb4ceb11f81715bcb7e85b3d6af8aff8349dc74f5386f8c93597e0bb93",
+      "targetedRedFailuresBeforeFix": 3,
+      "authorFocusedTestsPassed": 167,
+      "exactFocusedTestsPassed": 158,
+      "repositorySpecReferencesValidated": 10311,
+      "exactTreeChecksPassed": [
+        "typecheck", "contracts", "web-types", "spec", "inventory", "lint", "build", "offline-eval"
+      ],
+      "evaluatorTypeCheckPassed": true,
+      "independentEngineeringReviewPassed": true,
+      "syntheticCorrection": {
+        "settledBeforeResumeUsd": "0.00019",
+        "dispatchRepeatsAfterResume": [3],
+        "separateAttemptHeldUsd": "0.0111056"
+      },
+      "liveUsageReservationUnresolvedUsd": "0.022384",
       "liveProviderCalls": 0,
       "humanQualification": false
     },
