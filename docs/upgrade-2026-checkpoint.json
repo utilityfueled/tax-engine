@@ -4,7 +4,7 @@
     "asOf": "2026-11-28",
     "branch": "main",
     "applicationCommit": "57b64cb231e10a4de762e2966c6b5fdf234f5ee3",
-    "latestScopedApplicationCommit": "2d174de8b0a5759e8c53858b458da7f955e4965a",
+    "latestScopedApplicationCommit": "6aadaaeddc4931b13e4b14e387a93590224c6447",
     "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
     "latestSchedule8812PayrollActcEvidenceKey": "activeContinuation.nov27Schedule8812PayrollActc",
     "latestGuidedHsaCivilDatesEvidenceKey": "activeContinuation.nov27GuidedHsaCivilDates",
@@ -217,6 +217,39 @@
     ]
   },
   "activeContinuation": {
+    "nov28Form6198OriginalPartII": {
+      "commit": "6aadaaeddc4931b13e4b14e387a93590224c6447",
+      "archiveSha256": "bfc9cbf12ee051d53031c29a70fae31314b63f0bf1ced59a68af2eee375850e6",
+      "sourceTree": "ff152ba52530e36314004f758d88e4e4052958b5",
+      "localEvidenceMarker": "nov27-form6198-original-part-ii-path",
+      "exactFocusedTestsPassed": 565,
+      "checksPassed": [
+        "focused",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
+      "initialRedTests": 4,
+      "implementationFocusedTestsPassed": 204,
+      "independentEngineeringTestsPassed": 127,
+      "fixtureBox1Loss": "-6000",
+      "fixtureFederalLoss": "-4000",
+      "fixtureSuspendedAtRiskLoss": "2000",
+      "fixtureAdjustedGrossIncome": "81000",
+      "normalStructuredInput": true,
+      "ordinaryPartIIGuidedWorkflowAvailable": false,
+      "filingQualified": false,
+      "sources": [
+        "https://www.irs.gov/pub/irs-pdf/f6198.pdf",
+        "https://www.irs.gov/instructions/i6198",
+        "https://uscode.house.gov/us/usc/119-124/t26/s465/"
+      ]
+    },
     "nov28RentalResidenceWorksheet": {
       "commit": "2d174de8b0a5759e8c53858b458da7f955e4965a",
       "archiveSha256": "093033f74f33f35d0dbbe170032c2517f3bf7bb0c0047cdd3b9090ea63903e7b",

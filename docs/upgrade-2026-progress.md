@@ -23,6 +23,20 @@ jq '.resume | {latestScopedApplicationCommit, remaining}' docs/upgrade-2026-chec
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. Current ARM64 and exact AMD64 jobs for the `57b64cb23` application await runner assignment. The older ARM64 comparison failed nine strict browser cases after archive and recovery passed. Qualify both final runtime images before publishing. |
 
+## November 28 original 2026 Form 6198 Part II sources
+
+`6aadaaedd` binds an original ordinary nonpassive partnership K-1, taxpayer
+and opening-basis workpaper before calculating the private Part II limit.
+The regression now allows $4,000 of a $6,000 basis-admitted loss through
+Schedule E and the federal return, reducing AGI from $85,000 to $81,000.
+It retains $2,000 of suspended at-risk loss. The ambiguity in dated legacy
+inputs is held for original records. The existing guided specialist paths
+continue to use their distinct worksheets. This ordinary Part II method is
+available through structured input. Zero or negative capacity, Part III,
+recapture and 2026 form qualification remain open. Independent engineering
+review passed 127 tests. The exact package passed 565 focused tests
+and eight static checks. [Form 6198](https://www.irs.gov/pub/irs-pdf/f6198.pdf) · [IRS instructions](https://www.irs.gov/instructions/i6198) · [26 U.S.C. §465](https://uscode.house.gov/us/usc/119-124/t26/s465/)
+
 ## November 28 2026 rental residence expense limits
 
 `2d174de8b` carries the documented Schedule E residence through Worksheet 5-1
