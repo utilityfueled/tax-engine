@@ -2,12 +2,14 @@
   "resume": {
     "asOf": "2026-11-27",
     "branch": "main",
-    "applicationCommit": "dcfd227f5febe42d318ac8f4ebf1f7fd048caa53",
+    "applicationCommit": "e32a4591ea0063f0f425ec4c761582f1b0df553f",
     "latestScopedApplicationCommit": "e32a4591ea0063f0f425ec4c761582f1b0df553f",
     "latestCombinedCandidateCommit": "e32a4591ea0063f0f425ec4c761582f1b0df553f",
     "nov27FullBrowserCollectionEvidenceKey": "activeContinuation.nov27FullBrowserCollection",
     "latestScopedChecksEvidenceKey": "activeContinuation.nov27ExactFederalPaymentTotals",
     "nov27ExactFederalPaymentTotalsEvidenceKey": "activeContinuation.nov27ExactFederalPaymentTotals",
+    "nov27ExactFederalPaymentCombinedEvidenceKey": "activeContinuation.nov27ExactFederalPaymentCombined",
+    "nov27Arm64WorkerPairEvidenceKey": "activeContinuation.nov27Arm64WorkerPair",
     "nov27Form2210ObservedWithholdingEvidenceKey": "activeContinuation.nov27Form2210ObservedWithholding",
     "nov27RetirementCodeHSourceEvidenceKey": "activeContinuation.nov27RetirementCodeHSource",
     "nov27AiReceiptCorrectionEvidenceKey": "activeContinuation.nov27AiReceiptCorrection",
@@ -195,14 +197,14 @@
     "annualScheduleBSourceEvidenceKey": "activeContinuation.nov24ScheduleBFinalSource",
     "annualScheduleBReviewEvidenceKey": "activeContinuation.nov24ScheduleBOrdinaryReview",
     "pensionTaxableAmountEvidenceKey": "activeContinuation.nov24ReportedPensionTaxableAmount",
-    "completeLocalBaselineEvidenceKey": "activeContinuation.nov27FullBrowserCollection",
+    "completeLocalBaselineEvidenceKey": "activeContinuation.nov27ExactFederalPaymentCombined",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
-    "unitCoverageEvidenceKey": "activeContinuation.nov27CombinedDependentDonationExact",
+    "unitCoverageEvidenceKey": "activeContinuation.nov27ExactFederalPaymentCombined",
     "remaining": [
-      "Both strict Linux browser gates and current image evidence remain open. Exact f5493bdc8 CI 46081627667, AMD64 Web 46081627592 and Docker 46081627726 were queued without runners. ARM64 strict 46057962832 was pending and the separate comparison 46066052234 was queued. Earlier ARM64 46014076098 passed archive and Compose recovery but failed 11 strict browser cases. Earlier AMD64 46023825170 passed recovery and failed runtime browser and immutable evidence.",
+      "Both strict Linux browser gates and final image evidence remain open. Exact e32a4591e ARM64 46091464368 was pending, and AMD64 Web 46091432063, Docker 46091432102 and CI 46091432136 were queued. The separate older ARM64 comparison 46066052234 passed archive and Compose recovery and failed nine strict browser cases. Its worker diagnostic still timed out with both settings. Earlier AMD64 46023825170 passed recovery and failed runtime browser and immutable image evidence.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
-      "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
+      "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 27 public npm audits of the unchanged lockfile returned zero findings across 550 total and 457 production packages.",
       "Hosted cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open."
     ]
   },
@@ -302,6 +304,53 @@
       "generationRequestsMade": 0,
       "qualificationChanged": false
     },
+    "nov27ExactFederalPaymentCombined": {
+      "commit": "e32a4591ea0063f0f425ec4c761582f1b0df553f",
+      "exactArchiveSha256": "85c3fa30fa82411d25edefdd17c25f902df4f4bc6e8cdeae9035f1c95685d41d",
+      "manifestSha256": "374a620945976c070692c07a9307da76a53206dcdf0899277adf3b5fa1f7d5a4",
+      "localEvidenceMarker": "nov27-form2210-exact-source-totals-path",
+      "allElevenLocalChecksPassed": true,
+      "commandsPassed": [
+        "pnpm test", "pnpm test:coverage", "pnpm typecheck", "pnpm typecheck:contracts", "pnpm typecheck:web",
+        "pnpm spec:validate", "pnpm spec:inventory:check", "pnpm build", "pnpm build:web", "pnpm lint", "pnpm test:web"
+      ],
+      "unit": {"passed": 31449, "skipped": 83},
+      "coverage": {"passed": 31449, "skipped": 83, "branchPercent": "88.75", "minimumBranchPercent": "85"},
+      "browser": {
+        "passed": 655, "skipped": 5, "windows": 9, "listenerCleanup": true,
+        "summarySha256": "9b3b747164b6ed96e1e1a76fb1a4fe487578af6f1a0f950081bba4cda5f65bc2",
+        "sourceBuildSha256": "bd8c2d147c8512ee78316112c4a082b38a269739890613610d2c8a8d3c33864a"
+      },
+      "standaloneEncryptedRecovery": {
+        "passed": true, "listenerCleanup": true,
+        "receiptSha256": "600d957e9c1dda7bc943522de4d4f5804e1dac6ff133468836f9b825e02725fc"
+      },
+      "offlineEvaluatorArtifactCheckPassed": true,
+      "officialSampleDocumentsVerified": 15,
+      "prerequisites": {"node": "26.13.1", "pypdf": "6.10.0", "browser": "managed Chromium"},
+      "linuxNativeQualified": false,
+      "hostedQualified": false
+    },
+    "nov27Arm64WorkerPair": {
+      "commit": "750b0c8037956852d77b783d7613164020cc6d3e",
+      "workflowRun": "https://github.com/utilityfueled/tax-engine/actions/runs/46066052234",
+      "strictTimingArtifactId": 15241149817,
+      "workerPairArtifactId": 15242410434,
+      "strictTimingPayloadSha256": "6be31dce48d0bc07c419ab45e06ba47f9bee8e5c57a86cb45c98e987466f2164",
+      "workerPairPayloadSha256": "38d81a8296d2fafa9369698f88c65c9f929347ce933d2f46f2b1ac2b17526819",
+      "strictBrowser": {"windows": 9, "cases": 659, "passes": 645, "skips": 5, "failed": 9, "listenerCleanup": true},
+      "failedCasesPerWindow": {"6": 1, "7": 4, "8": 4},
+      "comparedWindow": 8,
+      "comparedCasesPerLeg": 131,
+      "deadlineMsOnTimedOutCases": 30000,
+      "retries": 0,
+      "twoWorkers": {"passed": 127, "timedOut": 4, "wallMs": 484370},
+      "oneWorker": {"passed": 129, "timedOut": 2, "wallMs": 729656},
+      "fixedOrderAndWarmupLimitAttribution": true,
+      "validatedByIndependentEngineeringReview": true,
+      "strictFailureSuperseded": false,
+      "nativeReady": false
+    },
     "nov27ExactFederalPaymentTotals": {
       "commit": "e32a4591ea0063f0f425ec4c761582f1b0df553f",
       "verifiedTree": "501fc97989978ab89ab6d1e16412232890560fd1",
@@ -315,7 +364,8 @@
       "independentEngineeringReviewPassed": true,
       "independentFocusedTestsPassed": 43,
       "exactSyntheticLine26AndOrdinaryForm2210": "1000000000000000123.03",
-      "localCombinedStatus": "running after disk recovery",
+      "localCombinedStatus": "all eleven checks passed after disk recovery",
+      "combinedEvidenceKey": "activeContinuation.nov27ExactFederalPaymentCombined",
       "localEvidenceMarker": "nov27-form2210-exact-source-totals-path",
       "arm64NativeRun": "https://github.com/utilityfueled/tax-engine/actions/runs/46091464368",
       "filingQualified": false

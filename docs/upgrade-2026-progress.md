@@ -8,12 +8,44 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `dcfd227f5` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `e32a4591e` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
-| Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. The updated native ARM64 run and the AMD64 jobs need runner assignment. The previous ARM64 browser still failed 11 cases after image and recovery passed. Qualify both final runtime images before publishing. |
+| Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. The updated native ARM64 run and the AMD64 jobs need runner assignment. The older ARM64 comparison still failed nine cases in its strict pass after image and recovery passed. Qualify both final runtime images before publishing. |
+
+## November 27 complete local verification
+
+All 11 required local commands passed from the exact `e32a4591e` archive.
+The unit and coverage suites each passed 31,449 tests with 83 skips.
+Branch coverage was 88.75% against the 85% gate. Managed Chromium passed
+655 cases with five skips across all nine windows. The standalone app
+created an encrypted backup, deleted the synthetic workspace and restored
+the backup. Both local listeners closed. The run used Node 26.13.1,
+pypdf 6.10.0 and 15 hash-verified official sample PDFs. The offline evaluator
+artifact check also passed. Manifest SHA-256
+`374a620945976c070692c07a9307da76a53206dcdf0899277adf3b5fa1f7d5a4`.
+The current Linux runs still await runners. Hosted qualification remains
+deferred, and human tax and AI reviews, final filing maps and live model
+qualification remain open.
+
+## November 27 ARM64 worker comparison
+
+On `750b0c803`, the strict native Chromium run finished all nine windows
+with 645 passes, five skips and nine failures. Archive import, Compose recovery,
+and production image startup passed. The failed cases appeared in windows 6,
+7 and 8. The separate diagnostic reran the same 131 cases from window 8
+on the same image with their existing deadlines and zero retries. Two
+workers had four timeouts in 484.370 seconds. One worker had two timeouts
+in 729.656 seconds. Both remaining failures were in the Ohio part-year
+school district flow at the filing-rejection request after review download.
+A fixed order and warmed container limit what the timings establish.
+The strict failure stands. The current exact native rehearsal and AMD64
+checks are separate runs.
+[Comparator run](https://github.com/utilityfueled/tax-engine/actions/runs/46066052234) ·
+[Current ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/46091464368) ·
+[Current AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/46091432063).
 
 ## November 27 exact federal payment totals
 
@@ -24,8 +56,8 @@ final three cents through Form 2210. Separate worksheet fixtures reject
 rounded mismatches and retain their exact subtotals. Statutory and source-effective dates
 retain their existing treatment. All 335 exact focused tests, eight static
 checks and 10,314 spec references passed. Independent engineering review
-reran 43 tests. The complete local checks are running on this exact
-revision, and the current ARM64 rehearsal was dispatched.
+reran 43 tests. The complete local checks passed on this exact revision.
+The current ARM64 rehearsal was dispatched.
 [IRS Form 1040 instructions](https://www.irs.gov/instructions/i1040gi) ·
 [IRS Form 2210 instructions](https://www.irs.gov/instructions/i2210) ·
 [ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/46091464368).
