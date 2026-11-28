@@ -4,7 +4,7 @@
     "asOf": "2026-11-28",
     "branch": "main",
     "applicationCommit": "6aadaaeddc4931b13e4b14e387a93590224c6447",
-    "latestScopedApplicationCommit": "c545b7a761daa54655ceba5e3265460b7ed39816",
+    "latestScopedApplicationCommit": "7c1dfb42e459217dca53e3afc57db66d4369c91e",
     "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
     "latestSchedule8812PayrollActcEvidenceKey": "activeContinuation.nov27Schedule8812PayrollActc",
     "latestGuidedHsaCivilDatesEvidenceKey": "activeContinuation.nov27GuidedHsaCivilDates",
@@ -217,6 +217,30 @@
     ]
   },
   "activeContinuation": {
+    "nov28CharitablePrepaidMortgageFixture": {
+      "commit": "7c1dfb42e459217dca53e3afc57db66d4369c91e",
+      "archiveSha256": "37b4c66b491b366cc39ccd337082159594d1ef7ccf28eed92ddee67449480a8d",
+      "sourceTree": "3aeca8b00c918c697af40bc628da326bc986821c",
+      "localEvidenceMarker": "nov27-charitable-prepaid-pmi-fixture-path",
+      "exactFocusedTestsPassed": 18,
+      "checksPassed": [
+        "focused",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
+      "firstFullSuiteRevision": "c545b7a761daa54655ceba5e3265460b7ed39816",
+      "firstFullSuiteFailures": 4,
+      "sharedFixtureAlreadyIdentifiedPublicCharity": true,
+      "independentMortgageInsuranceTestsPassed": 5,
+      "monetaryExpectationsChanged": false,
+      "applicationLogicChanged": false
+    },
     "nov28CharitableActualRecipientCategory": {
       "commit": "c545b7a761daa54655ceba5e3265460b7ed39816",
       "archiveSha256": "148166a628d79a47d739efb6bee0567b6b5f1e9738e7ec922d963216240d12c4",

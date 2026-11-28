@@ -23,6 +23,16 @@ jq '.resume | {latestScopedApplicationCommit, remaining}' docs/upgrade-2026-chec
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local Chromium and encrypted recovery passed. Current ARM64 and AMD64 workflows await runners. The earlier ARM64 image and Compose checks passed and the strict browser check failed nine cases. |
 
+## November 28 prepaid mortgage insurance charitable fixture
+
+`c545b7a76` passed its focused tests but the full unit suite found four
+failures in the prepaid mortgage insurance tests. All four shared a
+synthetic 2026 receipt already identified as a fictional public charity.
+`7c1dfb42e` adds its explicit first percentage category and regenerates
+the browser audit pins. The gift amounts and test expectations stay the
+same. Independent engineering passed all five mortgage insurance tests.
+The exact package passed 18 focused tests and eight static checks.
+
 ## November 28 original 2026 charitable recipient classification
 
 `c545b7a76` requires the recipient's actual category for positive, qualified
