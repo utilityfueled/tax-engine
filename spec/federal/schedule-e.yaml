@@ -70,14 +70,35 @@ lines:
     testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E Line 21 - net rental income (profit)"
 
   - line: "280A"
-    description: "Vacation home / mixed-use expense allocation"
-    formula: "If personal use > 14 days AND > 10% of rental days → expenses × (rental days / total days)"
+    description: "Historical vacation home and mixed-use calculation behavior"
+    formula: "For the legacy calculation only, apply expenses × (rental days / total days) if personal use exceeds both 14 days and 10% of rental days."
     irsRef: "IRC §280A; Pub 527 (Residential Rental Property)"
     edgeCases:
       - "Personal use ≤ 14 days → not mixed-use (full expenses)"
       - "Personal use ≤ 10% of rental days → not mixed-use"
       - "Both conditions must be exceeded for mixed-use classification"
     testRef: "tests/edge-cases/rental-property-edge-cases.test.ts::mixed-use: 30 personal days + 200 rental days — expenses prorated"
+
+  - line: "280A-2026-actual-allocation-hold"
+    description: "Hold actual 2026 Schedule E rentals with personal use until source-backed allocation is supported"
+    formula: >-
+      Hold a known positive personal-use day count in the typed Schedule E and
+      whole federal calculation before applying rental expenses. The dwelling
+      use-as-a-home threshold determines whether the additional deduction limit
+      applies. Even below that threshold, deduct only expenses attributable to
+      rental use. Applying this rule requires actual rental and personal-use
+      records, allocation of shared expenses, identification of directly
+      attributable expenses and any applicable section 280A worksheet. Preserve
+      the ordinary zero-personal-use calculation and legacy year behavior.
+    sources:
+      - "https://uscode.house.gov/us/usc/119-124/t26/s280A/ (26 U.S.C. §280A(d) and (e))"
+      - "https://www.irs.gov/publications/p527 (chapter 5, Dividing Expenses and Dwelling Unit Used as a Home)"
+      - "https://www.irs.gov/pub/irs-dft/i1040se--dft.pdf#page=7 (2026 draft, Part I line 2)"
+      - "https://www.irs.gov/instructions/i1040se (2025 instructions, Part I line 2)"
+    testRef: "tests/engine/schedules/schedule-e-personal-use-2026.test.ts::holds subthreshold personal use in the direct 2026 Schedule E"
+    testRefs:
+      - "tests/engine/schedules/schedule-e-personal-use-2026.test.ts::holds subthreshold personal use in the whole 2026 federal calculation"
+      - "tests/engine/schedules/schedule-e-personal-use-2026.test.ts::preserves ordinary 2026 and historical 2025 calculation behavior"
 
   - line: "ownership"
     description: "Ownership percentage scaling for rental properties"

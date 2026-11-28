@@ -293,6 +293,10 @@ function applyAtRiskLimitation(
 }
 
 export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'rentalProperties' | 'form1099Misc'> & Partial<Pick<TaxYearInput, 'k1CharitableSources' | 'qbiLossSources' | 'royaltyPropertySources' | 'form4562' | 'scheduleC'>> & {[contextField:string]:unknown} & { taxpayer?: K1CharitableReturnInput['taxpayer'] }, completedCharitable?: K1CharitableReturnResult): ScheduleEResult {
+  const rentals = input.rentalProperties ?? [];
+  if (input.taxpayer?.taxYear === 2026 && rentals.some(property => (property.personalUseDays ?? 0) > 0)) {
+    throw new Error("2026 Schedule E personal use requires actual dwelling-use records, a rental and personal expense allocation, and any applicable section 280A worksheet.");
+  }
   const scheduleK1SourceIssue = getFutureScheduleK1SourceIssue(input.taxpayer?.taxYear, input.scheduleK1);
   if (scheduleK1SourceIssue) throw new Error(scheduleK1SourceIssue);
   if (input.rentalProperties?.some(property => property.form4562?.passengerFirstYearSources !== undefined)) throw new Error('Passenger worksheet requires separate rental owner/activity linkage');
@@ -306,7 +310,6 @@ export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'ren
   // ═══════════════════════════════════════════════════════════
 
   const rentalProperties: RentalPropertyEntry[] = [];
-  const rentals = input.rentalProperties ?? [];
   let rentalSection280FRecapture = new Decimal(0);
 
   for (const prop of rentals) {
@@ -352,9 +355,8 @@ export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'ren
       d(prop.utilities),
     ).times(ownershipPct).plus(otherExpenses).plus(depreciation);
 
-    // IRC §280A: Vacation home / mixed-use property rules
-    // If personal use > 14 days AND > 10% of rental days → mixed-use property
-    // Expenses are allocated by rental days / total days
+    // Historical calculation behavior for legacy returns. The 2026 guard
+    // requires source-backed allocation before any property with personal use.
     const personalDays = prop.personalUseDays ?? 0;
     const rentalDays = prop.rentalDays ?? 365;
     const totalDays = personalDays + rentalDays;
