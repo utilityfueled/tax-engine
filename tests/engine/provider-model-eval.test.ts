@@ -469,6 +469,28 @@ describe("measured task model evaluation", () => {
       providerCostPerAcceptedUsd: "0.0006", filingSeasonCostPerAcceptedUsd: "0.0006",
     });
   });
+  it("keeps unobserved responses and later receipts out of earlier reports", () => {
+    const anchor = "2026-10-24T12:06:00.000002Z";
+    const observedAt = "2026-10-24T12:06:00.000004Z";
+    const sharedReference = "a".repeat(64);
+    const reconciled = run(extraction);
+    reconciled.attempts[0].billingEvidence = {
+      billedModel: "gpt-6-luna", evidenceReference: sharedReference, recordedAt: anchor, usageSource: "reconciliation",
+    };
+    const direct = run(extraction, "luna-high", 2);
+    direct.attempts = direct.attempts.map(attempt => ({ ...attempt, observedAt }));
+    if (!direct.measurement) throw new Error("Missing synthetic response.");
+    direct.measurement.responseReference = sharedReference;
+    const template = { version: 2 as const, entries: [reconciled, direct], availability };
+    const fixtureReviews = reviewedFixtures("2026-10-24");
+    const group = (cutoff: string) => summarizeProviderModelLiveEvalTemplate(template, fixtureReviews, cutoff).groups
+      .find(item => item.profileId === "luna-high" && item.task === extraction.task);
+    expect.soft(() => group("2026-10-24T12:06:00.000001Z")).not.toThrow();
+    expect(group("2026-10-24T12:06:00.000001Z")).toMatchObject({ knownProviderCostUsd: "0", assumedProviderCostUsd: "0", providerCostUsd: null });
+    expect(group(anchor)).toMatchObject({ knownProviderCostUsd: "0.0006", assumedProviderCostUsd: "0", providerCostUsd: null });
+    expect(group(observedAt)).toMatchObject({ knownProviderCostUsd: "0.0006", assumedProviderCostUsd: "0.0006", providerCostUsd: null, completedRuns: 0 });
+    expect(group(observedAt)?.blockers).toContain("attempt-billing-evidence-unverified");
+  });
   it("keeps submillisecond case reviews and capability windows in event order", () => {
     const tooEarly = "2026-10-24T12:00:01.12339Z";
     const checkedAt = "2026-10-24T12:00:01.1234Z";

@@ -128,6 +128,107 @@ describe("guarded repeated provider executor", () => {
       .toMatchObject({ providerCostUsd: null, unknownMaximumUsd: "0.0016896",
         undatedCost: { providerCostUsd: "0.00006", filingSeasonCostUsd: "0.00006" } });
   });
+  it("reports probe availability and direct case usage only at or after observing each result", async () => {
+    const state = setup();
+    const probeAt = "2026-10-25T12:00:00.002002Z";
+    const caseAt = "2026-10-25T12:00:00.006006Z";
+    const later = "2026-10-25T12:00:00.008Z";
+    let clock = at;
+    const transport = vi.fn(async (request: Parameters<Parameters<typeof executeProviderEval>[0]["transport"]>[0]) => {
+      clock = request.kind === "capability" ? probeAt : request.attemptId.endsWith(":1") ? caseAt : later;
+      return { ...good, elapsedMs: 4, responseReference: `fixture:${request.attemptId}` };
+    });
+    const result = await executeProviderEval({ ...state, now: () => clock, transport });
+    const template = JSON.parse(JSON.stringify(result.template));
+    const report = (cutoff: string) => summarizeProviderModelLiveEvalTemplate(template, undefined, cutoff);
+    const group = (cutoff: string) => report(cutoff).groups.find(item => item.profileId === "luna-high" && item.task === "income-extraction");
+    const beforeProbe = "2026-10-25T12:00:00.002001Z";
+    const beforeCase = "2026-10-25T12:00:00.006005Z";
+    expect.soft(group(beforeProbe)?.availability).toBeNull();
+    expect.soft(report(beforeProbe).capabilityAccounting?.[0]).toMatchObject({ providerCostUsd: null, unknownMaximumUsd: "0.0016896" });
+    expect.soft(group(probeAt)?.availability).toMatchObject({ status: "available", observedAt: probeAt });
+    expect.soft(report(probeAt).capabilityAccounting?.[0]).toMatchObject({ providerCostUsd: "0.00006", unknownMaximumUsd: "0" });
+    expect.soft(group(beforeCase)).toMatchObject({
+      providerCostUsd: null, filingSeasonCostUsd: null, knownProviderCostUsd: "0", knownFilingSeasonCostUsd: "0",
+      p95LatencyMs: null, schemaValidity: null,
+    });
+    for (const cutoff of [caseAt, "2026-10-25T12:00:00.006007Z"]) {
+      expect.soft(group(cutoff)).toMatchObject({ knownProviderCostUsd: "0.00006", knownFilingSeasonCostUsd: "0.00006", p95LatencyMs: 4 });
+    }
+    expect(transport).toHaveBeenCalledTimes(4);
+    expect(result.knownProviderCostUsd).toBe("0.00024");
+    expect(result.productionPromotion).toBe(false);
+  });
+  it("stops before transport when the send clock precedes the durable dispatch", async () => {
+    const state = setup();
+    let clock = at;
+    const transport = vi.fn(async () => good);
+    const result = await executeProviderEval({ ...state, now: () => clock, transport, append: async record => {
+      await state.append(record);
+      if (record.type === "start") clock = "2026-10-25T12:00:00.000002Z";
+      if (record.type === "dispatch") clock = "2026-10-25T12:00:00.000001Z";
+    } });
+    expect(result).toMatchObject({ stoppedReason: "clock-regressed", dispatchedRequests: 0, unknownMaximumUsd: "0" });
+    expect(state.records.at(-1)).toMatchObject({ type: "not-sent", reason: "clock-regressed-before-send" });
+    expect(transport).not.toHaveBeenCalled();
+  });
+  it("preserves known charges without dating a result when the clock regresses", async () => {
+    const state = setup();
+    const probeAt = "2026-10-25T12:00:00.002Z";
+    let clock = at;
+    const transport = vi.fn(async (request: Parameters<Parameters<typeof executeProviderEval>[0]["transport"]>[0]) => {
+      clock = request.kind === "capability" ? probeAt : "2026-10-25T12:00:00.001Z";
+      return { ...good, responseReference: `fixture:${request.attemptId}` };
+    });
+    const result = await executeProviderEval({ ...state, now: () => clock, transport });
+    expect(result).toMatchObject({ stoppedReason: "clock-regressed", knownProviderCostUsd: "0.00012", unknownMaximumUsd: "0" });
+    expect.soft(state.records.at(-1)).toMatchObject({ type: "result", observedAt: null, usage: good.usage });
+    const report = summarizeProviderModelLiveEvalTemplate(result.template, undefined, "2026-10-25T13:00:00Z");
+    expect(report.groups.find(item => item.profileId === "luna-high" && item.task === "income-extraction")).toMatchObject({
+      knownProviderCostUsd: "0", providerCostUsd: null, p95LatencyMs: null,
+    });
+    expect(transport).toHaveBeenCalledTimes(2);
+  });
+  it("releases the reservation when pre-send clock sampling throws", async () => {
+    const state = setup();
+    const transport = vi.fn(async () => good);
+    const result = await executeProviderEval({ ...state, transport, now: () => {
+      if (state.records.at(-1)?.type === "dispatch") throw new Error("Synthetic clock service failure.");
+      return at;
+    } });
+    expect(result).toMatchObject({ dispatchedRequests: 0, notSentRequests: 1, knownProviderCostUsd: "0", unknownMaximumUsd: "0" });
+    expect(state.records.at(-1)).toMatchObject({ type: "not-sent", reason: expect.stringMatching(/-before-send$/u) });
+    expect(transport).not.toHaveBeenCalled();
+  });
+  it("preserves authoritative probe and case charges when result clock sampling throws", async () => {
+    for (const failingKind of ["capability", "case"] as const) {
+      const state = setup();
+      let throwOnRead = false;
+      const transport = vi.fn(async (request: Parameters<Parameters<typeof executeProviderEval>[0]["transport"]>[0]) => {
+        throwOnRead = request.kind === failingKind;
+        return { ...good, responseReference: `fixture:${request.attemptId}` };
+      });
+      const result = await executeProviderEval({ ...state, transport, now: () => {
+        if (throwOnRead) throw new Error("Synthetic clock service failure after return.");
+        return at;
+      } });
+      const [knownProviderCostUsd, attempts] = failingKind === "capability" ? ["0.00006", 1] : ["0.00012", 2];
+      expect(result).toMatchObject({ stoppedReason: "clock-regressed", knownProviderCostUsd, unknownMaximumUsd: "0", dispatchedRequests: attempts });
+      expect(state.records.at(-1)).toMatchObject({ type: "result", observedAt: null, usage: good.usage });
+      expect(transport).toHaveBeenCalledTimes(attempts);
+      const report = summarizeProviderModelLiveEvalTemplate(result.template, undefined, "2026-10-25T13:00:00Z");
+      if (failingKind === "capability") {
+        expect(report.capabilityAccounting?.[0]).toMatchObject({ providerCostUsd: null, unknownMaximumUsd: "0.0016896",
+          undatedCost: { providerCostUsd: "0.00006", filingSeasonCostUsd: "0.00006" } });
+        expect(report.groups.find(item => item.profileId === "luna-high" && item.task === "income-extraction")?.availability).toBeNull();
+      } else {
+        expect(report.capabilityAccounting?.[0]).toMatchObject({ providerCostUsd: "0.00006", unknownMaximumUsd: "0" });
+        expect(report.groups.find(item => item.profileId === "luna-high" && item.task === "income-extraction")).toMatchObject({
+          knownProviderCostUsd: "0", providerCostUsd: null, p95LatencyMs: null, schemaValidity: null,
+        });
+      }
+    }
+  });
   it("retains unknown usage and never repeats a dispatched request on resume", async () => {
     const state = setup(); let calls = 0;
     const transport = async () => { calls++; throw new Error("secret raw provider error"); };

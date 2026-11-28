@@ -252,3 +252,26 @@ lines:
       - "tests/engine/provider-eval-runner.test.ts::holds a capability charge in reports preceding authoritative reconciliation"
       - "tests/engine/provider-eval-runner.test.ts::reports directly measured probe costs only after observing the response"
       - "tests/engine/provider-model-eval.test.ts::counts only dated response reviews that follow the measured result and meet the report cutoff"
+  - line: "provider-result-observation-cutoff"
+    description: "Report direct provider evidence once its result has been observed"
+    formula: >-
+      A dispatch clock reading must precede or equal the last pre-send reading.
+      If pre-send sampling throws after durable dispatch, record that no
+      request was sent and release that attempt's budget hold.
+      Record the wall-clock observation time of every returned provider result,
+      including case outcomes and failed or billed responses. If that clock
+      throws or cannot establish a valid time on or after send, retain the exact known
+      journal charge with an explicit unknown observation time and stop the
+      execution. A dated report first sees capability status, case outputs,
+      latency, response references and direct usage at the observation instant.
+      Before then, a dispatched case has unknown actual and filing-season costs
+      and its response is excluded from observed quality rates.
+      Keep receipt-dated reconciliation independent of result observation and
+      preserve existing behavior for historical records without the field.
+    testRef: "tests/engine/provider-eval-runner.test.ts::reports probe availability and direct case usage only at or after observing each result"
+    testRefs:
+      - "tests/engine/provider-eval-runner.test.ts::stops before transport when the send clock precedes the durable dispatch"
+      - "tests/engine/provider-eval-runner.test.ts::preserves known charges without dating a result when the clock regresses"
+      - "tests/engine/provider-eval-runner.test.ts::releases the reservation when pre-send clock sampling throws"
+      - "tests/engine/provider-eval-runner.test.ts::preserves authoritative probe and case charges when result clock sampling throws"
+      - "tests/engine/provider-model-eval.test.ts::keeps unobserved responses and later receipts out of earlier reports"

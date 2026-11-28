@@ -53,6 +53,7 @@ const entrySchema = z.strictObject({
     privacyFailure: z.boolean(), responseReference: z.string().nullable(), reportedModel: z.string().nullable() }).optional(),
   attempts: z.array(z.strictObject({
     profileId: z.string(), startedAt: z.iso.datetime(), usage: usageSchema.nullable(),
+    observedAt: z.iso.datetime().nullable().optional(),
     billingEvidence: z.strictObject({ billedModel: z.string().trim().min(1).max(128),
       evidenceReference: z.string().regex(evidenceReferencePattern), recordedAt: z.iso.datetime({ offset: true }),
       usageSource: z.literal("reconciliation").optional() }).optional(),
@@ -61,6 +62,7 @@ const entrySchema = z.strictObject({
 const availabilitySchema = z.strictObject({
   profileId: z.string(), status: z.enum(["available", "unavailable", "failed"]),
   checkedAt: z.iso.datetime(), expiresAt: z.iso.datetime(), evidenceReference: z.string().trim().min(1).max(500),
+  observedAt: z.iso.datetime().nullable().optional(),
   structuredOutput: z.boolean(), reasoningEffort: z.boolean(), reportedUsage: z.boolean(),
   reason: z.string().trim().min(1).max(500),
 });
@@ -133,6 +135,7 @@ function responseReviewAsOf({ independentReview, attempts, elapsedMs }: Provider
   if (reviewedAt === undefined || elapsedMs === null || !finalAttempt
     || !timestampAtOrBefore(attempts[0].startedAt, reviewedAt)
     || !timestampAtOrBefore(finalAttempt.startedAt, reviewedAt)
+    || !wasObservedBy(finalAttempt.observedAt, reviewedAt)
     || (cutoff !== undefined && !timestampAtOrBefore(reviewedAt, cutoff))
     || compareTimestampSpanToLatency(attempts[0].startedAt, reviewedAt, elapsedMs) < 0n) return null;
   return independentReview;
@@ -157,7 +160,20 @@ function exactField(expected: { kind: "money" | "date" | "text"; value: string }
 
 function billingEvidenceAsOf(attempt: ProviderModelLiveEvalEntry["attempts"][number], cutoff?: string) {
   const evidence = attempt.billingEvidence;
-  return evidence && (cutoff === undefined || timestampAtOrBefore(evidence.recordedAt, cutoff)) ? evidence : undefined;
+  return evidence && (evidence.usageSource === "reconciliation" || wasObservedBy(attempt.observedAt, cutoff))
+    && (cutoff === undefined || timestampAtOrBefore(evidence.recordedAt, cutoff)) ? evidence : undefined;
+}
+
+function wasObservedBy(observedAt: string | null | undefined, cutoff?: string): boolean {
+  return observedAt !== null && (observedAt === undefined || cutoff === undefined || timestampAtOrBefore(observedAt, cutoff));
+}
+
+function entryAsOf(entry: ProviderModelLiveEvalEntry, cutoff?: string): ProviderModelLiveEvalEntry {
+  if (wasObservedBy(entry.attempts.at(-1)?.observedAt, cutoff)) return entry;
+  const { measurement } = entry;
+  return { ...entry, elapsedMs: null, applicationSchemaValid: null, output: null, independentReview: null,
+    ...(measurement && { measurement: { ...measurement, normalizationStatus: "failed", applicationOutput: null,
+      privacyFailure: false, responseReference: null, reportedModel: null } }) };
 }
 
 function countAttemptEvidenceReferences(entries: readonly ProviderModelLiveEvalEntry[], cutoff?: string) {
@@ -177,7 +193,8 @@ function countAttemptEvidenceReferences(entries: readonly ProviderModelLiveEvalE
 }
 
 export function scoreProviderEvalEntry(entry: ProviderModelLiveEvalEntry, fixture: ProviderEvalFixture) {
-  return scoreForCorpus(entry, fixture, providerEvalCorpusDigest(), countAttemptEvidenceReferences([entry]));
+  const observed = entryAsOf(entry);
+  return scoreForCorpus(observed, fixture, providerEvalCorpusDigest(), countAttemptEvidenceReferences([observed]));
 }
 function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEvalFixture, currentCorpusDigest: string,
   evidenceReferences: ReadonlyMap<string, number>, cutoff?: string) {
@@ -198,8 +215,9 @@ function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEval
   const qualifiedModel = modelMatches && modelLifecycleValid;
   const attemptsAsOf = entry.attempts.map(attempt => {
     const billingEvidence = billingEvidenceAsOf(attempt, cutoff);
-    const usageAvailable = attempt.billingEvidence?.usageSource !== "reconciliation"
-      || (billingEvidence && timestampAtOrBefore(attempt.startedAt, billingEvidence.recordedAt));
+    const usageAvailable = attempt.billingEvidence?.usageSource === "reconciliation"
+      ? billingEvidence && timestampAtOrBefore(attempt.startedAt, billingEvidence.recordedAt)
+      : wasObservedBy(attempt.observedAt, cutoff);
     return { attempt, billingEvidence, usage: usageAvailable ? attempt.usage : null };
   });
   const tokenBudgetExceeded = attemptsAsOf.some(({ usage }) => usage !== null
@@ -290,6 +308,10 @@ export function parseProviderModelLiveEvalTemplate(value: unknown): ProviderMode
       || !timestampAtOrBefore(evidence.expiresAt, evidence.checkedAt, 30 * 24 * 60 * 60 * 1000)) {
       throw new Error("Provider availability evidence must expire within 30 days.");
     }
+    if ((evidence.observedAt && !timestampAtOrBefore(evidence.checkedAt, evidence.observedAt))
+      || (evidence.status === "available" && evidence.observedAt === null)) {
+      throw new Error("Invalid provider capability observation time.");
+    }
   }
   if (parsed.data.capabilityAccounting) {
     const probeProfiles = new Set<string>();
@@ -297,6 +319,7 @@ export function parseProviderModelLiveEvalTemplate(value: unknown): ProviderMode
       const probe = parsed.data.availability?.find(evidence => evidence.profileId === profileId);
       if (!probe || probeProfiles.has(profileId) || probe.checkedAt !== startedAt
         || probe.reportedUsage !== (settlement !== null)
+        || (probe.status === "available" && probe.observedAt !== undefined && probe.observedAt !== settlement?.recordedAt)
         || (settlement?.recordedAt && !timestampAtOrBefore(startedAt, settlement.recordedAt))) {
         throw new Error("Invalid or duplicate capability accounting evidence.");
       }
@@ -323,6 +346,7 @@ export function parseProviderModelLiveEvalTemplate(value: unknown): ProviderMode
       candidate(attempt.profileId);
       if (index === 0 && attempt.profileId !== entry.profileId) throw new Error("Initial attempt profile must match the evaluated profile.");
       if (index > 0 && attempt.profileId !== "sol-high") throw new Error("Only one explicit Sol High escalation is permitted.");
+      if (attempt.observedAt && !timestampAtOrBefore(attempt.startedAt, attempt.observedAt)) throw new Error("Provider case observation cannot precede dispatch.");
     });
   }
   return parsed.data;
@@ -351,9 +375,12 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
   fixtures: ProviderEvalFixture[] = taxProviderModelEvalFixtures, reportAt = new Date().toISOString()) {
   const validated = parseProviderModelLiveEvalTemplate(template);
   const reportCutoff = z.iso.datetime({ offset: true }).parse(reportAt);
-  const reportEntries = validated.entries.filter(entry => entry.attempts.every(attempt => timestampAtOrBefore(attempt.startedAt, reportCutoff)));
+  const reportEntries = validated.entries
+    .filter(entry => entry.attempts.every(attempt => timestampAtOrBefore(attempt.startedAt, reportCutoff)))
+    .map(entry => entryAsOf(entry, reportCutoff));
   const reportPreflights = (validated.preflightEntries ?? []).filter(entry => timestampAtOrBefore(entry.at, reportCutoff));
-  const reportAvailability = (validated.availability ?? []).filter(evidence => timestampAtOrBefore(evidence.checkedAt, reportCutoff));
+  const reportAvailability = (validated.availability ?? []).filter(evidence =>
+    timestampAtOrBefore(evidence.checkedAt, reportCutoff) && wasObservedBy(evidence.observedAt, reportCutoff));
   const capabilityAccounting = validated.capabilityAccounting
     ?.filter(probe => timestampAtOrBefore(probe.startedAt, reportCutoff))
     .map(({ profileId, startedAt, maximumUsd, settlement }) => {
@@ -423,8 +450,9 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
       return { entry, result: scoreEntry(entry, fixture) };
     });
     const complete = scored.filter(item => item.result.complete);
-    const fields = scored.reduce((sum, item) => sum + item.result.requiredFields, 0);
-    const exact = scored.reduce((sum, item) => sum + item.result.exactFields, 0);
+    const observedScores = scored.filter(({ entry }) => wasObservedBy(entry.attempts.at(-1)?.observedAt, reportCutoff));
+    const fields = observedScores.reduce((sum, item) => sum + item.result.requiredFields, 0);
+    const exact = observedScores.reduce((sum, item) => sum + item.result.exactFields, 0);
     const accepted = scored.filter(item => item.result.accepted).length;
     const latencies = scored.flatMap(({ entry, result }) => entry.elapsedMs === null || !result.attemptTimingConsistent ? [] : [entry.elapsedMs]);
     const knownProviderCost = scored.reduce((sum, item) => sum.plus(item.result.knownActualCostUsd), new Money(0));
@@ -444,7 +472,8 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
         && Object.keys(fixture.expected.engineValues).length === 0 && fixture.expected.category === null; }).length;
     const expectedPreflightRuns = preflightCases.length * evaluationGates.repeats;
     const expectedRuns = (cases.length - preflightCases.length) * evaluationGates.repeats;
-    const schemaRate = entries.length ? scored.filter(item => item.result.schemaValid).length / entries.length : null;
+    const schemaRate = observedScores.length
+      ? observedScores.filter(item => item.result.schemaValid).length / observedScores.length : null;
     const exactRate = fields ? exact / fields : null;
     const p95 = percentile(latencies, 0.95);
     const p50 = percentile(latencies, 0.5);
@@ -459,7 +488,7 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
       || entries.some(entry => entry.attempts.some(attempt => {
         const evidence = reportAvailability.find(item => item.profileId === attempt.profileId);
         return !evidence || evidence.status !== "available" || !evidence.structuredOutput || !evidence.reasoningEffort || !evidence.reportedUsage
-          || !timestampAtOrBefore(evidence.checkedAt, attempt.startedAt) || timestampAtOrBefore(evidence.expiresAt, attempt.startedAt);
+          || !timestampAtOrBefore(evidence.observedAt ?? evidence.checkedAt, attempt.startedAt) || timestampAtOrBefore(evidence.expiresAt, attempt.startedAt);
       }))) blockers.push("account-capability-unverified-or-unavailable");
     if (entries.some(entry => entry.measurement?.normalizationStatus !== "bound")) blockers.push("application-normalization-unverified");
     if (scored.some(item => item.entry.measurement?.runPurpose !== "qualification" || !item.result.provenanceMatches)
@@ -504,7 +533,9 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     const comparisonPlans = new Set([group, ...baselines].flatMap(item => [...(groupPlans.get(`${item.profileId}:${item.task}`) ?? [])]));
     if (comparisonPlans.size > 1) group.blockers.push("qualification-comparison-mixed-plans");
     if (baselines.some(item => !comparableBaselines.has(`${item.profileId}:${item.task}`))) group.blockers.push("baseline-comparison-incomplete");
-    const candidateEntries = reportEntries.filter(entry => entry.profileId === group.profileId && fixtures.find(fixture => fixture.id === entry.fixtureId)?.task === group.task);
+    const candidateEntries = reportEntries.filter(entry => entry.profileId === group.profileId
+      && wasObservedBy(entry.attempts.at(-1)?.observedAt, reportCutoff)
+      && fixtures.find(fixture => fixture.id === entry.fixtureId)?.task === group.task);
     for (const entry of candidateEntries) {
       const fixture = fixtures.find(item => item.id === entry.fixtureId);
       if (!fixture) throw new Error("Evaluation case is missing.");
