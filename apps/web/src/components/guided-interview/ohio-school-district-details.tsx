@@ -7,15 +7,14 @@ import type {OhioPaymentDraft} from '@/lib/guided-ohio-payment-facts';
 import {emptyOhioSchoolDistrictDraft,emptySchoolPeriod,emptySchoolW2,emptySchoolLocalRow,emptySchoolReceipt,emptySchoolPartYearWages,emptySchoolPartYearHome,emptySchoolPartYearPayroll,emptySchoolPartYearState,normalizeSchoolCurrency,confirmGuidedOhioSchoolDistrictFacts,buildGuidedOhioSchoolDistrictFacts,type OhioSchoolDistrictDraft} from '@/lib/guided-ohio-school-district-facts';
 import {BooleanFact,TextFact} from './fact-fields';
 import {CurrencyField} from './currency-field';
-type Path=Array<string|number>;
+import {editOhioSourceDraft,type OhioSourceDraftPath as Path} from './ohio-source-draft-edit';
 function read(value:unknown,path:Path):unknown{let v=value;for(const key of path){if(!v||typeof v!=='object')return undefined;v=Reflect.get(v,key);}return v;}
-function write(value:OhioSchoolDistrictDraft,path:Path,next:unknown){let current:object=value;for(const key of path.slice(0,-1)){let child:unknown=Reflect.get(current,key);if(!child||typeof child!=='object'){child={};Reflect.set(current,key,child);}current=child as object;}const last=path.at(-1);if(last===undefined)throw Error('An actual source field is required');Reflect.set(current,last,next);}
 const returnTypes=[['sd100','School district income tax (SD100)'],['it1040','Individual income tax (IT1040) — different account']]as const;
 const incomeSourceLabels={"ordinaryCompensationOnlyConfirmed": "School income consists only of ordinary wages", "noSelfEmploymentIncomeConfirmed": "Actual school records contain no self-employment income", "allOtherIncomeSourcesCheckedConfirmed": "All actual income sources have been checked", "noSpecialWageAdjustmentsConfirmed": "Actual school wages need no special adjustments"};
 const accountHolders=[['primary','Primary taxpayer'],['spouse','Spouse — separate method']]as const;
 export function OhioSchoolDistrictDetails({data,onChange,originalInput,ohioResidency,ohioPayments,taxYear,schoolDisplayObservation}:{data:OhioSchoolDistrictDraft|undefined;onChange:(data:OhioSchoolDistrictDraft|undefined)=>void;originalInput:TaxYearInput|null;ohioResidency:OhioResidencyDraft|undefined;ohioPayments:OhioPaymentDraft|undefined;taxYear:number|null|undefined;schoolDisplayObservation?:unknown}){
  const[error,setError]=useState<string|null>(null);const d=data??emptyOhioSchoolDistrictDraft();
- function edit(path:Path,value:unknown){const copy=structuredClone(d);write(copy,path,value);copy.sourceFactsConfirmed=null;setError(null);onChange(copy);}
+ function edit(path:Path,value:unknown){setError(null);onChange(editOhioSourceDraft(d,path,value));}
  function text(label:string,path:Path,type:'text'|'date'='text'){const v=read(d,path);return <TextFact key={path.join('.')} label={label} value={typeof v==='string'?v:''} type={type} onChange={value=>edit(path,value)}/>;}
  function secret(label:string,path:Path){const v=read(d,path);return <label key={path.join('.')} className="guided-field"><span className="guided-field-label">{label}</span><input className="guided-input" type="password" autoComplete="off" value={typeof v==='string'?v:''} onChange={event=>edit(path,event.target.value)}/></label>;}
  function amount(label:string,path:Path){const v=read(d,path);return <CurrencyField key={path.join('.')} label={label} value={typeof v==='string'?v:''} onChange={value=>{const normalized=normalizeSchoolCurrency(value);if(normalized===v)return;edit(path,normalized);}}/>;}
