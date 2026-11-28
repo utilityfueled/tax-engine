@@ -17,6 +17,13 @@ describe("MACRS depreciation computation", () => {
   // -----------------------------------------------------------------------
 
   describe("GDS 200% DB half-year convention (Table A-1)", () => {
+    it("preserves the prescribed rate product before whole-dollar rounding", () => {
+      const asset = { costBasis: "1000000000000000000005", placedInServiceDate: "2026-03-01", recoveryPeriod: "5" } as const;
+      expect(computeAssetDepreciation(asset, 2026)?.depreciation.toFixed()).toBe("200000000000000000001");
+      const listed = { ...asset, isListedProperty: true, isPassengerAutomobile: false, businessUsePercentage: 75 };
+      expect(computeListedPropertyDepreciation(listed, 2026)?.depreciation.toFixed()).toBe("150000000000000000001");
+    });
+
     it("5-year asset year 1 - 20.00% of $10,000 = $2,000", () => {
       const result = computeAssetDepreciation(
         { costBasis: "10000", placedInServiceDate: "2025-01", recoveryPeriod: "5" },

@@ -37,6 +37,7 @@ import { resolveMACRSAssetBasisSources, type MACRSBasisSourceAmounts, type MACRS
 import { resolveMACRSDispositionSources } from "@/models/macrs-disposition-sources.js";
 
 const ZERO = new Decimal(0);
+const MID_QUARTER_THRESHOLD_PERCENT = new Decimal(40);
 
 export interface AssetDepreciationResult {
   dispositionSourceStatus?: "documented_ordinary_nonterminal";
@@ -138,7 +139,7 @@ export function computeAssetDepreciation(
   }
 
   const percentage = table[recoveryYear - 1];
-  const depreciation = roundDollar(costBasis.times(percentage).dividedBy(100));
+  const depreciation = roundDollar(applyPercentage(costBasis, percentage));
 
   return {
     description: asset.description ?? "",
@@ -263,12 +264,12 @@ export function isMidQuarterRequired(
   assets: DepreciableAsset[],
   taxYear: number,
 ): boolean {
-  let totalBasis = ZERO;
-  let q4Basis = ZERO;
+  const totalBases: Decimal[] = [];
+  const q4Bases: Decimal[] = [];
 
   for (const asset of assets) {
     resolveMACRSDispositionSources(asset, taxYear);
-  const basisSourceAmounts = resolveMACRSAssetBasisSources(asset, taxYear);
+    const basisSourceAmounts = resolveMACRSAssetBasisSources(asset, taxYear);
     const recoveryPeriod = parseFloat(asset.recoveryPeriod);
     const isRealProperty = recoveryPeriod === 27.5 || recoveryPeriod === 39;
     if (isRealProperty) continue; // real property excluded from the test
@@ -283,22 +284,23 @@ export function isMidQuarterRequired(
     // Actual section179 is business-only; allocate gross use before subtracting it.
     // Bonus affects regular MACRS, never the statutory mid-quarter test basis.
     const basis = basisSourceAmounts?.midQuarterTestBasis ?? (asset.isListedProperty
-      ? d(asset.costBasis).times(new Decimal(asset.businessUsePercentage ?? 100)).dividedBy(100)
+      ? applyPercentage(d(asset.costBasis), new Decimal(asset.businessUsePercentage ?? 100))
       : d(asset.costBasis));
     if (basis.lessThanOrEqualTo(ZERO)) continue;
 
-    totalBasis = totalBasis.plus(basis);
+    totalBases.push(basis);
 
     const pisMonth = parseInt(asset.placedInServiceDate.substring(5, 7), 10);
     if (pisMonth >= 10) {
-      q4Basis = q4Basis.plus(basis);
+      q4Bases.push(basis);
     }
   }
 
-  if (totalBasis.isZero()) return false;
+  if (q4Bases.length === 0) return false;
 
-  // More than 40% → mid-quarter required
-  return q4Basis.times(100).greaterThan(totalBasis.times(40));
+  const totalBasis = sumSourceMoneyValues(totalBases);
+  const q4Basis = sumSourceMoneyValues(q4Bases);
+  return q4Basis.greaterThan(applyPercentage(totalBasis, MID_QUARTER_THRESHOLD_PERCENT));
 }
 
 // ---------------------------------------------------------------------------
@@ -360,7 +362,6 @@ export function computeListedPropertyDepreciation(
   if (costBasis.lessThanOrEqualTo(ZERO)) return null;
 
   const businessUsePct = new Decimal(asset.businessUsePercentage ?? 100);
-  const businessUseRatio = businessUsePct.dividedBy(100);
   const isPassengerAuto = asset.isPassengerAutomobile === true;
 
   const recoveryPeriod = parseFloat(asset.recoveryPeriod);
@@ -419,12 +420,12 @@ export function computeListedPropertyDepreciation(
   }
 
   const percentage = table[recoveryYear - 1];
-  const rawDepreciation = roundDollar(costBasis.times(percentage).dividedBy(100));
+  const rawDepreciation = roundDollar(applyPercentage(costBasis, percentage));
 
   // Apply business-use percentage
   const tentativeDepreciation = basisSourceAmounts
     ? rawDepreciation
-    : roundDollar(rawDepreciation.times(businessUseRatio));
+    : roundDollar(applyPercentage(rawDepreciation, businessUsePct));
 
   // Apply §280F cap for passenger automobiles
   let section280FCap: Decimal | null = null;
@@ -437,7 +438,7 @@ export function computeListedPropertyDepreciation(
       const limitTable = isFirstYearBonus ? limits.withBonus : limits.withoutBonus;
       // Year 1-3 use indices 0-2; year 4+ use index 3
       const capIndex = Math.min(recoveryYear - 1, limitTable.length - 1);
-      section280FCap = roundDollar(limitTable[capIndex].times(businessUseRatio));
+      section280FCap = roundDollar(applyPercentage(limitTable[capIndex], businessUsePct));
       depreciation = Decimal.min(tentativeDepreciation, section280FCap);
     }
   }
@@ -493,6 +494,12 @@ export function computeListedPropertyAggregation(
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+function applyPercentage(amount: Decimal, percentage: Decimal): Decimal {
+  // The product needs at most the sum of each operand's significant digits.
+  const ExactDecimal = Decimal.clone({ precision: amount.precision() + percentage.precision() });
+  return new Decimal(new ExactDecimal(amount).times(percentage).dividedBy(100));
+}
 
 function resolveMethod(
   explicit: string | undefined,

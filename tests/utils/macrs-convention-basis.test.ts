@@ -38,6 +38,16 @@ describe('MACRS-Convention-Basis',()=>{
     expect(isMidQuarterRequired([asset({costBasis:'6000.00'}),asset({costBasis:'4000.01',placedInServiceDate:'2026-10'})],2026)).toBe(true);
     expect(isMidQuarterRequired([asset({costBasis:'6000.01'}),asset({costBasis:'4000.00',placedInServiceDate:'2026-10'})],2026)).toBe(false);
   });
+  it('uses the strict 40 percent boundary beyond default Decimal precision',()=>{
+    const beforeQ4=asset({costBasis:'600000000000000000000'});
+    const q4=asset({costBasis:'400000000000000000000',placedInServiceDate:'2026-10'});
+    expect(isMidQuarterRequired([beforeQ4,q4],2026)).toBe(false);
+    expect(isMidQuarterRequired([beforeQ4,{...q4,costBasis:'399999999999999999999'}],2026)).toBe(false);
+    expect(isMidQuarterRequired([beforeQ4,{...q4,costBasis:'400000000000000000001'}],2026)).toBe(true);
+    const listed={...q4,isListedProperty:true,businessUsePercentage:50};
+    expect(isMidQuarterRequired([beforeQ4,{...listed,costBasis:'800000000000000000000'}],2026)).toBe(false);
+    expect(isMidQuarterRequired([beforeQ4,{...listed,costBasis:'800000000000000000003'}],2026)).toBe(true);
+  });
   it('preserves prior-year convention and does not assume a missing disposition',()=>{
     const r=computeAggregateDepreciation([asset({placedInServiceDate:'2025-01',convention:'halfYear'}),asset({placedInServiceDate:'2026-12'})],2026);
     expect(r.assetResults.map(x=>[x.convention,x.depreciation.toFixed(0)])).toEqual([['halfYear','3200'],['midQuarter','500']]);
