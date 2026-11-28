@@ -11,10 +11,14 @@ import { readGuidedProfessionalWagering, type ProfessionalWageringDraft } from "
 import { parseGuidedCurrency, sumGuidedDisplayAmounts } from "./guided-currency";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
 import { buildGuidedCardTipSource } from "./guided-card-tip-source";
+import { buildGuidedScheduleCForm6198, type GuidedScheduleCForm6198Draft } from './guided-schedule-c-form-6198';
+import { calculateForm6198ScheduleCPartII2026 } from '@/engine/forms/form-6198-schedule-c-part-ii-2026';
+import { sumSourceMoneyValues } from '@/utils/sum-source-money';
 
 import type {ScheduleCSourceFacts} from "@/models/inputs";
 
 export interface BusinessSourceData {
+  form6198PartII2026?: GuidedScheduleCForm6198Draft;
   goodwillAmortization?: GuidedGoodwillDraft;
   standardMileage?: BusinessMileageDraft;
   homeOfficeRenter?: RenterHomeOfficeDraft;
@@ -78,6 +82,9 @@ export function businessFactErrors(data: SelfEmploymentSectionData | undefined, 
   try { buildGuidedCardTipSource(data, returnYear, filingStatus); }
   catch (error) { errors.cardTipSource = error instanceof Error ? error.message : "Review the actual Form 1099-K source."; }
   const facts = data.businessFacts ?? {};
+  let atRiskOriginal: ReturnType<typeof buildGuidedScheduleCForm6198>;
+  try { atRiskOriginal = buildGuidedScheduleCForm6198(data, returnYear); }
+  catch (error) { errors.lossLimitation = error instanceof Error ? error.message : 'Review the actual Form 6198 originals.'; }
   try { buildGuidedRenterHomeOffice(facts.homeOfficeRenter, returnYear, flow?.segmentation.stateCode); }
   catch (error) { errors.homeOfficeRenter = error instanceof Error ? error.message : "Check the original home-office records."; }
   if (facts.homeOfficeRenter && facts.professionalWagering) errors.homeOfficeRenter = "This home-office worksheet requires one ordinary Schedule C business.";
@@ -143,7 +150,29 @@ export function businessFactErrors(data: SelfEmploymentSectionData | undefined, 
     const tentative = total(businessIncome).minus(total(incomeReductions)).minus(total(expenseAmounts))
       .minus(parseGuidedCurrency(data.expenses.meals).times("0.5").toDecimalPlaces(0, Decimal.ROUND_HALF_UP))
       .minus(mileage?.deduction ?? 0);
-    if (tentative.isNegative() && (data.qbiMateriallyParticipated === false || facts.allInvestmentAtRisk === false)) errors.lossLimitation = "This loss needs the actual passive activity or at-risk worksheet; the guided calculation cannot treat it as fully deductible.";
+    if (tentative.isNegative() && (data.qbiMateriallyParticipated === false || (facts.allInvestmentAtRisk === false && !atRiskOriginal))) {
+      errors.lossLimitation ??= 'This loss needs the actual passive activity or at-risk worksheet; the guided calculation cannot treat it as fully deductible.';
+    }
+    if (atRiskOriginal) {
+      const primary = flow?.sectionData['personal-info'];
+      const exactOrdinaryLoss = sumSourceMoneyValues([
+        ...businessIncome.map(parseGuidedCurrency),
+        ...[...incomeReductions, ...expenseAmounts].map(amount => parseGuidedCurrency(amount).negated()),
+      ]);
+      try {
+        if (!primary) throw new Error('Confirm the actual primary owner before reviewing Form 6198.');
+        calculateForm6198ScheduleCPartII2026(atRiskOriginal, exactOrdinaryLoss, {
+          taxYear: atRiskOriginal.taxYear, primaryOwner: primary,
+          business: {
+            accountHolder: atRiskOriginal.accountHolder, activityDescription: facts.activityDescription,
+            originalScheduleCReference: facts.scheduleCSourceFacts?.sourceReference,
+            materiallyParticipated: data.qbiMateriallyParticipated ?? undefined, allInvestmentAtRisk: facts.allInvestmentAtRisk ?? undefined,
+          },
+        });
+      } catch (error) {
+        errors.lossLimitation = error instanceof Error ? error.message : 'Review the actual Form 6198 originals.';
+      }
+    }
   }
 
   return errors;

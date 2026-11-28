@@ -1834,6 +1834,7 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
   const businessFacts = selfEmployment?.businessFacts;
   const renterHomeOffice = businessFacts?.homeOfficeRenter;
   const ownedHomeOffice = businessFacts?.homeOfficeOwned;
+  const scheduleCForm6198 = businessFacts?.form6198PartII2026;
   const rentals = state.sectionData["income-rental"];
   const royalties = state.sectionData["income-royalties"];
   const investments = state.sectionData["income-investments"];
@@ -1909,7 +1910,7 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
           } : {}),
         },
       } : {}),
-      ...(selfEmployment && (selfEmployment.cardTipSource || businessFacts?.incomeReconciled === true || businessFacts?.expensesReconciled === true || renterHomeOffice?.confirmed === true || ownedHomeOffice?.confirmed === true) ? {
+      ...(selfEmployment && (selfEmployment.cardTipSource || businessFacts?.incomeReconciled === true || businessFacts?.expensesReconciled === true || renterHomeOffice?.confirmed === true || ownedHomeOffice?.confirmed === true || scheduleCForm6198) ? {
         "income-self-employment": {
           ...selfEmployment,
           ...(selfEmployment.cardTipSource ? { cardTipSource: clearCardTipStatementConfirmation(selfEmployment.cardTipSource) } : {}),
@@ -1919,6 +1920,7 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
             ...(businessFacts.expensesReconciled === true ? { expensesReconciled: null } : {}),
             ...(renterHomeOffice?.confirmed === true ? { homeOfficeRenter: { ...renterHomeOffice, confirmed: false } } : {}),
             ...(ownedHomeOffice?.confirmed === true ? { homeOfficeOwned: { ...ownedHomeOffice, confirmed: false } } : {}),
+            ...(scheduleCForm6198 ? { form6198PartII2026: { ...scheduleCForm6198, sourceFactsConfirmed: null } } : {}),
           } } : {}),
         },
       } : {}),
@@ -2710,6 +2712,7 @@ export function updateSectionData(
       incomeReconciled: undefined,
       expensesReconciled: undefined,
       standardMileage: undefined,
+      form6198PartII2026: undefined,
       homeOfficeRenter: value.businessFacts.homeOfficeRenter ? { ...value.businessFacts.homeOfficeRenter, confirmed: undefined } : undefined,
       homeOfficeOwned: value.businessFacts.homeOfficeOwned ? { ...value.businessFacts.homeOfficeOwned, confirmed: undefined } : undefined,
       passengerSources: value.businessFacts.passengerSources ? { ...value.businessFacts.passengerSources, sourceFactsConfirmed: undefined, originalInput: undefined, originalDraft: undefined } : undefined,
@@ -2736,6 +2739,18 @@ export function updateSectionData(
   const passengerSourcesChanged=scheduleCValuesChanged && nextBusiness?.businessFacts?.passengerSources;
   const formerPersonal = state.sectionData["personal-info"];
   const nextPersonal = sectionId === "personal-info" ? data as PersonalInfoData : formerPersonal;
+  const scheduleCForm6198 = nextBusiness?.businessFacts?.form6198PartII2026;
+  const priorScheduleCForm6198 = previousBusiness?.businessFacts?.form6198PartII2026;
+  const scheduleCOriginalsChanged = sectionId === 'income-self-employment' && (
+    scheduleCValuesChanged || guidedSourceValuesChanged(priorScheduleCForm6198, scheduleCForm6198)
+    || previousBusiness?.businessFacts?.scheduleCSourceFacts?.sourceFactsConfirmed === true
+      && nextBusiness?.businessFacts?.scheduleCSourceFacts?.sourceFactsConfirmed !== true
+  );
+  const scheduleCForm6198ToReview = scheduleCForm6198?.sourceFactsConfirmed != null && (
+    scheduleCOriginalsChanged
+    || sectionId === 'personal-info' && guidedSourceValuesChanged(guidedTaxpayerIdentity(formerPersonal), guidedTaxpayerIdentity(nextPersonal))
+    || ['adjustments', 'credits'].includes(sectionId) && scheduleCValuesChanged
+  );
   const cardTipRecipient = nextBusiness?.cardTipSource;
   const cardTipRecipientChanged = sectionId === "personal-info" && cardTipRecipient && (cardTipRecipient.owner === "spouse"
     ? guidedSourceValuesChanged(guidedTaxpayerIdentity(formerPersonal?.spouse), guidedTaxpayerIdentity(nextPersonal?.spouse))
@@ -3091,7 +3106,7 @@ export function updateSectionData(
       } } : {}),
       ...((invalidatedOhioStateReturn ?? invalidatedPAStateReturn) ? { "state-return": invalidatedOhioStateReturn ?? invalidatedPAStateReturn } : {}),
       ...(invalidatedW2 ? { "income-w2": invalidatedW2 } : {}),
-      ...((scheduleCSourcesChanged || macrsSourcesChanged || passengerSourcesChanged || mileageSourcesChanged || wageringSourcesChanged || renterHomeOfficeChanged || ownedHomeOfficeChanged || cardTipRecipientChanged) && nextBusiness ? {
+      ...((scheduleCSourcesChanged || macrsSourcesChanged || passengerSourcesChanged || mileageSourcesChanged || wageringSourcesChanged || renterHomeOfficeChanged || ownedHomeOfficeChanged || cardTipRecipientChanged || scheduleCForm6198ToReview) && nextBusiness ? {
         "income-self-employment": {
           ...nextBusiness,
           ...(cardTipRecipientChanged && cardTipRecipient ? { cardTipSource: clearCardTipStatementConfirmation(cardTipRecipient) } : {}),
@@ -3100,6 +3115,7 @@ export function updateSectionData(
             ...(renterHomeOfficeChanged ? { homeOfficeRenter: { ...renterHomeOfficeChanged, confirmed: false } } : {}),
             ...(ownedHomeOfficeChanged ? { homeOfficeOwned: { ...ownedHomeOfficeChanged, confirmed: false } } : {}),
             ...(scheduleCSourcesChanged ? { scheduleCSourceFacts: { ...scheduleCSourcesChanged, sourceFactsConfirmed: null } } : {}),
+            ...(scheduleCForm6198ToReview && scheduleCForm6198 ? { form6198PartII2026: { ...scheduleCForm6198, sourceFactsConfirmed: null } } : {}),
             ...(macrsSourcesChanged ? { macrsAssets: { ...macrsSourcesChanged, sourceFactsConfirmed: null } } : {}),
             ...(passengerSourcesChanged ? { passengerSources: { ...passengerSourcesChanged, sourceFactsConfirmed: null } } : {}),
             ...(mileageSourcesChanged ? { standardMileage: clearBusinessMileageConfirmations(mileageDraft.data) } : {}),

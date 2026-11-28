@@ -1,0 +1,33 @@
+form: "2026 Guided Form 6198 Schedule C Part II originals"
+taxYear: 2026
+lines:
+  - line: "originals"
+    description: "Collect actual Part II originals for one ordinary primary-owner loss"
+    formula: >-
+      Show a separate source panel for a 2026 Schedule C with Box 32b. Retain
+      the actual owner name and last four taxpayer ID digits, business activity,
+      Schedule C reference and loss, and signed-off Part II line 6, 7 and 9
+      amounts with their own original references. Require explicit scope and
+      source confirmations. Keep blank amounts unknown and entered zero known.
+    irsRef: "Instructions for Form 6198, Lines 1, 6, 7 and 9; Schedule C Instructions, Lines 31 and 32"
+    testRef: "tests/apps/web/guided-schedule-c-form-6198-interactions.test.tsx::collects separate actual Form 6198 originals and preserves a known zero"
+  - line: "schedule-c-binding"
+    description: "Verify the loss against independent guided Schedule C records"
+    formula: >-
+      Preserve the existing missing-worksheet hold. Bind the Part II original
+      to the independently entered and confirmed ordinary Schedule C source
+      packet, actual primary owner and independently calculated exact pre-limit
+      loss. Use the canonical Schedule C calculation and its allowed loss.
+      Hold stale, mismatched, passive, unsupported-year and competing records.
+    irsRef: "Form 6198 Parts I, II and IV; IRC 465"
+    testRef: "tests/guided-interview/guided-schedule-c-form-6198.test.ts::uses the independent business source and actual Form 6198 loss in the normal guided bridge"
+  - line: "saved-originals"
+    description: "Reopen actual originals and require fresh review after material changes"
+    formula: >-
+      Preserve entered drafts and confirmed originals through guided load and
+      encrypted recovery. Clear the worksheet confirmation on controlling
+      taxpayer, business, source packet, receipt or expense edits, including a
+      new full taxpayer ID with the same last four digits. Keep filing, state
+      transfer, carry consumption and export outside this guided lane.
+    irsRef: "Form 6198 identity and activity source records"
+    testRef: "tests/guided-interview/guided-schedule-c-form-6198.test.ts::reopens actual originals and clears review after controlling edits"

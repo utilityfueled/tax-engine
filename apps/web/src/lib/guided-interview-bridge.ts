@@ -14,6 +14,8 @@ import { TaxYearInputSchema, W2Schema, type Form1099Misc, type Form1099Nec } fro
 import { reconcileForm8919NecSources } from "@/engine/forms/form-8919-nec-sources";
 import { assertW2StateLocalSources, type W2StateLocalSourceContext } from "@/engine/forms/w2-state-local";
 import {calculateScheduleCSourceFacts} from "../../../../src/engine/schedules/schedule-c-source-facts.js";
+import { calculateScheduleC } from '@/engine/schedules/schedule-c';
+import { buildGuidedScheduleCForm6198 } from './guided-schedule-c-form-6198';
 import {buildNecInputs} from './guided-business-facts';
 import { buildGuidedCardTipSource } from "./guided-card-tip-source";
 import { buildGuidedPersonalEvCharger } from "./guided-personal-ev-charger";
@@ -865,6 +867,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   let paymentFacts: ReturnType<typeof allPaymentFacts>;
   let reitPtpLossSource: ReturnType<typeof buildGuidedReitPtpLossSource>;
   let ordinaryAtRiskK1: ReturnType<typeof buildGuidedForm6198PartII>;
+  let ordinaryAtRiskScheduleC: ReturnType<typeof buildGuidedScheduleCForm6198>;
   try {
     reitPtpLossSource = buildGuidedReitPtpLossSource(state);
     form8919Sources = buildGuidedForm8919ReasonA(state);
@@ -878,6 +881,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     assertKnownFacts(combatPayElectionErrors(w2Data?.entries, w2Data?.combatPayElection, segmentation.filingStatus));
     assertKnownFacts(investmentFactErrors(investData, segmentation.filingStatus, state.taxYear, stateReturnData, segmentation.stateCode, personalInfo, qofDiscovery.answer === false));
     assertKnownFacts(businessFactErrors(seData, segmentation.filingStatus, w2Data?.entries, stateReturnData, state.taxYear, state));
+    ordinaryAtRiskScheduleC = buildGuidedScheduleCForm6198(seData, state.taxYear);
     homeOffice = buildGuidedOwnedHomeOffice(seData?.businessFacts?.homeOfficeOwned, state)
       ?? buildGuidedRenterHomeOffice(seData?.businessFacts?.homeOfficeRenter, state.taxYear, segmentation.stateCode);
     if (creditsData?.saversCredit) form8880 = buildGuidedSaversCredit(creditsData.saversCredit, guidedSaversCreditContext(state));
@@ -946,11 +950,14 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const w2s = buildW2Inputs(w2Data?.entries);
   const necs = buildNecInputs(seData?.necEntries);
   const cardTipStatement = buildGuidedCardTipSource(seData, state.taxYear, segmentation.filingStatus);
-  const scheduleC = buildScheduleCInput(
+  const scheduleCBusiness = buildScheduleCInput(
     seData?.necEntries, seData?.manualGrossReceipts, seData?.expenses, seData?.qbiMateriallyParticipated,
     seData?.businessFacts, standardMileage?.packet, professionalWagering?.ledger,
     homeOffice,
   );
+  const scheduleC = scheduleCBusiness && ordinaryAtRiskScheduleC
+    ? { ...scheduleCBusiness, form6198PartII2026: ordinaryAtRiskScheduleC }
+    : scheduleCBusiness;
   // The admitted card statement has one matching ledger receipt total and no other reported receipts.
   if (cardTipStatement && scheduleC) scheduleC.grossReceipts = parseGuidedCurrency(seData?.manualGrossReceipts).toFixed();
   let actualGoodwill:ReturnType<typeof buildGuidedGoodwill>;
@@ -1213,6 +1220,10 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   }
   if(seData?.businessFacts?.depreciationMethod==='passenger'||seData?.businessFacts?.passengerSources){try{const bound=bindGuidedPassengerInput(input,seData.businessFacts,capturePassenger);if(!bound)return null;Object.assign(input,bound.input);}catch(error){if(capturePassenger)throw error;return null;}}
   if(input.scheduleC?.sourceFacts || input.scheduleC?.expenses?.businessInterest){try{calculateScheduleCSourceFacts(input as Parameters<typeof calculateScheduleCSourceFacts>[0],input.scheduleC);}catch{return null;}}
+  if (ordinaryAtRiskScheduleC) {
+    try { calculateScheduleC(TaxYearInputSchema.parse(input)); }
+    catch { return null; }
+  }
   if (input.w2s.some(entry => entry.stateLocalSources !== undefined)) {
     try {
       const context = buildGuidedW2SourceContext(state);
