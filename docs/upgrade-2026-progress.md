@@ -15,6 +15,41 @@ the latest application revision, exact-source runs and open dependencies. The
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. The updated native ARM64 run and the AMD64 jobs need runner assignment. The previous ARM64 browser still failed 11 cases after image and recovery passed. Qualify both final runtime images before publishing. |
 
+## November 27 state disclosures, HSA originals and AI receipt binding
+
+`01a215a63` names the selected 2026 PA-40 and Ohio IT 1040 draft
+scenarios in public support. It lists full-year resident, part-year
+resident and nonresident methods, and limits the Ohio IT NRC credit
+note to selected part-year and nonresident cases. The existing guided
+source previews and full calculation, PDF and filing availability
+retain their separate statuses. All 346 exact focused tests and eight
+static checks passed, with independent engineering review.
+[Pennsylvania DOR](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
+[Ohio IT NRC](https://tax.ohio.gov/individual/file-now/IT-NRC-Forms).
+
+`b53b8fcef` carries the confirmed Form 1099-SA calendar year into the
+canonical input for guided Codes 1 and 3. The guide rejects blank or
+mismatched years. Undated historical canonical inputs can still retain
+an unknown year. A fictional source-confirmed ordinary distribution
+reopened on the private 2026 Form 8889 with $1,000 gross, $800 qualified,
+$200 taxable and $40 additional tax. The SSN field was blank and the
+review mark was present. All 294 exact focused tests and eight static
+checks passed, including 10,310 spec references. Independent
+engineering review reran 20 focused tests.
+[IRS Form 1099-SA instructions](https://www.irs.gov/instructions/i1099sa) ·
+[Final 2026 Form 8889](https://www.irs.gov/pub/irs-prior/f8889--2026.pdf).
+
+`b1505a199` binds an AI usage receipt to a single provider attempt
+across case and probe responses. It normalizes surrounding whitespace
+before hashing, so differently padded versions of the same reference
+cannot release another attempt's hold. The historical collision tests
+retain $0.00012 in verified charges and the $0.0111056 unresolved hold,
+and report $0.00006 separately as assumed usage. The journal stops
+before another mock dispatch. Historical hashes retain their original
+bytes. All 152 exact focused tests, eight static checks and the separate
+evaluator type check passed. Independent engineering review reran 64
+mock tests. These fixtures record no live provider usage or human labels.
+
 ## November 27 full browser collection correction
 
 `f5493bdc8` completed all nine local Chromium windows. It passed 651

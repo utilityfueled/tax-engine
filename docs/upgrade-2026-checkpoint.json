@@ -3,10 +3,12 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "dcfd227f5febe42d318ac8f4ebf1f7fd048caa53",
-    "latestScopedApplicationCommit": "b5efb12bcbde7e18468202e7f983984e92e973b8",
+    "latestScopedApplicationCommit": "b53b8fcefd1f02000531d33746156a2e37df5f8a",
     "latestCombinedCandidateCommit": "dcfd227f5febe42d318ac8f4ebf1f7fd048caa53",
     "nov27FullBrowserCollectionEvidenceKey": "activeContinuation.nov27FullBrowserCollection",
-    "latestScopedChecksEvidenceKey": "activeContinuation.nov27Form8863PrivateTransfer",
+    "latestScopedChecksEvidenceKey": "activeContinuation.nov27GuidedHsaStatementYear",
+    "nov27StateSupportResidencyEvidenceKey": "activeContinuation.nov27StateSupportResidency",
+    "nov27AiReceiptAttemptBindingEvidenceKey": "activeContinuation.nov27AiReceiptAttemptBinding",
     "nov27GuidedCommercialWorkpaperEvidenceKey": "activeContinuation.nov27GuidedCommercialWorkpaper",
     "nov27DeductionBrowserYearEvidenceKey": "activeContinuation.nov27DeductionBrowserYear",
     "latestOfflineAiEvidenceKey": "activeContinuation.nov27OfflineAiQualificationRecheck",
@@ -199,6 +201,91 @@
     ]
   },
   "activeContinuation": {
+    "nov27StateSupportResidency": {
+      "commit": "01a215a637be4f58f18a1bf039d82c1879aa5bd7",
+      "verifiedTree": "2219a62f28769a8ce1b8f4950a089d2b1dfe82d9",
+      "exactArchiveSha256": "0d63dafdc144efcf0ba0ed978103934c5e325e4b1aa35fd908b406cf8fd96b32",
+      "primarySources": [
+        "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax",
+        "https://tax.ohio.gov/individual/file-now/IT-NRC-Forms"
+      ],
+      "exactFocusedTestsPassed": 346,
+      "repositorySpecReferencesValidated": 10309,
+      "exactTreeChecksPassed": [
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
+      "independentEngineeringReviewPassed": true,
+      "independentFocusedTestsPassed": 13,
+      "filingQualified": false
+    },
+    "nov27GuidedHsaStatementYear": {
+      "commit": "b53b8fcefd1f02000531d33746156a2e37df5f8a",
+      "verifiedTree": "45f44c574c5b2174f53d9d8d9645c1ef8e41f628",
+      "exactArchiveSha256": "e379caa077523d8e9cb719504a79577b73c4e58cd98be0ba59aac73af85ff3e1",
+      "primarySources": [
+        "https://www.irs.gov/instructions/i1099sa",
+        "https://www.irs.gov/pub/irs-prior/f8889--2026.pdf"
+      ],
+      "targetedRedFailuresBeforeFix": 2,
+      "exactFocusedTestsPassed": 294,
+      "repositorySpecReferencesValidated": 10310,
+      "exactTreeChecksPassed": [
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
+      "independentEngineeringReviewPassed": true,
+      "independentFocusedTestsPassed": 20,
+      "privateForm8889SyntheticWidgetReadback": {
+        "line14a": "1000",
+        "line15": "800",
+        "line16": "200",
+        "line17b": "40",
+        "ssnBlank": true,
+        "reviewMarked": true
+      },
+      "filingQualified": false
+    },
+    "nov27AiReceiptAttemptBinding": {
+      "commit": "b1505a1999e67fae04dc3ac0ba8c14024127ea82",
+      "verifiedTree": "6f0a367d193488f83dfeda943178ed47fe2f93db",
+      "exactArchiveSha256": "9c9a46a59ed87ba0cb833f7a646ce74951532767080173f1151ea9e2bfcb70bb",
+      "exactFocusedTestsPassed": 152,
+      "repositorySpecReferencesValidated": 10310,
+      "exactTreeChecksPassed": [
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
+      "evaluatorTypeCheckPassed": true,
+      "independentEngineeringReviewPassed": true,
+      "independentMockTestsPassed": 64,
+      "syntheticHistoricalCollision": {
+        "knownUsd": "0.00012",
+        "heldMaximumUsd": "0.0111056",
+        "separateAssumedUsd": "0.00006",
+        "subsequentDispatches": 0
+      },
+      "liveProviderCalls": 0,
+      "humanQualification": false
+    },
     "nov27FullBrowserCollection": {
       "commit": "dcfd227f5febe42d318ac8f4ebf1f7fd048caa53",
       "verifiedTree": "1b12a6e6cea4f010c66815fe117de05bbb664b7b",
