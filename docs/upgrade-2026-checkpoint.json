@@ -4,7 +4,7 @@
     "asOf": "2026-11-28",
     "branch": "main",
     "applicationCommit": "6aadaaeddc4931b13e4b14e387a93590224c6447",
-    "latestScopedApplicationCommit": "8993e5114175d2c0cdfe7f2ad66bc15cda0582b9",
+    "latestScopedApplicationCommit": "46810ff85f0d4836b37bcd79dddeddce9be61987",
     "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
     "latestSchedule8812PayrollActcEvidenceKey": "activeContinuation.nov27Schedule8812PayrollActc",
     "latestGuidedHsaCivilDatesEvidenceKey": "activeContinuation.nov27GuidedHsaCivilDates",
@@ -217,6 +217,31 @@
     ]
   },
   "activeContinuation": {
+    "nov28AiAttemptAccountingCutoff": {
+      "commit": "46810ff85f0d4836b37bcd79dddeddce9be61987",
+      "archiveSha256": "f7f4d12b1ec154f9339f43bee0312199896c43fe978ac06ae0e60a0739d6bd7f",
+      "sourceTree": "62056c4d88c3c4218f8e8d8205b63043ab24d462",
+      "localEvidenceMarker": "nov27-ai-attempt-time-accounting-path",
+      "exactFocusedTestsPassed": 149,
+      "checksPassed": [
+        "focused",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
+      "initialRegressionFailures": 3,
+      "independentEngineeringOfflineTestsPassed": 51,
+      "initialObservedFixtureCostUsd": "0.00006",
+      "immediateCutoffAndUnsettledReconciliationVerified": true,
+      "partialResponseExcludedFromQualification": true,
+      "providerCalls": 0,
+      "qualificationPromoted": false
+    },
     "nov28FilingOriginalFactPresence": {
       "commit": "8993e5114175d2c0cdfe7f2ad66bc15cda0582b9",
       "archiveSha256": "25858810373e172667445697421cbb259a0b01d06ee91a098709cb7248a4c135",

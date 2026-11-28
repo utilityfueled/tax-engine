@@ -23,6 +23,17 @@ jq '.resume | {latestScopedApplicationCommit, remaining}' docs/upgrade-2026-chec
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local Chromium and encrypted recovery passed. Current ARM64 and AMD64 workflows await runners. The earlier ARM64 image and Compose checks passed and the strict browser check failed nine cases. |
 
+## November 28 AI evaluation attempt accounting at cutoff
+
+`46810ff85` counts each observed provider attempt at its own report cutoff.
+In the offline two-attempt fixture, initial known cost is $0.00006 as soon as
+the receipt is observed, before escalation starts. The total stays unknown
+while any attempt is unsettled. A partial response contributes no quality,
+latency or promotion evidence. Receipt reuse affects accounting only when
+the duplicate is visible. Three regressions failed before the fix.
+Independent engineering review passed 51 offline tests. The exact package
+passed 149 tests and eight static checks.
+
 ## November 28 filing facts before parsed defaults
 
 `8993e5114` gives the compiled filing scenario validator the original source
