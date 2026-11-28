@@ -5,7 +5,8 @@
     "branch": "main",
     "latestForm6198PhysicalEvidenceKey": "activeContinuation.nov28Form6198PhysicalCandidate",
     "applicationCommit": "95c43aef288b0b04fa88d1e60aa89b55c26b8bac",
-    "latestScopedApplicationCommit": "95c43aef288b0b04fa88d1e60aa89b55c26b8bac",
+    "latestScopedApplicationCommit": "3e9c65ac436d2b9d5be3121717f8aae9c689311b",
+    "latestStudentLoanObservationEvidenceKey": "activeContinuation.nov28StudentLoanObservationDate",
     "latestW2GObservationEvidenceKey": "activeContinuation.nov28ProfessionalW2GObservationDate",
     "latestAiExactBenefitEvidenceKey": "activeContinuation.nov28AiExactBenefitThreshold",
     "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
@@ -220,6 +221,24 @@
     ]
   },
   "activeContinuation": {
+    "nov28StudentLoanObservationDate": {
+      "applicationCommit": "3e9c65ac436d2b9d5be3121717f8aae9c689311b",
+      "sources": ["https://www.ecfr.gov/current/title-26/section-1.221-1", "https://www.irs.gov/pub/irs-pdf/f1098e.pdf"],
+      "scope": "The restored guide and canonical federal calculation hold actual 2026 origination after the observation date. Same-day origination, explicit zero and historical sources passed. Both implementation inventory entries are partial.",
+      "checks": "Two reproductions failed before the fix. All 107 focused cases and 24 spec references passed. Root and web typechecks, exact inventory and source binding passed. Focused lint found zero errors and 33 existing warnings.",
+      "failedRegressionLogSha256": "3ed7a544b262498a3df35db7e586f4d8e6621991991eb55863a9a5f44c2758f9",
+      "focusedLogSha256": "e56b6f8e1125fbc2ba1e367cf1d863db1504c4b6b277a64de8308080db1e7a00",
+      "evidenceDirectory": ".local/upgrade-evidence/nov28-student-loan-observation-date"
+    },
+    "nov28OhioRecurringEditMeasurement": {
+      "measuredRevision": "5b7bf7a0f",
+      "editsPerFixture": 200,
+      "uniqueFederalInputsPerFixture": 1,
+      "renderEvaluationMedianMs": { "business": 1.06, "reciprocal": 2.02, "residentCredit": 0.58, "school": 1.05 },
+      "scope": "Local synthetic draft and render-core measurement on Node 26.13.1. ARM64 timeout sites span several different browser phases. The cause of the native timeouts remains unconfirmed.",
+      "measurementSha256": "5ead4812169decd44f0691db5de849b5d562095bb5a6260d99c2617aea5e59cc",
+      "evidenceDirectory": ".local/upgrade-evidence/nov28-ohio-common-edit-cost"
+    },
     "nov28ExactProfessionalW2GAndAiCombined": {
       "commit": "95c43aef288b0b04fa88d1e60aa89b55c26b8bac",
       "exactArchiveSha256": "4f32a02e4cbddc99fd799fa7128791c7a0d8c0f816e2c814a28327ff690f94ab",

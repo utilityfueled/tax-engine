@@ -23,6 +23,18 @@ jq '.resume | {latestScopedApplicationCommit, remaining}' docs/upgrade-2026-chec
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local Chromium and encrypted recovery passed on `95c43aef2`. ARM64 run `46120985997` passed archive verification, Compose recovery and cleanup. Its strict browser step timed out in 12 Ohio cases. The revision with the tracked Form 6198 blank is queued. |
 
+## November 28 student-loan original facts
+
+`3e9c65ac4` holds an actual 2026 loan origination later than the observation
+date in both the saved guide and federal calculation. Same-day origination
+still permits the supported $1,200 deduction in the $1,200.15 Box 1 example.
+Explicit zero and historical records passed. Two regressions failed before
+the fix. Afterward, 107 tests and 24 scoped spec references passed, along with
+root and web typechecks and inventory. Focused lint reported zero errors and
+33 existing warnings. Both coverage entries record partial implementation.
+[26 CFR §1.221-1](https://www.ecfr.gov/current/title-26/section-1.221-1) ·
+[2026 Form 1098-E](https://www.irs.gov/pub/irs-pdf/f1098e.pdf).
+
 ## November 28 professional W-2G originals and AI evaluation
 
 `95c43aef2` holds linked 2026 professional slot winnings and withholding
@@ -62,6 +74,12 @@ All 11 earlier timeouts repeated. The new timeout was the phone case for the
 upgrade and recovery, immutable evidence and listener cleanup passed. Both
 runs retained the 30-second deadline and zero retries. The sanitized timing
 receipt SHA-256 is `14022b58efde5f240969aa5a8165bb74fe868c9c39316b1c9d85649adde67ed0`.
+
+Locally, 200 Ohio source-reference corrections per fixture in business,
+reciprocal, resident-credit and school flows repeatedly rebuilt the same
+federal input. Median render evaluation was 0.58–2.02 ms. The ARM64 timeout
+locations span field entry, reload, layout and filing review. The cause of
+the native timeouts remains unconfirmed.
 [Completed ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/46113946817)
 · [ARM64 successor](https://github.com/utilityfueled/tax-engine/actions/runs/46120985997).
 
