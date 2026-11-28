@@ -302,7 +302,7 @@ describe("Final 2026 Form 8863 physical candidate", () => {
       ...input, taxpayer: { ...input.taxpayer, spouse: { ...spouse, ssn: input.taxpayer.primary.ssn } },
     };
     expect(() => projectForm88632026Transfers(sharedTin, jointAotcTransferWorkpapers(sharedTin)))
-      .toThrow(/student.*identity/i);
+      .toThrow(/taxpayer identifier is already used/i);
   });
 
   it("holds contradictory or unverified joint student-spouse evidence", async () => {

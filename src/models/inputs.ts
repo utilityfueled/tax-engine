@@ -40,6 +40,7 @@ import { VehicleRefinancingSourcesSchema } from "@/models/vehicle-refinancing-so
 import { QofInvestmentSourceSchema } from "@/models/qof-investment-sources.js";
 import { getNYIT201ResidentConstants } from "@/models/constants.js";
 import { d } from "@/utils/decimal.js";
+import { duplicate2026ReturnTaxIdentifierIndexes, HOUSEHOLD_TAX_IDENTIFIER_CONFLICT } from "@/utils/household-tax-identifiers.js";
 import { Form982NolSourcesSchema } from "@/models/cod-nol-sources.js";
 import { Form982PrincipalResidenceSourcesSchema } from "@/models/cod-principal-residence-sources.js";
 import { Form982AttributeSourcesSchema } from "@/models/cod-attribute-sources.js";
@@ -130,6 +131,11 @@ export const TaxpayerSchema = z.object({
     zip: z.string(),
   }),
   dependents: z.array(DependentSchema).default([]),
+}).superRefine((taxpayer, context) => {
+  for (const index of duplicate2026ReturnTaxIdentifierIndexes(taxpayer)) {
+    context.addIssue({ code: "custom", path: index === 1 ? ["spouse", "ssn"] : ["dependents", index - 2, "ssn"],
+      message: HOUSEHOLD_TAX_IDENTIFIER_CONFLICT });
+  }
 });
 
 export const W2Schema = z.object({

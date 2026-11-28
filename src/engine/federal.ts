@@ -24,6 +24,7 @@ import { assertClaimOfRightStateMethod, calculateClaimOfRightSources, claimOfRig
  */
 
 import Decimal from "decimal.js";
+import { duplicate2026ReturnTaxIdentifierIndexes, HOUSEHOLD_TAX_IDENTIFIER_CONFLICT } from "@/utils/household-tax-identifiers.js";
 import { reportSavingsBondRatios } from "@/utils/savings-bond-ratios.js";
 import type { CharitableNolContributionLimit } from "@/utils/charitable-nol-source.js";
 import { usesDeterminedCharitableNolOrigins } from "@/utils/charitable-nol-origins.js";
@@ -290,6 +291,9 @@ function calculateFederalTaxBeforeOhioSchoolScheduleA(input: TaxYearInput, conte
 
 /** Spec: claim-of-right.yaml. Pub525 compares each method's tax for the year of repayment. */
 function calculateFederalTaxReturn(input: TaxYearInput, context?: { asOfDate?: string }): TaxReturnResult {
+  if (duplicate2026ReturnTaxIdentifierIndexes(input.taxpayer).length) {
+    throw new Error(HOUSEHOLD_TAX_IDENTIFIER_CONFLICT);
+  }
   assertCode3DisabilityPensionSources(input, context?.asOfDate);
   const form8919ReceiptDate = input.form8919?.reasonANecSource?.determinationReceivedDate;
   if (form8919ReceiptDate !== undefined && context?.asOfDate !== undefined) {

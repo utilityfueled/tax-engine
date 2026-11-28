@@ -323,6 +323,22 @@ lines:
     formula: "Missing year, birth date, residency, spouse facts or dependent eligibility prevents calculation. Preserve explicit zero months and explicit negative eligibility answers. A dependent count is not evidence of a qualifying child."
     irsRef: "Schedule 8812 instructions, Taxpayer Identification Number Requirements and Credits for Qualifying Children"
     testRef: "tests/guided-interview/guided-input-accuracy.test.ts::rejects a dependent count without actual dependent facts"
+  - line: "household-identifier-consistency-2026"
+    description: "Hold repeated taxpayer identifiers before the same person can enter multiple household roles"
+    formula: >-
+      Compare confirmed nine-digit taxpayer IDs across the 2026 primary
+      taxpayer, the spouse on a joint or separate married return, and every
+      dependent. Formatting with or without hyphens does not change the
+      identity. Reject repeated identifiers on the guided household section,
+      on direct canonical input, and at the federal calculator boundary for
+      typed callers that skip parsing. Leave blanks to the existing
+      source-specific identity rules. Preserve recorded household answers and
+      existing earlier-year behavior. Report the affected fields without
+      including taxpayer identifiers in the error.
+    irsRef: "IRS Form 1040 published business rules, F1040-011 and F1040-012 (https://www.irs.gov/pub/irs-utl/f1040brs.pdf); 2026 draft Form 1040, page 1 household identities (https://www.irs.gov/pub/irs-dft/f1040--dft.pdf)"
+    testRef: "tests/guided-interview/guided-input-accuracy.test.ts::holds repeated 2026 household identifiers before guided and canonical calculation"
+    testRefs:
+      - "tests/engine/federal-ctc-facts.test.ts::holds duplicate household identifiers before any child-credit claim"
   - line: "saved-year"
     description: "Preserve the saved year during migration"
     formula: "Do not replace an explicit saved year with a workspace default. A legacy interview without a recorded year needs confirmation before calculation."

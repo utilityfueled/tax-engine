@@ -2,6 +2,9 @@
 import { describe, expect, it } from "vitest";
 import { buildDependents, buildScheduleCInput, buildScheduleAInput, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { computeGuidedPreview } from "@/lib/guided-preview-compute";
+import { validateSection } from "@/lib/guided-interview-flow";
+import { TaxpayerSchema, TaxYearInputSchema } from "../../src/models/inputs";
+import { calculateFederalTax } from "../../src/engine/public-federal-return";
 import { startCompleteInterview, completePersonalInfo } from "./complete-facts";
 import { emptyDependentEntry, emptyNecEntry, emptyDeductionData, initialFlowState,
   loadGuidedFlowState, getGuidedFlowStorageKey } from "@/lib/guided-interview-flow";
@@ -19,6 +22,49 @@ describe("guided input fact fidelity", () => {
   it("rejects a dependent count without actual dependent facts", () => {
     expect(() => buildDependents("1")).toThrow(/dependent/i);
     expect(() => buildDependents("1", [{ ...emptyDependentEntry }])).toThrow();
+  });
+
+  it("holds repeated 2026 household identifiers before guided and canonical calculation", () => {
+    const start = startCompleteInterview({ filingStatus: "mfj", incomeTypes: [], lifeEvents: [], stateCode: null });
+    const spouse = completePersonalInfo.spouse;
+    if (!spouse) throw new Error("Missing synthetic spouse");
+    const child = { ...emptyDependentEntry, firstName: "Alex", lastName: "Example", ssn: "333-44-5555",
+      dateOfBirth: "2010-05-01", monthsLivedWithYou: "12", relationship: "child" as const,
+      qualifiesForCTC: false, qualifiesForODC: false, qualifiesForEIC: false };
+    const personal = { ...completePersonalInfo, spouse, dependentCount: "2", dependents: [child, { ...child, ssn: "444-55-6666" }] };
+    const state = { ...start, taxYear: 2026, sectionData: { ...start.sectionData, "personal-info": personal } };
+    const canonical = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
+    const cases = [
+      { index: 1, id: personal.ssn, field: "spouseSsn" },
+      { index: 2, id: personal.ssn, field: "dependent-0-ssn" },
+      { index: 2, id: spouse.ssn, field: "dependent-0-ssn" },
+      { index: 3, id: child.ssn, field: "dependent-1-ssn" },
+    ];
+    const results = cases.map(({ index, id, field }) => {
+      const duplicate = id.replaceAll("-", "");
+      const guided = { ...personal, spouse: { ...spouse }, dependents: personal.dependents.map(entry => ({ ...entry })) };
+      const model = structuredClone(canonical);
+      if (index === 1 && model.taxpayer.spouse) {
+        guided.spouse.ssn = duplicate;
+        model.taxpayer.spouse.ssn = duplicate;
+      } else {
+        guided.dependents[index - 2].ssn = duplicate;
+        model.taxpayer.dependents[index - 2].ssn = duplicate;
+      }
+      const changed = { ...state, sectionData: { ...state.sectionData, "personal-info": guided } };
+      const validation = validateSection(changed, "personal-info");
+      const parsed = TaxYearInputSchema.safeParse(model);
+      expect(() => calculateFederalTax(model)).toThrow(/taxpayer identifier is already used/i);
+      return { guideReportsConflict: /already used/i.test(validation.fieldErrors[field] ?? ""),
+        guideWithholdsInput: buildTaxInputFromGuidedData(changed) === null,
+        directRejects: !parsed.success, privateError: !JSON.stringify(validation.fieldErrors).includes(duplicate)
+          && (parsed.success || !parsed.error.message.includes(duplicate)),
+        priorYearUsesExistingIdentityRules: TaxpayerSchema.safeParse({ ...model.taxpayer, taxYear: 2025 }).success };
+    });
+    expect(results).toEqual(cases.map(() => ({ guideReportsConflict: true, guideWithholdsInput: true, directRejects: true,
+      privateError: true, priorYearUsesExistingIdentityRules: true })));
+    const unassigned = canonical.taxpayer.dependents.map(person => ({ ...person, ssn: "" }));
+    expect(TaxpayerSchema.safeParse({ ...canonical.taxpayer, dependents: unassigned }).success).toBe(true);
   });
 
   it("preserves zero residency months and explicit eligibility answers", () => {

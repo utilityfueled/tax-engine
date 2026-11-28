@@ -1,4 +1,5 @@
 import { isQualifyingRelativeCategory } from "@/utils/child-credit-relationship";
+import { duplicateHouseholdTaxIdentifierIndexes, HOUSEHOLD_TAX_IDENTIFIER_CONFLICT } from "@/utils/household-tax-identifiers";
 import { standardDeductionFactErrors } from "./guided-standard-deduction-facts";
 import { eicClaimantFactErrors } from "./guided-eic-eligibility";
 import { allowsBlankEicChildIdentifier } from "./guided-eic-separated-spouse";
@@ -135,6 +136,14 @@ export function personalFactErrors(data: PersonalInfoData | undefined, status: F
   }
   data?.dependents?.forEach((entry, index) => Object.assign(errors,
     dependentFactErrors(entry, index, taxYear, hasOriginalBlankDependentIdentifier(data, entry, index))));
+  if (data && taxYear === 2026) {
+    const spouseId = status === "mfj" || status === "mfs" ? data.spouse?.ssn : undefined;
+    const identifiers = [data.ssn, spouseId, ...(data.dependents ?? []).map(entry => entry.ssn)];
+    for (const index of duplicateHouseholdTaxIdentifierIndexes(identifiers)) {
+      const field = index === 1 ? "spouseSsn" : `dependent-${index - 2}-ssn`;
+      errors[field] = HOUSEHOLD_TAX_IDENTIFIER_CONFLICT;
+    }
+  }
   const claimsCtc = data?.dependents?.some((entry) => entry.qualifiesForCTC);
   const claimsOdc = data?.dependents?.some((entry) => entry.qualifiesForODC);
   if (claimsCtc || claimsOdc) {
