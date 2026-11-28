@@ -7,6 +7,7 @@
     "applicationCommit": "95c43aef288b0b04fa88d1e60aa89b55c26b8bac",
     "latestScopedApplicationCommit": "3e9c65ac436d2b9d5be3121717f8aae9c689311b",
     "latestStudentLoanObservationEvidenceKey": "activeContinuation.nov28StudentLoanObservationDate",
+    "latestFinalFormAvailabilityEvidenceKey": "activeContinuation.nov28FinalFormAvailability",
     "latestW2GObservationEvidenceKey": "activeContinuation.nov28ProfessionalW2GObservationDate",
     "latestAiExactBenefitEvidenceKey": "activeContinuation.nov28AiExactBenefitThreshold",
     "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
@@ -221,6 +222,21 @@
     ]
   },
   "activeContinuation": {
+    "nov28FinalFormAvailability": {
+      "observedOn": "2026-11-28",
+      "status": "Final 2026 outputs remain open for the federal, Pennsylvania and Ohio groups reviewed.",
+      "federal": "Current final Form 1040, instructions and Schedule 1-A are for 2025. The November 24, 2026 instructions including Schedule 1-A are explicitly draft.",
+      "pennsylvania": "The department still lists its 2025 PA-40 and annual instructions. Final 2026 PA-40 and PA-40 IN were unseen.",
+      "ohio": "The November 13, 2026 IT 1040 and SD 100 booklet remains draft and subject to change until January 2027. Final 2026 IT 1040, instructions and IT NRC were unseen.",
+      "sources": [
+        "https://www.irs.gov/pub/irs-pdf/f1040.pdf",
+        "https://www.irs.gov/pub/irs-pdf/i1040gi.pdf",
+        "https://www.irs.gov/pub/irs-pdf/f1040s1a.pdf",
+        "https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf",
+        "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax",
+        "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf"
+      ]
+    },
     "nov28StudentLoanObservationDate": {
       "applicationCommit": "3e9c65ac436d2b9d5be3121717f8aae9c689311b",
       "sources": ["https://www.ecfr.gov/current/title-26/section-1.221-1", "https://www.irs.gov/pub/irs-pdf/f1098e.pdf"],

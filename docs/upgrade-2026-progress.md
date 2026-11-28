@@ -23,6 +23,19 @@ jq '.resume | {latestScopedApplicationCommit, remaining}' docs/upgrade-2026-chec
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local Chromium and encrypted recovery passed on `95c43aef2`. ARM64 run `46120985997` passed archive verification, Compose recovery and cleanup. Its strict browser step timed out in 12 Ohio cases. The revision with the tracked Form 6198 blank is queued. |
 
+## November 28 final form availability
+
+The IRS final Form 1040, instructions and Schedule 1-A still carry tax year
+2025. The November 24 Form 1040 instructions, including Schedule 1-A, are a
+2026 draft. Pennsylvania still lists its 2025 PA-40 and annual instructions.
+Ohio's November 13 IT 1040 and SD 100 instructions are subject to change until
+January 2027. The final 2026 federal and state output groups covered by these
+sources remain open. [Final Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf)
+· [Final Schedule 1-A](https://www.irs.gov/pub/irs-pdf/f1040s1a.pdf)
+· [Draft 2026 instructions](https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf)
+· [Pennsylvania Department of Revenue](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax)
+· [Ohio 2026 draft booklet](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf).
+
 ## November 28 student-loan original facts
 
 `3e9c65ac4` holds an actual 2026 loan origination later than the observation
