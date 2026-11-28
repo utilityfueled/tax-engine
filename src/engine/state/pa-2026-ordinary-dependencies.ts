@@ -185,7 +185,9 @@ export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdin
  }
  if(Object.values(p.facts.sp.categories).some(row=>row.status!=='known_none'||row.entries.length))fail('other worldwide SP income requires its actual successor');
  const hasUnsupportedPrepayment=p.facts.payments.rows.some(row=>row.original.kind!=='extension'||sources.estimatedTaxReview2026!==undefined);
- if(sources.otherStateTaxes.status!=='none_paid'||hasUnsupportedPrepayment||p.facts.payments.priorCredit.status!=='none'||!p.useTax.isZero())fail('other state payments, PA prepayments, carryforward or use tax require their separate methods');
+ // Ordinary facts replay admits a positive amount without a global locality only after matching every purchase original.
+ const hasUnsupportedUseTax = !p.useTax.isZero() && (p.facts.useTax.locality !== undefined || sources.estimatedTaxReview2026 !== undefined);
+ if(sources.otherStateTaxes.status!=='none_paid'||hasUnsupportedPrepayment||p.facts.payments.priorCredit.status!=='none'||hasUnsupportedUseTax)fail('other state payments, PA prepayments, carryforward or use tax require their separate methods');
  if (income.residencyStatus === 'resident' && r.residency.domicilePeriods.length === 2) {
   const formerDomicile = r.residency.domicilePeriods[0].state;
   const stateName = formerDomicile === 'FL' ? 'Florida' : formerDomicile === 'TX' ? 'Texas' : undefined;

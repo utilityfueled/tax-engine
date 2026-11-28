@@ -19,6 +19,51 @@ it('PA2026 draft composes all actual residency sources without full federal admi
  }
 });
 
+it('PA2026 draft carries verified mixed-locality use tax into the balance due', () => {
+ const f = pa2026OrdinaryDraftFixture();
+ const date = '2026-05-01';
+ const purchases = ['philadelphia', 'allegheny_county'].map((locality, index) => ({
+  sourceReference: `Synthetic purchase and delivery invoice ${index + 1}`, date, kind: 'goods', locality,
+  taxableAmount: '10000', allowableTaxPaid: '0',
+  original: { receiptNumber: `INVOICE-${index + 1}`, date, amount: '10000', taxPaid: '0', locality },
+ }));
+ const facts = { ...f.facts, useTax: { status: 'itemized', sourceReference: 'Synthetic original receipt set', classificationConfirmed: true, purchases },
+  timing: { ...f.facts.timing, remainingTaxPayment: { status: 'expected_payment', date: '2027-04-15', amountAppliedToTax: '1500',
+   sourceReference: 'Synthetic planned balance payment' } } };
+ const result = calculatePA2026OrdinaryDraft(f.input, facts, f.sources);
+ expect(result.pa.pa40.useTax.toFixed()).toBe('1500');
+ expect(result.pa.pa40.totalAmountDue.toFixed()).toBe('1500');
+ expect(result.pa.rev1630.totalInterest.toFixed()).toBe('0');
+ expect(result.readiness).toMatchObject({ filingEligible: false, fullFederalCalculated: false });
+ const legacy = { ...facts, useTax: { ...facts.useTax, locality: 'philadelphia',
+  purchases: purchases.map(row => ({ ...row, locality: undefined, original: { ...row.original, locality: undefined } })) } };
+ expect(() => calculatePA2026OrdinaryDraft(f.input, legacy, f.sources)).toThrow(/use tax.*separate method/i);
+ expect(() => calculatePA2026OrdinaryDraft(f.input, { ...facts, timing: { ...facts.timing,
+  remainingTaxPayment: { ...facts.timing.remainingTaxPayment, amountAppliedToTax: '1400' } } }, f.sources)).toThrow(/principal.*fresh/i);
+});
+
+it('PA2026 draft holds future use-tax receipts and reports same-day purchases', () => {
+ const f = pa2026OrdinaryDraftFixture();
+ const asOfDate = '2026-12-30';
+ const date = '2026-12-31';
+ f.facts.timing.asOfDate = asOfDate;
+ for (const account of f.sources.otherStateTaxes.jurisdictions) account.completeThroughDate = asOfDate;
+ f.facts.timing.remainingTaxPayment = { status: 'expected_payment', date: '2027-04-15', amountAppliedToTax: '800',
+  sourceReference: 'Synthetic planned balance payment' };
+ const purchase = { sourceReference: 'Synthetic Philadelphia invoice', date, kind: 'goods' as const,
+  locality: 'philadelphia' as const, taxableAmount: '10000', allowableTaxPaid: '0',
+  original: { receiptNumber: 'INVOICE-PHL', date, amount: '10000', taxPaid: '0', locality: 'philadelphia' as const } };
+ f.facts.useTax = { status: 'itemized', sourceReference: 'Synthetic delivery invoice', classificationConfirmed: true, purchases: [purchase] };
+
+ expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources)).toThrow(/actual use-tax purchase date.*as-of/i);
+
+ purchase.date = asOfDate;
+ purchase.original.date = asOfDate;
+ const result = calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources);
+ expect(result.pa.pa40.useTax.toFixed()).toBe('800');
+ expect(result.pa.pa40.totalAmountDue.toFixed()).toBe('800');
+});
+
 it('PA2026 part-year bank interest replays one complete original and its dated credits', () => {
  const f = pa2026OrdinaryBankInterestFixture();
  const facts = confirmGuidedPAOrdinaryReturnFacts(f.input, { ...f.facts, sourceFactsConfirmed: null });

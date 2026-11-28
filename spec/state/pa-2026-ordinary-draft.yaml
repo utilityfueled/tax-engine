@@ -43,6 +43,20 @@ lines:
       original source-currentness/owner/year/duplicate/source-precision guards.
       REV1630 zero net tax exits before unsourced2027 interest is needed.
     testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft preserves exact cents known zero and complete withholding"
+  - line: "itemized-purchase-use-tax"
+    description: "Carry qualified actual use tax into the private ordinary return"
+    formula: >-
+      Accept positive use tax from individually matched original 2026 purchase
+      localities and matching receipt dates on or before the confirmed
+      filing-source as-of date. Apply the ordinary withholding, payment-principal and
+      disposition checks to the existing return calculation. A legacy global
+      locality does not qualify positive use tax for this limited state-only
+      return. Keep special estimated-payment methods with their existing limits
+      and keep annual form, full federal calculation and filing gates.
+    irsRef: "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/sales-use-and-hotel-occupancy-tax/use-tax/use-tax-for-individuals"
+    testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft carries verified mixed-locality use tax into the balance due"
+    testRefs:
+      - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft holds future use-tax receipts and reports same-day purchases"
   - line: "primary-residency-declaration"
     description: "Reconcile the retained Pennsylvania declaration with documented residency on draft replay"
     formula: |

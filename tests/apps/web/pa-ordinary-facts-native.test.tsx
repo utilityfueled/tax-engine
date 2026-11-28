@@ -4,13 +4,14 @@ import React, { useState } from 'react';
 import { expect, it } from 'vitest';
 import { PAOrdinaryReturnDetails } from '@/components/guided-interview/pa-ordinary-return-details';
 import { buildGuidedPAOrdinaryReturnFacts } from '@/lib/guided-pa-ordinary-return-facts';
-import { calculatePAOrdinaryReturn } from '@/engine/state/pa-ordinary-return.js';
+import { calculatePA2026OrdinaryDraft, calculatePAOrdinaryReturn } from '@/engine/state/pa-ordinary-return.js';
 import { calculatePAOrdinaryReturnFacts } from '@/engine/state/pa-ordinary-return-facts.js';
 import { PAOrdinaryReturnFactsSchema, PA_SP_OTHER_LINES, type PAOrdinaryReturnFacts } from '@/models/pa-ordinary-return-facts.js';
 import type { TaxYearInput } from '@/models/inputs.js';
 import { paOrdinaryReturnFixture, paOrdinaryReturnRefundFixture } from '../../fixtures/pa-ordinary-return';
 import { paNonchildHouseholdFixture } from '../../fixtures/pa-nonchild-dependent-household';
 import { paOrdinaryInvestmentFixture } from '../../fixtures/pa-ordinary-investment-sources';
+import { pa2026OrdinaryDraftFixture } from '../../fixtures/pa-2026-ordinary-draft';
 import { mountGuidedPanel } from './guided-panel-dom';
 
 type Panel = Awaited<ReturnType<typeof mountGuidedPanel>>;
@@ -342,6 +343,76 @@ it('Native purchase and worldwide receipts produce the documented PA liability',
     await h.panel.click(confirm);
     expect(h.draft().sourceFactsConfirmed).toBeNull();
     expect(h.panel.container.querySelector('[role="status"]')?.textContent).toMatch(/original.*differ/i);
+  } finally { await h.panel.dispose(); }
+});
+
+it('confirms mixed 2026 use-tax localities from each purchase original', async () => {
+  const { input, facts, sources } = pa2026OrdinaryDraftFixture();
+  const date = '2026-05-01';
+  facts.useTax = { status: 'itemized', sourceReference: 'Synthetic original delivery invoices', locality: 'philadelphia',
+    classificationConfirmed: true, purchases: [{ sourceReference: 'Synthetic Philadelphia invoice', date, kind: 'goods',
+      taxableAmount: '10000', allowableTaxPaid: '0', original: { date, amount: '10000', taxPaid: '0', receiptNumber: 'INVOICE-PHL' } }] };
+  const h = await mount(input, JSON.parse(JSON.stringify(facts)));
+  let stored: PAOrdinaryReturnFacts;
+  try {
+    expect(calculatePAOrdinaryReturnFacts(input, h.canonical()).useTax.toFixed()).toBe('800');
+    await h.panel.click('Add actual taxable purchase');
+    expect(h.draft().sourceFactsConfirmed).toBeNull();
+    expect(h.draft().useTax.locality).toBeUndefined();
+    expect(h.panel.control('Purchase 1 delivery or use locality').value).toBe('');
+    expect(h.panel.control('Purchase 1 original delivery or use locality').value).toBe('');
+    await enter(h.panel, {
+      'Purchase 1 delivery or use locality': 'philadelphia',
+      'Purchase 1 original delivery or use locality': 'philadelphia',
+      'Purchase 2 source reference': 'Synthetic Allegheny invoice',
+      'Purchase 2 actual date': date,
+      'Purchase 2 actual taxable kind': 'goods',
+      'Purchase 2 actual taxable amount': '10000',
+      'Purchase 2 actual allowable tax paid': '0',
+      'Purchase 2 delivery or use locality': 'allegheny_county',
+      'Purchase 2 original receipt number': 'INVOICE-ALL',
+      'Purchase 2 original receipt date': date,
+      'Purchase 2 original receipt amount': '10000',
+      'Purchase 2 original receipt tax paid': '0',
+      'Independent remaining-tax payment source': 'expected_payment',
+      'Independent actual or expected tax-payment date': '2027-04-15',
+      'Actual or expected amount applied to tax': '1500',
+    });
+    await h.panel.click(confirm);
+    expect(h.panel.container.querySelector('[role="status"]')?.textContent).toMatch(/original.*locality/i);
+    await h.panel.change('Purchase 2 original delivery or use locality', 'philadelphia');
+    await h.panel.click(confirm);
+    expect(h.draft().sourceFactsConfirmed).toBeNull();
+    await h.panel.change('Purchase 2 original delivery or use locality', 'allegheny_county');
+    await h.panel.click(confirm);
+    expect(calculatePA2026OrdinaryDraft(input, h.canonical(), sources).pa.pa40.totalAmountDue.toFixed()).toBe('1500');
+    stored = JSON.parse(JSON.stringify(h.draft()));
+  } finally { await h.panel.dispose(); }
+
+  const reopened = await mount(input, stored);
+  try {
+    expect(reopened.panel.control('Purchase 2 original delivery or use locality').value).toBe('allegheny_county');
+    expect(calculatePAOrdinaryReturnFacts(input, reopened.canonical()).useTax.toFixed()).toBe('1500');
+  } finally { await reopened.panel.dispose(); }
+});
+
+it('holds future 2026 use-tax receipts on confirmation and reopen', async () => {
+  const { input, facts } = pa2026OrdinaryDraftFixture();
+  const asOfDate = '2026-12-30';
+  const date = '2026-12-31';
+  facts.timing.asOfDate = asOfDate;
+  facts.useTax = { status: 'itemized', sourceReference: 'Synthetic delivery invoice', classificationConfirmed: true,
+    purchases: [{ sourceReference: 'Synthetic Philadelphia invoice', date, kind: 'goods', locality: 'philadelphia',
+      taxableAmount: '10000', allowableTaxPaid: '0',
+      original: { date, amount: '10000', taxPaid: '0', locality: 'philadelphia', receiptNumber: 'INVOICE-PHL' } }] };
+  const h = await mount(input, JSON.parse(JSON.stringify(facts)));
+  try {
+    expect(() => h.canonical()).toThrow(/actual use-tax purchase date.*as-of/i);
+    await h.panel.click(confirm);
+    expect(h.panel.container.querySelector('[role="status"]')?.textContent).toMatch(/actual use-tax purchase date.*as-of/i);
+    await enter(h.panel, { 'Purchase 1 actual date': asOfDate, 'Purchase 1 original receipt date': asOfDate });
+    await h.panel.click(confirm);
+    expect(calculatePAOrdinaryReturnFacts(input, h.canonical()).useTax.toFixed()).toBe('800');
   } finally { await h.panel.dispose(); }
 });
 

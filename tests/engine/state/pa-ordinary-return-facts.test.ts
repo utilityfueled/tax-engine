@@ -7,6 +7,39 @@ it('PA ordinary facts retain exact receipt sums and reject duplicate identities'
 it('PA ordinary facts derive worldwide SP without losing nonresident income',()=>{for(const [status,line6] of [['resident','0'],['part_year','24080'],['nonresident','44120']] as const){const {input,facts}=paOrdinaryReturnFactsFixture(status);const p=calculatePAOrdinaryReturnFacts(input,facts);expect(p.spOutsidePAIncome.toString()).toBe(line6);expect(p.spNontaxableIncome.plus(p.paTaxableIncome).toString()).toBe('50120');}});
 it('PA ordinary facts retain resident Final Return source choice',()=>{const {input,facts}=paOrdinaryReturnFactsFixture();facts.filing.choice='F';facts.filing.finalReturnReason='Permanently retiring abroad with no future PA taxable income';facts.filing.noPATaxableIncomeNextYearConfirmed=true;expect(calculatePAOrdinaryReturnFacts(input,facts).paFilingChoice).toBe('F');facts.filing.finalReturnReason='';expect(()=>calculatePAOrdinaryReturnFacts(input,facts)).toThrow(/Final|reason/i);});
 it('PA ordinary facts calculate actual itemized use tax',()=>{const {input,facts}=paOrdinaryReturnFactsFixture();const raw={...facts,useTax:{status:'itemized',sourceReference:'Actual itemized source',locality:'remainder_of_pa',classificationConfirmed:true,purchases:[{sourceReference:'Actual purchase1',date:'2025-05-01',kind:'goods',taxableAmount:'100',allowableTaxPaid:'2',original:{date:'2025-05-01',amount:'100',taxPaid:'2',receiptNumber:'PURCHASE-1'}}]}};expect(calculatePAOrdinaryReturnFacts(input,raw).useTax.toString()).toBe('4');});
+
+function purchase(receiptNumber: string, locality: string, amount: string, taxPaid: string) {
+ const date = '2026-05-01';
+ return { sourceReference: `Synthetic delivery evidence ${receiptNumber}`, date, kind: 'goods', locality,
+  taxableAmount: amount, allowableTaxPaid: taxPaid, original: { receiptNumber, date, amount, taxPaid, locality } };
+}
+
+it('PA ordinary facts calculate 2026 use tax at each verified purchase locality', () => {
+ const { input, facts } = paOrdinaryReturnFactsFixture('resident', 2026);
+ const raw = { ...facts, useTax: { status: 'itemized', sourceReference: 'Synthetic 2026 delivery receipts', classificationConfirmed: true,
+  purchases: [purchase('A', 'philadelphia', '10000', '0'), purchase('B', 'allegheny_county', '10000', '0'),
+   purchase('C', 'philadelphia', '5', '0'), purchase('D', 'allegheny_county', '5', '0'),
+   purchase('E', 'remainder_of_pa', '100', '1.75'), purchase('F', 'remainder_of_pa', '100', '10')] } };
+ const result = calculatePAOrdinaryReturnFacts(input, raw);
+ // 800 + 700 + 0.40 + 0.35 + 4.25, with the last purchase's excess tax applied only to itself.
+ expect(result.useTax.toFixed()).toBe('1505');
+ expect(result.facts.useTax.purchases?.map(row => row.original)).toEqual(raw.useTax.purchases.map(row => row.original));
+});
+
+it('PA ordinary facts reject unresolved 2026 purchase localities', () => {
+ const { input, facts } = paOrdinaryReturnFactsFixture('resident', 2026);
+ const philadelphia = purchase('A', 'philadelphia', '10000', '0');
+ const allegheny = purchase('B', 'allegheny_county', '10000', '0');
+ const legacyOnly = { ...allegheny, locality: undefined, original: { ...allegheny.original, locality: undefined } };
+ const useTax = { status: 'itemized', sourceReference: 'Synthetic 2026 delivery receipts', classificationConfirmed: true };
+ for (const badUseTax of [
+  { ...useTax, purchases: [philadelphia, legacyOnly] },
+  { ...useTax, purchases: [philadelphia, { ...allegheny, original: { ...allegheny.original, locality: '' } }] },
+  { ...useTax, purchases: [philadelphia, { ...allegheny, original: { ...allegheny.original, locality: 'philadelphia' } }] },
+  { ...useTax, locality: 'philadelphia', purchases: [philadelphia, allegheny] },
+  { ...useTax, purchases: [legacyOnly] },
+ ]) expect(() => calculatePAOrdinaryReturnFacts(input, { ...facts, useTax: badUseTax })).toThrow(/locality/i);
+});
 it('PA ordinary facts reconcile actual elections to fresh overpayment',()=>{const {input,facts}=paOrdinaryReturnFactsFixture();facts.disposition={kind:'allocation',sourceReference:'Actual elected31',refundRequested:'10',nextYearCreditRequested:'20',donations:[{code:'A',amount:'1'}]};const p=calculatePAOrdinaryReturnFacts(input,facts);expect(()=>reconcilePAOrdinaryReturnDisposition(p,new Decimal(31))).not.toThrow();expect(()=>reconcilePAOrdinaryReturnDisposition(p,new Decimal(32))).toThrow(/allocation|overpayment/i);});
 it.each(['unknownCategory','futureReceipt','unknownWithholding','wrongOwner','unknownPrior','unknownRefund','scalarPenalty','missingPaymentDate'])('PA ordinary facts reject missing or contradictory %s',kind=>{const {input,facts}=paOrdinaryReturnFactsFixture();const raw:Record<string,unknown>=structuredClone(facts);if(kind==='unknownCategory')delete facts.sp.categories['2'];if(kind==='futureReceipt'){facts.timing.kind='filed';facts.timing.asOfDate='2024-01-01';}if(kind==='unknownWithholding')delete input.w2s[0].stateTaxWithheld;if(kind==='wrongOwner')facts.owner.originalTaxpayer.ssn='999-99-9999';if(kind==='unknownPrior')Object.assign(facts.payments.priorReturn,{status:'unknown'});if(kind==='unknownRefund')Object.assign(facts.disposition,{refundRequested:undefined});if(kind==='scalarPenalty')raw.penalty='0';if(kind==='missingPaymentDate')Object.assign(facts.timing.remainingTaxPayment,{date:undefined});expect(()=>calculatePAOrdinaryReturnFacts(input,kind==='scalarPenalty'?raw:facts)).toThrow();});
 it('PA ordinary facts retain actual service wages apart from taxable residency income',()=>{const {input,facts}=paOrdinaryReturnFactsFixture('part_year');expect(calculatePAOrdinaryReturnFacts(input,facts).actualPAServiceCompensation.toString()).toBe('6000');});

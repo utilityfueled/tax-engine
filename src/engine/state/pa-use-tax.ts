@@ -123,6 +123,12 @@ export interface PAUseTaxSalesTaxPaidEntry {
   salesTaxPaid: Decimal;
 }
 
+export function getPAUseTaxRate(taxYear: number, locality: PAUseTaxLocality): Decimal {
+  const constants = PA_USE_TAX_CONSTANTS[taxYear];
+  if (!constants) throw new Error(`PA Use Tax Worksheet constants not available for tax year ${taxYear}`);
+  return constants[locality].rate;
+}
+
 function calculateEstimatedTableUseTax(
   paTaxableIncome: Decimal,
   config: PAUseTaxTableConfig,

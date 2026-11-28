@@ -6,7 +6,7 @@ import {calculateW2StateLocalSources} from '@/engine/forms/w2-state-local.js';
 import type {TaxYearInput} from '@/models/inputs.js';import type {CalculatedLine} from '@/models/outputs.js';
 import {PAOrdinaryReturnFactsSchema,PA_SP_OTHER_LINES,type PAOrdinaryReturnFacts} from '@/models/pa-ordinary-return-facts.js';
 import {PAResidencySourcesSchema} from '@/models/pa-residency.js';import {roundDollar} from '@/utils/decimal.js';import {AuditTrail} from '@/utils/audit.js';
-import {calculatePAResidencySources} from './pa-residency-sources.js';import {calculateScheduleSP} from './pa-schedule-sp.js';import {calculatePAUseTax} from './pa-use-tax.js';
+import {calculatePAResidencySources} from './pa-residency-sources.js';import {calculateScheduleSP} from './pa-schedule-sp.js';import {calculatePAUseTax,getPAUseTaxRate} from './pa-use-tax.js';
 import type {PA2026GovernmentUnemploymentContext} from './pa-2026-unemployment-source.js';
 const fail=(s:string):never=>{throw new Error('PA ordinary return sources: '+s);};
 const ref=(s:string)=>{if(!s.trim())fail('actual source reference is required');};
@@ -124,12 +124,46 @@ export function calculatePAOrdinaryReturnFacts(input:TaxYearInput,raw:unknown,un
  }
  if(input.taxpayer.dependents.length!==reviewedIndices.size)return fail('review every actual federal dependent through its qualified PA child or documented nonchild source method');
  let claimingHouseholdQualifies:boolean|undefined;if(f.claimedAsDependentOnAnotherReturn){if(!f.claimingHouseholdSP)return fail('dependent claimant needs actual completed claiming-household SP');const household=f.claimingHouseholdSP;if(ssn(household.original.accountSsn)===ssn(actual.ssn))return fail('claiming household taxpayer must be another actual taxpayer, not the dependent claimant');if(!household.original.claimedDependentSsns.some(s=>ssn(s)===ssn(actual.ssn)))return fail('actual household SP does not claim this dependent');claimingHouseholdQualifies=replaySP(household,y).forgivenessPercentage.gt(0);}else if(f.claimingHouseholdSP)return fail('claiming-household SP contradicts nondependent source');
- let use=new Money(0);const u=facts.useTax;ref(u.sourceReference);
- if(u.status==='none'){if(u.purchases?.length||u.locality||u.classificationConfirmed===true)return fail('no taxable purchases contradicts retained itemized use-tax sources');}
- else if(u.status==='itemized'&&u.locality&&u.classificationConfirmed===true&&u.purchases?.length){let goods=new Money(0),services=new Money(0),paid=new Money(0);const seen=new Set<string>();const entries=[];
-  for(const p of u.purchases){ref(p.sourceReference);ref(p.original.receiptNumber);currentDay(p.date,y);if(p.kind===''||p.date!==p.original.date||!localMoney(p.taxableAmount).eq(localMoney(p.original.amount))||!localMoney(p.allowableTaxPaid).eq(localMoney(p.original.taxPaid)))return fail('actual classified purchase and original date/amount/tax differ');const key=normalizedName(p.original.receiptNumber);if(seen.has(key))return fail('duplicate original purchase receipt');seen.add(key);const base=localMoney(p.taxableAmount),tax=localMoney(p.allowableTaxPaid);if(p.kind==='goods')goods=goods.plus(base);else services=services.plus(base);paid=paid.plus(tax);entries.push({taxablePurchaseAmount:base,salesTaxPaid:tax});}
-  use=calculatePAUseTax({taxYear:y,paTaxableIncome:income.totalOrdinaryPATaxableIncome,locality:u.locality,taxableItemPurchases:goods,taxableServicePurchases:services,electEstimatedTable:false,salesTaxAlreadyPaid:paid,salesTaxAlreadyPaidEntries:entries}).totalUseTaxLiability;
- }else return fail('actual use-tax purchase classification, locality and originals are required');
+ let use = new Money(0);
+ const u = facts.useTax;
+ ref(u.sourceReference);
+ const perPurchaseLocality = u.purchases?.some(purchase => purchase.locality !== undefined || purchase.original.locality !== undefined);
+ if (u.status === 'none') {
+  if (u.purchases?.length || u.locality || u.classificationConfirmed === true) return fail('no taxable purchases contradicts retained itemized use-tax sources');
+ } else if (u.status === 'itemized' && u.classificationConfirmed === true && u.purchases?.length) {
+  if (perPurchaseLocality && (y !== 2026 || u.locality !== undefined)) return fail('original locality for each 2026 purchase cannot be combined with a legacy locality');
+  if (!perPurchaseLocality && !u.locality) return fail('each purchase requires its actual original locality');
+  const seen = new Set<string>();
+  let exactUseTax = new Money(0), goods = new Money(0), services = new Money(0), paid = new Money(0);
+  const entries = [];
+  for (const purchase of u.purchases) {
+   ref(purchase.sourceReference);
+   ref(purchase.original.receiptNumber);
+   currentDay(purchase.date, y);
+   const base = localMoney(purchase.taxableAmount), tax = localMoney(purchase.allowableTaxPaid);
+   if (purchase.kind === '' || purchase.date !== purchase.original.date || !base.eq(localMoney(purchase.original.amount))
+    || !tax.eq(localMoney(purchase.original.taxPaid))) return fail('actual classified purchase and original date/amount/tax differ');
+   const key = normalizedName(purchase.original.receiptNumber);
+   if (seen.has(key)) return fail('duplicate original purchase receipt');
+   seen.add(key);
+   if (perPurchaseLocality) {
+    if (!purchase.locality || purchase.locality !== purchase.original.locality) return fail('each purchase requires matching original delivery or use locality');
+    if (purchase.date > asOf) return fail('actual use-tax purchase date cannot be later than the confirmed filing-source as-of date');
+    const liability = base.times(getPAUseTaxRate(y, purchase.locality));
+    exactUseTax = exactUseTax.plus(Money.max(0, liability.minus(tax)));
+   } else {
+    if (purchase.kind === 'goods') goods = goods.plus(base);
+    else services = services.plus(base);
+    paid = paid.plus(tax);
+    entries.push({ taxablePurchaseAmount: base, salesTaxPaid: tax });
+   }
+  }
+  if (u.locality) {
+   use = calculatePAUseTax({ taxYear: y, paTaxableIncome: income.totalOrdinaryPATaxableIncome, locality: u.locality,
+    taxableItemPurchases: goods, taxableServicePurchases: services, electEstimatedTable: false,
+    salesTaxAlreadyPaid: paid, salesTaxAlreadyPaidEntries: entries }).totalUseTaxLiability;
+  } else use = roundDollar(exactUseTax);
+ } else return fail('actual use-tax purchase classification, locality and originals are required');
  const disposition=facts.disposition;ref(disposition.sourceReference);const refund=localWhole(disposition.refundRequested),next=localWhole(disposition.nextYearCreditRequested);const codes=new Set<string>();
  const donations=disposition.donations.map(d=>{if(d.code==='H')return fail('donation H requires its actual Schedule P successor');if(!['A','B','C','D','E','F','G','I','J'].includes(d.code)||codes.has(d.code))return fail('actual donation code is unsupported or duplicate');codes.add(d.code);const amount=localWhole(d.amount);if(!amount.gt(0))return fail('actual donation must be positive');return {code:d.code,amount};});
  if(donations.length>5||disposition.kind===''||(disposition.kind==='no_overpayment'&&(!refund.eq(0)||!next.eq(0)||donations.length)))return fail('actual overpayment allocation is unknown or contradictory');
@@ -137,7 +171,7 @@ export function calculatePAOrdinaryReturnFacts(input:TaxYearInput,raw:unknown,un
  const commitment=bytesToHex(sha256(new TextEncoder().encode(stable({version:'pa-ordinary-return-facts-v1',input:snapshotPAOrdinaryReturnOriginals(input),paResidencySources:sourcePacket,paReciprocitySources:(input as TaxYearInput&{paReciprocitySources?:unknown}).paReciprocitySources,facts}))));const audit=new AuditTrail();
  audit.record('PA-Ordinary-Return-Sources','source','Original source commitment',new Money(0),'SHA256 binds current private originals, replayed PA income packets and complete source facts',{sourceCommitment:commitment});
  for(const [line,value] of Object.entries({...other,'6':outside}))audit.record('PA-Ordinary-Return-Sources','SP-'+line,'Reported source eligibility income',value,'Aggregate actual source category once, then report whole dollars');
- audit.record('PA-Ordinary-Return-Sources','estimated-payments','Actual estimated receipts',estimates,'Sum exact current-owner actual receipts with unique semantic identities');audit.record('PA-Ordinary-Return-Sources','use-tax','Actual itemized use tax',use,'Replay actual single-locality worksheet; no inferred locality or scalar override');
+ audit.record('PA-Ordinary-Return-Sources','estimated-payments','Actual estimated receipts',estimates,'Sum exact current-owner actual receipts with unique semantic identities');audit.record('PA-Ordinary-Return-Sources','use-tax','Actual itemized use tax',use,perPurchaseLocality?'Sum original purchase balances at their verified localities; no inferred locality or scalar override':'Replay actual single-locality worksheet; no inferred locality or scalar override');
  return {facts,sourceCommitment:commitment,methodVersion:'pa-ordinary-return-facts-v1',taxYear:y,paFilingChoice:f.choice as 'S'|'F',paTaxableIncome:income.totalOrdinaryPATaxableIncome,paWithholding:publicOrdinaryMoney(withholding),estimatedPayments:publicOrdinaryMoney(estimates),extensionPayment:publicOrdinaryMoney(extension),priorCreditCarryforward:publicOrdinaryMoney(credit),quarterlyEstimatedPayments:[publicOrdinaryMoney(quarterly[0]),publicOrdinaryMoney(quarterly[1]),publicOrdinaryMoney(quarterly[2]),publicOrdinaryMoney(quarterly[3])],hasNonendpointEstimatedPayment,hasEarlyExtensionPayment,priorYearPATaxableIncome:priorIncome===undefined?undefined:publicOrdinaryMoney(priorIncome),priorYearTaxForgivenessCredit:priorForgiveness===undefined?undefined:publicOrdinaryMoney(priorForgiveness),priorYear100PercentForgiveness:prior100,spOutsidePAIncome:publicOrdinaryMoney(outside),spOtherIncomeByLine:Object.fromEntries(Object.entries(other).map(([line,value])=>[line,publicOrdinaryMoney(value)])),spNontaxableIncome:publicOrdinaryMoney(nontax),spDependentChildren:childIndices.size,claimedAsDependent:f.claimedAsDependentOnAnotherReturn,claimingHouseholdQualifies,actualPAServiceCompensation:publicOrdinaryMoney(service),useTax:publicOrdinaryMoney(use),timing,refundRequested:publicOrdinaryMoney(refund),nextYearCreditRequested:publicOrdinaryMoney(next),donations:donations.map(row=>({...row,amount:publicOrdinaryMoney(row.amount)})),lines:publicOrdinaryLines(audit.getLines())};
 }
 export function reconcilePAOrdinaryReturnDisposition(projection:PAOrdinaryReturnProjection,reportedOverpayment:Decimal):void{const Money=Decimal.clone({precision:ordinarySourcePrecision(projection.refundRequested,projection.nextYearCreditRequested,projection.donations,reportedOverpayment),rounding:Decimal.ROUND_HALF_UP});const total=projection.donations.reduce((sum,d)=>sum.plus(d.amount),new Money(projection.refundRequested).plus(projection.nextYearCreditRequested));if(!reportedOverpayment.isFinite()||reportedOverpayment.lt(0)||!reportedOverpayment.eq(roundDollar(reportedOverpayment))||!total.eq(reportedOverpayment))fail('actual allocation must reconcile exactly with fresh reported overpayment');}

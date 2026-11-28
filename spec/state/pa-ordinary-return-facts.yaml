@@ -26,8 +26,31 @@ lines:
     testRef: "tests/engine/state/pa-ordinary-return-facts.test.ts::PA ordinary facts retain resident Final Return source choice"
   - line: "use-tax"
     description: "Actual itemized purchase worksheet"
-    formula: "Explicit no taxable purchases or actual single-locality itemized purchase receipts and classified taxable goods/services, allowable tax actually paid. Never infer locality from address or accept precomputed tax override."
+    formula: >-
+      Require explicit no taxable purchases or classified itemized goods and
+      services with original receipt amounts, allowable tax paid and distinct
+      receipt identities. In the 2026 purchase-by-purchase method, match each
+      purchase locality to its original delivery or use record. The matching
+      actual purchase and receipt date must be on or before the confirmed
+      filing-source as-of date. Apply the same check when reopening saved
+      evidence. Reject missing or contradictory locality and any combination
+      of the legacy global locality with purchase-level evidence. Multiply each taxable amount by
+      its locality's 6%, 7%, or 8% rate and subtract allowable tax paid on that
+      purchase up to its own liability. Sum exact balances and round the annual
+      amount once. Reopen retained single-locality records through the existing
+      worksheet. Editing their 2026 purchases requires original per-purchase
+      locality. Never infer locality from the taxpayer address or a different
+      purchase and never accept a precomputed tax override.
+    sources:
+      - "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/sales-use-and-hotel-occupancy-tax/use-tax/use-tax-for-individuals"
+      - "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/sales-use-and-hotel-occupancy-tax/local-sales-tax"
+      - "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf (rounding and prior sales tax per item)"
     testRef: "tests/engine/state/pa-ordinary-return-facts.test.ts::PA ordinary facts calculate actual itemized use tax"
+    testRefs:
+      - "tests/engine/state/pa-ordinary-return-facts.test.ts::PA ordinary facts calculate 2026 use tax at each verified purchase locality"
+      - "tests/engine/state/pa-ordinary-return-facts.test.ts::PA ordinary facts reject unresolved 2026 purchase localities"
+      - "tests/apps/web/pa-ordinary-facts-native.test.tsx::confirms mixed 2026 use-tax localities from each purchase original"
+      - "tests/apps/web/pa-ordinary-facts-native.test.tsx::holds future 2026 use-tax receipts on confirmation and reopen"
   - line: "disposition"
     description: "Actual refund/credit/donation allocation"
     formula: "Require actual requested whole-dollar refund, credit and up to5 unique published donation codes; H needs ScheduleP successor. Sum must equal fresh reported29. No automatic refund election."
