@@ -15,6 +15,24 @@ the latest application revision, exact-source runs and open dependencies. The
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. The ARM64 group and the AMD64 jobs for `fc7c3bd9` await runner assignment. The older ARM64 comparison failed nine strict browser cases after image and recovery passed. Qualify both final runtime images before publishing. |
 
+## November 27 shared AI probe costs and joint-student education review
+
+- `17d1dc024` exports billed capability probes and unresolved maximums once
+  per profile, with actual and January task cost per accepted run. Reports
+  honor observation and reconciliation cutoffs. A refreshed historical
+  journal can report an undated charge separately. The exact commit passed
+  169 focused tests, eight static checks and the CLI TypeScript check.
+  Independent engineering review repeated all 106 runner, scorer and CLI
+  tests. The synthetic example reconciled $0.00024 between the $0.00006
+  probe and $0.00018 in case attempts. Provider calls and promotion were disabled.
+- `f8c87ff72` adds the documented joint-return student-spouse path to the
+  private Form 8863 transfer review. The guided example with either spouse
+  supplying the employment-valid SSN confirmed $600 refundable and $700
+  nonrefundable at $168,000 MAGI. The reopened PDF retained blank identity
+  fields. The exact commit passed 242 focused tests and eight static checks.
+  Both source-specific scenarios passed independent engineering review.
+  Public exports and filing remain gated. [Final 2026 form](https://www.irs.gov/pub/irs-prior/f8863--2026.pdf) · [Draft instructions](https://www.irs.gov/pub/irs-dft/i8863--dft.pdf)
+
 ## November 27 exact local release checks on fc7c3bd96
 
 All 11 retained checks passed from the exact `fc7c3bd96` archive. The unit

@@ -4,7 +4,9 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "fc7c3bd96f5158cade397ae9c13d16a3347d3054",
-    "latestScopedApplicationCommit": "fc7c3bd96f5158cade397ae9c13d16a3347d3054",
+    "latestScopedApplicationCommit": "f8c87ff7261e3f673a8bbc79ad7be6e7eaefb261",
+    "latestAiCapabilityAccountingEvidenceKey": "activeContinuation.nov27AiCapabilityAccounting",
+    "latestForm8863StudentSpouseEvidenceKey": "activeContinuation.nov27Form8863StudentSpouse",
     "latestCombinedCandidateCommit": "fc7c3bd96f5158cade397ae9c13d16a3347d3054",
     "nov27FullBrowserCollectionEvidenceKey": "activeContinuation.nov27FullBrowserCollection",
     "latestScopedChecksEvidenceKey": "activeContinuation.nov27GuidedOwnedHomeForm8829",
@@ -210,6 +212,29 @@
     ]
   },
   "activeContinuation": {
+    "nov27AiCapabilityAccounting": {
+      "commit": "17d1dc0243ea1a94db5b9ca54e5bd4b7b458d233",
+      "archiveSha256": "28c0f2d9d2b912ef3b10ff91c4fb2c97e5159b90032404b8419b95095bb3b6dd",
+      "localEvidenceMarker": "nov27-ai-capability-accounting-stage-path",
+      "focusedTestsPassed": 169,
+      "staticChecksPassed": 8,
+      "cliTypecheckPassed": true,
+      "independentEngineeringTestsPassed": 106,
+      "paidProviderRequests": 0,
+      "promotionAuthorized": false
+    },
+    "nov27Form8863StudentSpouse": {
+      "commit": "f8c87ff7261e3f673a8bbc79ad7be6e7eaefb261",
+      "archiveSha256": "b0517131f6f788132a33eb87f7a7ed181095c1728de64389884fac923d129a6d",
+      "localEvidenceMarker": "nov27-form8863-student-identity-path",
+      "focusedTestsPassed": 242,
+      "staticChecksPassed": 8,
+      "independentEngineeringTestsPassed": 13,
+      "finalBlank": "https://www.irs.gov/pub/irs-prior/f8863--2026.pdf",
+      "draftInstructions": "https://www.irs.gov/pub/irs-dft/i8863--dft.pdf",
+      "qualifiedHumanTaxReview": false,
+      "qualifiedFilingExport": false
+    },
     "nov27GuidedOwnedHomeForm8829Combined": {
       "commit": "fc7c3bd96f5158cade397ae9c13d16a3347d3054",
       "exactArchiveSha256": "50e482e367389c5de097d4c090f422a33d69550cb36780b7ae6a3d83565ab5c7",
