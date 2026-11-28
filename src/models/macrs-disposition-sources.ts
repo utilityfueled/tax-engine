@@ -3,6 +3,10 @@ import { z } from 'zod';
 import Decimal from 'decimal.js';
 import { MACRS_GDS_200DB_HALF_YEAR, MACRS_GDS_200DB_MID_QUARTER, MACRS_RESIDENTIAL_RENTAL_MID_MONTH, MACRS_NONRESIDENTIAL_REAL_MID_MONTH, type MACRSConvention, type MACRSMethod } from '@/models/constants.js';
 import { roundDollar } from '@/utils/decimal.js';
+import { sumSourceMoney, sumSourceMoneyValues } from '@/utils/sum-source-money.js';
+import { sumSourceMoneyRatios } from '@/utils/sum-source-money-ratios.js';
+
+const PERCENT_DENOMINATOR = new Decimal(100);
 const money = z.string().refine(v => /^\d+(\.\d+)?$/.test(v) && new Decimal(v).isFinite());
 const ref = z.string().min(1).max(500).refine(v => v.trim().length > 0);
 function calendarDate(v: string): boolean {
@@ -107,7 +111,7 @@ export function resolveMACRSDispositionSources(asset: DispositionAsset, taxYear:
             fail('nonzero elections, adjustments or ADS history unsupported');
     if (s.history.length !== recoveryYear - 1)
         fail('complete contiguous prior-year history required');
-    let prior = new Decimal(0);
+    const priorDeductions: Decimal[] = [];
     const references = new Set<string>();
     for (const [rowIndex, row] of s.history.entries()) {
         if (row.taxYear !== pisYear + rowIndex || references.has(row.sourceReference))
@@ -116,11 +120,15 @@ export function resolveMACRSDispositionSources(asset: DispositionAsset, taxYear:
         if (!new Decimal(row.originalMacrsBasis).eq(basis) || !new Decimal(row.businessUsePercentage).eq(100) || ![row.section179Deduction, row.bonusDeduction, row.otherBasisAdjustments].every(v => new Decimal(v).isZero()))
             fail('historical basis, use or deductions changed');
         const allowed = new Decimal(row.regularAllowedOrAllowable);
-        if (!allowed.eq(row.regularClaimed) || !allowed.eq(roundDollar(basis.times(table[rowIndex]).div(100))))
+        const expected = roundDollar(sumSourceMoneyRatios([{
+            amount: basis, numerator: table[rowIndex], denominator: PERCENT_DENOMINATOR,
+        }]));
+        if (!allowed.eq(row.regularClaimed) || !allowed.eq(expected))
             fail('actual prior allowed and claimed history must reconcile to the original table');
-        prior = prior.plus(allowed);
+        priorDeductions.push(allowed);
     }
-    const remaining = basis.minus(prior);
+    const prior = sumSourceMoneyValues(priorDeductions);
+    const remaining = sumSourceMoney(basis, prior.negated());
     if (!remaining.gt(0) || !remaining.eq(s.adjustedBasisAtYearStart) || !prior.eq(s.assetSnapshot.cumulativePriorMacrsDeductions))
         fail('actual opening adjusted basis and prior depreciation do not reconcile');
     const month = Number(s.dispositionDate.slice(5, 7));

@@ -24,6 +24,18 @@ lines:
     description: "Single rounding and no source/history bypass"
     formula: "10005.20*19.20%*1/2=960.4992 ->960, never round annual first to1921 then halve to961. Missing disposal sources, first/terminal recovery, wrong dates/year, unknown history or unsupported property throw explicitly, including aggregate/listed entrypoints. No original source or canonical amount is rewritten."
     testRef: "tests/utils/macrs-ordinary-disposition.test.ts::rounds once and refuses unsupported or incomplete disposition paths"
+  - line: "source-precision"
+    description: "Preserve original depreciation history and the fractional disposition boundary"
+    formula: >-
+      Compute each prior table amount at exact source precision before rounding that year
+      to whole dollars. Sum the verified whole-dollar amounts and subtract them from the
+      original basis without losing any source digits. Carry the original convention and
+      annual rate as one rational share, compare it to the opening basis, and preserve
+      the correct side of the half-dollar boundary until rounding the current deduction.
+      Reject prior amounts or opening basis that only agree at reduced working precision.
+    testRef: "tests/utils/macrs-ordinary-disposition.test.ts::reconciles each prior deduction and opening basis at full source precision"
+    testRefs:
+      - "tests/utils/macrs-ordinary-disposition.test.ts::preserves repeating mid-month amounts on both sides of a half dollar"
   - line: "explicit-form-owner-year-audit"
     description: "Require actual Form4562 owner year and private-safe disposal audit"
     formula: "Any asserted disposal or packet requires explicit ownerTaxYear or input.taxYear; never select historical default2025 for source admission. Preserve conflict rejection. Add safe money/date/fraction/status audit only, without original references, identity or asset description; keep parent activity/Form4797 linkage unqualified. Mixed first-year source and prior-year disposal packets remain unsupported."

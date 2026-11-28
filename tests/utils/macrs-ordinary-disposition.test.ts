@@ -5,6 +5,35 @@ import { computeAssetDepreciation, computeAggregateDepreciation, computeListedPr
 import { calculateForm4562 } from '@/engine/forms/form-4562.js';
 import { dispositionFixture } from './macrs-disposition-fixtures.js';
 const direct = (v: unknown) => v as DepreciableAsset;
+
+function withActualHistory(
+    asset: ReturnType<typeof dispositionFixture>,
+    basis: string,
+    priorDeductions: readonly string[],
+    cumulative: string,
+    openingBasis: string,
+) {
+    const sources = asset.dispositionSources;
+    return {
+        ...asset,
+        costBasis: basis,
+        cumulativePriorMacrsDeductions: cumulative,
+        dispositionSources: {
+            ...sources,
+            grossCostBasis: basis,
+            originalMacrsBasis: basis,
+            adjustedBasisAtYearStart: openingBasis,
+            assetSnapshot: { ...sources.assetSnapshot, costBasis: basis, cumulativePriorMacrsDeductions: cumulative },
+            history: sources.history.map((row, index) => ({
+                ...row,
+                originalMacrsBasis: basis,
+                regularAllowedOrAllowable: priorDeductions[index],
+                regularClaimed: priorDeductions[index],
+            })),
+        },
+    };
+}
+
 describe('Ordinary source-bound nonterminal MACRS disposal', () => {
     it('reproduces the published quarter and residential disposal examples', () => {
         for (const [kind, want, raw] of [['quarter', '513', '513'], ['residential', '758', '757.5']] as const) {
@@ -55,6 +84,37 @@ describe('Ordinary source-bound nonterminal MACRS disposal', () => {
                 ...half, costBasis: '0'
             }])
             expect(() => computeAssetDepreciation(direct(changed), 2025)).toThrow();
+    });
+    it('reconciles each prior deduction and opening basis at full source precision', () => {
+        const original = dispositionFixture('half');
+        const basis = '1000000000000000000013';
+        const prior = ['200000000000000000003', '320000000000000000004'];
+        const cumulative = '520000000000000000007';
+        const openingBasis = '480000000000000000006';
+        const staleHistory = withActualHistory(original, basis, ['200000000000000000000', '320000000000000000000'],
+            '520000000000000000000', '480000000000000000000');
+        expect.soft(() => computeAssetDepreciation(direct(staleHistory), 2025)).toThrow(/prior allowed and claimed history/i);
+        expect.soft(() => computeAssetDepreciation(direct(withActualHistory(original, basis, prior, cumulative,
+            '480000000000000000005')), 2025)).toThrow(/opening adjusted basis/i);
+        const exact = withActualHistory(original, basis, prior, cumulative, openingBasis);
+        const result = computeAssetDepreciation(DepreciableAssetSchema.parse(exact), 2025);
+        expect(result?.dispositionAudit?.priorAllowedOrAllowable.toFixed()).toBe(cumulative);
+        expect(result?.dispositionAudit?.openingAdjustedBasis.toFixed()).toBe(openingBasis);
+        expect(result?.dispositionAudit?.preRoundDepreciation.toFixed()).toBe('96000000000000000001.248');
+        expect(result?.depreciation.toFixed()).toBe('96000000000000000001');
+    });
+    it('preserves repeating mid-month amounts on both sides of a half dollar', () => {
+        const original = dispositionFixture('residential');
+        original.recoveryPeriod = '39';
+        original.dispositionSources.assetSnapshot.recoveryPeriod = '39';
+        const prior = ['14124000000000000001', '30768000000000000002'];
+        const cumulative = '44892000000000000003';
+        // March 39-year disposition: basis × 2.564% × 2.5/12 = basis × 641/120,000.
+        for (const [lastDigit, expected] of [['2', '6410000000000000000'], ['3', '6410000000000000001']]) {
+            const asset = withActualHistory(original, `1200000000000000000093.6037441497659906396${lastDigit}`, prior,
+                cumulative, `1155108000000000000090.6037441497659906396${lastDigit}`);
+            expect(computeAssetDepreciation(DepreciableAssetSchema.parse(asset), 2025)?.depreciation.toFixed()).toBe(expected);
+        }
     });
     it('uses all four actual disposition quarters and preserves annual rate separately', () => {
         const base = dispositionFixture();

@@ -32,6 +32,7 @@ import {
 } from "@/models/constants.js";
 import { d, roundDollar } from "@/utils/decimal.js";
 import { sumSourceMoneyValues } from "@/utils/sum-source-money.js";
+import { sumSourceMoneyRatios } from "@/utils/sum-source-money-ratios.js";
 import { resolveMACRSAssetBasisSources, type MACRSBasisSourceAmounts, type MACRSBasisSourceStatus } from "@/models/macrs-asset-basis-sources.js";
 
 import { resolveMACRSDispositionSources } from "@/models/macrs-disposition-sources.js";
@@ -75,7 +76,11 @@ export function computeAssetDepreciation(
 ): AssetDepreciationResult | null {
   const disposition = resolveMACRSDispositionSources(asset, taxYear);
   if (disposition) {
-    const uncappedDepreciation = disposition.originalMacrsBasis.times(disposition.annualPercentage).div(100).times(disposition.fractionNumerator).div(disposition.fractionDenominator);
+    const uncappedDepreciation = sumSourceMoneyRatios([{
+      amount: applyPercentage(disposition.originalMacrsBasis, disposition.annualPercentage),
+      numerator: disposition.fractionNumerator,
+      denominator: disposition.fractionDenominator,
+    }]);
     const preRoundDepreciation = Decimal.min(uncappedDepreciation, disposition.remainingBasis);
     return { description: asset.description ?? "", costBasis: disposition.originalMacrsBasis,
       basisSourceStatus: "legacy_unqualified", dispositionSourceStatus: "documented_ordinary_nonterminal",
