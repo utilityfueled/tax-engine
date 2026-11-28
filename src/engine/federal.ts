@@ -90,6 +90,7 @@ import { calculateForeignTaxOrdinaryCredit } from "./forms/foreign-tax-ordinary-
 import { validateForeignTaxDeductionScope } from "./forms/foreign-tax-deduction-scope.js";
 import { calculateScheduleB } from "./schedules/schedule-b.js";
 import { calculateScheduleC } from "./schedules/schedule-c.js";
+import { assertObservedProfessionalWageringDates } from "./schedules/schedule-c-wagering-sources.js";
 import { calculateScheduleD, recomputeCarryforward } from "./schedules/schedule-d.js";
 import { calculateK1CharitableReturnSources } from "./forms/k1-charitable-return-sources.js";
 import { calculateScheduleE } from "./schedules/schedule-e.js";
@@ -298,6 +299,16 @@ type FederalInputWithRentalUseDate = TaxYearInput & { [rentalUseAsOfDate]?: stri
 function calculateFederalTaxReturn(input: TaxYearInput, context?: { asOfDate?: string }): TaxReturnResult {
   if (duplicate2026ReturnTaxIdentifierIndexes(input.taxpayer).length) {
     throw new Error(HOUSEHOLD_TAX_IDENTIFIER_CONFLICT);
+  }
+  const professionalW2G = input.scheduleC?.professionalWagering?.w2gSources;
+  if (input.taxpayer.taxYear === 2026 && professionalW2G) {
+    const today = currentLocalCivilDate();
+    const asOfDate = context?.asOfDate ?? today;
+    if (!isActualDate(asOfDate) || asOfDate > today) {
+      throw new Error("Professional Form W-2G requires a valid calculation as-of date on or before today.");
+    }
+    const originals = input.formW2G?.filter(form => "winningDate" in form) ?? [];
+    assertObservedProfessionalWageringDates([...professionalW2G.statements, ...originals], asOfDate);
   }
   if (input.taxpayer.taxYear === 2026 && input.rentalProperties?.some(property => property.rentalUseAllocationSources !== undefined)) {
     const today = currentLocalCivilDate();

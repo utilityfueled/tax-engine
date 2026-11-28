@@ -82,6 +82,42 @@ it('keeps linked winnings out of Schedule 1 even when every original has zero wi
   expect(result.totalWithholding.toFixed()).toBe('0');
 });
 
+it('holds future Box 2 dates before posting professional winnings or withholding', () => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date(2026, 10, 28, 12));
+  try {
+    const original = source();
+    const ledgerRow = original.scheduleC.professionalWagering.w2gSources.statements[0];
+    const statement = original.formW2G[0];
+    statement.winningDate = ledgerRow.winningDate = '2026-11-28';
+    const sameDay = TaxYearInputSchema.parse(original);
+    const result = calculateFederalTax(sameDay, { asOfDate: '2026-11-28' });
+    expect(result.totalIncome.toFixed()).toBe('1200.105');
+    expect(result.totalWithholding.toFixed()).toBe('1200.01');
+    expect(() => calculateFederalTax(sameDay, { asOfDate: '2026-11-27' })).toThrow(/Box 2.*as-of date/i);
+    expect(() => calculateFederalTax(sameDay, { asOfDate: '2026-11-29' })).toThrow(/valid calculation as-of date/i);
+
+    for (const datedSource of [statement, ledgerRow]) {
+      datedSource.winningDate = '2026-12-31';
+      expect(() => calculateFederalTax(TaxYearInputSchema.parse(original))).toThrow(/Box 2.*as-of date/i);
+      datedSource.winningDate = '2026-11-28';
+    }
+
+    for (const withholding of ['1200.01', '0']) {
+      statement.federalWithheld = ledgerRow.federalWithheld = withholding;
+      statement.winningDate = ledgerRow.winningDate = '2026-12-31';
+      const future = TaxYearInputSchema.parse(original);
+      expect(() => calculateFederalTax(future)).toThrow(/Box 2.*as-of date/i);
+    }
+    statement.winningDate = ledgerRow.winningDate = '2026-11-28';
+    const zero = calculateFederalTax(TaxYearInputSchema.parse(original));
+    expect(zero.totalIncome.toFixed()).toBe('1200.105');
+    expect(zero.totalWithholding.toFixed()).toBe('0');
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
 it('rejects changed or duplicated statements and unqualified state compositions', () => {
   const original = source();
   const parsed = TaxYearInputSchema.parse(original);

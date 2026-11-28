@@ -1,9 +1,19 @@
 import type { ScheduleCProfessionalWagering, TaxYearInput } from '@/models/inputs.js';
+import { isActualDate } from '@/utils/civil-date.js';
 import { d } from '@/utils/decimal.js';
 
 type WageringStatementInput = Partial<Pick<TaxYearInput, 'formW2G' | 'stateReturns' | 'ohioResidency' | 'paResidencySources'>> & {
   taxpayer: { taxYear: number; primary: { ssn: string } };
 };
+
+export function assertObservedProfessionalWageringDates(
+  statements: readonly { winningDate: string }[],
+  asOfDate: string,
+): void {
+  if (statements.some(({ winningDate }) => !isActualDate(winningDate) || winningDate > asOfDate)) {
+    throw new Error('Form W-2G Box 2 requires the actual date won on or before the as-of date.');
+  }
+}
 
 /** Bind the reported subset to its original ledger and retain federal withholding. */
 export function reconcileProfessionalWageringStatements(

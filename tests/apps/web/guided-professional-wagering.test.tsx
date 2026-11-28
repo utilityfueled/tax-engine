@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
 // Spec: spec/federal/schedule-c-wagering-2026.yaml
 import React, { useState } from 'react';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { SectionSelfEmployment } from '@/components/guided-interview/section-self-employment';
 import { SectionReview } from '@/components/guided-interview/section-review';
 import { calculateScheduleC } from '@/engine/schedules/schedule-c';
 import { buildGuidedFactAnswers, buildTaxInputFromGuidedData } from '@/lib/guided-interview-bridge';
-import { emptyDeductionData, startInterview, updateSectionData, validateSection } from '@/lib/guided-interview-flow';
+import { emptyDeductionData, parseGuidedFlowState, startInterview, updateSectionData, validateSection } from '@/lib/guided-interview-flow';
 import { createWorkspaceRecord } from '@/lib/workspace-storage';
 import { TaxYearInputSchema } from '@/models/inputs';
 import { completeBusinessSection, completePersonalInfo } from '../../guided-interview/complete-facts';
@@ -175,5 +175,57 @@ it('reconciles guided W-2G originals before retaining federal withholding', asyn
     expect(build()).toBeNull();
   } finally {
     await panel.dispose();
+  }
+});
+
+it('holds a future Box 2 date after reopening the confirmed originals', () => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date(2026, 10, 28, 12));
+  try {
+    const interview = startInterview({ filingStatus: 'single', incomeTypes: ['self-employment'], lifeEvents: [], stateCode: null }, 2026);
+    const owner = { ...structuredClone(completePersonalInfo), spouse: undefined };
+    const state = updateSectionData(interview, 'personal-info', owner);
+    const section = 'income-self-employment';
+    const withDate = (winningDate: string) => {
+      const business = {
+        ...structuredClone(completeBusinessSection),
+        businessFacts: {
+          ...completeBusinessSection.businessFacts,
+          activityDescription: 'Professional wagering', businessCode: '713200',
+          professionalWagering: {
+            ledgerReference: 'synthetic-ledger', grossTaxableWageringGains: '5000.01',
+            wageringLosses: '4000.05', otherwiseDeductibleWageringExpenses: '0',
+            fullCalendarYearConfirmed: true, completeDomesticProfessionalActivityConfirmed: true,
+            noOtherActivityOrDuplicatedAmountsConfirmed: true, noW2GOriginalsConfirmed: null,
+            w2gSources: {
+              individualOriginalsAndLedgerInclusionConfirmed: true, otherGrossTaxableWageringGains: '0',
+              statements: [{
+                sourceId: 'synthetic-original', ledgerEntry: 'synthetic-slot', payer: 'Synthetic Slot Payer',
+                payerTin: '95-8765432', recipientTinLast4: '3333', winningDate,
+                reportableWinnings: '5000.01', recognizedLedgerGain: '5000.01', federalWithheld: '1200.01',
+              }],
+            },
+          },
+        },
+      };
+      const entered = updateSectionData(state, section, business);
+      const confirmed = updateSectionData(entered, section, business);
+      return parseGuidedFlowState(JSON.stringify(confirmed));
+    };
+
+    const sameDay = withDate('2026-11-28');
+    expect(validateSection(sameDay, section).status).toBe('complete');
+    const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(sameDay));
+    const result = calculateScheduleC(input);
+    expect(result.grossReceipts.toFixed()).toBe('5000.01');
+    expect(result.professionalW2GWithholding?.toFixed()).toBe('1200.01');
+
+    const future = withDate('2026-12-31');
+    expect(validateSection(future, section).fieldErrors?.professionalWagering).toMatch(/Box 2.*as-of date/i);
+    expect(buildTaxInputFromGuidedData(future)).toBeNull();
+    const savedDate = future.sectionData[section]?.businessFacts?.professionalWagering?.w2gSources?.statements[0].winningDate;
+    expect(savedDate).toBe('2026-12-31');
+  } finally {
+    vi.useRealTimers();
   }
 });

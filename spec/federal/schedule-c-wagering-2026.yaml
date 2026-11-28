@@ -57,6 +57,24 @@ lines:
     formula: "Require matching year, payer, owner, date, amounts and complete federal-only source classifications. Reject additional fields on linked forms, including unqualified local-tax amounts. Do not default absent box 4 or treat two copies of one payment as two statements."
     irsRef: "January 2026 Instructions for Forms W-2G and 5754, section 3"
     testRef: "tests/engine/federal-professional-w2g-2026.test.ts::rejects changed or duplicated statements and unqualified state compositions"
+  - line: "W-2G box 2 observation date"
+    description: "Require original slot transactions to have occurred before their paid proceeds or withholding enter the return"
+    formula: >-
+      For the 2026 professional ledger with linked originals, hold dates won
+      later than the observation date. Check both the ledger record and the
+      linked Form W-2G before including Schedule C line 1 receipts or Form 1040
+      line 25c withholding, even when actual box 4 is zero. Allow a transaction
+      on the observation date. The guided collector uses the current local
+      civil date and retains incomplete source facts for correction after
+      reopening. The federal boundary uses the calculation caller's valid
+      as-of date no later than today or defaults to today's local civil date.
+      Box 2 establishes the date won. It does not establish the payment date
+      for other payment or timing methods. Preserve the historical and
+      unlinked recreational methods.
+    irsRef: "https://www.irs.gov/instructions/iw2g (January 2026 instructions, section 3, boxes 1, 2 and 4)"
+    testRef: "tests/engine/federal-professional-w2g-2026.test.ts::holds future Box 2 dates before posting professional winnings or withholding"
+    testRefs:
+      - "tests/apps/web/guided-professional-wagering.test.tsx::holds a future Box 2 date after reopening the confirmed originals"
   - line: "guided exclusive professional ledger"
     description: "Preserve confirmed calendar-year wagering sources in guided Schedule C"
     formula: >

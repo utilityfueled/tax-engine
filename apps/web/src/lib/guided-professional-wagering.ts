@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { reconcileProfessionalWageringStatements } from '@/engine/schedules/schedule-c-wagering-sources';
+import { assertObservedProfessionalWageringDates, reconcileProfessionalWageringStatements } from '@/engine/schedules/schedule-c-wagering-sources';
 import { FormW2GSchema, ScheduleCProfessionalWageringSchema } from '@/models/inputs';
+import { currentLocalCivilDate } from '@/utils/civil-date';
 import type { BusinessSourceData } from './guided-business-facts';
 import { isStartedNec } from './guided-compensation-reporting';
 import { parseGuidedCurrency } from './guided-currency';
@@ -111,6 +112,9 @@ export function readGuidedProfessionalWagering(data: SelfEmploymentSectionData, 
     throw new Error('Enter the complete professional ledger, actual amounts and confirmations. Complete each added Form W-2G and its ledger link.');
   }
   const ledger = packet.data;
+  if (ledger.w2gSources) {
+    assertObservedProfessionalWageringDates(ledger.w2gSources.statements, currentLocalCivilDate());
+  }
   const forms = ledger.w2gSources?.statements.map(row => FormW2GSchema.parse({
     taxYear: ledger.taxYear, accountHolder: 'primary', typeOfWager: 'slots', prizeType: 'cash',
     sourceId: row.sourceId, payer: row.payer, payerTin: row.payerTin, winningDate: row.winningDate,
