@@ -23,6 +23,22 @@ jq '.resume | {latestScopedApplicationCommit, remaining}' docs/upgrade-2026-chec
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local Chromium and encrypted recovery passed. [Exact Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/46123814219), [CI](https://github.com/utilityfueled/tax-engine/actions/runs/46123814311) and [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/46123814368) remained queued. [ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/46120985997) remained pending on the earlier revision. The previous ARM64 image and Compose checks passed and the strict browser check failed nine cases. |
 
+## November 28 guided ordinary Form 6198 Part II originals
+
+`19fc8c5e6` collects the original ordinary partnership K-1, opening basis,
+current at-risk worksheet and any needed current outside-basis workpaper
+from the normal guided interview. The saved positive control transfers
+$4,000 once and retains $2,000 at risk. The saved basis-limited control
+retains $1,000 at the basis step and $2,000 at risk, with a $3,000 deduction.
+An explicit zero remains a recorded answer. Missing originals, competing
+K-1 packets and a changed owner require review, including a taxpayer ID
+edit that keeps the same last four digits. The exact package passed
+1050 tests and eight static checks. Independent engineering passed
+112 tests and all seven scoped spec references. The implementation
+inventory links both 2026 specs to the canonical engine and leaves
+packet and filing qualification open. [IRS Form 6198 instructions](https://www.irs.gov/instructions/i6198)
+· [IRS Schedule K-1 instructions](https://www.irs.gov/instructions/i1065sk1)
+
 ## November 28 original outside-basis and at-risk carries
 
 `924a53fa8` reconciles the actual current outside-basis workpaper before

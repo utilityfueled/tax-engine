@@ -5513,16 +5513,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/instructions/i6198",
       "specPath": "spec/federal/2026/form-6198-guided-part-ii.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/forms/form-6198-part-ii-2026.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/guided-interview/guided-form-6198-part-ii.test.ts::reopens ordinary 2026 Form 6198 records and transfers the limited loss once",
+        "tests/guided-interview/guided-form-6198-part-ii.test.ts::reopens current outside-basis proof and separates the basis and at-risk losses"
+      ],
+      "implementationNote": "Saved guided original records feed the ordinary 2026 calculation and check owner changes. Qualified human review, final packet and e-file validation remain open.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -5533,16 +5537,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/instructions/i6198",
       "specPath": "spec/federal/2026/form-6198-part-ii.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/forms/form-6198-part-ii-2026.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/forms/form-6198-part-ii-2026.test.ts::transfers the source-backed Form 6198 limit through Schedule E and federal income",
+        "tests/engine/forms/form-6198-part-ii-2026.test.ts::separates original outside-basis and at-risk suspended amounts"
+      ],
+      "implementationNote": "Original 2026 ordinary nonpassive partnership Part II and separate basis and at-risk carries. Part III, negative at-risk recapture, qualified packet and e-file validation remain open.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
