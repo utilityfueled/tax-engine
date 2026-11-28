@@ -70,13 +70,16 @@ function actualTransferWorkpapers(input: TaxYearInput) {
   };
 }
 
-function actualJointSpouseReturn(studentHasEligibleSsn = false) {
+function actualJointAotcReturn(studentHasEligibleSsn = false, studentRole: "primary" | "spouse" = "spouse") {
   const start = startCompleteInterview({ filingStatus: "mfj", incomeTypes: ["w2"], lifeEvents: [], stateCode: null });
   const personal = start.sectionData["personal-info"];
   if (!personal?.spouse) throw new Error("Missing synthetic joint household");
-  const spouse = { ...personal.spouse, employmentValidSsnIssuedByDueDate: studentHasEligibleSsn, tinIssuedByDueDate: true };
+  const primarySsnEligible = studentRole === "primary" ? studentHasEligibleSsn : !studentHasEligibleSsn;
+  const spouseSsnEligible = !primarySsnEligible;
+  const spouse = { ...personal.spouse, employmentValidSsnIssuedByDueDate: spouseSsnEligible, tinIssuedByDueDate: true };
+  const student = studentRole === "primary" ? personal : spouse;
   const withPersonal = updateSectionData({ ...start, taxYear: 2026 }, "personal-info", {
-    ...personal, spouse, dateOfBirth: "2005-12-15", employmentValidSsnIssuedByDueDate: !studentHasEligibleSsn,
+    ...personal, spouse, dateOfBirth: "2005-12-15", employmentValidSsnIssuedByDueDate: primarySsnEligible, tinIssuedByDueDate: true,
   });
   const withWages = updateSectionData(withPersonal, "income-w2", { entries: [{ ...completeW2Entry, sourceTaxYear: "2026",
     wages: "168000", socialSecurityWages: "168000", socialSecurityWithheld: "10416", medicareWages: "168000", medicareWithheld: "2436",
@@ -84,15 +87,16 @@ function actualJointSpouseReturn(studentHasEligibleSsn = false) {
   const withEducation = updateSectionData(withWages, "credits", {
     ...emptyCreditsData,
     education: { ...emptyCreditsData.education, ...completeEducationClaimant, aotcClaimantFactsTaxYear: 2026,
-      primarySsnEligible: !studentHasEligibleSsn, spouseSsnEligible: studentHasEligibleSsn,
-      aocStudents: [{ ...completeAocEligibility, name: "  TAYLOR   Example  ", studentTaxId: spouse.ssn.replaceAll("-", ""), studentRole: "spouse",
+      primarySsnEligible, spouseSsnEligible,
+      aocStudents: [{ ...completeAocEligibility, name: `  ${student.firstName.toUpperCase()}   ${student.lastName}  `,
+        studentTaxId: student.ssn.replaceAll("-", ""), studentRole,
         studentSsnEligible: studentHasEligibleSsn, studentTinEligible: true, qualifiedExpenses: "4000", priorYearsClaimed: "3" }],
     },
   });
   return TaxYearInputSchema.parse(buildTaxInputFromGuidedData(withEducation));
 }
 
-function jointSpouseTransferWorkpapers(input: TaxYearInput) {
+function jointAotcTransferWorkpapers(input: TaxYearInput) {
   return { ...actualTransferWorkpapers(input), form1040Line11a: "168000", creditLimitWorksheetRemainingTax: "700",
     form8863Line6: "0.600", form8863Line8: "600", form8863Line19: "700" };
 }
@@ -259,8 +263,8 @@ describe("Final 2026 Form 8863 physical candidate", () => {
     const { renderPrivateForm88632026TransferReview } = await import("@/pdf/mappings/2026/form-8863-transfer-review.js");
     const [candidate, template] = await Promise.all([mapping(), readFile(blank)]);
     for (const studentHasEligibleSsn of [false, true]) {
-      const input = actualJointSpouseReturn(studentHasEligibleSsn);
-      const workpapers = jointSpouseTransferWorkpapers(input);
+      const input = actualJointAotcReturn(studentHasEligibleSsn);
+      const workpapers = jointAotcTransferWorkpapers(input);
       const reopened = await PDFDocument.load(await renderPrivateForm88632026TransferReview(input, workpapers, template));
       const values = reopened.getForm().getFields().flatMap(field => field instanceof PDFTextField && field.getText()
         ? [[field.getName(), field.getText()]] : []);
@@ -269,10 +273,42 @@ describe("Final 2026 Form 8863 physical candidate", () => {
     }
   });
 
+  it("reopens verified joint primary AOTC transfers without identity fields", async () => {
+    const { renderPrivateForm88632026TransferReview } = await import("@/pdf/mappings/2026/form-8863-transfer-review.js");
+    const [candidate, template] = await Promise.all([mapping(), readFile(blank)]);
+    for (const studentHasEligibleSsn of [false, true]) {
+      const input = actualJointAotcReturn(studentHasEligibleSsn, "primary");
+      const reopened = await PDFDocument.load(await renderPrivateForm88632026TransferReview(input, jointAotcTransferWorkpapers(input), template));
+      const values = reopened.getForm().getFields().flatMap(field => field instanceof PDFTextField && field.getText()
+        ? [[field.getName(), field.getText()]] : []);
+      expect(values).toEqual([[candidate.fields.line8, "600"], [candidate.fields.line19, "700"]]);
+      expect(reopened.getForm().getCheckBox(candidate.fields.line7RefundableRestriction).isChecked()).toBe(false);
+    }
+  });
+
+  it("holds contradictory primary student SSN evidence and shared household TINs on a joint return", async () => {
+    const { projectForm88632026Transfers } = await import("@/pdf/mappings/2026/form-8863-candidate.js");
+    const input = actualJointAotcReturn(false, "primary");
+    const education = input.educationExpenses;
+    const spouse = input.taxpayer.spouse;
+    if (!education || !spouse) throw new Error("Missing synthetic joint student facts");
+    const [student] = education.aocStudents;
+    const inconsistentStudent = {
+      ...input, educationExpenses: { ...education, aocStudents: [{ ...student, studentSsnEligible: true }] },
+    };
+    expect(() => projectForm88632026Transfers(inconsistentStudent, jointAotcTransferWorkpapers(inconsistentStudent)))
+      .toThrow(/student.*SSN.*conflict/i);
+    const sharedTin = {
+      ...input, taxpayer: { ...input.taxpayer, spouse: { ...spouse, ssn: input.taxpayer.primary.ssn } },
+    };
+    expect(() => projectForm88632026Transfers(sharedTin, jointAotcTransferWorkpapers(sharedTin)))
+      .toThrow(/student.*identity/i);
+  });
+
   it("holds contradictory or unverified joint student-spouse evidence", async () => {
     const { projectForm88632026Transfers } = await import("@/pdf/mappings/2026/form-8863-candidate.js");
-    const input = actualJointSpouseReturn();
-    const workpapers = jointSpouseTransferWorkpapers(input);
+    const input = actualJointAotcReturn();
+    const workpapers = jointAotcTransferWorkpapers(input);
     const education = input.educationExpenses;
     const spouse = input.taxpayer.spouse;
     if (!education || !spouse) throw new Error("Missing synthetic joint student facts");
@@ -293,7 +329,7 @@ describe("Final 2026 Form 8863 physical candidate", () => {
       [{ ...input, taxpayer: { ...input.taxpayer, primary: { ...input.taxpayer.primary, employmentValidSsnIssuedByDueDate: false } },
         educationExpenses: { ...education, primarySsnEligible: false } }, /at least one.*employment-valid SSN/i],
     ] as const) {
-      expect(() => projectForm88632026Transfers(changed, jointSpouseTransferWorkpapers(changed))).toThrow(expected);
+      expect(() => projectForm88632026Transfers(changed, jointAotcTransferWorkpapers(changed))).toThrow(expected);
     }
     expect(() => projectForm88632026Transfers(withSpouse({ lastName: "Changed" }), workpapers)).toThrow(/current canonical return/);
     expect(() => projectForm88632026Transfers(input, { ...workpapers, form8863Line6: "0.400" })).toThrow(/exact.*line 6/i);

@@ -78,6 +78,18 @@ lines:
     testRef: "tests/pdf/form-8863-2026-candidate.test.ts::reopens verified joint student-spouse AOTC transfers without identity fields"
     testRefs:
       - "tests/pdf/form-8863-2026-candidate.test.ts::holds contradictory or unverified joint student-spouse evidence"
+  - line: "private-joint-primary-aotc-transfer-review"
+    description: "Verify the documented primary student on a joint return"
+    formula: >-
+      Apply the joint one-student original workpaper contract when the primary
+      spouse is the student. Confirm that spouse's return identity and timely
+      TIN. Reconcile the student SSN answer to the primary claimant answer.
+      Either spouse may establish the timely employment-valid SSN requirement.
+      Keep the same joint phase-out, refundable calculation and redaction.
+    irsRef: "2026 draft Form 8863 instructions, identification requirements and lines 7, 20 and 21 (https://www.irs.gov/pub/irs-dft/i8863--dft.pdf)"
+    testRef: "tests/pdf/form-8863-2026-candidate.test.ts::reopens verified joint primary AOTC transfers without identity fields"
+    testRefs:
+      - "tests/pdf/form-8863-2026-candidate.test.ts::holds contradictory primary student SSN evidence and shared household TINs on a joint return"
   - line: "private-student-return-name"
     description: "Verify line 20 identity without printing it in the private transfer review"
     formula: "Require the positive primary AOTC student's name to match the actual return name by spelling and punctuation, ignoring differences in case and whitespace. Hold a blank or mismatched name even when current workpapers match the canonical input hash. Leave line 20 and all other identity widgets blank on the private PDF."

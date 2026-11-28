@@ -797,6 +797,21 @@ exact-factor workpapers; the shorter factor requires separate review.
 [Final 2026 Form 8863](https://www.irs.gov/pub/irs-prior/f8863--2026.pdf) ·
 [Draft 2026 Form 8863 instructions](https://www.irs.gov/pub/irs-dft/i8863--dft.pdf).
 
+### November 27 single-student AOTC on a joint return
+
+Use a joint return with $168,000 of Form 1040 line 11a income, zero excluded
+income, a $2,500 tentative AOTC for the student spouse and $700 available from
+the credit-limit worksheet. The student spouse is 21 and otherwise meets the
+student, institution and qualified payment requirements. In the first case,
+only the primary spouse has a timely employment-valid SSN and the student has
+a timely ITIN. In the second case, only the student spouse has a timely
+employment-valid SSN and the primary spouse has a timely ITIN. Independently
+derive lines 7, 8 and 19 in each case. Repeat with the primary spouse as the
+student and the same two SSN assignments. State which name and TIN lines 20
+and 21 require and how the joint return affects the under-24 test.
+[Final 2026 Form 8863](https://www.irs.gov/pub/irs-prior/f8863--2026.pdf) ·
+[Draft 2026 Form 8863 instructions](https://www.irs.gov/pub/irs-dft/i8863--dft.pdf).
+
 ## November 27 commercial clean vehicle credit and carryback
 
 For a single calendar-year taxpayer materially participating in a sole

@@ -162,16 +162,18 @@ export function projectForm88632026Transfers(rawInput: TaxYearInput, rawWorkpape
     || education.nonresidentAlien !== false || input.standardDeductionFacts?.nonresidentAlien === true
     || input.standardDeductionFacts?.dualStatusAlien === true || education.aocBanInEffect !== false
     || education.form8862Required !== false) {
-    throw new Error("Form 8863 review requires one ordinary AOTC claim for a single filer or a student spouse on a joint return.");
+    throw new Error("Form 8863 review requires one ordinary AOTC claim for a single filer or either spouse on a joint return.");
   }
   const [student] = education.aocStudents;
   const school = student.institutions?.[0];
+  const role = student.studentRole;
   const primaryTin = primary.ssn.replaceAll("-", "");
-  const person = joint ? spouse : primary;
+  const spouseTin = spouse?.ssn.replaceAll("-", "");
+  const person = role === "primary" ? primary : joint && role === "spouse" ? spouse : undefined;
   const studentTin = person?.ssn.replaceAll("-", "");
-  if (!person || !/^\d{9}$/.test(primaryTin) || !studentTin || !/^\d{9}$/.test(studentTin)
-    || student.studentRole !== (joint ? "spouse" : "primary") || student.studentTaxId?.replaceAll("-", "") !== studentTin
-    || (joint && (primaryTin === studentTin || !primary.firstName.trim() || !primary.lastName.trim()))) {
+  if (!person || !/^\d{9}$/.test(primaryTin) || student.studentTaxId?.replaceAll("-", "") !== studentTin
+    || (joint && (!spouse || !spouseTin || !/^\d{9}$/.test(spouseTin) || primaryTin === spouseTin
+      || !primary.firstName.trim() || !primary.lastName.trim() || !spouse.firstName.trim() || !spouse.lastName.trim()))) {
     throw new Error("Form 8863 review student identity must match the actual return household role.");
   }
   const name = educationStudentReturnName(student.name, person);
@@ -182,13 +184,14 @@ export function projectForm88632026Transfers(rawInput: TaxYearInput, rawWorkpape
 
   const primarySsnEligible = joint ? jointClaimantSsn(primary, education.primarySsnEligible, "primary")
     : education.primarySsnEligible ?? primary.employmentValidSsnIssuedByDueDate;
-  const spouseSsnEligible = joint ? jointClaimantSsn(person, education.spouseSsnEligible, "spouse") : undefined;
+  const spouseSsnEligible = joint && spouse ? jointClaimantSsn(spouse, education.spouseSsnEligible, "spouse") : undefined;
   if (joint) {
     if (education.primaryTinEligible !== undefined && ((primary.tinIssuedByDueDate !== undefined
       && education.primaryTinEligible !== primary.tinIssuedByDueDate) || (primarySsnEligible === true && !education.primaryTinEligible))) {
       throw new Error("Form 8863 review primary timely TIN answers conflict with the joint return.");
     }
-    if (spouseSsnEligible === undefined || (student.studentSsnEligible !== undefined && student.studentSsnEligible !== spouseSsnEligible)) {
+    const studentSsnEligible = role === "spouse" ? spouseSsnEligible : primarySsnEligible;
+    if (studentSsnEligible === undefined || (student.studentSsnEligible !== undefined && student.studentSsnEligible !== studentSsnEligible)) {
       throw new Error("Form 8863 review student SSN answers are unknown or conflict with the joint return.");
     }
     if (primarySsnEligible !== true && spouseSsnEligible !== true) {
