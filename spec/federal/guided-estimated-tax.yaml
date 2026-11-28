@@ -11,9 +11,11 @@ lines:
     testRef: "tests/guided-interview/guided-estimated-tax-facts.test.ts::preserves actual prior history and known zero without creating missing facts"
   - line: "payment-origin"
     description: "Applied credits retain actual IRS-effective dates"
-    formula: "Each dated applied-credit entry links an actual prior-return credit; exact linked amounts must conserve that original source. Never derive an effective date from the originating tax year. Estimated/extension/return payments retain their distinct categories and dates."
+    formula: "Each dated applied-credit entry links an actual prior-return credit. Sum the linked amounts exactly at the precision of the canonical source strings, including explicit zero, before comparing with that original credit. Never derive an effective date from the originating tax year. Estimated/extension/return payments retain their distinct categories and dates."
     irsRef: "Form2210 Instructions PartIII line11 and Table1"
     testRef: "tests/guided-interview/guided-estimated-tax-facts.test.ts::reconciles actual effective credit dates per original source"
+    testRefs:
+      - "tests/guided-interview/guided-estimated-tax-facts.test.ts::reconciles reopened applied credits beyond shared Decimal precision without losing cents"
   - line: "return-payment-overlap"
     description: "Reconcile a balance-due payment that matches a federal estimate or extension payment"
     formula: >-
@@ -66,9 +68,19 @@ lines:
     testRef: "tests/apps/web/estimated-tax-source-interactions.test.tsx::collects actual history and dates while preserving unknowns and exact amounts"
   - line: "withholding-and-proven-zero"
     description: "Actual timing must reconcile and actual zero can prove a safe harbor"
-    formula: "The statutory tax-minus-withholding under1000 exception applies regardless of timing. Otherwise canonical withholding sources reconcile every elected dated amount:2025 single85000 wages has10155 table tax and9140 withholding on December31 gives248 penalty. An actual no-tax-liability/full-year citizenship or residence history can establish zero penalty for2026 without inventing an unpublished future rate."
+    formula: >-
+      An elected 2026 actual withholding date must be observed on or before the
+      calculation as-of civil date. Keep the reported dates and amounts in the
+      saved draft, including zero. The statutory tax-minus-withholding under1000
+      exception applies regardless of timing. Otherwise canonical withholding
+      sources reconcile every elected dated amount:2025 single85000 wages has10155
+      table tax and9140 withholding on December31 gives248 penalty. An actual
+      no-tax-liability/full-year citizenship or residence history can establish
+      zero penalty for2026 without inventing an unpublished future rate.
     irsRef: "Form2210 Instructions Exceptions and PartIII line11"
     testRef: "tests/guided-interview/guided-estimated-tax-facts.test.ts::binds actual withholding dates to canonical withholding and supports proven2026 zero"
+    testRefs:
+      - "tests/guided-interview/guided-estimated-tax-facts.test.ts::holds future elected 2026 withholding dates in reopened drafts and canonical input"
   - line: "prior-tax-multiplier"
     description: "Collect prior tax before the high-income multiplier"
     formula: "Actual prior-year tax5000 and prior AGI150001 establish a5500 prior-year comparison for a2025 single filer, applying110% exactly once. Timely actual payments of1375 per installment establish zero penalty."

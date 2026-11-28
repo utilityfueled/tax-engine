@@ -87,6 +87,23 @@ export function assertActualFederalBalanceDueDates(
   }
 }
 
+export function assertActualFederalWithholdingDates(
+  taxYear: number,
+  facts: Pick<NonNullable<TaxYearInput["form2210"]>, "withholdingMethod" | "withholdingPayments"> | undefined,
+  calculationAsOfDate?: string,
+): void {
+  if (taxYear !== 2026 || facts?.withholdingMethod !== "actual-dates" || !facts.withholdingPayments?.length) return;
+  const asOfDate = actualPaymentAsOfDate(calculationAsOfDate);
+  for (const { date } of facts.withholdingPayments) {
+    if (!actualDate.safeParse(date).success || !date.startsWith(`${taxYear}-`)) {
+      throw new Error("Form 2210 actual withholding requires a valid date within the return year.");
+    }
+    if (date > asOfDate) {
+      throw new Error("Form 2210 actual withholding dates must be on or before the calculation as-of date.");
+    }
+  }
+}
+
 export function assertFederalPaymentSources(
   input: Pick<TaxYearInput, "taxpayer" | "adjustments" | "form2210">,
   calculationAsOfDate?: string,
@@ -96,6 +113,7 @@ export function assertFederalPaymentSources(
     .filter(payment => payment.type === "federal");
   const paymentAsOfDate = year === 2026 && datedPayments.length > 0 ? actualPaymentAsOfDate(calculationAsOfDate) : undefined;
   assertActualFederalBalanceDueDates(year, input.form2210, paymentAsOfDate ?? calculationAsOfDate);
+  assertActualFederalWithholdingDates(year, input.form2210, paymentAsOfDate ?? calculationAsOfDate);
   const receiptReferences = new Set<string>();
   const receiptByDateAndAmount = new Map<string, boolean>();
   const assertDistinctPositiveReceipt = (payment: { date: string; amount: string; receiptReference?: string }) => {

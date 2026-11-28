@@ -147,7 +147,10 @@ lines:
       Estimated-payment totals must match their dated sources. A prior-year
       credit generated after April15 keeps its actual effective date. Withholding
       is divided by law, not represented as actual payroll dates. Actual-date
-      election must reconcile all withholding. Return and extension payments
+      election must reconcile all withholding. For 2026, elected withholding
+      dates must be valid civil dates in the return year on or before the trusted
+      calculation as-of date, which defaults to the runtime civil date, even
+      if an exception makes the penalty zero. Return and extension payments
       stop accrual on their actual effective dates; neither moves the April15 end.
       For 2026, each positive bank or IRS payment must appear once across
       federal estimates, extension payments and balance-due return payments.
@@ -160,6 +163,8 @@ lines:
     testRefs:
       - "tests/engine/federal-payment-date-sources.test.ts::holds 2026 balance-due duplicates before they reduce the installment penalty"
       - "tests/engine/federal-payment-date-sources.test.ts::keeps independently documented 2026 installment payments and legacy 2025 entries"
+      - "tests/guided-interview/guided-estimated-tax-facts.test.ts::holds future elected 2026 withholding dates in reopened drafts and canonical input"
+      - "tests/engine/federal-payment-date-sources.test.ts::validates elected 2026 withholding dates before the under-1000 exception"
 
   - line: "actual-balance-due-chronology"
     description: Validate observed payment, filing and full-payment dates before using the 2026 facts

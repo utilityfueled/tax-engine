@@ -60,6 +60,39 @@ it("reconciles actual effective credit dates per original source", () => {
   payments.priorYearAppliedCredits[0].amount = "";
   expect(() => buildEstimatedTaxFacts(payments, 2025)).toThrow(/amount|refund/i);
 });
+it("reconciles reopened applied credits beyond shared Decimal precision without losing cents", () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 10, 27, 12));
+  const priorYearCreditPayments = [
+    { appliedCreditIndex: "0", date: "2026-04-15", amount: "1,000,000,000,000,000,000" },
+    { appliedCreditIndex: "0", date: "2026-06-15", amount: "0.01" },
+    { appliedCreditIndex: "1", date: "2026-09-15", amount: "0.00" },
+  ];
+  const reopen = (originalAmount: string) => {
+    const state = stateWith({
+      ...emptyPaymentData,
+      estimatedTaxFacts: { ...filedPriorReturnFacts2026(), priorYearCreditPayments },
+      priorYearAppliedCredits: [{ sourceTaxYear: "2025", amount: originalAmount }, { sourceTaxYear: "2025", amount: "0.00" }],
+    });
+    const reopened = parseGuidedFlowState(JSON.stringify({ ...state, taxYear: 2026 }));
+    if (!reopened) throw new Error("Expected the applied-credit draft to reopen");
+    expect(reopened.sectionData.payments?.estimatedTaxFacts?.priorYearCreditPayments).toEqual(priorYearCreditPayments);
+    return reopened;
+  };
+  const exact = reopen("1,000,000,000,000,000,000.01");
+  expect.soft(validateSection(exact, "payments").status).toBe("complete");
+  const canonical = TaxYearInputSchema.safeParse(buildTaxInputFromGuidedData(exact));
+  expect.soft(canonical.success).toBe(true);
+  if (canonical.success) {
+    expect(canonical.data.adjustments?.priorYearAppliedCredits?.map(credit => credit.amount)).toEqual(["1000000000000000000.01", "0.00"]);
+    expect(canonical.data.form2210?.priorYearCreditPayments).toEqual([
+      { date: "2026-04-15", amount: "1000000000000000000" }, { date: "2026-06-15", amount: "0.01" }, { date: "2026-09-15", amount: "0" },
+    ]);
+  }
+  const rounded = reopen("1,000,000,000,000,000,000");
+  expect.soft(validateSection(rounded, "payments").fieldErrors?.estimatedTaxFacts).toMatch(/reconcile/u);
+  expect.soft(buildTaxInputFromGuidedData(rounded)).toBeNull();
+});
 it("holds a repeated January estimated payment through Payments, bridge and draft replay", () => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date(2027, 0, 15, 12));
@@ -210,6 +243,44 @@ it("holds impossible and future 2026 dates after a payment draft reopens", () =>
       expect(buildTaxInputFromGuidedData(held)).toBeNull();
     }
   }
+});
+it("holds future elected 2026 withholding dates in reopened drafts and canonical input", () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 10, 27, 12));
+  const reopen = (date: string, amount: string, withholdingMethod: EstimatedTaxFactsData["withholdingMethod"] = "actual-dates") => {
+    const withholdingPayments = [{ date, amount }];
+    const state = stateWith({
+      ...emptyPaymentData,
+      estimatedTaxFacts: { ...filedPriorReturnFacts2026(), withholdingMethod, withholdingPayments },
+    });
+    state.sectionData["income-w2"]!.entries[0].federalWithheld = amount;
+    const reopened = parseGuidedFlowState(JSON.stringify({ ...state, taxYear: 2026 }));
+    if (!reopened) throw new Error("Expected the withholding draft to reopen");
+    expect(reopened.sectionData.payments?.estimatedTaxFacts?.withholdingPayments).toEqual(withholdingPayments);
+    return reopened;
+  };
+  const observed = reopen("2026-11-27", "1000.01");
+  expect(validateSection(observed, "payments").status).toBe("complete");
+  const canonical = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(observed));
+  expect(canonical.form2210?.withholdingPayments).toEqual([{ date: "2026-11-27", amount: "1000.01" }]);
+  expect(() => assertFederalPaymentSources(canonical)).not.toThrow();
+  expect.soft(() => assertFederalPaymentSources(canonical, "2026-11-26")).toThrow(/withholding.*as-of date/i);
+  expect(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(reopen("2026-11-27", "0.00"))).form2210?.withholdingPayments).toEqual([{ date: "2026-11-27", amount: "0" }]);
+
+  for (const amount of ["1000.01", "0.00"]) {
+    const pending = reopen("2026-12-31", amount);
+    expect.soft(validateSection(pending, "payments")).toMatchObject({ status: "partial", allowSkip: false, fieldErrors: {
+      estimatedTaxFacts: expect.stringMatching(/withholding.*as-of date/i),
+    } });
+    expect.soft(buildTaxInputFromGuidedData(pending)).toBeNull();
+    const direct = TaxYearInputSchema.parse({
+      ...canonical, form2210: { ...canonical.form2210, withholdingPayments: [{ date: "2026-12-31", amount }] },
+    });
+    expect.soft(() => assertFederalPaymentSources(direct)).toThrow(/withholding.*as-of date/i);
+    expect.soft(() => calculateFederalTax(direct)).toThrow(/withholding.*as-of date/i);
+  }
+  expect(buildTaxInputFromGuidedData(reopen("2026-12-31", "0.00", "equal-installments"))?.form2210?.withholdingPayments)
+    .toEqual([{ date: "2026-12-31", amount: "0" }]);
 });
 it("holds conflicting positive prior-return refunds through Payments and the bridge", () => {
   for (const year of [2025, 2026]) {

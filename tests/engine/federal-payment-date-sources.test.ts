@@ -1,4 +1,4 @@
-// Spec: spec/federal/form-1040.yaml, line 26 and related extension source facts.
+// Specs: spec/federal/form-1040.yaml, line 26; spec/federal/form-2210.yaml, lines 11a-11d.
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/models/constants.js", async importOriginal => {
@@ -92,6 +92,33 @@ describe("Actual federal payment dates and selected return application", () => {
       expect(JSON.stringify(result.allLines)).not.toMatch(/fictional-.*-original/iu);
       const legacy = { date: "2026-04-09", amount: paid.amount };
       expect(datedPenaltyReturn(2025, adjustments([], [{ ...legacy, type: "federal" }]), [legacy]).form2210?.totalPayments.toFixed()).toBe("4000.02");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("validates elected 2026 withholding dates before the under-1000 exception", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 10, 27, 12));
+    try {
+      const runOn = (year: 2025 | 2026, date: string, asOfDate: string, withholdingMethod = "actual-dates") => {
+        const base = raw(year, adjustments());
+        const amount = base.w2s[0].federalWithheld;
+        return calculateFederalTax(TaxYearInputSchema.parse({
+          ...base,
+          form2210: {
+            calendarYearTaxpayer: true, residentReturn: true, farmerOrFisher: false, disasterReliefClaimed: false,
+            waiverRequested: false, calculationMethod: "regular", withholdingMethod, withholdingPayments: [{ date, amount }],
+          },
+        }), { asOfDate });
+      };
+      const observed = runOn(2026, "2026-11-27", "2026-11-27");
+      expect(observed.form2210?.safeHarborReason).toMatch(/< \$1,000/u);
+      expect(observed.form2210?.penalty.toFixed()).toBe("0");
+      expect.soft(() => runOn(2026, "2026-12-31", "2026-11-27")).toThrow(/withholding.*as-of date/i);
+      expect.soft(() => runOn(2026, "2026-11-27", "2026-11-26")).toThrow(/withholding.*as-of date/i);
+      expect(runOn(2026, "2026-12-31", "2026-11-27", "equal-installments").form2210?.penalty.toFixed()).toBe("0");
+      expect(runOn(2025, "2025-12-31", "2025-11-27").form2210?.penalty.toFixed()).toBe("0");
     } finally {
       vi.useRealTimers();
     }

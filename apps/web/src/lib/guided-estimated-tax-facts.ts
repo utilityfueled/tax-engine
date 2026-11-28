@@ -1,7 +1,8 @@
 import Decimal from "decimal.js";
-import { assertActualFederalBalanceDueDates, assertPriorReturnCreditSource } from "@/engine/forms/federal-payment-date-sources";
+import { assertActualFederalBalanceDueDates, assertActualFederalWithholdingDates, assertPriorReturnCreditSource } from "@/engine/forms/federal-payment-date-sources";
 import { buildEstimatedInvestmentElection, type EstimatedInvestmentElectionData } from "./guided-estimated-investment-election";
 import { Form2210Schema, type TaxYearInput } from "@/models/inputs";
+import { sumSourceMoneyValues } from "@/utils/sum-source-money";
 import type { EstimatedPaymentEntry, FilingStatus, PaymentData } from "./guided-interview-flow";
 import { amountError, isActualDate, normalizeFederalPaymentReceiptReference } from "./guided-required-facts";
 import { parseGuidedCurrency, parseGuidedDisplayAmount } from "./guided-currency";
@@ -179,21 +180,23 @@ export function buildEstimatedTaxFacts(
     });
   }
   const withholdingPayments = dated(facts.withholdingPayments, "withholding", true);
+  assertActualFederalWithholdingDates(year, { withholdingMethod: facts.withholdingMethod, withholdingPayments });
   const priorYearCreditPayments = dated(facts.priorYearCreditPayments, "applied-credit", false);
   const datedReturnPayments = dated(facts.returnPayments, "return payment", false, true);
   const returnPayments = year === 2026 ? reconcileReturnPaymentReceipts(data, facts.returnPayments, datedReturnPayments) : datedReturnPayments;
-  const credits = data.priorYearAppliedCredits ?? [], allocated = credits.map(() => new Decimal(0));
+  const credits = data.priorYearAppliedCredits ?? [];
+  const allocated = credits.map((): Decimal[] => []);
   facts.priorYearCreditPayments.forEach((entry, index) => {
     if (!/^(0|[1-9]\d*)$/.test(entry.appliedCreditIndex)) throw new Error("Link each actual effective-date payment to its original applied-refund source.");
     const sourceIndex = Number(entry.appliedCreditIndex), original = credits[sourceIndex];
     if (!Number.isSafeInteger(sourceIndex) || !original || original.sourceTaxYear !== String(taxYear - 1)) throw new Error("The effective-date entry has no matching actual prior-year credit source.");
-    allocated[sourceIndex] = allocated[sourceIndex].plus(priorYearCreditPayments[index].amount);
+    allocated[sourceIndex].push(new Decimal(priorYearCreditPayments[index].amount));
   });
   credits.forEach((credit, index) => {
     if (credit.sourceTaxYear !== String(taxYear - 1)) throw new Error("Applied refund source year must be the actual immediately preceding tax year.");
     const original = new Decimal(money(credit.amount, "original applied refund") as string);
     assertPriorReturnCreditSource(original, facts.priorYearTaxStatus || undefined, filingStatus != null && filingStatus !== "mfj");
-    if (!allocated[index].eq(original) || (original.gt(0) && !facts.priorYearCreditPayments.some(row => row.appliedCreditIndex === String(index)))) throw new Error("Actual effective-date payments must reconcile every original applied-refund source, including zero.");
+    if (!sumSourceMoneyValues(allocated[index]).eq(original)) throw new Error("Actual effective-date payments must reconcile every original applied-refund source, including zero.");
   });
   const early = known(facts.earlyReturnExceptionClaimed, "early filing and full-payment exception");
   const hasDates = !!facts.returnFiledDate || !!facts.returnPaidInFullDate;
