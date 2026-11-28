@@ -1,0 +1,66 @@
+form: "Form 6198 physical candidate for 2026"
+fullName: "At-Risk Limitations, current IRS revision physical field contract"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-pdf/f6198.pdf"
+revision: "Rev. November 2025"
+references:
+  - "https://www.irs.gov/instructions/i6198"
+  - "spec/federal/2026/form-6198-part-ii.yaml"
+  - "spec/federal/2026/form-6198-schedule-c-part-ii.yaml"
+notes: |
+  The IRS blank is a rolling revision. Its title is Form 6198 (Rev. November
+  2025) and its printed footer says Created 9/9/25. The instructions apply to
+  that revision or later. The candidate describes physical fields for tax
+  year 2026, with no calculation, rendering, or qualification of any return.
+  The layout can be checked against a separately supplied original blank by
+  setting TAX_ENGINE_FORM_6198_BLANK to its path. The blank stays local.
+lines:
+  - line: "source"
+    description: "Pin the IRS blank retrieved November 28, 2026"
+    formula: "Record SHA-256 8ae169186ad9f62910e73205ebaeb02a73bc74bb1a47954074ec14e4645a6389, 82547 bytes, one page, the exact title, revision and footer."
+    testRef: "tests/pdf/form-6198-2026-candidate.test.ts::pins the current official revision"
+    testRefs:
+      - "tests/pdf/form-6198-2026-candidate.test.ts::matches the supplied official AcroForm and printed layout"
+  - line: "header"
+    description: "Name(s), identifying number, and description of activity"
+    formula: "Map the three distinct header text widgets in printed order before Part I."
+    testRef: "tests/pdf/form-6198-2026-candidate.test.ts::maps all 34 physical widgets once"
+  - line: "1-5"
+    description: "Part I current-year profit or loss from the activity"
+    formula: |
+      Map line 1 ordinary income or loss, the three disposition cells 2a
+      (Schedule D), 2b (Form 4797), 2c (other), line 3 other income and gains,
+      line 4 other deductions and losses, and line 5 current-year profit or
+      loss. The blank prints parentheses around the line 4 cell.
+    testRef: "tests/pdf/form-6198-2026-candidate.test.ts::maps all 34 physical widgets once"
+  - line: "6-10b"
+    description: "Part II simplified computation of amount at risk"
+    formula: |
+      Map line 6 opening adjusted basis, line 7 increases, line 8 subtotal,
+      line 9 decreases, the inset line 10a subtraction cell, and the separate
+      right-column line 10b nonnegative result cell.
+    testRef: "tests/pdf/form-6198-2026-candidate.test.ts::maps all 34 physical widgets once"
+  - line: "11-19b"
+    description: "Part III detailed computation of amount at risk"
+    formula: |
+      Map the ten amount cells on lines 11 through 19b, including the inset
+      line 19a. Map each independent checkbox widget in the printed pairs.
+      Line 15 chooses effective date or prior-year Form 6198 line 19b.
+      Lines 16 and 18 each choose effective date or the prior year end.
+      In each pair the actual checked appearance states are /1 for option a
+      and /2 for option b. This physical map implements no Part III method.
+    testRef: "tests/pdf/form-6198-2026-candidate.test.ts::maps all 34 physical widgets once"
+  - line: "20-21"
+    description: "Part IV amount at risk and deductible loss"
+    formula: |
+      Map the distinct line 20 amount-at-risk cell and line 21 deductible
+      loss cell. The blank prints parentheses around the line 21 cell.
+      These are layout facts only. No output sign conversion or rounding is
+      provided by the field map.
+    testRef: "tests/pdf/form-6198-2026-candidate.test.ts::maps all 34 physical widgets once"
+    testRefs:
+      - "tests/pdf/form-6198-2026-candidate.test.ts::matches the supplied official AcroForm and printed layout"
+  - line: "release"
+    description: "Preserve the closed 2026 review and filing gates"
+    formula: "Keep the physical candidate unregistered and explicitly disabled for review exports and filing. Independent review stays pending."
+    testRef: "tests/pdf/form-6198-2026-candidate.test.ts::keeps the candidate outside 2026 export and filing"
