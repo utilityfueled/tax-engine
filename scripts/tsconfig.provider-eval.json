@@ -4,5 +4,5 @@
     "noEmit": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
-  "include": ["run-provider-eval.ts", "lib/provider-eval-*.ts"]
+  "include": ["run-provider-eval.ts", "prepare-provider-eval-review.ts", "lib/provider-eval-*.ts"]
 }

@@ -723,7 +723,7 @@
     "packages/engine/src/ai-task-registry.ts": "a57ce7ada7f13d15ac981d11d6253a945568dd8827c0a35f38e6aef7add158cf",
     "packages/engine/src/index.ts": "123e1b8fd429c41facb43493542bad8faafaf8360f4218fac2adda25ab12ecc0",
     "packages/engine/src/provider-direct-identifiers.ts": "32824dda21e7fdb8d14b857c42a2c7f371e7ab49ad802c301d933d2bb59edc26",
-    "packages/engine/src/provider-eval-application.ts": "c46f4e5855727d1fd3985adaf1ac460690edecd8520e4f6148e79a6a2d877128",
+    "packages/engine/src/provider-eval-application.ts": "4f5988895fcd8b95268bde7d52f4d367a3efef15cac3a1a73b7ccc3e75bf9d56",
     "packages/engine/src/provider-eval-cases/classification.ts": "a499ef82806ddf1cb7af984b7f523e7e77902ad10903425db9b34d8133eba1d6",
     "packages/engine/src/provider-eval-cases/expenses.ts": "14f20a4385a1808ea02154626b4363b9f9b45ac7bdd67256d53f93ff403cf453",
     "packages/engine/src/provider-eval-cases/explanation.ts": "be43f5886c252751b4a36d9e75faaeda54c5cb01e1256a39f4c2c45c58cd8681",

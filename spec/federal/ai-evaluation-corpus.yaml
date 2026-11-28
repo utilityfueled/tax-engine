@@ -28,6 +28,17 @@ lines:
     description: "Draft source-bound expected values remain separate from provider input"
     formula: "Literal monetary/date/text oracles, named source IDs and case-specific human review criteria; expected outputs never establish application-schema validation or independent review."
     testRef: "tests/engine/provider-eval-corpus.test.ts::preserves distinct source boundaries and review criteria across every task"
+  - line: "source-first-human-review"
+    description: "Give independent reviewers synthetic facts before showing draft answers"
+    formula: >-
+      Generate a source packet and a blank decision worksheet from the frozen
+      corpus. Both keep the fixture identity, case digest, corpus digest and
+      original split. The source packet shows source input, references and
+      application context, requested field names and kinds, and requested
+      audit IDs. It omits the draft oracle, reviewer criteria and review
+      metadata. The worksheet contains no reviewer assertions or labels.
+      Qualification still requires separately recorded actual human review.
+    testRef: "tests/engine/provider-eval-review-packet.test.ts::prepares every frozen case for independent source-first review"
   - line: "review-admission"
     description: "Preserve frozen authors and reject invalid independence or timing"
     formula: >-

@@ -11,6 +11,12 @@ export const providerEvalBindingManifest = Object.entries(AI_TASKS).map(([task, 
   normalizationStatus: "bound" as const,
 }));
 export type EvalPreflightReason = "missing-verified-context" | "invalid-verified-context" | "cancelled";
+export function providerEvalRequestedFields(fixture: ProviderEvalFixture) {
+  return Object.entries(fixture.expected.fields).map(([name, field]) => ({ name, kind: field.kind }));
+}
+export function providerEvalRequestedAuditIds(fixture: ProviderEvalFixture) {
+  return Object.keys(fixture.expected.engineValues);
+}
 export function prepareProviderEvalCase(fixture: ProviderEvalFixture):
   { kind: "provider"; context: ApplicationGroundingContext } | { kind: "preflight"; reason: EvalPreflightReason } {
   if (fixture.requestContext?.cancelled) return { kind: "preflight", reason: "cancelled" };
@@ -23,7 +29,7 @@ export function prepareProviderEvalCase(fixture: ProviderEvalFixture):
   }
   if (fixture.sourceIds.length !== 1) throw new Error("This frozen source pack requires one explicit source packet identity.");
   return { kind: "provider", context: { sources: [{ id: fixture.sourceIds[0], text: fixture.input }],
-    requestedFields: Object.entries(fixture.expected.fields).map(([name, field]) => ({ name, kind: field.kind })),
+    requestedFields: providerEvalRequestedFields(fixture),
     ...(taxContext ? { taxContext } : {}) } };
 }
 /** Golden values, expected dispositions and review criteria are never model input. */
@@ -33,7 +39,7 @@ export function evaluationRequestContent(fixture: ProviderEvalFixture) {
   const policy = AI_TASKS[fixture.task];
   return { task: fixture.task, promptVersion: policy.promptVersion, schemaVersion: policy.schemaVersion,
     instruction: AI_APPLICATION_INSTRUCTIONS, context: prepared.context,
-    requestedAuditIds: Object.keys(fixture.expected.engineValues) };
+    requestedAuditIds: providerEvalRequestedAuditIds(fixture) };
 }
 export function validateProviderEvalOutput(fixture: ProviderEvalFixture, payload: unknown) {
   const failed = (blocker: string, privacyFailure = false) => ({ output: null, applicationOutput: null,

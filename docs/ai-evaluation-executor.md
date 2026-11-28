@@ -90,16 +90,33 @@ corpus, logs or journal.
 
 ### Independent case review
 
-Make a private copy of the [frozen fixture pack](../prompts/provider-model-eval/fixture-pack.json).
-It contains 160 development cases and 80 held-out cases. For each case,
-review the fictional source, proposed answer or abstention, expected
-fields and case-specific criteria. Independently check money, dates and
-their source records. Record any disagreement by fixture ID. If a case
-needs a different oracle, correct the source corpus before preparing a
-new qualification plan.
+Generate a source packet and blank decision worksheet locally. The first
+pass uses the fictional records, relevant application context, requested
+field names and types, and requested audit IDs. The two files share the corpus digest and
+each case's ID and digest. They preserve all 160 development and 80
+held-out cases. The source packet omits the proposed answers and review
+criteria. The public corpus remains available, so this workflow limits
+anchoring during review and provides no secrecy guarantee.
 
-Keep all frozen content, IDs, splits and `review.author` intact in the
-copy. After a human independent of the case author resolves the review,
+```sh
+mkdir -p .local/ai-eval/case-review
+node --import tsx scripts/prepare-provider-eval-review.ts sources > .local/ai-eval/case-review/sources.json
+node --import tsx scripts/prepare-provider-eval-review.ts decisions > .local/ai-eval/case-review/decisions.json
+```
+
+Independently record the answer or abstention, exact money and dates,
+category or relied-on audit values when applicable, and source references.
+Leave unresolved decisions blank and record any ambiguity in `notes`.
+Keep the independent worksheet, then compare it with the [frozen fixture
+pack](../prompts/provider-model-eval/fixture-pack.json) and its case-specific
+criteria. Record any disagreement by fixture ID. If a case needs a different
+oracle, correct the source corpus before preparing a new qualification plan.
+The worksheets contain no verified reviewer labels and do not feed the
+qualification gate.
+
+In a private copy of the frozen fixture pack, keep all frozen content, IDs,
+splits and `review.author` intact. After a human independent of the case
+author resolves the review,
 set `review.status` to `reviewed`, identify the actual reviewer in
 `review.reviewer` and use the actual ISO date or timestamp in
 `review.reviewedAt`. Leave unresolved cases pending. This offline
