@@ -4,7 +4,7 @@
     "asOf": "2026-11-28",
     "branch": "main",
     "applicationCommit": "57b64cb231e10a4de762e2966c6b5fdf234f5ee3",
-    "latestScopedApplicationCommit": "57b64cb231e10a4de762e2966c6b5fdf234f5ee3",
+    "latestScopedApplicationCommit": "32257efbfd00f9e8122ba7fe2ed784eaa2479d7f",
     "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
     "latestSchedule8812PayrollActcEvidenceKey": "activeContinuation.nov27Schedule8812PayrollActc",
     "latestGuidedHsaCivilDatesEvidenceKey": "activeContinuation.nov27GuidedHsaCivilDates",
@@ -217,6 +217,33 @@
     ]
   },
   "activeContinuation": {
+    "nov28QcdObservedTransferDates": {
+      "commit": "32257efbfd00f9e8122ba7fe2ed784eaa2479d7f",
+      "archiveSha256": "06d61f0de2f94e19bdc7f8b7bd63de597cab4c61c84e66f47e22d9297d321f16",
+      "sourceTree": "9a2d235ce0a75b6b078eac5957acd90a3714a4ac",
+      "localEvidenceMarker": "nov27-qcd-civil-cutoff-path",
+      "exactFocusedTestsPassed": 68,
+      "checksPassed": [
+        "focused",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
+      "implementationRegressionFailuresBeforeFix": 3,
+      "independentEngineeringTestsPassed": 68,
+      "sameDayAndFutureBoundariesVerified": true,
+      "publicFederalExplicitCutoffVerified": true,
+      "savedDraftReplayVerified": true,
+      "filingQualified": false,
+      "sources": [
+        "https://www.irs.gov/publications/p590b"
+      ]
+    },
     "nov28Arm64CompletedComparison": {
       "sourceCommit": "dcfd227f5febe42d318ac8f4ebf1f7fd048caa53",
       "run": 46085907600,

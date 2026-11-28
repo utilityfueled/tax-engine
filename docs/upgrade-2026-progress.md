@@ -15,6 +15,17 @@ the latest application revision, exact-source runs and open dependencies. The
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. Current ARM64 and exact AMD64 jobs for the `57b64cb23` application await runner assignment. The older ARM64 comparison failed nine strict browser cases after archive and recovery passed. Qualify both final runtime images before publishing. |
 
+## November 28 actual IRA charitable transfer dates
+
+`32257efbf` validates when a charitable distribution actually occurred in
+saved guided drafts, direct Form 1099-R calculations and the federal
+return. A 2026 transfer on the calculation date can use the exception.
+Future, missing, impossible and mismatched dates fail before the exclusion
+is calculated. An explicit historical cutoff also applies to the return.
+The three regression tests failed before the fix. Independent engineering
+review passed 68 focused tests. The exact package passed 68 tests
+and eight static checks. [IRS Publication 590-B](https://www.irs.gov/publications/p590b)
+
 ## November 28 earlier ARM64 comparison result
 
 The earlier `dcfd227f5` ARM64 run passed native image and archive
