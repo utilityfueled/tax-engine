@@ -13,7 +13,64 @@ the latest application revision, exact-source runs and open dependencies. The
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
-| Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. The ARM64 group and the AMD64 jobs for `fc7c3bd9` await runner assignment. The older ARM64 comparison failed nine strict browser cases after image and recovery passed. Qualify both final runtime images before publishing. |
+| Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. The ARM64 group and exact AMD64 jobs for `b56ed84a1` await runner assignment. The older ARM64 comparison failed nine strict browser cases after archive and recovery passed. Qualify both final runtime images before publishing. |
+
+## November 28 exact remote queue
+
+The CI, Web and Docker jobs for `b56ed84a1` had no assigned
+runners. The ARM64 incumbent was queued and its successor was pending.
+Vercel recorded canceled automatic production targets for all four
+source commits above this checkpoint's prior baseline. [CI](https://github.com/utilityfueled/tax-engine/actions/runs/46110428404) · [Web](https://github.com/utilityfueled/tax-engine/actions/runs/46110428431) · [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/46110428369) · [ARM64 queue](https://github.com/utilityfueled/tax-engine/actions/runs/46085907600)
+
+## November 28 federal Schedule E rentals with personal use
+
+`b56ed84a1` holds 2026 rentals with known personal-use days at both direct
+Schedule E and federal-return admission until actual expense allocation
+is supported. A regression previously deducted $1,000 of shared expense
+when 90 rental days and ten personal days allocate $900 to rental use.
+Ordinary 2026 rentals with zero personal use and prior-year behavior
+retain their existing calculations. All 637 exact focused tests and eight
+static checks passed. Independent engineering review passed 426 tests
+across Schedule E and the separate Pennsylvania state boundaries.
+Mixed-use calculation still requires actual rental and personal-use
+records, allocation by expense category and any applicable worksheet.
+[26 U.S.C. §280A](https://uscode.house.gov/us/usc/119-124/t26/s280A/) · [IRS Publication 527](https://www.irs.gov/publications/p527) · [Draft 2026 Schedule E instructions](https://www.irs.gov/pub/irs-dft/i1040se--dft.pdf#page=7)
+
+## November 28 Pennsylvania use tax by actual purchase locality
+
+`5e05f1827` validates each claimed locality against its original delivery
+or use record. Two $10,000 purchases in Philadelphia and Allegheny County
+produce $1,500 in use tax in the private resident draft. Original dates
+must fall on or before the confirmed snapshot date. A separate engineering
+review repeated 284 tests, including same-day, future and invalid-date
+controls. Saved single-locality confirmations still reopen. Editing the
+purchases requires actual locality evidence for each receipt. All
+314 exact focused tests and eight static checks passed. Public
+filing remains gated. [PA use-tax guidance](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/sales-use-and-hotel-occupancy-tax/use-tax/use-tax-for-individuals) · [PA-40 instructions](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf)
+
+## November 28 qualification at AI dispatch and credit sale
+
+`da90d5442` rechecks the eligible profile and report digest immediately
+after reserving credits and before provider transport. Expiry, rollback
+or a report change releases an undispatched reservation. Credit sales
+and dispatch use the same exact qualification boundaries and require
+the default clock's sampled millisecond to be fully covered. All
+215 exact focused tests and eight static checks passed. A separate
+run with disposable PostgreSQL 16.14 passed all 204 tests, including
+the 22 accounting tests skipped without PostgreSQL. The listener
+closed. A separate engineering review exercised the partial- and
+full-millisecond cases with mock transport. Provider calls and
+promotion were disabled.
+
+## November 27 household tax identifiers
+
+`622f147ff` rejects a repeated taxpayer ID among the primary taxpayer,
+joint or separate filing spouse, and dependents in 2026. Guided intake
+identifies the conflicting field. Canonical parsing and direct federal
+admission reject the same conflict without echoing the identifier. The
+155 exact focused tests and eight static checks passed. Independent
+engineering review repeated 59 tests across household intake, the federal
+calculator and Form 8863. [IRS business rules](https://www.irs.gov/pub/irs-utl/f1040brs.pdf) · [Draft 2026 Form 1040](https://www.irs.gov/pub/irs-dft/f1040--dft.pdf)
 
 ## November 27 joint education, payroll-based ACTC and HSA receipt dates
 

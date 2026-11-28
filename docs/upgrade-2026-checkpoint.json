@@ -1,10 +1,10 @@
 {
   "resume": {
     "aiSourceFirstCaseReviewEvidenceKey": "activeContinuation.nov27AiSourceFirstCaseReview",
-    "asOf": "2026-11-27",
+    "asOf": "2026-11-28",
     "branch": "main",
     "applicationCommit": "513fba11dad05e177a5cb12301b6adcf1f13d490",
-    "latestScopedApplicationCommit": "513fba11dad05e177a5cb12301b6adcf1f13d490",
+    "latestScopedApplicationCommit": "b56ed84a1d4c82da84b615df820d1f5671726ecb",
     "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
     "latestSchedule8812PayrollActcEvidenceKey": "activeContinuation.nov27Schedule8812PayrollActc",
     "latestGuidedHsaCivilDatesEvidenceKey": "activeContinuation.nov27GuidedHsaCivilDates",
@@ -110,6 +110,7 @@
     "visitedOhioHeaderEvidenceKey": "activeContinuation.nov26VisitedOhioHeaderEdits",
     "ohioBankInterestResidencyEvidenceKey": "activeContinuation.nov26OhioBankInterestAllResidency",
     "latestExactLinuxResultsEvidenceKey": "activeContinuation.nov26LocalReturnReopening",
+    "latestLinuxQueueEvidenceKey": "activeContinuation.nov28ExactNativeQueue",
     "latestSchedule8812AndNativeTimingEvidenceKey": "activeContinuation.nov26Schedule8812AndNativeTiming",
     "ohioUnemploymentEducatorHoursAndForm4137EvidenceKey": "activeContinuation.nov26OhioUnemploymentEducatorHoursAndForm4137",
     "latestFederalAnnualSourceEvidenceKey": "activeContinuation.nov25FederalAnnualSourceRefresh",
@@ -207,7 +208,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov27ExactFederalPaymentCombined",
     "remaining": [
-      "Both strict Linux browser gates and final image evidence remain open. The exact 513fba11d AMD64 CI 46106161592, Web 46106161639 and Docker 46106161572 were queued with no artifacts. The ARM64 incumbent 46085907600 was queued for a runner and e32a4591e 46091464368 was pending in the same concurrency group. The separate older ARM64 comparison 46066052234 passed archive and Compose recovery and failed nine strict browser cases. Its worker diagnostic timed out with both settings. Earlier AMD64 46023825170 passed recovery and failed runtime browser and immutable image evidence.",
+      "Both strict Linux browser gates and final image evidence remain open. The exact b56ed84a1 AMD64 CI 46110428404, Web 46110428431 and Docker 46110428369 were queued without runners. The ARM64 incumbent 46085907600 was queued for a runner and e32a4591e 46091464368 was pending in the same concurrency group. The separate older ARM64 comparison 46066052234 passed archive and Compose recovery and failed nine strict browser cases. Its worker diagnostic timed out with both settings. Earlier AMD64 46023825170 passed recovery and failed runtime browser and immutable image evidence.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 27 public npm audits of the unchanged lockfile returned zero findings across 550 total and 457 production packages.",
@@ -215,6 +216,154 @@
     ]
   },
   "activeContinuation": {
+    "nov28ExactNativeQueue": {
+      "commit": "b56ed84a1d4c82da84b615df820d1f5671726ecb",
+      "observedOn": "2026-11-28",
+      "ci": {
+        "runId": "46110428404",
+        "status": "queued",
+        "jobs": 7,
+        "assigned": 0
+      },
+      "web": {
+        "runId": "46110428431",
+        "status": "queued",
+        "jobs": 3,
+        "assigned": 0
+      },
+      "docker": {
+        "runId": "46110428369",
+        "status": "queued",
+        "jobs": 1,
+        "assigned": 0
+      },
+      "arm64Incumbent": {
+        "runId": "46085907600",
+        "status": "queued",
+        "assigned": 0
+      },
+      "arm64Successor": {
+        "runId": "46091464368",
+        "status": "pending"
+      },
+      "canceledAutomaticProductionTargets": [
+        "622f147ff",
+        "da90d5442",
+        "5e05f1827",
+        "b56ed84a1"
+      ]
+    },
+    "nov28ScheduleEPersonalUseAdmission": {
+      "commit": "b56ed84a1d4c82da84b615df820d1f5671726ecb",
+      "archiveSha256": "a5c9319e0f94eb090063a721b662435c3b4c6a984ef2e4f3926174623de69eb1",
+      "sourceTree": "af3b98b84527c257358228d286e83e50f2c906bc",
+      "localEvidenceMarker": "nov27-rental-personal-use-admission-path",
+      "exactFocusedTestsPassed": 637,
+      "checksPassed": [
+        "focused",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
+      "implementationFocusedTestsPassed": 267,
+      "independentEngineeringTestsPassed": 426,
+      "unsupportedPositivePersonalUseHeld": true,
+      "ordinary2026AndLegacyControlsPassed": true,
+      "paStateSourceGatePreserved": true,
+      "mixedUseCalculationQualified": false,
+      "sources": [
+        "https://uscode.house.gov/us/usc/119-124/t26/s280A/",
+        "https://www.irs.gov/publications/p527",
+        "https://www.irs.gov/pub/irs-dft/i1040se--dft.pdf#page=7"
+      ]
+    },
+    "nov28PennsylvaniaUseTaxLocalities": {
+      "commit": "5e05f1827d7aa252f41d7df94d6490cf3c9d06d1",
+      "archiveSha256": "450bc2876376e7dd24b9b555e5818fb580cbb7eb664513491d4304076d73c50e",
+      "sourceTree": "52f894e5c72e7237f48b64f3457c2b5451ad2069",
+      "localEvidenceMarker": "nov27-pa-receipt-localities-path",
+      "exactFocusedTestsPassed": 314,
+      "checksPassed": [
+        "focused",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
+      "initialImplementationFocusedTestsPassed": 366,
+      "dateCorrectionFocusedTestsPassed": 368,
+      "independentRereviewTestsPassed": 284,
+      "twoOriginalLocalitiesUseTax": "1500",
+      "philadelphiaSameDayOriginalUseTax": "800",
+      "futureAndInvalidDatesHeld": true,
+      "publicReturnsAndFilingGatePromoted": false,
+      "sources": [
+        "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/sales-use-and-hotel-occupancy-tax/use-tax/use-tax-for-individuals",
+        "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf"
+      ]
+    },
+    "nov28AiDispatchQualification": {
+      "commit": "da90d5442d4d6f455339225de8e5e2c19c49880d",
+      "archiveSha256": "f88a769af5f16606651a20516ed7e32bc33427afb37bdd0c9b801117eb849989",
+      "sourceTree": "3894a172c1f70e0ab6bb56744d1fd0ba9e06ee11",
+      "localEvidenceMarker": "nov27-ai-qualified-dispatch-path",
+      "exactFocusedTestsPassed": 215,
+      "checksPassed": [
+        "focused",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
+      "workingTreeEngineeringChecksPassed": 204,
+      "exactPostgresTestsPassed": 204,
+      "exactPostgresSuites": 10,
+      "exactPostgresVersion": "16.14",
+      "localPostgresListenerClosed": true,
+      "qualificationRecheckedAfterReservation": true,
+      "expiryAtFractionalMillisecondCovered": true,
+      "salesDispatchTimeModesAgree": true,
+      "liveProviderCalls": 0,
+      "promotionEnabled": false
+    },
+    "nov27HouseholdTaxIdentifiers": {
+      "commit": "622f147ff9682d6c2202e212b265828e9165e114",
+      "archiveSha256": "c5566cb297402f7c4cfb4c0ae58a6138f9781eb480b599b77f51ca11a35428a1",
+      "sourceTree": "6e76ae043ba4fcb840a5395962bbb4bd0a80c277",
+      "localEvidenceMarker": "nov27-household-identifiers-path",
+      "exactFocusedTestsPassed": 155,
+      "checksPassed": [
+        "focused",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
+      "independentEngineeringTestsPassed": 59,
+      "directFederalAdmissionCovered": true,
+      "guidedFieldPathsCovered": true,
+      "sources": [
+        "https://www.irs.gov/pub/irs-utl/f1040brs.pdf",
+        "https://www.irs.gov/pub/irs-dft/f1040--dft.pdf"
+      ]
+    },
     "nov27GuidedHsaCivilDatesCombined": {
       "commit": "513fba11dad05e177a5cb12301b6adcf1f13d490",
       "browserStoragePreflight": {
