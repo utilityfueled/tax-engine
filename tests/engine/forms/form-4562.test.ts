@@ -66,6 +66,17 @@ describe("Form 4562 depreciation and section 179 summary", () => {
     expect(result.line13.toNumber()).toBe(0);
   });
 
+  it("Form 4562 Lines 4 and 5 - preserve the exact phaseout differences", () => {
+    const result = calculateForm4562(Form4562Schema.parse({
+      taxYear: 2026,
+      section179TotalCost: "5090000.00000000000001",
+    }));
+
+    expect([result.line4.toFixed(), result.line5.toFixed()]).toEqual([
+      "1000000.00000000000001", "1559999.99999999999999",
+    ]);
+  });
+
   it("Form 4562 Lines 5 and 13 - full phaseout leaves current-year section 179 at zero and carries forward the prior-year amount", () => {
     const result = calculateForm4562({
       section179TotalCost: "6500000",
@@ -120,6 +131,22 @@ describe("Form 4562 depreciation and section 179 summary", () => {
     expect(String(line13?.inputs["Line 9"])).toBe("600000");
     expect(String(line13?.inputs["Line 10"])).toBe("40000");
     expect(String(line13?.inputs["Line 12"])).toBe("0");
+  });
+
+  it.each([
+    ["1000001", "1000000.00000000000001", "0"],
+    ["1000000", "1000000", "0.00000000000001"],
+  ])("Form 4562 Lines 12 and 13 - conserve prior carryover at current income limit %s", (incomeLimit, deduction, carryover) => {
+    const result = calculateForm4562(Form4562Schema.parse({
+      taxYear: 2026,
+      section179ElectedCost: "1000000",
+      section179CarryoverFromPriorYear: "0.00000000000001",
+      section179BusinessIncomeLimit: incomeLimit,
+    }));
+
+    expect([result.line12.toFixed(), result.line13.toFixed(), result.line22.toFixed()]).toEqual([
+      deduction, carryover, deduction,
+    ]);
   });
 
   it("Form 4562 Line 12 - direct allocated section 179 overrides replace the computed amount", () => {

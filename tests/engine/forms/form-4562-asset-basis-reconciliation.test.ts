@@ -23,6 +23,18 @@ describe('Form4562 actual asset bridge consistency',()=>{
     expect(JSON.stringify(original)).toBe(before);
     for(const [section179,bonus] of [['0','2000'],['999','2000'],['1000','1999'],['1001','2001']])expect(()=>calculateForm4562(input([asset()],section179,bonus))).toThrow(/asset|allocation|basis/i);
   });
+  it('reconciles documented section 179 and bonus totals without rounding source allocations', () => {
+    const assets = [
+      asset(false, '4000000', '1000000', '1000000'),
+      asset(false, '10000', '0.00000000000001', '0.00000000000001'),
+    ];
+    const exactTotal = '1000000.00000000000001';
+    const result = calculateForm4562(input(assets, exactTotal, exactTotal));
+
+    expect([result.line12.toFixed(), result.line14.toFixed()]).toEqual([exactTotal, exactTotal]);
+    expect(() => calculateForm4562(input(assets, '1000000', exactTotal))).toThrow(/must reconcile/);
+    expect(() => calculateForm4562(input(assets, exactTotal, '1000000'))).toThrow(/must reconcile/);
+  });
   it('keeps a documented zero listed deduction zero instead of a legacy scalar',()=>{
     const original=Form4562Schema.parse({...input([asset(true,'0','0','0')],'0','0'),listedPropertyDepreciation:'750'});
     const result=calculateForm4562(original);

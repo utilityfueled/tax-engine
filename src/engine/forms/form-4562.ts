@@ -194,27 +194,28 @@ export function calculateForm4562(input: Form4562Input, ownerTaxYear?: number): 
   const defaults = SECTION_179_DEFAULTS[taxYear];
   const audit = new AuditTrail();
 
-  // --- Part I: Section 179 (unchanged) ---
+  // --- Part I: Section 179 ---
   const line1 = Decimal.max(ZERO, d(input.section179MaximumDeduction ?? defaults.maximum));
   const line2 = Decimal.max(ZERO, d(input.section179TotalCost));
   const line3 = Decimal.max(ZERO, d(input.section179ThresholdCost ?? defaults.threshold));
-  const line4 = Decimal.max(ZERO, line2.minus(line3));
-  const line5 = Decimal.max(ZERO, line1.minus(line4));
+  const line4 = Decimal.max(ZERO, sumSourceMoney(line2, line3.negated()));
+  const line5 = Decimal.max(ZERO, sumSourceMoney(line1, line4.negated()));
   const line8 = Decimal.max(ZERO, d(input.section179ElectedCost));
   const line9 = Decimal.min(line5, line8);
   const line10 = Decimal.max(ZERO, d(input.section179CarryoverFromPriorYear));
   const line11 = Decimal.min(line5, Decimal.max(ZERO, d(input.section179BusinessIncomeLimit)));
+  const deductionBeforeIncomeLimit = sumSourceMoney(line9, line10);
 
   const directLine12Override = input.section179ExpenseDeduction !== undefined
     ? Decimal.max(ZERO, d(input.section179ExpenseDeduction))
     : undefined;
-  const computedLine12 = Decimal.min(line9.plus(line10), line11);
+  const computedLine12 = Decimal.min(deductionBeforeIncomeLimit, line11);
   const line12 = directLine12Override ?? computedLine12;
 
   const directLine13Override = input.section179CarryoverToNextYear !== undefined
     ? Decimal.max(ZERO, d(input.section179CarryoverToNextYear))
     : undefined;
-  const computedLine13 = Decimal.max(ZERO, line9.plus(line10).minus(line12));
+  const computedLine13 = Decimal.max(ZERO, sumSourceMoney(deductionBeforeIncomeLimit, line12.negated()));
   const line13 = directLine13Override ?? computedLine13;
 
   // --- Parts II–V: Depreciation ---
@@ -234,19 +235,21 @@ export function calculateForm4562(input: Form4562Input, ownerTaxYear?: number): 
 
   if (hasDocumentedAssetBasis) {
     const fail: (detail: string) => never = detail => { throw new Error(`Form4562 asset basis allocation: ${detail}`); };
-    let actualSection179 = ZERO;
-    let actualBonus = ZERO;
+    const section179Allocations: Decimal[] = [];
+    const bonusAllocations: Decimal[] = [];
     for (const asset of input.assets ?? []) {
       const source = resolveMACRSAssetBasisSources(asset, taxYear);
       if (!source) fail('every asset requires its complete first-year source packet');
       if (asset.isListedProperty && (source.section179BusinessDeduction.gt(0) || source.bonusBusinessDeduction.gt(0))) {
         fail('listed section179 and bonus require the separate Part V allocation method');
       }
-      actualSection179 = actualSection179.plus(source.section179BusinessDeduction);
-      actualBonus = actualBonus.plus(source.bonusBusinessDeduction);
+      section179Allocations.push(source.section179BusinessDeduction);
+      bonusAllocations.push(source.bonusBusinessDeduction);
     }
     if (input.section179ExpenseDeduction !== undefined && d(input.section179ExpenseDeduction).lt(0)) fail('negative section179 deduction');
     if (d(input.specialDepreciationAllowance).lt(0)) fail('negative bonus deduction');
+    const actualSection179 = sumSourceMoneyValues(section179Allocations);
+    const actualBonus = sumSourceMoneyValues(bonusAllocations);
     if (!actualSection179.eq(line12) || !actualBonus.eq(line14)) {
       fail('actual per-asset section179 and bonus must reconcile to form lines12 and14');
     }

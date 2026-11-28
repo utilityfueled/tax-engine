@@ -89,7 +89,7 @@ lines:
 
   - line: "4"
     description: "Reduction in the section 179 limit"
-    formula: "Line 2 - Line 3, floored at $0"
+    formula: "Subtract Line 3 from Line 2 exactly, then floor the result at $0"
     irsRef: "Form 4562, Line 4"
     inputs:
       - "Form 4562 Line 2"
@@ -98,11 +98,11 @@ lines:
       - "Total section 179 property cost exactly at the phaseout threshold keeps Line 4 at $0"
       - "Total section 179 property cost $1 above the threshold reduces the available Line 5 amount by exactly $1"
       - "Total section 179 property cost at or above the threshold plus the annual limit fully phases out the current-year Line 5 amount"
-    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Line 12 - section 179 deduction applies the 2025 limit, threshold reduction, and business-income cap"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Lines 4 and 5 - preserve the exact phaseout differences"
 
   - line: "5"
     description: "Section 179 dollar limitation for the year"
-    formula: "Line 1 - Line 4, floored at $0"
+    formula: "Subtract Line 4 from Line 1 exactly, then floor the result at $0"
     irsRef: "Form 4562, Line 5"
     inputs:
       - "Form 4562 Line 1"
@@ -112,7 +112,7 @@ lines:
       - "The annual limitation drops to $2,499,999 when the validated total cost is $4,000,001"
       - "The annual limitation is $0 when the validated total cost reaches $6,500,000 or more under the 2025 limits"
       - "The annual limitation remains $1 when the validated total cost is $6,499,999, so one dollar of current-year section 179 deduction can still be claimed"
-    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Line 12 - section 179 deduction applies the 2025 limit, threshold reduction, and business-income cap"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Lines 4 and 5 - preserve the exact phaseout differences"
 
   - line: "8"
     description: "Total elected cost of section 179 property"
@@ -152,7 +152,7 @@ lines:
 
   - line: "12"
     description: "Section 179 expense deduction"
-    formula: "Use the validated direct line 12 override when provided; otherwise add Lines 9 and 10 and limit the result to Line 11"
+    formula: "Use the validated direct line 12 override when provided; otherwise add Lines 9 and 10 exactly and limit the result to Line 11"
     irsRef: "Form 4562, Line 12"
     inputs:
       - "Validated direct section 179 expense deduction override"
@@ -160,11 +160,11 @@ lines:
       - "Form 4562 Line 10"
       - "Form 4562 Line 11"
     notes: "A direct override supports business-specific allocations from a separate summary Form 4562, matching the instructions for multiple businesses or activities."
-    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Line 12 - direct allocated section 179 overrides replace the computed amount"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Lines 12 and 13 - conserve prior carryover at current income limit %s"
 
   - line: "13"
     description: "Carryover of disallowed deduction to 2026"
-    formula: "Use the validated direct line 13 override when provided; otherwise add Lines 9 and 10, then subtract Line 12 and floor at $0"
+    formula: "Use the validated direct line 13 override when provided; otherwise add Lines 9 and 10 and subtract Line 12 exactly before flooring at $0"
     irsRef: "Form 4562, Line 13"
     inputs:
       - "Validated direct section 179 carryover override"
@@ -175,7 +175,7 @@ lines:
       - "When the current-year section 179 limit is fully phased out, prior-year carryover remains on Line 13 because none of it can be deducted this year"
       - "When the current-year section 179 limit is one dollar short of full phaseout, only that final $1 can be deducted and the remaining current-year elected cost plus prior-year carryover stays on Line 13"
       - "When the business-income limitation is $0, the full tentative section 179 deduction plus prior-year carryover stays on Line 13"
-    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Line 12 - direct allocated section 179 overrides replace the computed amount"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Lines 12 and 13 - conserve prior carryover at current income limit %s"
 
   - line: "14"
     description: "Special depreciation allowance for qualified property other than listed property"
@@ -184,6 +184,12 @@ lines:
     inputs:
       - "Validated special depreciation allowance for non-listed property"
     testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Line 22 - total deduction sums section 179, depreciation, MACRS, and listed property"
+
+  - line: "12-14-asset-reconciliation"
+    description: "Documented per-asset section 179 and bonus totals"
+    formula: "Exactly and independently add all documented business section 179 deductions and all documented bonus depreciation deductions. Require equality to lines 12 and 14 respectively before transferring either amount."
+    irsRef: "Form 4562, Lines 12 and 14"
+    testRef: "tests/engine/forms/form-4562-asset-basis-reconciliation.test.ts::reconciles documented section 179 and bonus totals without rounding source allocations"
 
   - line: "15"
     description: "Property subject to section 168(f)(1) election"
