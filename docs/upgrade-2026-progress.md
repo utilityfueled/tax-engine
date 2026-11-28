@@ -16,12 +16,36 @@ jq '.resume | {latestScopedApplicationCommit, remaining}' docs/upgrade-2026-chec
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `57b64cb23` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `6aadaaedd` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
-| Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. Current ARM64 and exact AMD64 jobs for the `57b64cb23` application await runner assignment. The older ARM64 comparison failed nine strict browser cases after archive and recovery passed. Qualify both final runtime images before publishing. |
+| Self-host release | Exact local Chromium and encrypted recovery passed. Current ARM64 and AMD64 workflows await runners. The earlier ARM64 image and Compose checks passed and the strict browser check failed nine cases. |
+
+## November 28 exact local release checks on 6aadaaedd
+
+All 11 retained checks passed from the exact `6aadaaedd` archive. The unit
+and coverage suites each passed 31,538 tests with 83 skips.
+Branch coverage was 88.8% against the 85% gate. Managed Chromium passed
+655 cases with 5 skips across all 9 windows. The standalone
+app created an encrypted backup, deleted the synthetic workspace and
+restored it. Both isolated listeners closed. Node 26.13.1, pypdf 6.10.0,
+15 hash-verified official sample PDFs and the offline AI evaluation
+artifact check were used. Manifest SHA-256 `31e18f71266ab41ca2d114c94ef71a945eb78d2abe0ab69307b79b10ced30fa9`.
+
+The separate rental smoke passed at 1280px and 390px. It saved and reopened
+explicit zero carryover entries, invalidated confirmations after a keyboard
+edit, and removed the worksheet without deleting the insurance receipt. Its
+listener closed. The receipt manifest SHA-256 is
+`5caa9684e98caa6f99924304a09da8b135bfd38c4263dd98cd9c6c6f668d49dc`.
+
+The current ARM64 rehearsal was dispatched on `0c594ea43`, which differs
+from the tested application by two evidence documents. It was pending
+without a runner at the first check. Exact AMD64 CI, Web and Docker were
+queued without assigned runners at their last check. Vercel canceled the
+automatic production builds for the four application packages.
+[ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/46120985997) · [CI](https://github.com/utilityfueled/tax-engine/actions/runs/46118207971) · [Web](https://github.com/utilityfueled/tax-engine/actions/runs/46118207711) · [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/46118207685)
 
 ## November 28 original 2026 Form 6198 Part II sources
 

@@ -3,7 +3,7 @@
     "aiSourceFirstCaseReviewEvidenceKey": "activeContinuation.nov27AiSourceFirstCaseReview",
     "asOf": "2026-11-28",
     "branch": "main",
-    "applicationCommit": "57b64cb231e10a4de762e2966c6b5fdf234f5ee3",
+    "applicationCommit": "6aadaaeddc4931b13e4b14e387a93590224c6447",
     "latestScopedApplicationCommit": "6aadaaeddc4931b13e4b14e387a93590224c6447",
     "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
     "latestSchedule8812PayrollActcEvidenceKey": "activeContinuation.nov27Schedule8812PayrollActc",
@@ -205,11 +205,11 @@
     "annualScheduleBSourceEvidenceKey": "activeContinuation.nov24ScheduleBFinalSource",
     "annualScheduleBReviewEvidenceKey": "activeContinuation.nov24ScheduleBOrdinaryReview",
     "pensionTaxableAmountEvidenceKey": "activeContinuation.nov24ReportedPensionTaxableAmount",
-    "completeLocalBaselineEvidenceKey": "activeContinuation.nov28SourceBackedRentalCombined",
+    "completeLocalBaselineEvidenceKey": "activeContinuation.nov28Form6198CombinedReleaseChecks",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov27ExactFederalPaymentCombined",
     "remaining": [
-      "Both strict Linux browser gates and final image evidence remain open. The exact 57b64cb23 AMD64 CI 46112070298, Web 46112070248 and Docker 46112070237 were queued without runners. The earlier ARM64 46085907600 passed archive and Compose recovery and failed nine strict browser cases. Current application run 46113946817 is queued in the same concurrency group. The earlier pending 46091464368 was superseded. The separate older ARM64 comparison 46066052234 passed archive and Compose recovery and failed nine strict browser cases. Its worker diagnostic timed out with both settings. Earlier AMD64 46023825170 passed recovery and failed runtime browser and immutable image evidence.",
+      "Both strict Linux browser gates and final runtime image evidence remain open. Exact application 6aadaaedd AMD64 CI 46118207971, Web 46118207711 and Docker 46118207685 were queued without assigned runners. Current ARM64 rehearsal 46120985997 was pending without a runner on the documentation successor 0c594ea43. Earlier 46085907600 passed archive and Compose recovery and failed nine strict browser cases.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 27 public npm audits of the unchanged lockfile returned zero findings across 550 total and 457 production packages.",
@@ -217,6 +217,87 @@
     ]
   },
   "activeContinuation": {
+    "nov28Form6198CombinedReleaseChecks": {
+      "commit": "6aadaaeddc4931b13e4b14e387a93590224c6447",
+      "exactArchiveSha256": "bfc9cbf12ee051d53031c29a70fae31314b63f0bf1ced59a68af2eee375850e6",
+      "localEvidenceMarker": "nov27-form6198-original-part-ii-path",
+      "manifestSha256": "31e18f71266ab41ca2d114c94ef71a945eb78d2abe0ab69307b79b10ced30fa9",
+      "allElevenLocalChecksPassed": true,
+      "commandsPassed": [
+        "test",
+        "coverage",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "build",
+        "build-web",
+        "lint",
+        "browser"
+      ],
+      "prerequisites": {
+        "node": "26.13.1",
+        "pypdf": "6.10.0"
+      },
+      "officialSampleDocumentsVerified": 15,
+      "offlineEvaluatorArtifactCheckPassed": true,
+      "unit": {
+        "passed": 31538,
+        "skipped": 83
+      },
+      "coverage": {
+        "passed": 31538,
+        "skipped": 83,
+        "branchPercent": "88.8"
+      },
+      "browser": {
+        "passed": 655,
+        "skipped": 5,
+        "windows": 9,
+        "listenerCleanup": true,
+        "summarySha256": "9b3b747164b6ed96e1e1a76fb1a4fe487578af6f1a0f950081bba4cda5f65bc2",
+        "sourceBuildSha256": "1acca6cae8e23714383017ace1ac0aa637934d6683cc10084a735ef0b98993ff"
+      },
+      "standaloneEncryptedRecovery": {
+        "exit": 0,
+        "logSha256": "b3a0e50f25673463b11cdf5a64b3e45c6faa14bb8d0656e4203ff9c72f0348f2",
+        "receiptSha256": "ee47cad20af6beafe8fbc8d248c481bb3fb109ae3d13c5ac9b147ec9f8a8415c",
+        "listenerCleanup": true
+      },
+      "linuxNativeQualified": false,
+      "hostedQualified": false,
+      "ownedRentalResidenceChromiumSmoke": {
+        "viewports": [
+          1280,
+          390
+        ],
+        "passed": 2,
+        "savedEditClearsConfirmations": true,
+        "listenerCleanup": true,
+        "receiptManifestSha256": "5caa9684e98caa6f99924304a09da8b135bfd38c4263dd98cd9c6c6f668d49dc"
+      },
+      "currentArm64Rehearsal": {
+        "runId": 46120985997,
+        "checkedOutSha": "0c594ea43f11970620c108a504a9c0fc1d23fc23",
+        "sourceDeltaFromApplication": [
+          "docs/upgrade-2026-checkpoint.json",
+          "docs/upgrade-2026-progress.md"
+        ],
+        "statusAtFirstCheck": "pending",
+        "assignedRunnersAtFirstCheck": 0
+      },
+      "amd64Actions": {
+        "sourceCommit": "6aadaaeddc4931b13e4b14e387a93590224c6447",
+        "runIds": {
+          "ci": 46118207971,
+          "web": 46118207711,
+          "docker": 46118207685
+        },
+        "statusAtCheck": "queued",
+        "assignedRunnersAtCheck": 0
+      }
+    },
     "nov28Form6198OriginalPartII": {
       "commit": "6aadaaeddc4931b13e4b14e387a93590224c6447",
       "archiveSha256": "bfc9cbf12ee051d53031c29a70fae31314b63f0bf1ced59a68af2eee375850e6",

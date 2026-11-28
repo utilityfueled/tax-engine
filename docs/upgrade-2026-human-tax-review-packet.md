@@ -1046,3 +1046,27 @@ a confirmed receipt dated after the application snapshot should be
 excluded from that snapshot. Reconcile the final annual blank and
 directions before approving filing output.
 [Pennsylvania use-tax guidance](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/sales-use-and-hotel-occupancy-tax/use-tax/use-tax-for-individuals) · [2025 PA-40 instructions](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf) · [Synthetic fixture](../tests/engine/state/pa-2026-ordinary-draft.test.ts).
+
+## November 28 residence expense carryover and at-risk worksheet
+
+For the Schedule E case in `2d174de8b`, assume one wholly owned dwelling
+rented at fair value for 80 days and used personally for 20 days, with one
+lease. There is $1,000 in rent, $100 of rental-only advertising and $1,250 of
+shared insurance. The taxpayer takes the standard deduction. The prior-year
+carryovers, current casualty losses and allowable depreciation are all
+documented as zero. Derive Worksheet 5-1 lines 2d, 3, 4a, 4f, 7a and 7b,
+the Schedule E net and the Form 8582 treatment. Repeat with $1,125 of
+insurance to test exact break-even. Determine which separate facts are
+required for EIC and NIIT when the same dwelling yields positive net income.
+[IRS Publication 527](https://www.irs.gov/publications/p527) · [Form 8582 instructions](https://www.irs.gov/instructions/i8582) · [Form 8960 instructions](https://www.irs.gov/instructions/i8960)
+
+For the Form 6198 case in `6aadaaedd`, assume one ordinary nonpassive
+partnership, a $6,000 Box 1 loss, $12,000 of opening outside adjusted basis
+and $8,000 included in that basis for which the investor is not at risk.
+There are no other relevant adjustments, QBI or self-employment amounts,
+prior suspended losses or recapture. Derive Part II lines 6 through 10b,
+Part IV lines 20 and 21, the Schedule E transfer and the suspended loss.
+Explain how the opening basis and the $4,000 prior at-risk balance affect
+the separate worksheets. Identify any fact that would require Part III or
+recapture in this scenario.
+[Form 6198](https://www.irs.gov/pub/irs-pdf/f6198.pdf) · [IRS instructions](https://www.irs.gov/instructions/i6198) · [26 U.S.C. §465](https://uscode.house.gov/us/usc/119-124/t26/s465/)
