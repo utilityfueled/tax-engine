@@ -139,3 +139,20 @@ Independent engineering review checked the exact model binding against
 the shared rate table and found the published configured rates unchanged.
 On the exact current application archive, 37 focused registry, settlement
 and evaluation tests passed with 20 conditional skips.
+## November 27 public catalog recheck
+
+The exact configured `gpt-6-luna` and `gpt-6.1-sol` model pages still show
+standard input/cached-input/output at $0.10/$0.01/$0.50 and $2/$0.10/$10
+per million tokens, respectively. Sol's long-context rates still change above
+272K input tokens. The GPT-5 Mini alias and dated snapshot remain listed for
+shutdown December 11, 2026. [Luna model](https://developers.openai.com/api/docs/models/gpt-6-luna) ·
+[Sol model](https://developers.openai.com/api/docs/models/gpt-6.1-sol) ·
+[OpenAI deprecations](https://developers.openai.com/api/docs/deprecations).
+
+Google still lists `gemini-3-flash-preview` with no announced shutdown date.
+The configured `gemini-3.8-flash` standard paid rates remain
+$0.75/$0.075/$3.75 through December 31 and $1.50/$0.15/$7.50 from January 1,
+2027 in input/cached-input/output order. These were public documentation
+checks. Account access, candidate output and promotion thresholds remain
+independent requirements. [Google pricing](https://aistudio.google.com/docs/pricing) ·
+[Google deprecations](https://aistudio.google.com/docs/deprecations).

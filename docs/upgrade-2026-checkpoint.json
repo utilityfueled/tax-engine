@@ -3,13 +3,15 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "dcfd227f5febe42d318ac8f4ebf1f7fd048caa53",
-    "latestScopedApplicationCommit": "adf5bd9caf2416e7b1f33929daba5cacfbcffdb6",
-    "latestCombinedCandidateCommit": "adf5bd9caf2416e7b1f33929daba5cacfbcffdb6",
+    "latestScopedApplicationCommit": "0a09bd1923705b016314cd041d4dd5e0d05f5941",
+    "latestCombinedCandidateCommit": "0a09bd1923705b016314cd041d4dd5e0d05f5941",
     "nov27FullBrowserCollectionEvidenceKey": "activeContinuation.nov27FullBrowserCollection",
-    "latestScopedChecksEvidenceKey": "activeContinuation.nov27RetirementCodeHSource",
+    "latestScopedChecksEvidenceKey": "activeContinuation.nov27Form2210ObservedWithholding",
+    "nov27Form2210ObservedWithholdingEvidenceKey": "activeContinuation.nov27Form2210ObservedWithholding",
     "nov27RetirementCodeHSourceEvidenceKey": "activeContinuation.nov27RetirementCodeHSource",
     "nov27AiReceiptCorrectionEvidenceKey": "activeContinuation.nov27AiReceiptCorrection",
     "nov27PublicAdvisoryCountsEvidenceKey": "activeContinuation.nov27PublicAdvisoryCounts",
+    "nov27PublicProviderCatalogEvidenceKey": "activeContinuation.nov27PublicProviderCatalog",
     "nov27StateSupportResidencyEvidenceKey": "activeContinuation.nov27StateSupportResidency",
     "nov27AiReceiptAttemptBindingEvidenceKey": "activeContinuation.nov27AiReceiptAttemptBinding",
     "nov27GuidedCommercialWorkpaperEvidenceKey": "activeContinuation.nov27GuidedCommercialWorkpaper",
@@ -288,6 +290,33 @@
       },
       "liveProviderCalls": 0,
       "humanQualification": false
+    },
+    "nov27PublicProviderCatalog": {
+      "checkedOn": "2026-11-27",
+      "evidence": "docs/upgrade-2026-provider-catalog-20261117.md#november-27-public-catalog-recheck",
+      "configuredStandardRatesChanged": false,
+      "gpt5MiniShutdownDate": "2026-12-11",
+      "gemini3FlashPreviewShutdownDateAnnounced": false,
+      "accountRequestsMade": 0,
+      "generationRequestsMade": 0,
+      "qualificationChanged": false
+    },
+    "nov27Form2210ObservedWithholding": {
+      "commit": "0a09bd1923705b016314cd041d4dd5e0d05f5941",
+      "verifiedTree": "18a16f234462b1fac96a1779c356b88193219d75",
+      "exactArchiveSha256": "646bc6448dbf011df716b8b2549b393f7e799ad3389f71f11706b508afc8fcd7",
+      "primarySources": ["https://uscode.house.gov/us/usc/119-134/t26/s6654/", "https://www.irs.gov/instructions/i2210"],
+      "targetedRedFailuresBeforeFix": 3,
+      "exactFocusedTestsPassed": 332,
+      "repositorySpecReferencesValidated": 10313,
+      "exactTreeChecksPassed": [
+        "typecheck", "contracts", "web-types", "spec", "inventory", "lint", "build", "offline-eval"
+      ],
+      "independentEngineeringReviewPassed": true,
+      "localCombinedStatus": "scheduled after prior isolated tracks",
+      "localEvidenceMarker": "nov27-form2210-observed-withholding-path",
+      "arm64NativeRun": "https://github.com/utilityfueled/tax-engine/actions/runs/46090803858",
+      "filingQualified": false
     },
     "nov27RetirementCodeHSource": {
       "commit": "adf5bd9caf2416e7b1f33929daba5cacfbcffdb6",
