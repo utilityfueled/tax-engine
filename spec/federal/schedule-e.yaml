@@ -80,10 +80,10 @@ lines:
     testRef: "tests/edge-cases/rental-property-edge-cases.test.ts::mixed-use: 30 personal days + 200 rental days — expenses prorated"
 
   - line: "280A-2026-actual-allocation-hold"
-    description: "Hold actual 2026 Schedule E rentals with personal use until source-backed allocation is supported"
+    description: "Hold 2026 Schedule E personal use outside the supported actual allocation"
     formula: >-
-      Hold a known positive personal-use day count in the typed Schedule E and
-      whole federal calculation before applying rental expenses. The dwelling
+      Hold a known positive personal-use day count without qualified actual
+      allocation sources before applying rental expenses. The dwelling
       use-as-a-home threshold determines whether the additional deduction limit
       applies. Even below that threshold, deduct only expenses attributable to
       rental use. Applying this rule requires actual rental and personal-use
@@ -99,6 +99,48 @@ lines:
     testRefs:
       - "tests/engine/schedules/schedule-e-personal-use-2026.test.ts::holds subthreshold personal use in the whole 2026 federal calculation"
       - "tests/engine/schedules/schedule-e-personal-use-2026.test.ts::preserves ordinary 2026 and historical 2025 calculation behavior"
+
+  - line: "280A-2026-actual-nonhome-allocation"
+    description: "Allocate actual receipts for one profitable rental dwelling below the residence threshold"
+    formula: >-
+      Require one wholly primary-owned entire residential dwelling, a same-property
+      source packet and complete ordinary cash rentals, no special activity
+      classification, no other passive or QBI sources or carryovers for this method.
+      Count the inclusively dated, nonoverlapping fair-rental and personal use
+      periods and match both totals to the return. Require one original tenant
+      lease for an occupancy longer than 30 days and explicit confirmation of
+      arm's-length for-profit use without significant services or special rental
+      relationships. Exclude vacant days and hold overlapping or special-use days.
+      Reject use as a residence when personal days exceed both 14 and 10% of rental
+      days. Match separately entered gross rents to the complete dated rent ledger,
+      with each original receipt linked to the one original tenant lease.
+      Match each nonpersonal expense category to its independently dated receipts.
+      Each period ends and every receipt was paid on or before the trusted
+      calculation as-of date. A receipt or period ending that day is observed.
+      Fully deduct documented rental-only advertising and agency/management or
+      commission charges; multiply shared insurance, utilities and eligible real
+      estate taxes by fair-rental days / used days; deduct no personal receipts.
+      Real estate taxes in this method require a standard deduction election.
+      Require explicit zero for all other expense categories and current depreciation.
+      Substantiate zero allowable depreciation with complete same-property prior
+      asset records, including the building, proving the depreciable bases were
+      fully recovered before 2026 and no current assets, basis changes, listed
+      property or Form 4562 items. Use Decimal, retain the allocated expenses by
+      category, and require positive current-year line 21. Keep residence, losses,
+      specialty worksheets and export qualification held. Keep a saved original
+      allocation packet until the filer explicitly removes it after correcting
+      use days or changing the return year, and then require reconfirmation.
+    sources:
+      - "https://uscode.house.gov/us/usc/119-124/t26/s280A/ (26 U.S.C. §280A(d) and (e))"
+      - "https://www.irs.gov/publications/p527 (Dividing Expenses, Cost or Other Basis Fully Recovered, and Worksheet 5-1 direct expense instructions)"
+      - "https://www.irs.gov/instructions/i8582 (Rental Activities and Exceptions)"
+    testRef: "tests/engine/schedules/schedule-e-personal-use-2026.test.ts::allocates verified 2026 rental-only and shared categories exactly"
+    testRefs:
+      - "tests/engine/schedules/schedule-e-personal-use-2026.test.ts::transfers one verified profitable 2026 dwelling through the whole federal calculation"
+      - "tests/engine/schedules/schedule-e-personal-use-2026.test.ts::holds contradicted and unsupported actual 2026 rental packets"
+      - "tests/apps/web/rental-source-interactions.test.tsx::reconciles edited 2026 dwelling originals through guided input"
+      - "tests/apps/web/rental-source-interactions.test.tsx::clears saved 2026 allocation only on explicit removal after a correction"
+      - "tests/engine/schedules/schedule-e-personal-use-2026.test.ts::holds unobserved 2026 rental receipts and periods at the explicit return as-of date"
 
   - line: "ownership"
     description: "Ownership percentage scaling for rental properties"

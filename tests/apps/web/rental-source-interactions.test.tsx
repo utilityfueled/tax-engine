@@ -2,12 +2,15 @@
 // Spec: spec/federal/guided-input.yaml, rental-source-records
 import React, { act, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SectionRentalIncome } from "@/components/guided-interview/section-rental-income";
 import { SectionReview } from "@/components/guided-interview/section-review";
 import { rentalFactErrors } from "@/lib/guided-rental-facts";
 import { buildRentalPropertyInputs, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { emptyRentalPropertyEntry, type RentalPropertyEntryData } from "@/lib/guided-interview-flow";
+import { calculateScheduleE } from "@/engine/schedules/schedule-e.js";
+import { TaxYearInputSchema } from "@/models/inputs.js";
+import * as civilDate from "@/utils/civil-date.js";
 import { completeRentalSource, startCompleteInterview } from "../../guided-interview/complete-facts";
 
 let container: HTMLDivElement, root: Root, latest: RentalPropertyEntryData[];
@@ -16,9 +19,9 @@ afterEach(async () => { await act(async () => root.unmount()); container.remove(
 function control(label: string) { const element = [...container.querySelectorAll("label")].find(item => item.querySelector(".guided-field-label")?.textContent === label)?.querySelector<HTMLInputElement | HTMLSelectElement>("input,select"); if (!element) throw new Error(`Missing ${label}`); return element; }
 async function change(label: string, value: string) { const input = control(label); await act(async () => { Object.getOwnPropertyDescriptor(input.tagName === "SELECT" ? HTMLSelectElement.prototype : HTMLInputElement.prototype, "value")?.set?.call(input, value); input.dispatchEvent(new Event(input.tagName === "SELECT" ? "change" : "input", { bubbles: true })); }); }
 async function click(label: string) { const button = [...container.querySelectorAll("button")].find(item => item.textContent?.trim() === label); if (!button) throw new Error(`Missing ${label}`); await act(async () => button.click()); }
-async function render(entries = [completeRentalSource]) {
+async function render(entries = [completeRentalSource], taxYear?: number) {
   latest = structuredClone(entries);
-  function Harness() { const [data, setData] = useState(latest); return <SectionRentalIncome entries={data} onEntriesChange={next => { latest = next; setData(next); }} />; }
+  function Harness() { const [data, setData] = useState(latest); return <SectionRentalIncome entries={data} taxYear={taxYear} onEntriesChange={next => { latest = next; setData(next); }} />; }
   await act(async () => root.render(<Harness />));
 }
 const confirmation = "Have you checked the actual property, ownership, use, income and expense facts after the latest edits?";
@@ -121,5 +124,74 @@ describe("actual rental source interactions", () => {
     await change("Did you materially participate in this qualified rental under section 469?", "");
     expect(latest[0].qbiMateriallyParticipated).toBeNull();
     expect(buildTaxInputFromGuidedData(flow())).toBeNull();
+  });
+
+  it("reconciles edited 2026 dwelling originals through guided input", async () => {
+    const propertyAddress = completeRentalSource.description;
+    const periodConfirmation = "Do these complete ordinary cash-rental records include all occupied days, rents and expenses, with no other rental classifications or special-use periods?";
+    const entry: RentalPropertyEntryData = { ...completeRentalSource, rentalDays: "90", personalUseDays: "10", rents: "2000", insurance: "1000",
+      rentalUseAllocationSources: { taxYear: 2026, propertyAddress, occupancySourceReference: "Calendar", rentSourceReference: "Rent ledger",
+        expenseSourceReference: "Bill ledger", confirmedCompleteOrdinaryUse: true, confirmedOrdinaryTenantRelationship: true,
+        periods: [{ sourceReference: "Lease", use: "fair_rental", start: "2026-06-01", end: "2026-08-29" },
+          { sourceReference: "Owner calendar", use: "personal", start: "2026-09-01", end: "2026-09-10" }],
+        rentReceipts: [{ sourceReference: "Paid rent", propertyAddress, leaseReference: "Lease", datePaid: "2026-06-01", amount: "2000" }],
+        expenseReceipts: [{ sourceReference: "Paid policy", propertyAddress, datePaid: "2026-08-20", amount: "999", category: "insurance", use: "shared" }],
+        depreciation: { propertyAddress, sourceReference: "Prior asset register", confirmedCompleteWithoutCurrentAssets: true,
+          assets: [{ sourceReference: "Building record", kind: "building", placedInServiceDate: "1990-01-01", basisFullyRecoveredDate: "2018-01-01",
+            depreciableBasis: "66000", priorAllowableDepreciation: "66000" }] } } };
+    const current = () => {
+      const state = flow();
+      state.taxYear = 2026;
+      return buildTaxInputFromGuidedData(state);
+    };
+    await render([entry], 2026);
+    expect(current()).toBeNull();
+    expect(rentalFactErrors(latest, "single", 2026)["rental-0-personal-allocation"]).toMatch(/insurance receipts must match/i);
+    await change("Expense receipt 1 amount", "1,000.00");
+    expect(latest[0].rentalUseAllocationSources?.confirmedCompleteOrdinaryUse).toBeNull();
+    expect(latest[0].sourceFactsConfirmed).toBeNull();
+    expect(current()).toBeNull();
+    await change(periodConfirmation, "true");
+    await change(confirmation, "true");
+    const complete = current();
+    expect(complete?.rentalProperties[0].rentalUseAllocationSources?.expenseReceipts?.[0]?.amount).toBe("1000.00");
+    expect(calculateScheduleE(TaxYearInputSchema.parse(complete), undefined, { asOfDate: "2026-10-01" }).rentalProperties[0].netRentalIncome.toFixed(2)).toBe("1100.00");
+    expect(buildTaxInputFromGuidedData(flow())).toBeNull();
+    await render(JSON.parse(JSON.stringify(latest)), 2026);
+    expect(current()?.rentalProperties[0].rentalUseAllocationSources).toEqual(complete?.rentalProperties[0].rentalUseAllocationSources);
+
+    const today = vi.spyOn(civilDate, "currentLocalCivilDate").mockReturnValue("2026-10-01");
+    try {
+      const confirmEditedExpenseDate = async (date: string) => {
+        await change("Expense receipt 1 paid date", date);
+        await change(periodConfirmation, "true");
+        await change(confirmation, "true");
+      };
+      await confirmEditedExpenseDate("2026-10-02");
+      expect(rentalFactErrors(latest, "single", 2026)["rental-0-personal-allocation"]).toMatch(/as-of date/i);
+      expect(current()).toBeNull();
+      await confirmEditedExpenseDate("2026-10-01");
+      expect(current()?.rentalProperties[0].rentalUseAllocationSources?.expenseReceipts?.[0]?.datePaid).toBe("2026-10-01");
+    } finally { today.mockRestore(); }
+  });
+
+  it("clears saved 2026 allocation only on explicit removal after a correction", async () => {
+    await render([{ ...completeRentalSource, personalUseDays: "1" }], 2026);
+    await click("Add use period");
+    await change("Use period 1 reference", "Saved original");
+    await change("Days of personal use", "0");
+    await change(confirmation, "true");
+    const saved = JSON.parse(JSON.stringify(latest)) as RentalPropertyEntryData[];
+    expect(saved[0].rentalUseAllocationSources?.periods?.[0].sourceReference).toBe("Saved original");
+    for (const taxYear of [2026, 2025]) {
+      await render(saved, taxYear);
+      const state = () => ({ ...flow(), taxYear });
+      expect(buildTaxInputFromGuidedData(state())).toBeNull();
+      await click("Remove 2026 rental allocation records");
+      expect(latest[0].rentalUseAllocationSources).toBeUndefined();
+      expect(latest[0].sourceFactsConfirmed).toBeNull();
+      await change(confirmation, "true");
+      expect(buildTaxInputFromGuidedData(state())?.rentalProperties[0]?.personalUseDays).toBe(0);
+    }
   });
 });

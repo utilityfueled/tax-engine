@@ -9,11 +9,14 @@ import { PARentalExpenseDetails } from "./pa-rental-expense-details";
 import type { PARentalIncomeExpensesData } from "@/lib/guided-pa-rental-facts";
 import { RentalCarrySourceDetails } from "./rental-carry-source-details";
 import { guidedSourceValuesChanged } from "@/lib/guided-source-confirmation";
+import { RentalUseAllocationDetails } from "./rental-use-allocation-details";
 
-function RentalPropertyCard({ entry, index, onEntryChange, onRemove, canRemove, stateCode }: {
+function RentalPropertyCard({ entry, index, onEntryChange, onRemove, canRemove, stateCode, taxYear }: {
   entry: RentalPropertyEntryData; index: number; onEntryChange: (entry: RentalPropertyEntryData) => void; onRemove: () => void; canRemove: boolean;
   stateCode?: string | null;
+  taxYear?: number | null;
 }) {
+  const hasMixedUse = taxYear === 2026 && (Number(entry.personalUseDays) > 0 || !!entry.rentalUseAllocationSources);
   const patch = (values: Partial<RentalPropertyEntryData>, confirmationOnly = false) => onEntryChange({ ...entry, ...values,
     priorLossSources: "priorLossSources" in values ? values.priorLossSources : (!confirmationOnly && !("sourceFactsConfirmed" in values) && entry.priorLossSources ? { ...entry.priorLossSources, sourceFactsConfirmed: null } : entry.priorLossSources),
     paClassification: values.paClassification ?? (!confirmationOnly && !("sourceFactsConfirmed" in values) && entry.paClassification ? { ...entry.paClassification, factsConfirmed: null } : entry.paClassification),
@@ -47,13 +50,19 @@ function RentalPropertyCard({ entry, index, onEntryChange, onRemove, canRemove, 
     <CurrencyField label="Prior-year unallowed rental losses" value={entry.priorYearUnallowedLoss ?? ""} onChange={priorYearUnallowedLoss => patch({ priorYearUnallowedLoss })} />
     <CurrencyField label="Prior-year unallowed rental credits" value={entry.priorYearUnallowedCredits ?? ""} onChange={priorYearUnallowedCredits => patch({ priorYearUnallowedCredits })} />
     <RentalCarrySourceDetails data={entry.priorLossSources} onChange={priorLossSources => patch({ priorLossSources }, !guidedSourceValuesChanged(entry.priorLossSources, priorLossSources))} />
-    <details className="guided-expand"><summary className="guided-expand-trigger">Actual deductible rental expenses</summary>
-      <p className="guided-hint">Enter each checked category, including actual zero. Exclude capital improvements, personal costs and amounts claimed elsewhere. Vehicle and depreciation amounts come from their completed deductible worksheets.</p>
+    <details className="guided-expand"><summary className="guided-expand-trigger">{hasMixedUse ? "Actual expenses before allocation" : "Actual deductible rental expenses"}</summary>
+      <p className="guided-hint">{hasMixedUse
+        ? "Enter whole shared expenses and rental-only expenses here. Record personal-only receipts in the separate use records. Enter actual zero for categories with no allocable expenses."
+        : "Enter each checked category, including actual zero. Exclude capital improvements, personal costs and amounts claimed elsewhere. Vehicle and depreciation amounts come from their completed deductible worksheets."}</p>
       <div className="guided-expand-body guided-form-grid guided-form-grid-3">{rentalExpenseFields.map(([field, label]) => <CurrencyField key={field} label={label} value={entry[field] ?? ""} onChange={value => patch({ [field]: value })} />)}</div>
       <TextFact label="Description of other deductible rental expenses" value={entry.otherExpenseDescription ?? ""} onChange={otherExpenseDescription => patch({ otherExpenseDescription })} />
       <BooleanFact label="Is the depreciation amount from the actual deductible depreciation worksheet?" value={entry.depreciationWorksheetConfirmed} onChange={depreciationWorksheetConfirmed => patch({ depreciationWorksheetConfirmed })} />
       <BooleanFact label="Is the auto and travel amount from the actual deductible vehicle and travel records?" value={entry.autoTravelWorksheetConfirmed} onChange={autoTravelWorksheetConfirmed => patch({ autoTravelWorksheetConfirmed })} />
     </details>
+    {hasMixedUse && <RentalUseAllocationDetails value={entry.rentalUseAllocationSources}
+      onChange={rentalUseAllocationSources => patch({ rentalUseAllocationSources })} />}
+    {entry.rentalUseAllocationSources && <button className="utility-button utility-button-small" type="button"
+      onClick={() => patch({ rentalUseAllocationSources: undefined })}>Remove 2026 rental allocation records</button>}
     <BooleanFact label="Does this rental qualify as a trade or business for the QBI deduction?" value={entry.qualifiesForQBI} onChange={qualifiesForQBI => patch({ qualifiesForQBI })} />
     {entry.qualifiesForQBI === true && <div className="guided-form-grid">
       <BooleanFact label="Did you materially participate in this qualified rental under section 469?" value={entry.qbiMateriallyParticipated} onChange={qbiMateriallyParticipated => patch({ qbiMateriallyParticipated })} />
@@ -74,10 +83,10 @@ function RentalPropertyCard({ entry, index, onEntryChange, onRemove, canRemove, 
   </div>;
 }
 
-export function SectionRentalIncome({ entries, onEntriesChange, stateCode }: { entries: RentalPropertyEntryData[]; onEntriesChange: (entries: RentalPropertyEntryData[]) => void; stateCode?: string | null }) {
+export function SectionRentalIncome({ entries, onEntriesChange, stateCode, taxYear }: { entries: RentalPropertyEntryData[]; onEntriesChange: (entries: RentalPropertyEntryData[]) => void; stateCode?: string | null; taxYear?: number | null }) {
   return <RetroShell title="Rental Income" eyebrow="INCOME // SCHEDULE E">
     <div className="guided-question"><p className="guided-prompt">Enter the actual source facts for each rental property.</p><p className="guided-hint">Zero-rent and expense-only properties stay in the record. Complete their actual eligibility before calculating.</p></div>
-    <div className="guided-w2-stack">{entries.map((entry, index) => <RentalPropertyCard key={index} entry={entry} index={index} stateCode={stateCode} onEntryChange={updated => onEntriesChange(entries.map((existing, existingIndex) => existingIndex === index ? updated : existing))} onRemove={() => onEntriesChange(entries.filter((_, existingIndex) => existingIndex !== index))} canRemove={entries.length > 1} />)}</div>
+    <div className="guided-w2-stack">{entries.map((entry, index) => <RentalPropertyCard key={index} entry={entry} index={index} stateCode={stateCode} taxYear={taxYear} onEntryChange={updated => onEntriesChange(entries.map((existing, existingIndex) => existingIndex === index ? updated : existing))} onRemove={() => onEntriesChange(entries.filter((_, existingIndex) => existingIndex !== index))} canRemove={entries.length > 1} />)}</div>
     <button className="utility-button" type="button" onClick={() => onEntriesChange([...entries, { ...emptyRentalPropertyEntry }])} aria-label="Add another rental property">+ Add another property</button>
   </RetroShell>;
 }

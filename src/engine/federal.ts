@@ -93,6 +93,7 @@ import { calculateScheduleC } from "./schedules/schedule-c.js";
 import { calculateScheduleD, recomputeCarryforward } from "./schedules/schedule-d.js";
 import { calculateK1CharitableReturnSources } from "./forms/k1-charitable-return-sources.js";
 import { calculateScheduleE } from "./schedules/schedule-e.js";
+import { rentalUseAllocationIssue } from "./schedules/rental-use-allocation-2026.js";
 import { calculateK1PassiveCapitalSources } from "./forms/k1-passive-capital-sources.js";
 import { calculateK1Form461Classification } from "./forms/k1-form461-classification.js";
 import { calculateK1PassiveDistributionSources } from "./forms/k1-passive-distribution-sources.js";
@@ -289,10 +290,20 @@ function calculateFederalTaxBeforeOhioSchoolScheduleA(input: TaxYearInput, conte
   return calculateFederalTaxReturn(withOhioSchoolCalculation(input, { phase: "preliminary" }), context);
 }
 
+const rentalUseAsOfDate = Symbol("rentalUseAsOfDate");
+type FederalInputWithRentalUseDate = TaxYearInput & { [rentalUseAsOfDate]?: string };
+
 /** Spec: claim-of-right.yaml. Pub525 compares each method's tax for the year of repayment. */
 function calculateFederalTaxReturn(input: TaxYearInput, context?: { asOfDate?: string }): TaxReturnResult {
   if (duplicate2026ReturnTaxIdentifierIndexes(input.taxpayer).length) {
     throw new Error(HOUSEHOLD_TAX_IDENTIFIER_CONFLICT);
+  }
+  if (input.taxpayer.taxYear === 2026 && input.rentalProperties?.some(property => property.rentalUseAllocationSources !== undefined)) {
+    const today = currentLocalCivilDate();
+    const asOfDate = context?.asOfDate ?? today;
+    if (!isActualDate(asOfDate) || asOfDate > today) rentalUseAllocationIssue("Supply a valid calculation as-of date no later than today.");
+    const datedInput: FederalInputWithRentalUseDate = { ...input, [rentalUseAsOfDate]: asOfDate };
+    input = datedInput;
   }
   assertCode3DisabilityPensionSources(input, context?.asOfDate);
   const form8919ReceiptDate = input.form8919?.reasonANecSource?.determinationReceivedDate;
@@ -686,7 +697,8 @@ function calculateFederalTaxCore(sourceInput: TaxYearInput, marketplace?: Market
   const calculateOrdered = (kind: MarketplaceOrderedKind) => !ordered?.kinds.includes(kind) || ordered.calculating === kind || ordered[kind] !== undefined;
   const year = sourceInput.taxpayer.taxYear;
   const constants = getConstants(year);
-  const { businessInput: input, form8919NecSource } = reconcileForm8919NecSources(sourceInput, currentLocalCivilDate());
+  const today = currentLocalCivilDate();
+  const { businessInput: input, form8919NecSource } = reconcileForm8919NecSources(sourceInput, today);
   if (year === 2026 && input.form3903 && input.form2555) {
     throw new Error("Form 3903 and Form 2555 require a separate allocation from the original foreign income and moving expense records.");
   }
@@ -1795,7 +1807,7 @@ function calculateFederalTaxCore(sourceInput: TaxYearInput, marketplace?: Market
   audit.record("1040", "8-sched-f", "Farm income (Schedule F)", schedFNetProfit, "Schedule F Line 34");
 
   // Schedule E: Supplemental income (rental + partnership)
-  const schedE = calculateScheduleE(input, k1CharitableSources);
+  const schedE = calculateScheduleE(input, k1CharitableSources, { asOfDate: (sourceInput as FederalInputWithRentalUseDate)[rentalUseAsOfDate] ?? today });
   for (const { basisResult, name } of schedE.partnerships) {
     // Legacy dollar rounding can move a small suspension between categories, so test the real shortfall.
     if (basisResult?.totalSuspendedLosses.gt(0) && basisResult.lossCategories.some(row => row.key === 'foreignTax' && row.total.gt(0))) {

@@ -15,6 +15,7 @@ import { Section45WCurrentCreditSchema } from './section45w-current-credit.js';
 import { OhioReturnHeaderSourcesSchema } from './ohio-return-header-sources.js';
 import { OhioSchoolDistrictFactsSchema } from './ohio-school-district.js';
 import {PAMarriedOrdinarySourcesSchema} from './pa-married-ordinary-sources.js';
+import { RentalUseAllocation2026Schema } from './rental-use-allocation-2026.js';
 /**
  * Zod schemas for all tax input documents.
  * Each schema validates the JSON input files in data/input/.
@@ -4010,6 +4011,7 @@ export const RentalPropertySchema = z.object({
   propertyType: z.enum(["single_family", "multi_family", "vacation", "commercial", "land", "other"]).default("single_family"),
   personalUseDays: z.number().int().min(0).default(0),
   rentalDays: z.number().int().min(0).default(365),
+  rentalUseAllocationSources: RentalUseAllocation2026Schema.optional(),
   ownershipPercentage: decimal.optional(), // default "100"
   isActiveParticipant: z.boolean().default(true),
   rents: decimal,

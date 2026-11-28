@@ -653,6 +653,7 @@ function SectionContent({
         <SectionRentalIncome
           entries={rentalEntries}
           stateCode={state.segmentation.stateCode}
+          taxYear={state.taxYear}
           onEntriesChange={(next: RentalPropertyEntryData[]) =>
             onStateChange(updateSectionData(state, "income-rental", { entries: next }))
           }

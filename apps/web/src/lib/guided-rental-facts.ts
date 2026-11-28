@@ -1,9 +1,14 @@
 import Decimal from "decimal.js";
+import { calculateRentalUseAllocation2026 } from "@/engine/schedules/rental-use-allocation-2026.js";
+import { RentalPropertySchema } from "@/models/inputs.js";
+import { RentalUseAllocation2026Schema } from "@/models/rental-use-allocation-2026.js";
+import { currentLocalCivilDate } from "@/utils/civil-date.js";
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
 import type { FilingStatus, PersonalInfoData, RentalPropertyEntryData } from "./guided-interview-flow";
 import { paRentalWorksheetErrors, type PARentalIncomeExpensesData } from "./guided-pa-rental-facts";
 import { rentalCarrySourceErrors, type RentalCarryoverData } from "./guided-rental-carry-sources";
+import { buildGuidedRentalUseAllocation, rentalDecimalText, type RentalUseAllocationDraft } from "./guided-rental-use-allocation";
 
 export const paRentalBooleanFacts = [
   ["offeredToPublic", "Was this activity offered commercially to the public?"],
@@ -29,6 +34,7 @@ export interface RentalSourceData {
   minimumOwnershipPercentage?: string;
   personalUseDays?: string;
   rentalDays?: string;
+  rentalUseAllocationSources?: RentalUseAllocationDraft;
   sourceFactsConfirmed?: boolean | null;
   heldForRental?: boolean | null;
   amountsAreWholeProperty?: boolean | null;
@@ -65,14 +71,36 @@ export const rentalExpenseFields = [
 ] as const;
 const types = ["single_family", "multi_family", "vacation", "commercial", "land", "other"];
 
+function guidedRentalUseAllocationError(entry: RentalPropertyEntryData): string | undefined {
+  const source = RentalUseAllocation2026Schema.safeParse(buildGuidedRentalUseAllocation(entry.rentalUseAllocationSources));
+  if (!source.success) return "Complete the original 2026 calendar, rent, expense and fully recovered asset records.";
+  if (entry.sourceFactsConfirmed !== true) return undefined;
+  const property = RentalPropertySchema.safeParse({
+    ...entry,
+    ownershipPercentage: rentalDecimalText(entry.ownershipPercentage),
+    personalUseDays: Number(entry.personalUseDays), rentalDays: Number(entry.rentalDays),
+    rents: rentalDecimalText(entry.rents), ...Object.fromEntries(rentalExpenseFields.map(([field]) => [field, rentalDecimalText(entry[field])])),
+    qbiW2Wages: rentalDecimalText(entry.qbiW2Wages), qbiUBIA: rentalDecimalText(entry.qbiUBIA),
+    rentalUseAllocationSources: source.data,
+  });
+  if (!property.success) return "Confirm the dwelling and its original annual day and expense amounts.";
+  try {
+    calculateRentalUseAllocation2026(property.data, currentLocalCivilDate());
+  } catch (error) {
+    return error instanceof Error ? error.message : "Reconcile the actual dwelling records.";
+  }
+}
+
 export function isStartedRental(entry: RentalPropertyEntryData): boolean {
   const entered = (value: unknown) => typeof value === "boolean" || (typeof value === "string" && value.trim() !== "");
-  return Object.values(entry).some(entered) || !!entry.priorLossSources || [entry.paClassification, entry.paIncomeExpenses].some(source => source && Object.values(source).some(entered));
+  return Object.values(entry).some(entered) || !!entry.priorLossSources || !!entry.rentalUseAllocationSources
+    || [entry.paClassification, entry.paIncomeExpenses].some(source => source && Object.values(source).some(entered));
 }
 
 export function rentalFactErrors(entries: RentalPropertyEntryData[] | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, stateCode?: string | null, personal?: PersonalInfoData): Record<string, string> {
   const errors: Record<string, string> = rentalCarrySourceErrors(entries, taxYear, filingStatus, personal);
   const names = new Set<string>();
+  const startedEntries = (entries ?? []).filter(isStartedRental).length;
   const maxDays = taxYear && new Date(Date.UTC(taxYear, 1, 29)).getUTCMonth() === 1 ? 366 : 365;
   (entries ?? []).forEach((entry, index) => {
     if (!isStartedRental(entry)) return;
@@ -87,7 +115,12 @@ export function rentalFactErrors(entries: RentalPropertyEntryData[] | undefined,
     if (ownershipError || parseGuidedCurrency(entry.ownershipPercentage).lte(0) || parseGuidedCurrency(entry.ownershipPercentage).gt(100)) errors[`${key}-ownership`] = "Enter the actual ownership percentage greater than 0 and no more than 100.";
     for (const field of ["personalUseDays", "rentalDays"] as const) if (!/^\d+$/.test(entry[field] ?? "") || Number(entry[field]) > maxDays) errors[`${key}-${field}`] = `Enter the actual whole number of days, from 0 to ${maxDays}.`;
     if (!errors[`${key}-personalUseDays`] && !errors[`${key}-rentalDays`] && Number(entry.personalUseDays) + Number(entry.rentalDays) > maxDays) errors[`${key}-days`] = "Rental and personal days cannot exceed the calendar year.";
-    if (!errors[`${key}-personalUseDays`] && Number(entry.personalUseDays) > 0) errors[`${key}-personal-allocation`] = "Personal use requires the actual rental/personal allocation and section 280A worksheets, which this guided route does not yet support.";
+    if (entry.rentalUseAllocationSources || (!errors[`${key}-personalUseDays`] && Number(entry.personalUseDays) > 0)) {
+      const issue = taxYear === 2026 && startedEntries === 1
+        ? guidedRentalUseAllocationError(entry)
+        : "Personal use without the supported 2026 same-dwelling source method requires separate section 280A worksheets.";
+      if (issue) errors[`${key}-personal-allocation`] = issue;
+    }
     for (const [field, label] of [["rents", "Actual gross rents"], ...rentalExpenseFields, ["priorYearUnallowedLoss", "Prior-year unallowed losses"], ["priorYearUnallowedCredits", "Prior-year unallowed credits"]] as const) {
       const error = amountError(entry[field], label); if (error) errors[`${key}-${field}`] = error;
     }

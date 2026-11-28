@@ -19,6 +19,8 @@ import { calculateK1CharitableReturnSources, type K1CharitableReturnResult, type
 import { calculateRoyaltyPropertySources, type RoyaltyPropertyResult } from "@/engine/forms/royalty-property-sources.js";
 import { d, sum } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { calculateRentalUseAllocation2026, rentalUseAllocationIssue, type RentalUseReturnContext } from "./rental-use-allocation-2026.js";
+import type { RentalAllocationCategory } from "@/models/rental-use-allocation-2026.js";
 
 // ── Part I: Rental Property Entry ────────────────────────
 
@@ -28,6 +30,7 @@ export interface RentalPropertyEntry {
   rents: Decimal;
   totalExpenses: Decimal;
   netRentalIncome: Decimal; // Line 21 per property
+  allocatedExpenses?: Partial<Record<RentalAllocationCategory, Decimal>>;
   isPassive: true; // Rental is always passive unless real estate professional
   isActiveParticipant: boolean;
 }
@@ -292,11 +295,21 @@ function applyAtRiskLimitation(
   };
 }
 
-export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'rentalProperties' | 'form1099Misc'> & Partial<Pick<TaxYearInput, 'k1CharitableSources' | 'qbiLossSources' | 'royaltyPropertySources' | 'form4562' | 'scheduleC'>> & {[contextField:string]:unknown} & { taxpayer?: K1CharitableReturnInput['taxpayer'] }, completedCharitable?: K1CharitableReturnResult): ScheduleEResult {
+export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'rentalProperties' | 'form1099Misc'> & Partial<Pick<TaxYearInput, 'k1CharitableSources' | 'form4562'>> & RentalUseReturnContext & {[contextField:string]:unknown} & { taxpayer?: K1CharitableReturnInput['taxpayer'] }, completedCharitable?: K1CharitableReturnResult, context?: { asOfDate: string }): ScheduleEResult {
   const rentals = input.rentalProperties ?? [];
-  if (input.taxpayer?.taxYear === 2026 && rentals.some(property => (property.personalUseDays ?? 0) > 0)) {
-    throw new Error("2026 Schedule E personal use requires actual dwelling-use records, a rental and personal expense allocation, and any applicable section 280A worksheet.");
+  const taxYear = input.taxpayer?.taxYear;
+  const mixedUse = rentals.find(property => property.rentalUseAllocationSources !== undefined || (taxYear === 2026 && (property.personalUseDays ?? 0) > 0));
+  if (mixedUse && (taxYear !== 2026 || rentals.length !== 1 || input.scheduleK1?.length || input.scheduleK1Form1041?.length
+    || input.royaltyPropertySources !== undefined || input.form1099Misc?.length || input.form1098?.length
+    || input.scheduleC !== undefined || input.scheduleF !== undefined || input.form4562 !== undefined || input.qbiLossSources !== undefined
+    || input.priorYear?.suspendedPassiveLosses?.length || input.priorYear?.reitPtpLossSource
+    || !d(input.priorYear?.qbiLossCarryforward).isZero())) {
+    rentalUseAllocationIssue("Other activities, mortgage records, passive losses and QBI sources require their separate allocation methods.");
   }
+  if (mixedUse && !d(mixedUse.taxes).isZero() && input.deductionElection !== "standard") {
+    rentalUseAllocationIssue("This real estate tax allocation requires an explicit standard deduction election.");
+  }
+  const actualRentalUse = mixedUse && calculateRentalUseAllocation2026(mixedUse, context?.asOfDate);
   const scheduleK1SourceIssue = getFutureScheduleK1SourceIssue(input.taxpayer?.taxYear, input.scheduleK1);
   if (scheduleK1SourceIssue) throw new Error(scheduleK1SourceIssue);
   if (input.rentalProperties?.some(property => property.form4562?.passengerFirstYearSources !== undefined)) throw new Error('Passenger worksheet requires separate rental owner/activity linkage');
@@ -363,7 +376,13 @@ export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'ren
     const isMixedUse = personalDays > 14 && personalDays > rentalDays * 0.1;
 
     let totalExpenses: Decimal;
-    if (isMixedUse && totalDays > 0) {
+    if (actualRentalUse) {
+      totalExpenses = actualRentalUse.totalExpenses;
+      audit.record("Sched E", "280A-2026", "Actual rental-use allocation", totalExpenses,
+        "Documented direct rental costs plus the fair-rental share of shared expenses", {
+          ...actualRentalUse.expensesByCategory, "Fair-rental days": String(actualRentalUse.rentalDays), "Personal-use days": String(actualRentalUse.personalDays),
+        });
+    } else if (isMixedUse && totalDays > 0) {
       const rentalRatio = new Decimal(rentalDays).dividedBy(totalDays);
       totalExpenses = grossExpenses.times(rentalRatio).toDecimalPlaces(0, Decimal.ROUND_DOWN);
       audit.record("Sched E", "280A", `Mixed-use allocation: ${prop.description}`,
@@ -373,7 +392,7 @@ export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'ren
       totalExpenses = grossExpenses;
     }
 
-    const netRentalIncome = rents.minus(totalExpenses);
+    const netRentalIncome = actualRentalUse?.netRentalIncome ?? rents.minus(totalExpenses);
 
     rentalProperties.push({
       description: prop.description,
@@ -381,6 +400,7 @@ export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'ren
       rents,
       totalExpenses,
       netRentalIncome,
+      ...(actualRentalUse ? { allocatedExpenses: actualRentalUse.expensesByCategory } : {}),
       isPassive: true,
       isActiveParticipant: prop.isActiveParticipant ?? true,
     });

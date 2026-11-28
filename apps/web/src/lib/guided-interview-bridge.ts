@@ -97,6 +97,7 @@ import { businessFactErrors, hasBusinessSourceData, isStartedNec, sumKnownBusine
 import { readGuidedBusinessMileage } from "./guided-business-mileage";
 import { readGuidedProfessionalWagering } from "./guided-professional-wagering";
 import { isStartedRental, rentalFactErrors, rentalExpenseFields } from "./guided-rental-facts";
+import { buildGuidedRentalUseAllocation } from "./guided-rental-use-allocation";
 import { buildGuidedRentalCarryovers } from "./guided-rental-carry-sources";
 import { paRentalAmountFields } from "./guided-pa-rental-facts";
 import { bindGuidedRefundRecoveryInput, captureGuidedRefundRecoveryOriginals } from "./guided-tax-refund-recoveries";
@@ -648,6 +649,7 @@ export function buildRentalPropertyInputs(entries: RentalPropertyEntryData[] | u
       ownershipPercentage: toOptionalDecimalString(e.ownershipPercentage),
       personalUseDays: /^\d+$/.test(e.personalUseDays ?? "") ? Number(e.personalUseDays) : undefined,
       rentalDays: /^\d+$/.test(e.rentalDays ?? "") ? Number(e.rentalDays) : undefined,
+      ...(e.rentalUseAllocationSources ? { rentalUseAllocationSources: buildGuidedRentalUseAllocation(e.rentalUseAllocationSources) } : {}),
       isActiveParticipant: e.isActiveParticipant ?? undefined,
       allInvestmentAtRisk: e.allInvestmentAtRisk ?? undefined,
       rents: toOptionalDecimalString(e.rents),
