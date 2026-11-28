@@ -16,6 +16,7 @@ import { OhioReturnHeaderSourcesSchema } from './ohio-return-header-sources.js';
 import { OhioSchoolDistrictFactsSchema } from './ohio-school-district.js';
 import {PAMarriedOrdinarySourcesSchema} from './pa-married-ordinary-sources.js';
 import { RentalUseAllocation2026Schema } from './rental-use-allocation-2026.js';
+import { Form6198PartII2026Schema } from './form-6198-part-ii-2026.js';
 /**
  * Zod schemas for all tax input documents.
  * Each schema validates the JSON input files in data/input/.
@@ -2283,6 +2284,8 @@ export const Form6198Schema = z.object({
   currentYearDecreases: decimal.optional(),
   /** Line 10a: Amount at risk at close of preceding tax year (0 if first year) */
   priorYearAmountAtRisk: decimal.optional(),
+  /** Current Part II records, separate from retained legacy worksheet amounts. */
+  partII2026: Form6198PartII2026Schema.optional(),
 });
 export type Form6198Input = z.infer<typeof Form6198Schema>;
 

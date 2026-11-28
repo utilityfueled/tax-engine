@@ -54,6 +54,9 @@ export interface Form6198Result {
 }
 
 export function calculateForm6198(input: Form6198Input): Form6198Result {
+  if (input.partII2026 !== undefined) {
+    throw new Error("2026 Form 6198 Part II requires the original Schedule K-1 and matching return context.");
+  }
   const audit = new AuditTrail();
   const name = input.activityName || "Activity";
 

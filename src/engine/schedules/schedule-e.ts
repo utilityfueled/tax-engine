@@ -14,6 +14,7 @@ import { getFutureScheduleK1SourceIssue } from "../assert-statement-year.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { calculateForm4562 } from "@/engine/forms/form-4562.js";
 import { calculateForm6198, type Form6198Result } from "@/engine/forms/form-6198.js";
+import { calculateForm6198PartII2026 } from "@/engine/forms/form-6198-part-ii-2026.js";
 import { calculatePartnerBasisSchedule, type PartnerBasisScheduleResult } from "@/engine/forms/partner-basis-schedule.js";
 import { calculateK1CharitableReturnSources, type K1CharitableReturnResult, type K1CharitableReturnInput } from "@/engine/forms/k1-charitable-return-sources.js";
 import { calculateRoyaltyPropertySources, type RoyaltyPropertyResult } from "@/engine/forms/royalty-property-sources.js";
@@ -202,10 +203,16 @@ function applyBasisLimitation(
   return { basisAdjustedTotal, basisResult };
 }
 
+type AtRiskReturnContext = Pick<K1CharitableReturnInput, "scheduleK1" | "qbiLossSources" | "k1CharitableSources"> & {
+  taxpayer?: K1CharitableReturnInput["taxpayer"];
+};
+
 function applyAtRiskLimitation(
   k1: ScheduleK1,
   rawNetAmount: Decimal,
   audit: AuditTrail,
+  input: AtRiskReturnContext,
+  k1Index: number,
 ): {
   netAmount: Decimal;
   atRiskAmount?: Decimal;
@@ -215,6 +222,33 @@ function applyAtRiskLimitation(
   // When Form 6198 input is provided, compute the at-risk amount from it
   // instead of using the manual atRiskAmount field
   if (k1.form6198) {
+    const sourceId = `scheduleK1:${k1Index}`;
+    const linkedSource = input.k1CharitableSources?.statements?.some(row => row.k1SourceId === sourceId)
+      || input.qbiLossSources?.activities?.some(row => row.k1SourceId === sourceId);
+    if (k1.form6198.partII2026 !== undefined) {
+      const ein = k1.partnershipEIN.trim().replaceAll("-", "");
+      const duplicateActivity = input.scheduleK1.some((other, index) => index !== k1Index
+        && (other.taxYear === 2026 || other.taxYear === undefined)
+        && (other.accountHolder === k1.accountHolder || other.accountHolder === undefined)
+        && other.partnershipEIN.trim().replaceAll("-", "") === ein);
+      if (linkedSource || duplicateActivity) {
+        throw new Error("Form 6198 Part II requires a single original Schedule K-1 without a competing activity source.");
+      }
+      const result = calculateForm6198PartII2026(k1, rawNetAmount, input.taxpayer);
+      audit.merge(result.lines);
+      return result;
+    }
+
+    const source = k1.form6198;
+    const openingBasis = d(k1.beginningBasis);
+    const priorAtRisk = d(source.priorYearAmountAtRisk);
+    if (input.taxpayer?.taxYear === 2026 && k1.taxYear === 2026 && !linkedSource && rawNetAmount.lt(0)
+      && k1.entityType === "partnership" && !k1.isPassiveActivity && !k1.isPubliclyTradedPartnership
+      && !k1.isForeignPartnership && !d(k1.royalties).gt(0)
+      && openingBasis.gt(0) && openingBasis.eq(d(source.adjustedBasisAtEffectiveDate))
+      && priorAtRisk.gt(0) && !priorAtRisk.eq(openingBasis) && d(source.currentYearDecreases).gt(0)) {
+      throw new Error("Form 6198 requires original 2026 Part II records to resolve the opening basis and prior at-risk amounts.");
+    }
     const form6198Result = calculateForm6198(k1.form6198);
     const computedAtRisk = form6198Result.amountAtRisk;
 
@@ -222,7 +256,6 @@ function applyAtRiskLimitation(
     // activity membership. For an actual current ordinary-loss/royalty source,
     // preserve the separately reported income offset described in i6198 line5.
     if (rawNetAmount.isNegative() && d(k1.royalties).gt(0)) {
-      const source = k1.form6198;
       const requiredAmounts = [source.ordinaryIncome, source.gainLossFromDispositions,
         source.otherIncomeGains, source.otherDeductionsLosses, source.adjustedBasisAtEffectiveDate,
         source.currentYearIncreases, source.currentYearDecreases, source.priorYearAmountAtRisk];
@@ -568,8 +601,10 @@ export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'ren
       netAmount: totalK1Income,
       atRiskAmount,
       suspendedAtRiskLoss,
-    } = charitableRisk ? { netAmount: charitableRisk.ordinaryAmount, atRiskAmount: charitableRisk.worksheet.amountAtRisk,
-      suspendedAtRiskLoss: charitableRisk.ordinarySuspended.negated() } : applyAtRiskLimitation(k1, basisAdjustedAmount, audit);
+    } = charitableRisk && k1.form6198?.partII2026 === undefined
+      ? { netAmount: charitableRisk.ordinaryAmount, atRiskAmount: charitableRisk.worksheet.amountAtRisk,
+        suspendedAtRiskLoss: charitableRisk.ordinarySuspended.negated() }
+      : applyAtRiskLimitation(k1, basisAdjustedAmount, audit, input, k1Index);
 
     let nonpassiveIncome = new Decimal(0);
     let nonpassiveLoss = new Decimal(0);

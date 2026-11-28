@@ -1,0 +1,53 @@
+form: "Form 6198 Part II ordinary partnership workpaper"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i6198"
+references:
+  - "https://www.irs.gov/pub/irs-pdf/f6198.pdf"
+  - "https://www.irs.gov/instructions/i6198"
+  - "https://uscode.house.gov/us/usc/t26/s465"
+lines:
+  - line: "6-7-9-originals"
+    description: "Bind the simplified method to the actual ordinary partnership activity"
+    formula: >-
+      Require a single matching current partnership statement for the same
+      owner (name and tax ID suffix), tax year, activity name and EIN, with an original K-1 reference,
+      opening adjusted basis workpaper and complete current Part II workpaper.
+      Match the actual Box 1 loss and opening adjusted basis to the canonical
+      input. Require explicit known amounts, including zero, for the opening
+      adjusted basis on the first day of the year and Part II increases and
+      decreases. Confirm one ordinary nonpassive activity with no prior
+      at-risk losses, recapture or Part III method. Require the full Box 1
+      loss to survive the separate partnership basis calculation and known
+      zero for the unsupported QBI and self-employment amounts. Hold
+      competing sources or unsupported activity composition and never fill
+      in missing evidence.
+    testRef: "tests/engine/forms/form-6198-part-ii-2026.test.ts::requires actual same-owner K-1, basis and complete Part II records"
+    testRefs:
+      - "tests/engine/forms/form-6198-part-ii-2026.test.ts::holds duplicate original sources and standalone legacy calculation"
+  - line: "8-10a-10b-20-21"
+    description: "Compute the current Form 6198 limit before the ordinary loss transfer"
+    formula: >-
+      Use exact Decimal amounts. Line 8 adds opening basis and increases.
+      Line 10a subtracts decreases, including amounts in the opening basis
+      for which the taxpayer is not at risk. Line 10b is the greater of zero
+      or line 10a. For the supported positive Part II case only, line 20
+      equals line 10b. Limit the already basis-allowed ordinary loss to line
+      20 and retain the difference as suspended at-risk loss. Carry the
+      allowed nonpassive loss through Schedule E once. Hold a zero or negative
+      line 10a for separate Part III or section 465(e) review. This calculation
+      grants no 2026 filing, export or review-form qualification.
+    testRef: "tests/engine/forms/form-6198-part-ii-2026.test.ts::transfers the source-backed Form 6198 limit through Schedule E and federal income"
+    testRefs:
+      - "tests/engine/forms/form-6198-part-ii-2026.test.ts::holds zero or negative Part II capacity for separate review"
+  - line: "legacy-source-scope"
+    description: "Preserve historical and specialized methods without treating earlier fields as current Part II"
+    formula: >-
+      Preserve established historical calculations and distinct linked K-1
+      source methods. When the regular 2026 loss lane receives distinct
+      opening and prior at-risk amounts and a positive decrease, and the
+      legacy basis amount also equals the reported opening basis, hold for
+      original Part II evidence. An older at-risk balance cannot establish
+      the first-day adjusted basis or prove the meaning of line 9. Remain
+      compatible with legacy calculations outside that ambiguity. Never
+      combine the new Part II source with legacy or manual inputs.
+    testRef: "tests/engine/forms/form-6198-part-ii-2026.test.ts::holds the ambiguous regular 2026 legacy worksheet and preserves 2025"
