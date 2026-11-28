@@ -2348,7 +2348,7 @@
       "skippedTitles": []
     },
     "deductions-credits.spec.ts": {
-      "caseCount": 35,
+      "caseCount": 36,
       "bounds": {
         "filled-return": 0,
         "provider": 0,
