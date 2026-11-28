@@ -4,10 +4,10 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "08c705b1237f8a9a31c98dc5f1b58d0fbd17d3f0",
-    "latestScopedApplicationCommit": "08c705b1237f8a9a31c98dc5f1b58d0fbd17d3f0",
-    "latestCombinedCandidateCommit": "08c705b1237f8a9a31c98dc5f1b58d0fbd17d3f0",
+    "latestScopedApplicationCommit": "fc7c3bd96f5158cade397ae9c13d16a3347d3054",
+    "latestCombinedCandidateCommit": "fc7c3bd96f5158cade397ae9c13d16a3347d3054",
     "nov27FullBrowserCollectionEvidenceKey": "activeContinuation.nov27FullBrowserCollection",
-    "latestScopedChecksEvidenceKey": "activeContinuation.nov27GuidedMortgageActualDates",
+    "latestScopedChecksEvidenceKey": "activeContinuation.nov27GuidedOwnedHomeForm8829",
     "nov27ExactFederalPaymentTotalsEvidenceKey": "activeContinuation.nov27ExactFederalPaymentTotals",
     "nov27ExactFederalPaymentCombinedEvidenceKey": "activeContinuation.nov27ExactFederalPaymentCombined",
     "nov27Arm64WorkerPairEvidenceKey": "activeContinuation.nov27Arm64WorkerPair",
@@ -202,7 +202,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov27ExactFederalPaymentCombined",
     "remaining": [
-      "Both strict Linux browser gates and final image evidence remain open. AMD64 CI 46099424628, Web 46099424592 and Docker 46099424569 for 08c705b12 were queued. The ARM64 incumbent 46085907600 was queued for a runner and e32a4591e 46091464368 was pending in the same concurrency group. The separate older ARM64 comparison 46066052234 passed archive and Compose recovery and failed nine strict browser cases. Its worker diagnostic timed out with both settings. Earlier AMD64 46023825170 passed recovery and failed runtime browser and immutable image evidence.",
+      "Both strict Linux browser gates and final image evidence remain open. AMD64 CI 46102497156, Web 46102497114 and Docker 46102497101 for fc7c3bd9 were queued. The ARM64 incumbent 46085907600 was queued for a runner and e32a4591e 46091464368 was pending in the same concurrency group. The separate older ARM64 comparison 46066052234 passed archive and Compose recovery and failed nine strict browser cases. Its worker diagnostic timed out with both settings. Earlier AMD64 46023825170 passed recovery and failed runtime browser and immutable image evidence.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 27 public npm audits of the unchanged lockfile returned zero findings across 550 total and 457 production packages.",
@@ -210,6 +210,41 @@
     ]
   },
   "activeContinuation": {
+    "nov27GuidedOwnedHomeForm8829": {
+      "commit": "fc7c3bd96f5158cade397ae9c13d16a3347d3054",
+      "exactArchiveSha256": "50e482e367389c5de097d4c090f422a33d69550cb36780b7ae6a3d83565ab5c7",
+      "localEvidenceMarker": "nov27-guided-8829-owned-home-path",
+      "commandsPassed": [
+        "focused",
+        "offline-eval",
+        "contracts",
+        "spec",
+        "inventory",
+        "typecheck",
+        "build",
+        "web-types",
+        "lint"
+      ],
+      "focusedTestsPassed": 686,
+      "independentEngineeringReviewPassed": true,
+      "independentFocusedTestsPassed": 18,
+      "scope": "Federal-only 2026 standard deduction and one qualifying continuously used owned home. Guided original records are held after relevant edits until reconfirmed. Use live Schedule C line 29 and a single Form 8829 line 36 transfer.",
+      "form8829Line8": "30000",
+      "form8829Line24": "900",
+      "form8829Line42": "513",
+      "form8829Line36": "1413",
+      "scheduleCNetProfit": "28587",
+      "sources": [
+        "https://www.irs.gov/pub/irs-prior/f8829--2026.pdf",
+        "https://www.irs.gov/pub/irs-dft/i8829--dft.pdf"
+      ],
+      "amd64": {
+        "ciQueued": 46102497156,
+        "webQueued": 46102497114,
+        "dockerQueued": 46102497101
+      },
+      "filingQualified": false
+    },
     "nov27AiSourceFirstCaseReview": {
       "commit": "9009af968452724ebd941fc1a94614ff3b60ef4f",
       "exactArchiveSha256": "0bc660e1d4f564c383729549ee84caedc63cbae16656d7673ce9aa4ec91f0748",

@@ -13,7 +13,20 @@ the latest application revision, exact-source runs and open dependencies. The
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
-| Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. The ARM64 group and the AMD64 jobs for `08c705b12` await runner assignment. The older ARM64 comparison failed nine strict browser cases after image and recovery passed. Qualify both final runtime images before publishing. |
+| Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. The ARM64 group and the AMD64 jobs for `fc7c3bd9` await runner assignment. The older ARM64 comparison failed nine strict browser cases after image and recovery passed. Qualify both final runtime images before publishing. |
+
+## November 27 guided Form 8829 for a qualifying owned home
+
+`fc7c3bd96` guides one federal-only standard-deduction business through
+actual owned-home records for unchanged full-year use. The engine sends live
+Schedule C line 29 to Form 8829 line 8 and transfers Form 8829 line 36 back
+once. The independently checked fixture applied $900 of operating costs
+and $513 of depreciation for a $1,413 deduction and $28,587 of net profit.
+Saved source edits require reconfirmation. The filing route remains gated.
+All 686 exact focused tests, eight static checks and independent engineering
+review passed. [Final 2026 Form 8829](https://www.irs.gov/pub/irs-prior/f8829--2026.pdf) · [Draft 2026 instructions](https://www.irs.gov/pub/irs-dft/i8829--dft.pdf)
+
+The AMD64 runs for this revision await runner assignment. [CI](https://github.com/utilityfueled/tax-engine/actions/runs/46102497156) · [Web](https://github.com/utilityfueled/tax-engine/actions/runs/46102497114) · [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/46102497101)
 
 ## November 27 source-first AI case review packet
 
