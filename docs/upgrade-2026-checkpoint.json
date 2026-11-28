@@ -3,7 +3,7 @@
     "aiSourceFirstCaseReviewEvidenceKey": "activeContinuation.nov27AiSourceFirstCaseReview",
     "asOf": "2026-11-28",
     "branch": "main",
-    "applicationCommit": "6aadaaeddc4931b13e4b14e387a93590224c6447",
+    "applicationCommit": "7c1dfb42e459217dca53e3afc57db66d4369c91e",
     "latestScopedApplicationCommit": "7c1dfb42e459217dca53e3afc57db66d4369c91e",
     "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
     "latestSchedule8812PayrollActcEvidenceKey": "activeContinuation.nov27Schedule8812PayrollActc",
@@ -205,11 +205,11 @@
     "annualScheduleBSourceEvidenceKey": "activeContinuation.nov24ScheduleBFinalSource",
     "annualScheduleBReviewEvidenceKey": "activeContinuation.nov24ScheduleBOrdinaryReview",
     "pensionTaxableAmountEvidenceKey": "activeContinuation.nov24ReportedPensionTaxableAmount",
-    "completeLocalBaselineEvidenceKey": "activeContinuation.nov28Form6198CombinedReleaseChecks",
+    "completeLocalBaselineEvidenceKey": "activeContinuation.nov28ExactFilingAiCharityCombined",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov27ExactFederalPaymentCombined",
     "remaining": [
-      "Both strict Linux browser gates and final runtime image evidence remain open. Exact application 6aadaaedd AMD64 CI 46118207971, Web 46118207711 and Docker 46118207685 were queued without assigned runners. Current ARM64 rehearsal 46120985997 was pending without a runner on the documentation successor 0c594ea43. Earlier 46085907600 passed archive and Compose recovery and failed nine strict browser cases.",
+      "Both strict Linux browser gates and final runtime image evidence remain open. Exact application 7c1dfb42e CI 46123814311, Web 46123814219 and Docker 46123814368 were queued. ARM64 rehearsal 46120985997 was pending on the earlier documentation successor 0c594ea43. Earlier 46085907600 passed archive and Compose recovery and failed nine strict browser cases.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 27 public npm audits of the unchanged lockfile returned zero findings across 550 total and 457 production packages.",
@@ -217,6 +217,57 @@
     ]
   },
   "activeContinuation": {
+    "nov28ExactFilingAiCharityCombined": {
+      "commit": "7c1dfb42e459217dca53e3afc57db66d4369c91e",
+      "exactArchiveSha256": "37b4c66b491b366cc39ccd337082159594d1ef7ccf28eed92ddee67449480a8d",
+      "localEvidenceMarker": "nov27-charitable-prepaid-pmi-fixture-path",
+      "manifestSha256": "ebfd97f840e66ff3b59bd0371da657efceb217e72bd3a630c21d6639c483a427",
+      "allElevenLocalChecksPassed": true,
+      "commandsPassed": [
+        "test",
+        "coverage",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "build",
+        "build-web",
+        "lint",
+        "browser"
+      ],
+      "prerequisites": {
+        "node": "26.13.1",
+        "pypdf": "6.10.0"
+      },
+      "officialSampleDocumentsVerified": 15,
+      "offlineEvaluatorArtifactCheckPassed": true,
+      "unit": {
+        "passed": 31548,
+        "skipped": 83
+      },
+      "coverage": {
+        "passed": 31548,
+        "skipped": 83,
+        "branchPercent": "88.8"
+      },
+      "browser": {
+        "passed": 655,
+        "skipped": 5,
+        "windows": 9,
+        "listenerCleanup": true,
+        "summarySha256": "9b3b747164b6ed96e1e1a76fb1a4fe487578af6f1a0f950081bba4cda5f65bc2",
+        "sourceBuildSha256": "a0772f9d317f17bd7c7832a299d345ac755faac6b567ca9ac8f7292029d81bbe"
+      },
+      "standaloneEncryptedRecovery": {
+        "exit": 0,
+        "logSha256": "fd5abc72abbfdbacb339e04761698cbdf78af03dcbea1de5c8c6d82db545d20a",
+        "receiptSha256": "e6ab71405431abe965a0fdd895d97734f3e0dc0188be36ff84b9be7327fb6bec",
+        "listenerCleanup": true
+      },
+      "linuxNativeQualified": false,
+      "hostedQualified": false
+    },
     "nov28CharitablePrepaidMortgageFixture": {
       "commit": "7c1dfb42e459217dca53e3afc57db66d4369c91e",
       "archiveSha256": "37b4c66b491b366cc39ccd337082159594d1ef7ccf28eed92ddee67449480a8d",
