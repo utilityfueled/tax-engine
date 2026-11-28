@@ -5577,6 +5577,75 @@
       ]
     },
     {
+      "key": "federal/form-6198-schedule-c-guided",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": null,
+      "specPath": "spec/federal/2026/form-6198-schedule-c-guided.yaml",
+      "enginePath": "src/engine/forms/form-6198-schedule-c-part-ii-2026.ts",
+      "packetPath": null,
+      "implementationTestRefs": [
+        "tests/guided-interview/guided-schedule-c-form-6198.test.ts::uses the independent business source and actual Form 6198 loss in the normal guided bridge",
+        "tests/guided-interview/guided-schedule-c-form-6198.test.ts::reopens actual originals and clears review after controlling edits"
+      ],
+      "implementationNote": "Guided original Schedule C and Form 6198 records reopen after encrypted recovery and require current owner and source confirmation. Qualified human review and export remain open.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/form-6198-schedule-c-part-ii",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/instructions/i6198",
+      "specPath": "spec/federal/2026/form-6198-schedule-c-part-ii.yaml",
+      "enginePath": "src/engine/forms/form-6198-schedule-c-part-ii-2026.ts",
+      "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/forms/form-6198-schedule-c-part-ii-2026.test.ts::uses the exact allowed Schedule C loss once in federal income",
+        "tests/engine/forms/form-6198-schedule-c-part-ii-2026.test.ts::distinguishes exact zero capacity from a one-cent negative amount"
+      ],
+      "implementationNote": "Source-bound 2026 ordinary sole-proprietor Schedule C loss and separate current at-risk suspension. Prior carry release, Part III, qualified state transfers and filing remain open.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/form-6198-schedule-c-part-ii-2026",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/form-6198-schedule-c-part-ii-2026.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-6251",
       "jurisdiction": "federal",
       "taxYear": 2025,
