@@ -3,6 +3,7 @@
     "aiSourceFirstCaseReviewEvidenceKey": "activeContinuation.nov27AiSourceFirstCaseReview",
     "asOf": "2026-11-28",
     "branch": "main",
+    "latestForm6198PhysicalEvidenceKey": "activeContinuation.nov28Form6198PhysicalCandidate",
     "applicationCommit": "19fc8c5e60bf082465b9e5cb2952742d5a522f93",
     "latestScopedApplicationCommit": "77e1fe6f664633fa2397f3f22e484957f9259703",
     "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
@@ -217,6 +218,26 @@
     ]
   },
   "activeContinuation": {
+    "nov28Form6198PhysicalCandidate": {
+      "applicationCommit": "43adee4032f5c6abd23279f546d39949bf16d470",
+      "source": "https://www.irs.gov/pub/irs-pdf/f6198.pdf",
+      "sourceRevision": "November 2025, retrieved November 28, 2026",
+      "officialBlankSha256": "8ae169186ad9f62910e73205ebaeb02a73bc74bb1a47954074ec14e4645a6389",
+      "physicalEvidence": "One page, all 34 widgets and all six checked states verified. Four exact-source tests passed against the official blank. The inventory remains unsupported and no renderer is registered.",
+      "evidenceDirectory": ".local/upgrade-evidence/nov28-current-form6198-blank",
+      "testLogSha256": "056fde6bbe1413e24a765e643d158edda4492a1f89ba54d22d1c3f438fa6591f"
+    },
+    "nov28Arm64StrictBrowserResult": {
+      "failedRun": 46113946817,
+      "failedRevision": "9f8fcff52176f2175234b06c7c9d644e7c8097cc",
+      "browser": { "passed": 644, "timedOut": 11, "skipped": 5 },
+      "passedBeforeBrowser": "Native image verification, isolated Compose upgrade and database recovery, and the immutable archive. Listener cleanup passed.",
+      "artifactSha256": "716370606f623f3991003919648f17abd7ada7c45ad807c8d61c592c0850af1a",
+      "successorRun": 46120985997,
+      "successorRevision": "0c594ea43f11970620c108a504a9c0fc1d23fc23",
+      "successorContains": "42d8091d9e54c6429741c09629351a303a8ba1cc",
+      "successorStatus": "Queued when checked November 28, 2026. Strict browser qualification remains open."
+    },
     "nov28GuidedScheduleCForm6198Originals": {
       "applicationCommit": "77e1fe6f664633fa2397f3f22e484957f9259703",
       "guidedCommit": "1b131cf5dccdf3f7ddc09775dcad572dcaffe4eb",
