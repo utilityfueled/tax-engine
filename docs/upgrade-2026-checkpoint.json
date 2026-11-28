@@ -3,10 +3,10 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "e32a4591ea0063f0f425ec4c761582f1b0df553f",
-    "latestScopedApplicationCommit": "e32a4591ea0063f0f425ec4c761582f1b0df553f",
-    "latestCombinedCandidateCommit": "e32a4591ea0063f0f425ec4c761582f1b0df553f",
+    "latestScopedApplicationCommit": "505b82023f61b71bc029117a6181c7e85bf7d1e3",
+    "latestCombinedCandidateCommit": "505b82023f61b71bc029117a6181c7e85bf7d1e3",
     "nov27FullBrowserCollectionEvidenceKey": "activeContinuation.nov27FullBrowserCollection",
-    "latestScopedChecksEvidenceKey": "activeContinuation.nov27ExactFederalPaymentTotals",
+    "latestScopedChecksEvidenceKey": "activeContinuation.nov27Form8829OwnedHomeReview",
     "nov27ExactFederalPaymentTotalsEvidenceKey": "activeContinuation.nov27ExactFederalPaymentTotals",
     "nov27ExactFederalPaymentCombinedEvidenceKey": "activeContinuation.nov27ExactFederalPaymentCombined",
     "nov27Arm64WorkerPairEvidenceKey": "activeContinuation.nov27Arm64WorkerPair",
@@ -201,7 +201,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov27ExactFederalPaymentCombined",
     "remaining": [
-      "Both strict Linux browser gates and final image evidence remain open. Exact e32a4591e ARM64 46091464368 was pending, and AMD64 Web 46091432063, Docker 46091432102 and CI 46091432136 were queued. The separate older ARM64 comparison 46066052234 passed archive and Compose recovery and failed nine strict browser cases. Its worker diagnostic still timed out with both settings. Earlier AMD64 46023825170 passed recovery and failed runtime browser and immutable image evidence.",
+      "Both strict Linux browser gates and final image evidence remain open. AMD64 CI 46095697537, Web 46095697457 and Docker 46095697438 for 505b82023 were queued. The ARM64 incumbent 46085907600 was queued for a runner and e32a4591e 46091464368 was pending in the same concurrency group. The separate older ARM64 comparison 46066052234 passed archive and Compose recovery and failed nine strict browser cases. Its worker diagnostic timed out with both settings. Earlier AMD64 46023825170 passed recovery and failed runtime browser and immutable image evidence.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 27 public npm audits of the unchanged lockfile returned zero findings across 550 total and 457 production packages.",
@@ -209,6 +209,60 @@
     ]
   },
   "activeContinuation": {
+    "nov27Form8863StudentIdentity": {
+      "commit": "d72ebd8142777ea9ca5f9265eac322c9b7d288fe",
+      "exactArchiveSha256": "1ea9988b80d2dae5438627be8d133f55d21bfe5f3837c892e73cc185450fdbbb",
+      "localEvidenceMarker": "nov27-form8863-student-identity-path",
+      "commandsPassed": [
+        "focused",
+        "offline-eval",
+        "contracts",
+        "spec",
+        "inventory",
+        "typecheck",
+        "build",
+        "web-types",
+        "lint"
+      ],
+      "focusedTestsPassed": 535,
+      "independentEngineeringReviewPassed": true,
+      "filingQualified": false,
+      "scope": "Bind positive 2026 AOTC and LLC claims to the matching household role, TIN and return name, including the primary middle initial. Private lines 20 and 21 stay blank.",
+      "officialForm": "https://www.irs.gov/pub/irs-prior/f8863--2026.pdf#page=2"
+    },
+    "nov27Form8829OwnedHomeReview": {
+      "commit": "505b82023f61b71bc029117a6181c7e85bf7d1e3",
+      "exactArchiveSha256": "2541e51c7564c802818e6b7f5679789226f21e9203d812be882ecbc776e1ab8f",
+      "localEvidenceMarker": "nov27-form8829-owned-review-path",
+      "commandsPassed": [
+        "focused",
+        "offline-eval",
+        "contracts",
+        "spec",
+        "inventory",
+        "typecheck",
+        "build",
+        "web-types",
+        "lint"
+      ],
+      "focusedTestsPassed": 449,
+      "independentEngineeringReviewPassed": true,
+      "filingQualified": false,
+      "scope": "Private worksheet for one qualifying standard-deduction owned home with continued exclusive use and confirmed same-home records. The guided owned-home path remains open.",
+      "officialForm": "https://www.irs.gov/pub/irs-prior/f8829--2026.pdf",
+      "draftInstructions": "https://www.irs.gov/pub/irs-dft/i8829--dft.pdf",
+      "initialFocusedFailure": "One unchanged Schedule C test timed out during concurrent static checks; all 449 passed on the four-worker focused rerun with original timeouts.",
+      "amd64": {
+        "ciQueued": 46095697537,
+        "webQueued": 46095697457,
+        "dockerQueued": 46095697438
+      },
+      "arm64": {
+        "incumbentQueued": 46085907600,
+        "pending": 46091464368,
+        "leftQueueIntact": true
+      }
+    },
     "nov27StateSupportResidency": {
       "commit": "01a215a637be4f58f18a1bf039d82c1879aa5bd7",
       "verifiedTree": "2219a62f28769a8ce1b8f4950a089d2b1dfe82d9",

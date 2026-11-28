@@ -13,7 +13,31 @@ the latest application revision, exact-source runs and open dependencies. The
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
-| Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. The updated native ARM64 run and the AMD64 jobs need runner assignment. The older ARM64 comparison still failed nine cases in its strict pass after image and recovery passed. Qualify both final runtime images before publishing. |
+| Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. The ARM64 group and the AMD64 jobs for `505b82023` await runner assignment. The older ARM64 comparison failed nine strict browser cases after image and recovery passed. Qualify both final runtime images before publishing. |
+
+## November 27 education identity and owned-home review
+
+`d72ebd814` binds positive 2026 AOTC and LLC claims to the actual return
+household member's name after matching role and TIN. Guided intake and the
+engine preserve the return spelling and any primary middle initial. Private
+review lines 20 and 21 stay blank. The independent engineering review and
+535 exact-source focused tests passed. [Final 2026 Form 8863, lines 20–21](https://www.irs.gov/pub/irs-prior/f8863--2026.pdf#page=2)
+
+`505b82023` adds a private Form 8829 worksheet for a continuously used owned
+home with standard deduction and confirmed full-year business use. Same-home
+records establish the area, costs and lower depreciable basis before the
+2.564% rate applies. Independent engineering review reopened the saved PDF
+and confirmed the Schedule C transfer, widget appearances and redaction.
+All 449 exact-source focused tests passed on a four-worker rerun with the
+original timeouts after a Schedule C test timed out during concurrent checks.
+The worksheet has no guided owned-home entry or filing route. The form is
+final, and the 2026 instructions are still draft.
+[Final 2026 Form 8829](https://www.irs.gov/pub/irs-prior/f8829--2026.pdf) · [Draft 2026 instructions](https://www.irs.gov/pub/irs-dft/i8829--dft.pdf)
+
+AMD64 CI, Web and Docker jobs for `505b82023` were queued. The default ARM64
+group had a queued incumbent and a pending `e32a4591e` run. A new default
+dispatch would replace that pending run while the incumbent still waits for
+a runner, so both were left in place. [AMD64 CI](https://github.com/utilityfueled/tax-engine/actions/runs/46095697537) · [Web](https://github.com/utilityfueled/tax-engine/actions/runs/46095697457) · [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/46095697438) · [ARM64 incumbent](https://github.com/utilityfueled/tax-engine/actions/runs/46085907600) · [ARM64 pending](https://github.com/utilityfueled/tax-engine/actions/runs/46091464368)
 
 ## November 27 complete local verification
 
