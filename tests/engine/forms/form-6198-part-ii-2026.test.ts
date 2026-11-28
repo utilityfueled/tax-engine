@@ -94,10 +94,25 @@ it("requires actual same-owner K-1, basis and complete Part II records", () => {
   expect(() => calculateScheduleE(input({ partII2026 }, 2026, { royalties: "1" }))).toThrow(/Form 6198.*ordinary/i);
 });
 
-it("holds zero or negative Part II capacity for separate review", () => {
-  for (const decreases of ["12000.00", "12000.01"]) {
-    expect.soft(() => calculateScheduleE(input({ partII2026: { ...partII2026, decreases } }))).toThrow(/Form 6198.*Part III.*recapture/i);
-  }
+it("suspends the full ordinary loss when actual Part II capacity is exactly zero", () => {
+  const canonical = input({ partII2026: { ...partII2026, decreases: "12000.00" } });
+  const result = calculateScheduleE(canonical);
+  expect.soft(result.partnerships[0].atRiskAmount?.toFixed()).toBe("0");
+  expect.soft(result.partnerships[0].nonpassiveLoss.toFixed()).toBe("0");
+  expect.soft(result.partnerships[0].suspendedAtRiskLoss.toFixed()).toBe("-6000");
+  expect.soft(result.lines.filter(line => line.form === "Form 6198").slice(-4)
+    .map(line => [line.line, line.value.toFixed()])).toEqual([
+    ["10a", "0"], ["10b", "0"], ["20", "0"], ["21", "0"],
+  ]);
+  const federal = calculateFederalTax(canonical);
+  expect.soft(federal.otherIncome.toFixed()).toBe("0");
+  expect(federal.agi.toFixed()).toBe("85000");
+});
+
+it("holds negative Part II capacity for separate review before the worksheet floor", () => {
+  const canonical = input({ partII2026: { ...partII2026, decreases: "12000.01" } });
+  expect.soft(() => calculateScheduleE(canonical)).toThrow(/Form 6198.*Part III.*recapture/i);
+  expect(() => calculateFederalTax(canonical)).toThrow(/Form 6198.*Part III.*recapture/i);
 });
 
 it("holds duplicate original sources and standalone legacy calculation", () => {

@@ -70,8 +70,8 @@ export function calculateForm6198PartII2026(
   const line8 = line6.plus(line7);
   const line9 = d(source.decreases);
   const line10a = line8.minus(line9);
+  if (line10a.lt(0)) throw new Error("Negative Form 6198 Part II capacity requires separate Part III and recapture review.");
   const line10b = Decimal.max(0, line10a);
-  if (line10b.isZero()) throw new Error("Form 6198 Part II at zero or below requires separate Part III and recapture review.");
 
   const deductibleLoss = Decimal.min(basisAdjustedLoss.abs(), line10b);
   const audit = new AuditTrail();
@@ -81,7 +81,7 @@ export function calculateForm6198PartII2026(
   audit.record("Form 6198", "9", "Decreases", line9, "Verified decreases and amounts included on line 6 that are not at risk");
   audit.record("Form 6198", "10a", "Part II net amount", line10a, "Line 8 minus line 9");
   audit.record("Form 6198", "10b", "Part II amount at risk", line10b, "Greater of line 10a or zero");
-  audit.record("Form 6198", "20", "Amount at risk", line10b, "Positive Part II amount from line 10b");
+  audit.record("Form 6198", "20", "Amount at risk", line10b, "Part II amount from line 10b");
   audit.record("Form 6198", "21", "Deductible loss", deductibleLoss, "Lesser of the basis-allowed Box 1 loss or line 20");
   return {
     netAmount: deductibleLoss.negated(),

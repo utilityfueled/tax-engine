@@ -30,15 +30,19 @@ lines:
       Use exact Decimal amounts. Line 8 adds opening basis and increases.
       Line 10a subtracts decreases, including amounts in the opening basis
       for which the taxpayer is not at risk. Line 10b is the greater of zero
-      or line 10a. For the supported positive Part II case only, line 20
-      equals line 10b. Limit the already basis-allowed ordinary loss to line
-      20 and retain the difference as suspended at-risk loss. Carry the
-      allowed nonpassive loss through Schedule E once. Hold a zero or negative
-      line 10a for separate Part III or section 465(e) review. This calculation
-      grants no 2026 filing, export or review-form qualification.
+      or line 10a. Line 20 equals line 10b when the complete original Part II
+      workpaper produces a nonnegative line 10a. Limit the already basis-allowed
+      ordinary loss to line 20 and retain the difference as suspended at-risk
+      loss. Carry the allowed nonpassive loss through Schedule E once. Actual
+      line 10a of exactly zero yields zero on lines 10b, 20 and 21 and suspends
+      the full loss. Section 465(e) recapture requires a negative amount at risk.
+      Hold a negative line 10a for separate recapture or Part III review before
+      using the printed line 10b floor. This calculation grants no 2026 filing,
+      export or review-form qualification.
     testRef: "tests/engine/forms/form-6198-part-ii-2026.test.ts::transfers the source-backed Form 6198 limit through Schedule E and federal income"
     testRefs:
-      - "tests/engine/forms/form-6198-part-ii-2026.test.ts::holds zero or negative Part II capacity for separate review"
+      - "tests/engine/forms/form-6198-part-ii-2026.test.ts::suspends the full ordinary loss when actual Part II capacity is exactly zero"
+      - "tests/engine/forms/form-6198-part-ii-2026.test.ts::holds negative Part II capacity for separate review before the worksheet floor"
   - line: "legacy-source-scope"
     description: "Preserve historical and specialized methods without treating earlier fields as current Part II"
     formula: >-
