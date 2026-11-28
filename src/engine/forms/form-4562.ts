@@ -16,6 +16,7 @@ import type { Form4562Input, AmortizableAsset } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d, roundDollar } from "@/utils/decimal.js";
+import { sumSourceMoney } from "@/utils/sum-source-money.js";
 import { resolveMACRSAssetBasisSources, type MACRSBasisSourceAmounts } from "@/models/macrs-asset-basis-sources.js";
 import {
   computeAggregateDepreciation,
@@ -259,7 +260,7 @@ export function calculateForm4562(input: Form4562Input, ownerTaxYear?: number): 
     line20 = Decimal.max(ZERO, d(input.macrsCurrentYearAdsDepreciation));
   }
 
-  const line22 = line12.plus(line14).plus(line15).plus(line16).plus(line17).plus(line19).plus(line20).plus(line21);
+  const line22 = sumSourceMoney(line12, line14, line15, line16, line17, line19, line20, line21);
 
   // --- §280F(b)(2) Recapture ---
   // When listed property business use drops from >50% to ≤50%, recapture the

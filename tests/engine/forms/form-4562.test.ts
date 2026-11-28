@@ -161,6 +161,28 @@ describe("Form 4562 depreciation and section 179 summary", () => {
     expect(String(line22?.inputs["Line 21"])).toBe("4500");
   });
 
+  it("Form 4562 Line 22 - exactly sums all eight line amounts before transfer", () => {
+    const result = calculateForm4562({
+      taxYear: 2026,
+      section179ExpenseDeduction: "0.01",
+      specialDepreciationAllowance: "100000000000000000000",
+      section168f1Depreciation: "0.02",
+      otherDepreciation: "0.04",
+      macrsPre2025AssetsDepreciation: "0.08",
+      macrsCurrentYearGdsDepreciation: "0.16",
+      macrsCurrentYearAdsDepreciation: "0.32",
+      listedPropertyDepreciation: "0.64",
+      currentYearAmortization: "5000",
+    });
+
+    const components = [result.line12, result.line14, result.line15, result.line16, result.line17, result.line19, result.line20, result.line21];
+    expect(components.map(value => value.toFixed())).toEqual([
+      "0.01", "100000000000000000000", "0.02", "0.04", "0.08", "0.16", "0.32", "0.64",
+    ]);
+    expect(result.line22.toFixed()).toBe("100000000000000000001.27");
+    expect(result.lines.find(line => line.line === "22")?.value.toFixed()).toBe("100000000000000000001.27");
+  });
+
   it("Form 4562 Lines 42 through 44 - amortization totals stay separate from the line 22 depreciation bridge", () => {
     const result = calculateForm4562({
       section179ExpenseDeduction: "540000",

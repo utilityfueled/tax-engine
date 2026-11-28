@@ -250,7 +250,7 @@ lines:
 
   - line: "22"
     description: "Total depreciation and section 179 deduction"
-    formula: "Add Line 12, Lines 14 through 17, the aggregate line 19 column (g) amount, the aggregate line 20 column (g) amount, and Line 21"
+    formula: "Add Line 12, Lines 14 through 17, the aggregate line 19 column (g) amount, the aggregate line 20 column (g) amount, and Line 21 exactly without intermediate rounding"
     irsRef: "Form 4562, Line 22"
     inputs:
       - "Form 4562 Line 12"
@@ -262,7 +262,7 @@ lines:
       - "Form 4562 Line 20"
       - "Form 4562 Line 21"
     notes: "The official 2025 form does not include Part VI amortization in line 22, so amortization remains outside this Schedule C line 13 bridge."
-    testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C Line 13 - Form 4562 total deduction flows through the depreciation line"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Line 22 - exactly sums all eight line amounts before transfer"
 
   - line: "packet"
     description: "Draft packet inclusion rule for supported Form 4562 activities"
