@@ -1284,7 +1284,7 @@
     "src/models/k1-charitable-return-sources.ts": "ba99fc82aff3960b7349947fb26ec3346cf246e856481b91143549d566d589a4",
     "src/models/k1-passive-distribution-sources.ts": "f43e12e8dae2ce54bbaabd5376b7b7241d779351f54ef26ae800bbfc922c3e0f",
     "src/models/k1-prior-charitable-at-risk.ts": "e6c2aa34842a870ea8b619b0f2fa619b6e40d68b4a7f9a0554ba0ad1e48c581d",
-    "src/models/macrs-asset-basis-sources.ts": "4ee7c2b3f2421983ac367fb77e5a6ff12172d8e060fbe314e6024acb1d69e741",
+    "src/models/macrs-asset-basis-sources.ts": "2cd3866493cf920adcc23f82f80ec0088bd34b72e5371cbf5825733f8c037201",
     "src/models/macrs-disposition-sources.ts": "584e566f234c38b446b577f9d63e05f525dc8fc45f072e28b2e0873378230c00",
     "src/models/marketplace-coverage-family.ts": "3d94c50d1ec89ee6430a6be81946d4af1b014674ff3c80afbeed7ba6e9875b85",
     "src/models/medical-mileage-hoh.ts": "fff249edd1041f69089f5f4385d694892870205e0d7d8291aaaaa90b6fa5a955",

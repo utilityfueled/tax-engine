@@ -1,6 +1,7 @@
 /** Spec: spec/federal/macrs-asset-basis-sources.yaml. */
 import { describe, expect, it } from "vitest";
 import { DepreciableAssetSchema } from "@/models/inputs.js";
+import { resolveMACRSAssetBasisSources } from "@/models/macrs-asset-basis-sources.js";
 
 function originalAsset() {
   const asset = { costBasis: "10000", placedInServiceDate: "2026-02-28", recoveryPeriod: "5", method: "200DB", isListedProperty: false, isPassengerAutomobile: false, businessUsePercentage: 100, disposedDuringYear: false };
@@ -17,6 +18,37 @@ function originalAsset() {
 }
 
 describe("MACRS actual basis source schema", () => {
+  it("rejects a gross original that contradicts the retained exact basis", () => {
+    const original = originalAsset();
+    const costBasis = "1000000000000000000000";
+    const asset = {
+      ...original, costBasis,
+      basisSources: {
+        ...original.basisSources, grossCostBasis: "1000000000000000000005",
+        assetSnapshot: { ...original.basisSources.assetSnapshot, costBasis },
+      },
+    };
+    expect(() => resolveMACRSAssetBasisSources(asset, 2026)).toThrow(/legacy cost basis conflicts/i);
+    expect(DepreciableAssetSchema.safeParse(asset).success).toBe(false);
+  });
+
+  it("derives exact business, pre-bonus and regular bases for a reconciled original", () => {
+    const original = originalAsset();
+    const retained = { costBasis: "10000000000000000000004.01", businessUsePercentage: 60 };
+    const asset = DepreciableAssetSchema.parse({
+      ...original, ...retained,
+      basisSources: {
+        ...original.basisSources, grossCostBasis: "10000000000000000000005.02", businessUsePercentage: "60",
+        section179BusinessDeduction: "1.01", bonusBusinessDeduction: "2.01",
+        assetSnapshot: { ...original.basisSources.assetSnapshot, ...retained },
+      },
+    });
+    const basis = resolveMACRSAssetBasisSources(asset, 2026)!;
+    expect(basis.businessBasis.toFixed()).toBe("6000000000000000000003.012");
+    expect(basis.midQuarterTestBasis.toFixed()).toBe("6000000000000000000002.002");
+    expect(basis.regularMacrsBasis.toFixed()).toBe("5999999999999999999999.992");
+  });
+
   it("preserves a complete original packet and rejects unknown missing or contradictory facts", () => {
     const original = originalAsset();
     const parsed = DepreciableAssetSchema.safeParse(original);

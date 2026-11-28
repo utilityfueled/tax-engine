@@ -1,11 +1,14 @@
 /** Original-bound, first-year GDS personal-property basis only. */
 import { z } from "zod";
 import Decimal from "decimal.js";
+import { sumSourceMoney } from "@/utils/sum-source-money.js";
+import { sumSourceMoneyRatios } from "@/utils/sum-source-money-ratios.js";
 
 const decimalPattern = /^\d+(\.\d+)?$/;
 const money = z.string().refine(value => decimalPattern.test(value) && new Decimal(value).isFinite());
 const reference = z.string().min(1).max(500).refine(value => value.trim().length > 0);
 const percentage = money.refine(value => decimalPattern.test(value) && new Decimal(value).isFinite() && new Decimal(value).lte(100));
+const HUNDRED = new Decimal(100);
 
 function isCalendarDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -122,15 +125,16 @@ export function resolveMACRSAssetBasisSources(
   const section179BusinessDeduction = new Decimal(source.section179BusinessDeduction);
   const bonusBusinessDeduction = new Decimal(source.bonusBusinessDeduction);
   const legacyCostBasis = new Decimal(asset.costBasis);
-  const businessBasis = grossCostBasis.times(businessUse).dividedBy(100);
+  const businessBasis = sumSourceMoneyRatios([{ amount: grossCostBasis, numerator: businessUse, denominator: HUNDRED }]);
   if (section179BusinessDeduction.gt(businessBasis)) fail("section179 exceeds the actual business basis");
-  const midQuarterTestBasis = businessBasis.minus(section179BusinessDeduction);
+  const midQuarterTestBasis = sumSourceMoney(businessBasis, section179BusinessDeduction.negated());
   if (bonusBusinessDeduction.gt(midQuarterTestBasis)) fail("bonus exceeds the remaining business basis");
-  if (!legacyCostBasis.eq(grossCostBasis.minus(section179BusinessDeduction))) fail("legacy cost basis conflicts with its documented gross-less-section179 meaning");
+  const expectedLegacyCostBasis = sumSourceMoney(grossCostBasis, section179BusinessDeduction.negated());
+  if (!legacyCostBasis.eq(expectedLegacyCostBasis)) fail("legacy cost basis conflicts with its documented gross-less-section179 meaning");
   if (asset.firstYearBonusEligible !== undefined && asset.firstYearBonusEligible !== bonusBusinessDeduction.gt(0)) fail("the recorded bonus flag and actual allocation disagree");
   return {
     legacyCostBasis, grossCostBasis, businessBasis, section179BusinessDeduction,
     bonusBusinessDeduction, midQuarterTestBasis,
-    regularMacrsBasis: midQuarterTestBasis.minus(bonusBusinessDeduction),
+    regularMacrsBasis: sumSourceMoney(midQuarterTestBasis, bonusBusinessDeduction.negated()),
   };
 }
