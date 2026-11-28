@@ -4,7 +4,10 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "fc7c3bd96f5158cade397ae9c13d16a3347d3054",
-    "latestScopedApplicationCommit": "f8c87ff7261e3f673a8bbc79ad7be6e7eaefb261",
+    "latestScopedApplicationCommit": "513fba11dad05e177a5cb12301b6adcf1f13d490",
+    "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
+    "latestSchedule8812PayrollActcEvidenceKey": "activeContinuation.nov27Schedule8812PayrollActc",
+    "latestGuidedHsaCivilDatesEvidenceKey": "activeContinuation.nov27GuidedHsaCivilDates",
     "latestAiCapabilityAccountingEvidenceKey": "activeContinuation.nov27AiCapabilityAccounting",
     "latestForm8863StudentSpouseEvidenceKey": "activeContinuation.nov27Form8863StudentSpouse",
     "latestCombinedCandidateCommit": "fc7c3bd96f5158cade397ae9c13d16a3347d3054",
@@ -212,6 +215,49 @@
     ]
   },
   "activeContinuation": {
+    "nov27Form8863JointPrimary": {
+      "commit": "c5b0aef142db39a86617d94becf40a08e153b2b5",
+      "archiveSha256": "a3c1d0dd9b41665b450303a428d4537c317ac41f77694bac01925bee29292131",
+      "localEvidenceMarker": "nov27-form8863-joint-primary-path",
+      "focusedTestsPassed": 244,
+      "staticChecksPassed": 8,
+      "independentEngineeringTestsPassed": 15,
+      "qualifiedHumanTaxReview": false,
+      "qualifiedFilingExport": false
+    },
+    "nov27Schedule8812PayrollActc": {
+      "commit": "62a9a5d583983d653c365394aea1b8dd5b739213",
+      "archiveSha256": "c0aa743bdbe4b319a8a9aae92efb7d60f1fd5d4fc3bb71cd77da2dec29f93a2e",
+      "localEvidenceMarker": "nov27-schedule8812-payroll-actc-path",
+      "focusedTestsPassed": 180,
+      "staticChecksPassed": 8,
+      "independentEngineeringTestsPassed": 5,
+      "annualEarnedIncomeCreditMaximum": "8231",
+      "finalBlank": "https://www.irs.gov/pub/irs-prior/f1040s8--2026.pdf",
+      "draftInstructions": "https://www.irs.gov/pub/irs-dft/i1040s8--dft.pdf",
+      "qualifiedHumanTaxReview": false,
+      "qualifiedFilingExport": false
+    },
+    "nov27GuidedHsaCivilDates": {
+      "commit": "513fba11dad05e177a5cb12301b6adcf1f13d490",
+      "archiveSha256": "6742dbdd8d1f3907823057e00bfdaa96f06d1f29b8784f9ee30b37c5a1358d55",
+      "localEvidenceMarker": "nov27-guided-hsa-civil-dates-path",
+      "focusedTestsPassed": 215,
+      "staticChecksPassed": 8,
+      "independentEngineeringTestsPassed": 10,
+      "finalBlank": "https://www.irs.gov/pub/irs-prior/f8889--2026.pdf",
+      "legacyYearBehaviorRetained": true,
+      "remoteQueue": {
+        "ciRun": "46106161592",
+        "webRun": "46106161639",
+        "dockerRun": "46106161572",
+        "status": "queued",
+        "artifacts": 0,
+        "exactArm64Run": null,
+        "arm64IncumbentRun": "46085907600",
+        "arm64PendingRun": "46091464368"
+      }
+    },
     "nov27AiCapabilityAccounting": {
       "commit": "17d1dc0243ea1a94db5b9ca54e5bd4b7b458d233",
       "archiveSha256": "28c0f2d9d2b912ef3b10ff91c4fb2c97e5159b90032404b8419b95095bb3b6dd",

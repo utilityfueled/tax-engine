@@ -15,6 +15,30 @@ the latest application revision, exact-source runs and open dependencies. The
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. The ARM64 group and the AMD64 jobs for `fc7c3bd9` await runner assignment. The older ARM64 comparison failed nine strict browser cases after image and recovery passed. Qualify both final runtime images before publishing. |
 
+## November 27 joint education, payroll-based ACTC and HSA receipt dates
+
+- `c5b0aef14` completes the private one-student joint Form 8863 review for
+  either spouse as the student and either spouse supplying the required SSN.
+  Independent review checked the retained household identity and PDF redaction.
+  Exact checks passed 244 focused tests and eight static checks. [Final form](https://www.irs.gov/pub/irs-prior/f8863--2026.pdf) · [Draft instructions](https://www.irs.gov/pub/irs-dft/i8863--dft.pdf)
+- `62a9a5d58` adds the private Schedule 8812 Part II-B review when three
+  or more qualifying children and the printed earned-income comparison
+  require it. The renderer sums original W-2 payroll tax cents before rounding
+  and holds inconsistent transfers. It applies the $8,231 annual EIC cap
+  and requires the original return's two eligibility confirmations for a
+  positive MFS EIC transfer. An independent review passed all five new tests.
+  The exact commit passed 180 focused tests and eight static checks.
+  [Final form](https://www.irs.gov/pub/irs-prior/f1040s8--2026.pdf#page=2) · [IRS EIC limit](https://www.irs.gov/irb/2025-45_IRB)
+- `513fba11d` holds future distribution dates and future positive rollover
+  receipts in the 2026 guided Form 1099-SA flow. Same-day and completed
+  following-year receipts within 60 days remain accepted. Exact checks
+  passed 215 focused tests and eight static checks. Independent review
+  reproduced all 10 guided tests. [Final Form 8889](https://www.irs.gov/pub/irs-prior/f8889--2026.pdf) · [IRS rollover guidance](https://www.irs.gov/publications/p969)
+
+The exact `513fba11d` Linux CI, Chromium and Docker runs are queued without
+artifacts. The ARM64 queue still has a separate incumbent and pending run.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/46106161592) · [Web](https://github.com/utilityfueled/tax-engine/actions/runs/46106161639) · [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/46106161572)
+
 ## November 27 shared AI probe costs and joint-student education review
 
 - `17d1dc024` exports billed capability probes and unresolved maximums once
