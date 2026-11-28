@@ -345,7 +345,7 @@
     "apps/web/src/lib/guided-minimum-tax-credit.ts": "51c928e58b953ed2f191f66994998711622b0ea56519577c76bcdec293c50093",
     "apps/web/src/lib/guided-mortgage-balances.ts": "d00a2011985c594b382fcdff89d9d4641e19e65fd23ac2d0b8f27651d6e820b4",
     "apps/web/src/lib/guided-mortgage-debt-categories.ts": "006d8ba4e23983c993a760f9f9f82f33a79fa403a9861c069dac19d096698d83",
-    "apps/web/src/lib/guided-mortgage-facts.ts": "0b776a2506efcfc35368417178cee4704c4b48d042b04959bd7f681b9e064350",
+    "apps/web/src/lib/guided-mortgage-facts.ts": "07dd4c79acd79f6a7fb94efee433579e1203e5a736607e3e4c9df70fa2cbb0d6",
     "apps/web/src/lib/guided-mortgage-insurance-prepaid.ts": "278f95b7fec801f9b70992146584eefe056e07ee2ffb31f95563029fecb292e6",
     "apps/web/src/lib/guided-mortgage-points.ts": "65020d4f34c7eb06689271f2a4adda19b26371e70a123fb705258490b9392e26",
     "apps/web/src/lib/guided-mortgage-recoveries.ts": "58a2a1c2bc0d361da717305b6897f850eb1f129c75268eeca33f00c7df4366b6",

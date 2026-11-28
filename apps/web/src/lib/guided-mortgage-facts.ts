@@ -1,7 +1,8 @@
 import Decimal from "decimal.js";
+import { currentLocalCivilDate, isActualDate } from "@/utils/civil-date";
 import type { FilingStatus, MortgageEntryData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
-import { amountError, isActualDate } from "./guided-required-facts";
+import { amountError } from "./guided-required-facts";
 import type { MortgageFirstLastData, MortgageMonthlyData, MortgageInterestRateData } from "./guided-mortgage-balances";
 import type { MortgageDebtCategoryData } from "./guided-mortgage-debt-categories";
 import type { MortgagePointsHistoryData } from "./guided-mortgage-points";
@@ -92,6 +93,7 @@ export function normalizeMortgageReference(value: string | undefined): string | 
 /** Ordinary original debt or actual completed category sources; never infer an average from Box 2. */
 export function mortgageFactErrors(entries: MortgageEntryData[], taxYear?: number | null, filingStatus?: FilingStatus | null, sourceWorksheet = false): Record<string, string> {
   const errors: Record<string, string> = {};
+  const asOfDate = taxYear === 2026 ? currentLocalCivilDate() : undefined;
   const loans = new Set<string>();
   const homes = { "main-home": new Set<string>(), "second-home": new Set<string>() };
   let maximumDebt = new Decimal(0);
@@ -144,7 +146,11 @@ export function mortgageFactErrors(entries: MortgageEntryData[], taxYear?: numbe
       const message = amountError(entry[field], label);
       if (message) error(field, message);
     }
-    if (!isActualDate(entry.originationDate) || (year && entry.originationDate > `${year}-12-31`)) error("date", "Enter the actual mortgage origination date, no later than the statement year.");
+    if (!isActualDate(entry.originationDate) || (year && entry.originationDate > `${year}-12-31`)) {
+      error("date", "Enter the actual mortgage origination date, no later than the statement year.");
+    } else if (year === 2026 && asOfDate && entry.originationDate > asOfDate) {
+      error("date", "Enter the actual Box 3 mortgage origination date on or before today.");
+    }
     if (entry.originationDate <= "1987-10-13" && !categories) error("grandfathered", "Grandfathered debt needs its completed category and continuous-security history before this path can calculate.");
     const validAmount = (field: "maximumBalanceDuringYear" | "outstandingPrincipal" | "refundOfOverpaidInterest" | "pointsPaid" | "propertyTaxPaid" | "mortgageInsurancePremiums") => !amountError(entry[field], field);
     if (validAmount("maximumBalanceDuringYear")) {
@@ -159,6 +165,11 @@ export function mortgageFactErrors(entries: MortgageEntryData[], taxYear?: numbe
       if (entry.loanType !== "original") error("points-history", "Refinancing points require their actual amortization or separately qualified improvement history before this route can calculate.");
       if (entry.propertyUse !== "main-home") error("points-home", "Purchase points on a second home need their actual amortization worksheet; they cannot use the main-home full-deduction route.");
       if (!year || !entry.originationDate.startsWith(`${year}-`)) error("points-year", "Prior-loan points need their actual amortization history; only qualifying current-year purchase points are supported here.");
+      const paidDate = entry.pointsPaidDate;
+      if (year === 2026 && asOfDate && entry.pointsMethod === "current_year" && paidDate && isActualDate(paidDate)
+        && paidDate.startsWith("2026-") && paidDate > asOfDate) {
+        error("points-date", "Enter the actual purchase-points payment date on or before today.");
+      }
       for (const field of Object.keys(mortgagePointFacts) as (keyof typeof mortgagePointFacts)[]) if (entry[field] !== true) error(field, "Confirm every full-deduction purchase-points condition. Other points require an amortization or allocation worksheet.");
     }
     if (entry.insuranceAllocationMethod === 'current-original-prepaid' && (year !== 2026 || entry.hasMortgageInsuranceAllocation !== true)) error('insurance-method', 'Reconcile the saved original prepaid method with actual 2026 insurance evaluation.');
@@ -168,7 +179,12 @@ export function mortgageFactErrors(entries: MortgageEntryData[], taxYear?: numbe
       if (entry.hasMortgageInsuranceAllocation === false && !amountError(entry.insurancePremiumsAllocableToYear, "insurance allocation") && parseGuidedCurrency(entry.insurancePremiumsAllocableToYear).gt(0)) error("insurance-review", "Reconcile the saved positive annual insurance allocation before saying no premiums need evaluation.");
       if (entry.hasMortgageInsuranceAllocation === true) {
         if (entry.insuranceAllocationTaxYear !== entry.sourceTaxYear) error("insurance-year", "Enter the actual insurance allocation year matching this return.");
-        if (!isActualDate(entry.insuranceContractIssueDate) || entry.insuranceContractIssueDate! > `${year}-12-31`) error("insurance-contract", "Enter the actual mortgage-insurance contract issue date.");
+        const issueDate = entry.insuranceContractIssueDate;
+        if (!issueDate || !isActualDate(issueDate) || issueDate > `${year}-12-31`) {
+          error("insurance-contract", "Enter the actual mortgage-insurance contract issue date.");
+        } else if (asOfDate && issueDate > asOfDate) {
+          error("insurance-contract", "Enter the actual mortgage insurance contract issue date on or before today.");
+        }
         for (const field of ["insuranceQualifiedProvider", "insuranceAcquisitionDebt", "insuranceQualifiedResidence"] as const) if (typeof entry[field] !== "boolean") error(field, "Confirm the actual insurance provider, acquisition-debt and qualified-residence facts.");
         if (entry.insuranceAllocationMethod === 'current-original-prepaid') {
           try { mortgagePrepaidSource(entry); } catch (cause) { error('insurance-originals', cause instanceof Error ? cause.message : 'Complete the actual original premium facts.'); }
