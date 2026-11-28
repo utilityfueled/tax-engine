@@ -3,7 +3,7 @@
     "aiSourceFirstCaseReviewEvidenceKey": "activeContinuation.nov27AiSourceFirstCaseReview",
     "asOf": "2026-11-27",
     "branch": "main",
-    "applicationCommit": "08c705b1237f8a9a31c98dc5f1b58d0fbd17d3f0",
+    "applicationCommit": "fc7c3bd96f5158cade397ae9c13d16a3347d3054",
     "latestScopedApplicationCommit": "fc7c3bd96f5158cade397ae9c13d16a3347d3054",
     "latestCombinedCandidateCommit": "fc7c3bd96f5158cade397ae9c13d16a3347d3054",
     "nov27FullBrowserCollectionEvidenceKey": "activeContinuation.nov27FullBrowserCollection",
@@ -198,7 +198,7 @@
     "annualScheduleBSourceEvidenceKey": "activeContinuation.nov24ScheduleBFinalSource",
     "annualScheduleBReviewEvidenceKey": "activeContinuation.nov24ScheduleBOrdinaryReview",
     "pensionTaxableAmountEvidenceKey": "activeContinuation.nov24ReportedPensionTaxableAmount",
-    "completeLocalBaselineEvidenceKey": "activeContinuation.nov27GuidedMortgageActualDatesCombined",
+    "completeLocalBaselineEvidenceKey": "activeContinuation.nov27GuidedOwnedHomeForm8829Combined",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov27ExactFederalPaymentCombined",
     "remaining": [
@@ -210,6 +210,75 @@
     ]
   },
   "activeContinuation": {
+    "nov27GuidedOwnedHomeForm8829Combined": {
+      "commit": "fc7c3bd96f5158cade397ae9c13d16a3347d3054",
+      "exactArchiveSha256": "50e482e367389c5de097d4c090f422a33d69550cb36780b7ae6a3d83565ab5c7",
+      "localEvidenceMarker": "nov27-guided-8829-owned-home-path",
+      "manifestSha256": "a3a085a71bfe043fad147000b9d931727af6a00ad0aa31371d025f3c9aceb9d3",
+      "allElevenLocalChecksPassed": true,
+      "commandsPassed": [
+        "test",
+        "coverage",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "build",
+        "build-web",
+        "lint",
+        "browser"
+      ],
+      "prerequisites": {
+        "node": "26.13.1",
+        "pypdf": "6.10.0"
+      },
+      "officialSampleDocumentsVerified": 15,
+      "offlineEvaluatorArtifactCheckPassed": true,
+      "unit": {
+        "passed": 31477,
+        "skipped": 83
+      },
+      "coverage": {
+        "passed": 31477,
+        "skipped": 83,
+        "branchPercent": "88.76"
+      },
+      "browser": {
+        "passed": 655,
+        "skipped": 5,
+        "windows": 9,
+        "listenerCleanup": true,
+        "summarySha256": "9b3b747164b6ed96e1e1a76fb1a4fe487578af6f1a0f950081bba4cda5f65bc2",
+        "sourceBuildSha256": "4a3a50b118f5da2db4d790b571538c0ec465536050bf619ddf177d6d465f6e3a"
+      },
+      "standaloneEncryptedRecovery": {
+        "exit": 0,
+        "logSha256": "071c3a78a1d2b2db38bfe80a24b28cf987bb35a68a8433be038ebbe099ee0c33",
+        "receiptSha256": "539baf1626fa1c46fb77fc433210cc63d278c74e428d20789ace25b41d2a4d15",
+        "listenerCleanup": true
+      },
+      "linuxNativeQualified": false,
+      "hostedQualified": false,
+      "ownedHomeDesktopAndPhoneSmoke": [
+        {
+          "viewport": 1280,
+          "enteredFields": 21,
+          "fitsViewport": true,
+          "keyboardConfirmation": true,
+          "savedReopen": true,
+          "editingInvalidated": true
+        },
+        {
+          "viewport": 390,
+          "enteredFields": 21,
+          "fitsViewport": true,
+          "keyboardConfirmation": true,
+          "savedReopen": true,
+          "editingInvalidated": true
+        }
+      ]
+    },
     "nov27GuidedOwnedHomeForm8829": {
       "commit": "fc7c3bd96f5158cade397ae9c13d16a3347d3054",
       "exactArchiveSha256": "50e482e367389c5de097d4c090f422a33d69550cb36780b7ae6a3d83565ab5c7",
