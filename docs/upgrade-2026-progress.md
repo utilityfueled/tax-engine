@@ -16,12 +16,12 @@ jq '.resume | {latestScopedApplicationCommit, remaining}' docs/upgrade-2026-chec
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `19fc8c5e6` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `77e1fe6f6` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
-| Self-host release | Exact local Chromium and encrypted recovery passed on `19fc8c5e6`. The latest completed ARM64 run passed image verification and Compose recovery, then timed out in 11 Chromium cases. Its successor reached the strict browser step and includes the Ohio edit optimization. See the run receipts below. |
+| Self-host release | Exact local Chromium and encrypted recovery passed on `77e1fe6f6`. The latest completed ARM64 run passed image verification and Compose recovery, then timed out in 11 Chromium cases. Its successor reached the strict browser step and includes the Ohio edit optimization. See the run receipts below. |
 
 ## November 28 professional W-2G originals and AI evaluation
 
@@ -271,6 +271,28 @@ artifact check were used. Manifest SHA-256 `e82757429832c8208590b594b664f63de754
 The first coverage and Chromium attempts hit local disk exhaustion. The same source passed after removing generated test cache files. The cache cleanup verified that the serving build ID stayed the same.
 
 A separate Chromium smoke entered and saved original Form 6198 facts at 1280 and 390 pixels. Both viewports reopened the recorded zero. Clearing it reset confirmation. The phone flow also entered current outside-basis workpaper facts.
+
+## November 28 exact local release checks on 77e1fe6f6
+
+All 11 retained checks passed from the exact `77e1fe6f6` archive. The unit
+and coverage suites each passed 31,613 tests with 83 skips.
+Branch coverage was 88.82% against the 85% gate. Managed Chromium passed
+655 cases with 5 skips across all 9 windows. The standalone
+app created an encrypted backup, deleted the synthetic workspace and
+restored it. Both isolated listeners closed. Node 26.13.1, pypdf 6.10.0,
+15 hash-verified official sample PDFs and the offline AI evaluation
+artifact check were used. Manifest SHA-256 `4b01d365bd7d22f4087c5795a1bf2f60b260d391702a68899bac6aed7671fc06`.
+
+The initial packaged browser invocations stopped before runtime because the
+Git-only archive lacked the official sample documents. All 15 trusted copies
+passed their checksums. The replay called the unchanged managed orchestrator
+directly and retained the original timeouts and skip rules.
+
+Successor `95c43aef2` passed 31,621 unit tests with 84 skips, the engine build,
+lint, all typechecks, specs and inventory. That revision predates the tracked
+Form 6198 blank. The candidate's required physical test passed separately on
+`01c9b5947`. Coverage and the production web and browser checks for
+`95c43aef2` were still in progress.
 
 ## November 28 original 2026 Form 6198 Part II sources
 

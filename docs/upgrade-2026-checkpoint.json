@@ -4,7 +4,7 @@
     "asOf": "2026-11-28",
     "branch": "main",
     "latestForm6198PhysicalEvidenceKey": "activeContinuation.nov28Form6198PhysicalCandidate",
-    "applicationCommit": "19fc8c5e60bf082465b9e5cb2952742d5a522f93",
+    "applicationCommit": "77e1fe6f664633fa2397f3f22e484957f9259703",
     "latestScopedApplicationCommit": "95c43aef288b0b04fa88d1e60aa89b55c26b8bac",
     "latestW2GObservationEvidenceKey": "activeContinuation.nov28ProfessionalW2GObservationDate",
     "latestAiExactBenefitEvidenceKey": "activeContinuation.nov28AiExactBenefitThreshold",
@@ -208,11 +208,11 @@
     "annualScheduleBSourceEvidenceKey": "activeContinuation.nov24ScheduleBFinalSource",
     "annualScheduleBReviewEvidenceKey": "activeContinuation.nov24ScheduleBOrdinaryReview",
     "pensionTaxableAmountEvidenceKey": "activeContinuation.nov24ReportedPensionTaxableAmount",
-    "completeLocalBaselineEvidenceKey": "activeContinuation.nov28ExactGuidedForm6198Combined",
+    "completeLocalBaselineEvidenceKey": "activeContinuation.nov28ExactGuidedScheduleCForm6198Combined",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov27ExactFederalPaymentCombined",
     "remaining": [
-      "Both strict Linux browser gates and final runtime image evidence remain open. Exact application 19fc8c5e6 CI 46127803068, Web 46127803042 and Docker 46127803025 were queued. ARM64 rehearsal 46120985997 was pending on the earlier documentation successor 0c594ea43. Run 46113946817 on 9f8fcff52 reached the strict ARM64 browser step. Earlier 46085907600 passed archive and Compose recovery and failed nine strict browser cases.",
+      "Both strict Linux browser gates and final runtime image evidence remain open. Exact application 95c43aef2 CI 46134802863, Web 46134802878 and Docker 46134802937 were queued when checked. ARM64 rehearsal 46120985997 on 0c594ea43 passed native archive verification and isolated Compose recovery and entered strict Chromium. The prior ARM64 run 46113946817 timed out in 11 browser cases after passing image and recovery checks.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 27 public npm audits of the unchanged lockfile returned zero findings across 550 total and 457 production packages.",
@@ -220,6 +220,59 @@
     ]
   },
   "activeContinuation": {
+    "nov28ExactGuidedScheduleCForm6198Combined": {
+      "commit": "77e1fe6f664633fa2397f3f22e484957f9259703",
+      "exactArchiveSha256": "398c8c4935aa603d8fb7a4f1233ae4168fcbb085369221db271713c732a3c2cc",
+      "localEvidenceMarker": "nov28-guided-schedule-c-form6198-path",
+      "manifestSha256": "4b01d365bd7d22f4087c5795a1bf2f60b260d391702a68899bac6aed7671fc06",
+      "allElevenLocalChecksPassed": true,
+      "commandsPassed": [
+        "test",
+        "coverage",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "build",
+        "build-web",
+        "lint",
+        "browser"
+      ],
+      "prerequisites": {
+        "node": "26.13.1",
+        "pypdf": "6.10.0"
+      },
+      "officialSampleDocumentsVerified": 15,
+      "offlineEvaluatorArtifactCheckPassed": true,
+      "unit": {
+        "passed": 31613,
+        "skipped": 83
+      },
+      "coverage": {
+        "passed": 31613,
+        "skipped": 83,
+        "branchPercent": "88.82"
+      },
+      "browser": {
+        "passed": 655,
+        "skipped": 5,
+        "windows": 9,
+        "listenerCleanup": true,
+        "summarySha256": "9b3b747164b6ed96e1e1a76fb1a4fe487578af6f1a0f950081bba4cda5f65bc2",
+        "sourceBuildSha256": "9a41429ea7a0894ac2a2eafcfa98a81ea0fae3713055fad89656cd171139bd8d",
+        "invocation": "Direct unchanged managed orchestrator main([--project=chromium])",
+        "initialCliAttempts": "Official sample fixtures were missing from the git-only archive. All 15 checksummed public fixtures were installed before the managed replay."
+      },
+      "standaloneEncryptedRecovery": {
+        "exit": 0,
+        "logSha256": "6d177aae1bacefbbf4af91a04ec20bedfa4772d6d5589322cc198e685f3be944",
+        "receiptSha256": "5b86569c0b668a2aea3a77195c7d45a741cc606e94b6f3d16c4f8a96e8766ff7",
+        "listenerCleanup": true
+      },
+      "linuxNativeQualified": false,
+      "hostedQualified": false
+    },
     "nov28ProfessionalW2GObservationDate": {
       "applicationCommit": "95c43aef288b0b04fa88d1e60aa89b55c26b8bac",
       "source": "https://www.irs.gov/instructions/iw2g",
