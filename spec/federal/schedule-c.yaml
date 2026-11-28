@@ -198,6 +198,20 @@ lines:
       - "SE tax only applies to net profit (losses reduce other income but not SE)"
     testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C Line 31 - net profit or loss"
 
+  - line: "31-32b-2026-at-risk"
+    description: "Hold a loss when some Schedule C investment is explicitly not at risk"
+    formula: "For 2026 Schedule C with box 32b expressly selected, use the retained canonical business in the standalone entry point and preserve exact Decimal precision when checking the loss after line 30. A negative line 29 minus line 30 requires a source-backed Schedule C Form 6198 result before it can enter Schedule 1. Hold while this method is unsupported. Exact zero, profits, all-at-risk and unanswered legacy inputs retain their existing treatment."
+    edgeCases:
+      - "Conserve each exact current Part V source amount through line 27b and reject an interest split that differs from the canonical line 16 total before deciding the sign."
+    irsRef: "Schedule C Instructions, Lines 31 and 32; Form 6198 Instructions; IRC section 465(a)"
+    testRef: "tests/engine/schedules/schedule-c-at-risk-2026.test.ts::holds a 2026 business loss when the original at-risk answer is false"
+
+  - line: "13-32b-2026-depreciation"
+    description: "Use the exact Form 4562 summary before deciding whether box 32b limits a loss"
+    formula: "Carry Form 4562 line 22 through Schedule C lines 13, 28, 29 and 31 without intermediate rounding. A one-cent loss requires Form 6198 records when box 32b is selected. An exact zero passes the at-risk loss guard."
+    irsRef: "Form 4562, Line 22; Schedule C Instructions, Lines 13 and 32"
+    testRef: "tests/engine/schedules/schedule-c-at-risk-2026.test.ts::holds a cent loss transferred from Form 4562 line 22"
+
   - line: "16-source-facts"
     description: "Conserve actual business interest and its source classification"
     formula: "Positive retained aggregate businessInterest must not be omitted. Require actual current owner/business source, mortgage/vehicle/other split exactly equal to aggregate, actual remaining noninterest otherExpenses, ordinary current cash business-only allocation and all duplication/capitalization/personal/foreign exclusions confirmed. Sourceful small-business section163(j) exception requires three complete prior full-year aggregated gross-receipt amounts <=3*31000000 in2025 or3*32000000 in2026, actual nontaxshelter and no prior disallowed/partnershipEBIE. Unknown or other limitation methods reject explicitly; no entered allowed-interest override. Sum interest once into28/31 and preserve authoritative aggregate for PA."

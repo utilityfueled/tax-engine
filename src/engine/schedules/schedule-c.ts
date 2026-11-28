@@ -24,6 +24,7 @@ import {
 } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d as legacyAmount, min, roundDollar } from "@/utils/decimal.js";
+import { sumSourceMoney, sumSourceMoneyValues } from "@/utils/sum-source-money.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { reconcileScheduleCStandardMileage } from "@/utils/schedule-c-standard-mileage.js";
 import type { Form4562Result } from "@/engine/forms/form-4562.js";
@@ -77,6 +78,7 @@ export interface ScheduleCInput {
   businessCode?: string; // NAICS code
   ein?: string;
   accountingMethod?: "cash" | "accrual";
+  allInvestmentAtRisk?: boolean;
   grossReceipts?: string; // Line 1 (override — otherwise sum of 1099-NEC)
   returnsAndAllowances?: string; // Line 2
   costOfGoodsSold?: string; // Line 4
@@ -188,7 +190,8 @@ export function calculateScheduleC(
   input: TaxYearInput,
   scheduleCInput: ScheduleCInput | undefined = input.scheduleC?.professionalWagering !== undefined
     || input.scheduleC?.standardMileage !== undefined || input.scheduleC?.sourceFacts?.section45WFirstYear !== undefined
-    || input.scheduleC?.sourceFacts?.section45WSecondYear !== undefined ? input.scheduleC : undefined,
+    || input.scheduleC?.sourceFacts?.section45WSecondYear !== undefined
+    || (input.taxpayer.taxYear === 2026 && input.scheduleC?.allInvestmentAtRisk === false) ? input.scheduleC : undefined,
   options: { dependentCareBenefitsAdjustment?: Decimal; section45WSecondYearAsOfDate?: string } = {},
 ): ScheduleCResult {
   assertStatementYear("Form 1099-NEC", input.form1099Nec, input.taxpayer.taxYear);
@@ -201,6 +204,11 @@ export function calculateScheduleC(
   const wagering = calculateProfessionalWagering(input, scheduleCInput, options.dependentCareBenefitsAdjustment, audit);
   const mileage = calculateStandardMileage(input, scheduleCInput);
   const sources = calculateScheduleCSourceFacts(input, scheduleCInput);
+  const checkAtRiskLoss = input.taxpayer.taxYear === 2026 && scheduleCInput !== undefined
+    && (scheduleCInput.allInvestmentAtRisk === false || input.scheduleC?.allInvestmentAtRisk === false);
+  const add = (left: Decimal, right: Decimal): Decimal => checkAtRiskLoss
+    ? sumSourceMoney(left, right)
+    : left.plus(right);
   // Only the admitted documentary passenger path needs the100-character exact
   // projection. Keep historical caller precision/behavior for all other inputs.
   const Exact = sources?.passenger ? Decimal.clone({precision:256,rounding:Decimal.ROUND_HALF_UP}) : undefined;
@@ -211,10 +219,9 @@ export function calculateScheduleC(
   if (section45W) audit.merge(section45W.lines);
 
   // Line 1: Gross receipts
-  const necTotal = input.form1099Nec.reduce(
-    (acc, f) => acc.plus(d(f.nonemployeeCompensation)),
-    d(0)
-  );
+  const necTotal = checkAtRiskLoss
+    ? sumSourceMoneyValues(input.form1099Nec.map(f => d(f.nonemployeeCompensation)))
+    : input.form1099Nec.reduce((acc, f) => acc.plus(d(f.nonemployeeCompensation)), d(0));
   const grossReceipts = wagering?.gains ?? (scheduleCInput?.grossReceipts
     ? d(scheduleCInput.grossReceipts)
     : necTotal);
@@ -227,15 +234,15 @@ export function calculateScheduleC(
   audit.record("Sched C", "2", "Returns and allowances", returnsAndAllowances, "Refunds/rebates");
 
   // Lines 3–7: receipts, cost of goods, and separately reported other income.
-  const netReceipts = grossReceipts.minus(returnsAndAllowances);
+  const netReceipts = add(grossReceipts, returnsAndAllowances.negated());
   audit.record("Sched C", "3", "Net receipts", netReceipts, "Line 1 - Line 2");
   const costOfGoodsSold = d(scheduleCInput?.costOfGoodsSold);
   audit.record("Sched C", "4", "Cost of goods sold", costOfGoodsSold, "Line 42 (inventory calculation)");
-  const grossProfit = netReceipts.minus(costOfGoodsSold);
+  const grossProfit = add(netReceipts, costOfGoodsSold.negated());
   audit.record("Sched C", "5", "Gross profit", grossProfit, "Line 3 - Line 4");
   const otherIncome = d(scheduleCInput?.otherIncome);
   audit.record("Sched C", "6", "Other business income", otherIncome, "Actual income classified separately from gross receipts");
-  const grossIncome = grossProfit.plus(otherIncome);
+  const grossIncome = add(grossProfit, otherIncome);
   audit.record("Sched C", "7", "Gross income", grossIncome, "Line 5 + Line 6");
 
   // ── Expenses (Lines 8-27) ────────────────────────────
@@ -254,7 +261,7 @@ export function calculateScheduleC(
   };
 
   let totalExpenses = d(0);
-  totalExpenses = totalExpenses.plus(addExpense("8", "Advertising", expenses.advertising));
+  totalExpenses = add(totalExpenses, addExpense("8", "Advertising", expenses.advertising));
   if (mileage) {
     expenseBreakdown["Car and truck"] = mileage.deduction;
     audit.record("Sched C", "9", "Car and truck", mileage.deduction,
@@ -264,9 +271,9 @@ export function calculateScheduleC(
         "Business parking and tolls": mileage.parkingAndTolls,
       });
   }
-  totalExpenses = totalExpenses.plus(mileage?.deduction ?? addExpense("9", "Car and truck", expenses.carAndTruck));
-  totalExpenses = totalExpenses.plus(addExpense("10", "Commissions and fees", expenses.commissionsAndFees));
-  totalExpenses = totalExpenses.plus(addExpense("11", "Contract labor", expenses.contractLabor));
+  totalExpenses = add(totalExpenses, mileage?.deduction ?? addExpense("9", "Car and truck", expenses.carAndTruck));
+  totalExpenses = add(totalExpenses, addExpense("10", "Commissions and fees", expenses.commissionsAndFees));
+  totalExpenses = add(totalExpenses, addExpense("11", "Contract labor", expenses.contractLabor));
   const depreciationAndSection179Deduction = section45W?.line28 ?? form4562?.line22 ?? d(expenses.depreciation);
   expenseBreakdown["Depreciation and section 179"] = depreciationAndSection179Deduction;
   audit.record(
@@ -280,46 +287,49 @@ export function calculateScheduleC(
       ? { "Form 4562 Line 22": form4562.line22 }
       : { "Validated manual Schedule C depreciation amount": d(expenses.depreciation) }
   );
-  totalExpenses = totalExpenses.plus(depreciationAndSection179Deduction);
-  const employeeBenefits = d(expenses.employeeBenefitPrograms).plus(options.dependentCareBenefitsAdjustment ?? d("0"));
+  totalExpenses = add(totalExpenses, depreciationAndSection179Deduction);
+  const employeeBenefits = add(d(expenses.employeeBenefitPrograms), options.dependentCareBenefitsAdjustment ?? d(0));
   if (!employeeBenefits.isFinite() || employeeBenefits.lt(0)) {
     throw new Error("Schedule C employee benefit programs must reconcile to a finite nonnegative expense");
   }
-  totalExpenses = totalExpenses.plus(addExpense("14", "Employee benefit programs", employeeBenefits.toString()));
-  totalExpenses = totalExpenses.plus(addExpense("15", "Insurance", expenses.insurance));
+  totalExpenses = add(totalExpenses, addExpense("14", "Employee benefit programs", employeeBenefits.toString()));
+  totalExpenses = add(totalExpenses, addExpense("15", "Insurance", expenses.insurance));
   if(sources && (sources.interestTotal.gt(0) || scheduleCInput?.sourceFacts?.interest)){
-    totalExpenses=totalExpenses.plus(sources.interestTotal);
+    totalExpenses = add(totalExpenses, sources.interestTotal);
     expenseBreakdown["Business interest"]=sources.interestTotal;
     audit.record("Sched C","16a","Business mortgage interest reported on actual1098 or similar",sources.mortgage,"Actual eligible business mortgage source");
     audit.record("Sched C","16b","Other business interest",input.taxpayer.taxYear===2026?sources.vehicle:sources.vehicle.plus(sources.other),"Actual source-year interest classification");
     if(input.taxpayer.taxYear===2026)audit.record("Sched C","16c","Other business interest",sources.other,"Actual 2026 other-interest source");
   }
-  totalExpenses = totalExpenses.plus(addExpense("17", "Legal and professional", expenses.legalAndProfessional));
-  totalExpenses = totalExpenses.plus(addExpense("18", "Office expense", expenses.officeExpense));
-  totalExpenses=totalExpenses.plus(addExpense("20b","Rent of business property",expenses.rentOnBusinessProperty));
-  totalExpenses=totalExpenses.plus(addExpense("21","Repairs and maintenance",expenses.repairsAndMaintenance));
-  totalExpenses=totalExpenses.plus(addExpense("23","Taxes and licenses",expenses.taxes));
-  totalExpenses=totalExpenses.plus(addExpense("26","Wages",expenses.wages));
-  totalExpenses = totalExpenses.plus(addExpense("22", "Supplies", expenses.supplies));
-  totalExpenses = totalExpenses.plus(addExpense("24a", "Travel", expenses.travel));
+  totalExpenses = add(totalExpenses, addExpense("17", "Legal and professional", expenses.legalAndProfessional));
+  totalExpenses = add(totalExpenses, addExpense("18", "Office expense", expenses.officeExpense));
+  totalExpenses = add(totalExpenses, addExpense("20b", "Rent of business property", expenses.rentOnBusinessProperty));
+  totalExpenses = add(totalExpenses, addExpense("21", "Repairs and maintenance", expenses.repairsAndMaintenance));
+  totalExpenses = add(totalExpenses, addExpense("23", "Taxes and licenses", expenses.taxes));
+  totalExpenses = add(totalExpenses, addExpense("26", "Wages", expenses.wages));
+  totalExpenses = add(totalExpenses, addExpense("22", "Supplies", expenses.supplies));
+  totalExpenses = add(totalExpenses, addExpense("24a", "Travel", expenses.travel));
 
   // Meals at 50%
   const fullMeals = d(expenses.meals);
-  const deductibleMeals = roundDollar(fullMeals.times(MEAL_DEDUCTION_RATE));
+  const meals = checkAtRiskLoss
+    ? new (Decimal.clone({ precision: fullMeals.precision() + 2 }))(fullMeals)
+    : fullMeals;
+  const deductibleMeals = roundDollar(meals.times(MEAL_DEDUCTION_RATE));
   expenseBreakdown["Meals (50%)"] = deductibleMeals;
   audit.record("Sched C", "24b", "Deductible meals (50%)", deductibleMeals, `${fullMeals} × 50%`);
-  totalExpenses = totalExpenses.plus(deductibleMeals);
+  totalExpenses = add(totalExpenses, deductibleMeals);
 
-  totalExpenses = totalExpenses.plus(addExpense("25", "Utilities", expenses.utilities));
+  totalExpenses = add(totalExpenses, addExpense("25", "Utilities", expenses.utilities));
   // Classified Part V sources include actual Form4562 amortization, separate from line13.
-  const otherExpenses = wagering?.deduction ?? d(expenses.otherExpenses).plus(sources?.partV ?? d(0));
-  totalExpenses = totalExpenses.plus(addExpense("27b", "Other expenses", otherExpenses.toString()));
+  const otherExpenses = wagering?.deduction ?? add(d(expenses.otherExpenses), sources?.partV ?? d(0));
+  totalExpenses = add(totalExpenses, addExpense("27b", "Other expenses", otherExpenses.toString()));
 
   // Line 28: Total expenses
   audit.record("Sched C", "28", "Total expenses", totalExpenses, "Sum of Lines 8-27");
 
   // Line 29: Tentative profit
-  const tentativeProfit = grossIncome.minus(totalExpenses);
+  const tentativeProfit = add(grossIncome, totalExpenses.negated());
   audit.record("Sched C", "29", "Tentative profit or loss", tentativeProfit, "Line 7 - Line 28");
 
   // Line 30: Home office deduction
@@ -357,8 +367,11 @@ export function calculateScheduleC(
       : "Form 8829 or simplified method");
 
   // Line 31: Net profit or loss
-  const netProfit = tentativeProfit.minus(homeOfficeDeduction);
+  const netProfit = add(tentativeProfit, homeOfficeDeduction.negated());
   if (section45W && netProfit.lt(0)) throw new Error("Section 45W Schedule C loss requires a separate loss attribution method.");
+  if (checkAtRiskLoss && netProfit.lt(0)) {
+    throw new Error("2026 Schedule C loss requires actual Form 6198 records when some investment is not at risk.");
+  }
   audit.record("Sched C", "31", "Net profit or loss", netProfit, "Line 29 - Line 30");
 
   const result:ScheduleCResult = {

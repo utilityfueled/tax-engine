@@ -9,15 +9,20 @@ import {AmortizableAssetSchema,DepreciableAssetSchema} from '@/models/inputs.js'
 import {calculateForm4562} from '@/engine/forms/form-4562.js';
 import {AuditTrail} from '@/utils/audit.js';
 import {d} from '@/utils/decimal.js';
+import {sumSourceMoney} from '@/utils/sum-source-money.js';
 
 const ordinary = ['commissionsAndFees','rentOnBusinessProperty','repairsAndMaintenance','taxes','wages','bankCharges','duesAndPublications','freight','laundryAndCleaning','managementFees','postage','telephone'] as const;
 const special = ['pensionAndProfitSharing','amortization','depletion','badDebts','startupCostsDirectExpense','idcsAmortization','idcsCurrentExpensing','section179Expense'] as const;
-type SourceBusiness = {principalBusinessActivity?:string;businessCode?:string;accountHolder?:'primary'|'spouse'; businessName?:string;ein?:string;otherExpenseDescription?:string;accountingMethod?:'cash'|'accrual';sourceFacts?:ScheduleCSourceFacts;expenses?:object};
-type SourceInput = {rentalProperties?:unknown[];scheduleF?:unknown;royaltyPropertySources?:unknown;taxpayer:Pick<TaxYearInput['taxpayer'],'taxYear'|'filingStatus'|'primary'|'spouse'|'address'>;scheduleK1?:Array<{excessBusinessInterest?:string}>;form2555?:unknown;form4562?:TaxYearInput['form4562'];dependentCareBenefits?:TaxYearInput['dependentCareBenefits'];w2s?:unknown;form3800?:{currentYearCredits?:string;passiveActivityCredits?:string}};
+type SourceBusiness = {principalBusinessActivity?:string;businessCode?:string;accountHolder?:'primary'|'spouse'; businessName?:string;ein?:string;otherExpenseDescription?:string;accountingMethod?:'cash'|'accrual';allInvestmentAtRisk?:boolean;sourceFacts?:ScheduleCSourceFacts;expenses?:object};
+type SourceInput = {rentalProperties?:unknown[];scheduleC?:Pick<SourceBusiness,'allInvestmentAtRisk'>;scheduleF?:unknown;royaltyPropertySources?:unknown;taxpayer:Pick<TaxYearInput['taxpayer'],'taxYear'|'filingStatus'|'primary'|'spouse'|'address'>;scheduleK1?:Array<{excessBusinessInterest?:string}>;form2555?:unknown;form4562?:TaxYearInput['form4562'];dependentCareBenefits?:TaxYearInput['dependentCareBenefits'];w2s?:unknown;form3800?:{currentYearCredits?:string;passiveActivityCredits?:string}};
 
 /** Validate the original records; split metadata never becomes a second expense. */
 export function calculateScheduleCSourceFacts(input:SourceInput,business:SourceBusiness|undefined,saved?:ScheduleCResult){
  const fail=(detail:string):never=>{throw new Error(`Schedule C actual source expense method: ${detail}`);};
+ const exactAtRiskSources=input.taxpayer.taxYear===2026
+  && (business?.allInvestmentAtRisk===false||input.scheduleC?.allInvestmentAtRisk===false);
+ const add=(first:Decimal,...remaining:Decimal[])=>exactAtRiskSources
+  ?sumSourceMoney(first,...remaining):remaining.reduce((total,value)=>total.plus(value),first);
  const passenger=calculateScheduleCPassengerSources(input,business);
  const amount=(value:string|undefined,label:string)=>{if(typeof value!=='string'||!value.trim())return fail(`${label} is unknown`);if(!/^-?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?$/.test(value.trim()))return fail(`${label} is invalid`);let n:Decimal;try{n=new Decimal(value.trim().replace(/,/g,''));}catch{return fail(`${label} is invalid`);}if(!n.isFinite()||n.lt(0))return fail(`${label} must be finite and nonnegative`);return n;};
  const ref=(value:string|undefined,label:string)=>{if(!value?.trim())fail(`${label} source reference is unknown`);};
@@ -27,7 +32,7 @@ export function calculateScheduleCSourceFacts(input:SourceInput,business:SourceB
  for(const field of ['businessInterest',...ordinary])if(!d(exp[field]).isFinite()||d(exp[field]).lt(0))fail(`${field} is not a nonnegative current expense`);
  if(input.form4562?.assets?.some(asset=>asset.basisSources!==undefined)&&!proof?.depreciation)fail('documented depreciation assets require actual Schedule C owner and activity attribution');
  const amortizationTotal=input.form4562?calculateForm4562(input.form4562,input.taxpayer.taxYear).line44:d(0);
- const interestTotal=d(exp.businessInterest),ordinaryTotal=ordinary.reduce((s,k)=>s.plus(d(exp[k])),d(0));
+ const interestTotal=d(exp.businessInterest),ordinaryTotal=add(d(0),...ordinary.map(key=>d(exp[key])));
  if(!proof){if(amortizationTotal.gt(0))fail('positive Form4562 amortization requires actual Schedule C asset attribution sources');if(saved?.lines.some(row=>row.line==='actual-source-commitment'))fail('saved original source proof was removed');if(!interestTotal.isZero()||!ordinaryTotal.isZero())fail('positive interest or classified ordinary expenses require complete actual sources');return undefined;}
  if(d(exp.otherExpenses).gt(0)&&!business?.otherExpenseDescription?.trim())fail('actual remaining other-expense description is unknown');
  truth(proof.sourceFactsConfirmed,'original source facts');ref(proof.sourceReference,'business');
@@ -46,7 +51,7 @@ export function calculateScheduleCSourceFacts(input:SourceInput,business:SourceB
  if(interest||!interestTotal.isZero()){
   if(!interest)return fail('interest sources missing');const p=interest;ref(p.sourceReference,'interest');
   mortgage=amount(p.mortgageInterest,'mortgage interest');vehicle=amount(p.vehicleLoanInterest,'vehicle loan interest');other=amount(p.otherInterest,'other interest');
-  if(!mortgage.plus(vehicle).plus(other).eq(interestTotal))fail('interest split does not reconcile exactly with aggregate expense');
+  if(!add(mortgage,vehicle,other).eq(interestTotal))fail('interest split does not reconcile exactly with aggregate expense');
   for(const key of ['allInterestOrdinaryCurrentCashBusinessOnlyConfirmed','noCapitalizedPrepaidRelatedPartyOrForeignInterestConfirmed','noPersonalOrSchedule1AInterestConfirmed','notDeductedElsewhereConfirmed'] as const)truth(p[key],key);
   if(mortgage.gt(0))truth(p.mortgageBank1098OrSimilarStatementConfirmed,'mortgage bank and actual1098 or similar statement classification');
   if(!amount(p.otherExpensesExcludingInterest,'remaining noninterest expenses').eq(d(exp.otherExpenses)))fail('remaining other expenses do not reconcile');ref(p.otherExpenseSourceReference,'remaining noninterest expenses');
@@ -56,7 +61,7 @@ export function calculateScheduleCSourceFacts(input:SourceInput,business:SourceB
    for(const k of ['allAggregationAndPassThroughSharesIncludedConfirmed','notTaxShelterConfirmed','noPriorDisallowedInterestOrPartnershipEbieConfirmed'] as const)truth(g[k],k);
    if(input.scheduleK1?.some(k=>!d(k.excessBusinessInterest).isZero()))fail('partnership excess business interest requires a separate method');
    const history=g.history;if(history?.length!==3)return fail('three full-year aggregate gross receipts sources are required');let total=d(0);const years=new Set<number>();
-   for(const row of history){if(row.taxYear===undefined||row.taxYear<input.taxpayer.taxYear-3||row.taxYear>=input.taxpayer.taxYear||years.has(row.taxYear))fail('gross receipts history years are missing, duplicated or stale');years.add(row.taxYear as number);truth(row.fullTaxYearConfirmed,'full taxable year receipts');ref(row.sourceReference,'gross receipts');total=total.plus(amount(row.grossReceipts,'aggregate gross receipts'));}
+   for(const row of history){if(row.taxYear===undefined||row.taxYear<input.taxpayer.taxYear-3||row.taxYear>=input.taxpayer.taxYear||years.has(row.taxYear))fail('gross receipts history years are missing, duplicated or stale');years.add(row.taxYear as number);truth(row.fullTaxYearConfirmed,'full taxable year receipts');ref(row.sourceReference,'gross receipts');total=add(total,amount(row.grossReceipts,'aggregate gross receipts'));}
    const threshold=input.taxpayer.taxYear===2025?'31000000':'32000000';if(total.gt(d(threshold).times(3)))fail('aggregate gross receipts exceed the actual source-year interest exception');
   }
  }
@@ -68,7 +73,7 @@ export function calculateScheduleCSourceFacts(input:SourceInput,business:SourceB
   const rows=p.rows;if(!rows?.length)return fail('ordinary expense rows are unknown');
   for(const row of rows){if(!ordinary.includes(row.category as typeof ordinary[number])||!row.category||rowAmounts[row.category])fail('ordinary expense source category is unsupported or duplicated');ref(row.sourceReference,'ordinary expense row');truth(row.sourceFactsConfirmed,'ordinary expense row');const key=row.category;if(!key)return fail('ordinary source row category is missing');const value=amount(row.amount,'ordinary expense row');if(!value.eq(d(exp[key])))fail('ordinary expense row differs from actual canonical amount');rowAmounts[key]=value;}
   for(const key of ordinary)if(d(exp[key]).gt(0)&&!rowAmounts[key])fail(`${key} source row is missing`);
-  for(const key of ordinary.slice(5))partV=partV.plus(rowAmounts[key]??d(0));
+  partV=add(partV,...ordinary.slice(5).map(key=>rowAmounts[key]??d(0)));
   if(d(exp.wages).gt(0)&&(d(input.form3800?.currentYearCredits).gt(0)||d(input.form3800?.passiveActivityCredits).gt(0)))fail('employee wages with business credit reductions require a separate source method');
  }
 
@@ -131,10 +136,10 @@ export function calculateScheduleCSourceFacts(input:SourceInput,business:SourceB
    if(asset.dateAmortizationBegins.length===10)date(asset.dateAmortizationBegins,'original declared start');if(begin.slice(0,4)!==String(input.taxpayer.taxYear)||asset.dateAmortizationBegins.slice(0,7)!==begin.slice(0,7))fail('amortization current start does not match later actual acquisition and business-start sources');
    const identity=JSON.stringify([description.replace(/\s+/g,' ').toLowerCase(),basis.toString(),begin.slice(0,7),'197',180]);if(originals.has(identity))fail('amortization duplicates an indistinguishable original asset');originals.add(identity);
   }
-  if(p.reclassification){const r=p.reclassification;ref(r.sourceReference,'amortization reclassification');const old=amount(r.originalOtherExpenses,'original other expenses before amortization reclassification'),included=amount(r.amortizationAlreadyIncluded,'amortization already included'),remaining=amount(r.remainingOtherExpenses,'remaining nonamortization other expenses');if(!old.eq(included.plus(remaining))||!remaining.eq(d(exp.otherExpenses))||included.gt(amortizationTotal))fail('actual amortization reclassification is not conserved');if(included.gt(0)&&interest?.reclassification)fail('simultaneous historical interest and amortization reclassification requires its coherent original ledger method');}
-  partV=partV.plus(amortizationTotal);
+  if(p.reclassification){const r=p.reclassification;ref(r.sourceReference,'amortization reclassification');const old=amount(r.originalOtherExpenses,'original other expenses before amortization reclassification'),included=amount(r.amortizationAlreadyIncluded,'amortization already included'),remaining=amount(r.remainingOtherExpenses,'remaining nonamortization other expenses');if(!old.eq(add(included,remaining))||!remaining.eq(d(exp.otherExpenses))||included.gt(amortizationTotal))fail('actual amortization reclassification is not conserved');if(included.gt(0)&&interest?.reclassification)fail('simultaneous historical interest and amortization reclassification requires its coherent original ledger method');}
+  partV=add(partV,amortizationTotal);
  }
- if(interest?.reclassification){const r=interest.reclassification;ref(r.sourceReference,'expense reclassification');const old=amount(r.originalOtherExpenses,'original other expenses'),i=amount(r.interestAlreadyIncluded,'interest already included'),o=amount(r.ordinaryExpensesAlreadyIncluded,'ordinary expenses already included'),remaining=amount(r.remainingOtherExpenses,'remaining other expenses');if(!old.eq(i.plus(o).plus(remaining))||!remaining.eq(d(exp.otherExpenses))||i.gt(interestTotal)||o.gt(ordinaryTotal))fail('actual expense reclassification is not conserved');}
+ if(interest?.reclassification){const r=interest.reclassification;ref(r.sourceReference,'expense reclassification');const old=amount(r.originalOtherExpenses,'original other expenses'),i=amount(r.interestAlreadyIncluded,'interest already included'),o=amount(r.ordinaryExpensesAlreadyIncluded,'ordinary expenses already included'),remaining=amount(r.remainingOtherExpenses,'remaining other expenses');if(!old.eq(add(i,o,remaining))||!remaining.eq(d(exp.otherExpenses))||i.gt(interestTotal)||o.gt(ordinaryTotal))fail('actual expense reclassification is not conserved');}
  if(!proof.address)fail('actual business address or confirmed home omission source is unknown');
  let address:ScheduleCSourceFacts['address'];
  if(proof.address){address=proof.address;const a=address;
@@ -146,11 +151,12 @@ export function calculateScheduleCSourceFacts(input:SourceInput,business:SourceB
  const commitment=bytesToHex(sha256(new TextEncoder().encode(JSON.stringify(stable({taxpayer:input.taxpayer,business,partnershipInterest:input.scheduleK1?.map(k=>k.excessBusinessInterest),businessCredits:input.form3800,form4562:input.form4562,dependentCareBenefits:input.dependentCareBenefits,careW2Sources:input.dependentCareBenefits?input.w2s:undefined})))));
  if(saved){
   const rows=saved.lines.filter(row=>row.line==='actual-source-commitment');if(rows.length!==1||rows[0].inputs['Original source commitment']!==commitment)fail('saved original source commitment is stale');
-  const expected:Array<[string,Decimal]>=[['10',rowAmounts.commissionsAndFees??d(0)],['20b',rowAmounts.rentOnBusinessProperty??d(0)],['21',rowAmounts.repairsAndMaintenance??d(0)],['23',rowAmounts.taxes??d(0)],['26',rowAmounts.wages??d(0)],['27b',d(exp.otherExpenses).plus(partV)]];
+  const otherExpenses=add(d(exp.otherExpenses),partV);
+  const expected:Array<[string,Decimal]>=[['10',rowAmounts.commissionsAndFees??d(0)],['20b',rowAmounts.rentOnBusinessProperty??d(0)],['21',rowAmounts.repairsAndMaintenance??d(0)],['23',rowAmounts.taxes??d(0)],['26',rowAmounts.wages??d(0)],['27b',otherExpenses]];
   if(interest)expected.push(['16a',mortgage],['16b',input.taxpayer.taxYear===2026?vehicle:vehicle.plus(other)],...(input.taxpayer.taxYear===2026?[['16c',other] as [string,Decimal]]:[]));
   for(const [line,value] of expected){const found=saved.lines.filter(row=>row.form==='Sched C'&&row.line===line);if(found.length!==1||!found[0].value.eq(value))fail('saved source expense calculation is stale');}
   for(const [label,key] of [['Commissions and fees','commissionsAndFees'],['Rent of business property','rentOnBusinessProperty'],['Repairs and maintenance','repairsAndMaintenance'],['Taxes and licenses','taxes'],['Wages','wages']] as const)if(!saved.expenseBreakdown[label]?.eq(rowAmounts[key]??d(0)))fail('saved source expense breakdown is stale');
-  if(!saved.expenseBreakdown['Other expenses']?.eq(d(exp.otherExpenses).plus(partV))||(interest&&!saved.expenseBreakdown['Business interest']?.eq(interestTotal)))fail('saved interest or remaining other expense is stale');
+  if(!saved.expenseBreakdown['Other expenses']?.eq(otherExpenses)||(interest&&!saved.expenseBreakdown['Business interest']?.eq(interestTotal)))fail('saved interest or remaining other expense is stale');
  }
  if(passenger&&saved){
   assertScheduleCPassengerResult(passenger,saved,commitment);
