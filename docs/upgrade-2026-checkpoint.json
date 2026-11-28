@@ -4,7 +4,7 @@
     "asOf": "2026-11-28",
     "branch": "main",
     "latestForm6198PhysicalEvidenceKey": "activeContinuation.nov28Form6198PhysicalCandidate",
-    "applicationCommit": "77e1fe6f664633fa2397f3f22e484957f9259703",
+    "applicationCommit": "95c43aef288b0b04fa88d1e60aa89b55c26b8bac",
     "latestScopedApplicationCommit": "95c43aef288b0b04fa88d1e60aa89b55c26b8bac",
     "latestW2GObservationEvidenceKey": "activeContinuation.nov28ProfessionalW2GObservationDate",
     "latestAiExactBenefitEvidenceKey": "activeContinuation.nov28AiExactBenefitThreshold",
@@ -208,11 +208,11 @@
     "annualScheduleBSourceEvidenceKey": "activeContinuation.nov24ScheduleBFinalSource",
     "annualScheduleBReviewEvidenceKey": "activeContinuation.nov24ScheduleBOrdinaryReview",
     "pensionTaxableAmountEvidenceKey": "activeContinuation.nov24ReportedPensionTaxableAmount",
-    "completeLocalBaselineEvidenceKey": "activeContinuation.nov28ExactGuidedScheduleCForm6198Combined",
+    "completeLocalBaselineEvidenceKey": "activeContinuation.nov28ExactProfessionalW2GAndAiCombined",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov27ExactFederalPaymentCombined",
     "remaining": [
-      "Both strict Linux browser gates and final runtime image evidence remain open. Exact application 95c43aef2 CI 46134802863, Web 46134802878 and Docker 46134802937 were queued when checked. ARM64 rehearsal 46120985997 on 0c594ea43 passed native archive verification and isolated Compose recovery and entered strict Chromium. The prior ARM64 run 46113946817 timed out in 11 browser cases after passing image and recovery checks.",
+      "Both strict Linux browser gates and final runtime image evidence remain open. GitHub CI 46136306545, Web 46136306506 and Docker 46136306571 were queued on bf76e9f24, including the tracked Form 6198 blank. ARM64 46136373270 is pending on the same revision behind 46120985997, which passed archive and Compose recovery before entering strict Chromium. The prior ARM64 run 46113946817 timed out in 11 browser cases after passing image and recovery checks.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 27 public npm audits of the unchanged lockfile returned zero findings across 550 total and 457 production packages.",
@@ -220,6 +220,57 @@
     ]
   },
   "activeContinuation": {
+    "nov28ExactProfessionalW2GAndAiCombined": {
+      "commit": "95c43aef288b0b04fa88d1e60aa89b55c26b8bac",
+      "exactArchiveSha256": "4f32a02e4cbddc99fd799fa7128791c7a0d8c0f816e2c814a28327ff690f94ab",
+      "localEvidenceMarker": "nov28-w2g-ai-exact-path",
+      "manifestSha256": "62a29ef234d161fcf9c4eb2f2ee4112a1f61c5ccf7f7e8ae6d10c1f3a85412cc",
+      "allElevenLocalChecksPassed": true,
+      "commandsPassed": [
+        "test",
+        "coverage",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "build",
+        "build-web",
+        "lint",
+        "browser"
+      ],
+      "prerequisites": {
+        "node": "26.13.1",
+        "pypdf": "6.10.0"
+      },
+      "officialSampleDocumentsVerified": 15,
+      "offlineEvaluatorArtifactCheckPassed": true,
+      "unit": {
+        "passed": 31621,
+        "skipped": 84
+      },
+      "coverage": {
+        "passed": 31621,
+        "skipped": 84,
+        "branchPercent": "88.82"
+      },
+      "browser": {
+        "passed": 655,
+        "skipped": 5,
+        "windows": 9,
+        "listenerCleanup": true,
+        "summarySha256": "9b3b747164b6ed96e1e1a76fb1a4fe487578af6f1a0f950081bba4cda5f65bc2",
+        "sourceBuildSha256": "5746b252d9fb0be1c5915cc3664191dc9bdfd736d30c35931d2e79eb6ba9cbad"
+      },
+      "standaloneEncryptedRecovery": {
+        "exit": 0,
+        "logSha256": "15c8fb1ff68e66f34b70996aa4430f71f5bbaccf99307f047fcc8e74ce1406e9",
+        "receiptSha256": "2bc68eec40186a94463beda830c522c01ce524b57f5aece2cb05a3a682b5dfb0",
+        "listenerCleanup": true
+      },
+      "linuxNativeQualified": false,
+      "hostedQualified": false
+    },
     "nov28ExactGuidedScheduleCForm6198Combined": {
       "commit": "77e1fe6f664633fa2397f3f22e484957f9259703",
       "exactArchiveSha256": "398c8c4935aa603d8fb7a4f1233ae4168fcbb085369221db271713c732a3c2cc",
@@ -309,7 +360,10 @@
       "successorRun": 46120985997,
       "successorRevision": "0c594ea43f11970620c108a504a9c0fc1d23fc23",
       "successorContains": "42d8091d9e54c6429741c09629351a303a8ba1cc",
-      "successorStatus": "An ARM64 runner started it November 28, 2026 at 10:16 UTC and reached strict browser flows. Strict browser qualification remains open."
+      "successorStatus": "An ARM64 runner started it November 28, 2026 at 10:16 UTC and reached strict browser flows. Strict browser qualification remains open.",
+      "latestSourceRun": 46136373270,
+      "latestSourceRevision": "bf76e9f24a8d2de0074f1dae2497ccf4595f65ed",
+      "latestSourceStatus": "Pending on the standard public ARM64 runner. The running rehearsal was preserved."
     },
     "nov28GuidedScheduleCForm6198Originals": {
       "applicationCommit": "77e1fe6f664633fa2397f3f22e484957f9259703",

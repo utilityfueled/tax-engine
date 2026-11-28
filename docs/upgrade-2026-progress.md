@@ -16,12 +16,12 @@ jq '.resume | {latestScopedApplicationCommit, remaining}' docs/upgrade-2026-chec
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `77e1fe6f6` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `95c43aef2` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
-| Self-host release | Exact local Chromium and encrypted recovery passed on `77e1fe6f6`. The latest completed ARM64 run passed image verification and Compose recovery, then timed out in 11 Chromium cases. Its successor reached the strict browser step and includes the Ohio edit optimization. See the run receipts below. |
+| Self-host release | Exact local Chromium and encrypted recovery passed on `95c43aef2`. The latest completed ARM64 run passed image verification and Compose recovery, then timed out in 11 Chromium cases. Its successor reached strict Chromium. Another run is pending on the revision with the tracked Form 6198 blank. |
 
 ## November 28 professional W-2G originals and AI evaluation
 
@@ -58,6 +58,13 @@ requirement. The successor on `0c594ea43` began strict browser flows on
 November 28. It includes `42d8091d9`, which removes the Ohio per-edit clone.
 [Completed ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/46113946817)
 · [ARM64 successor](https://github.com/utilityfueled/tax-engine/actions/runs/46120985997).
+
+The exact source with the tracked Form 6198 blank is queued separately on
+`bf76e9f24`. Both ARM64 rehearsals retain their existing browser requirements.
+[Current-source ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/46136373270)
+· [GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/46136306545)
+· [Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/46136306506)
+· [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/46136306571).
 
 ## November 28 guided sole-proprietor Form 6198 records
 
@@ -288,11 +295,20 @@ Git-only archive lacked the official sample documents. All 15 trusted copies
 passed their checksums. The replay called the unchanged managed orchestrator
 directly and retained the original timeouts and skip rules.
 
-Successor `95c43aef2` passed 31,621 unit tests with 84 skips, the engine build,
-lint, all typechecks, specs and inventory. That revision predates the tracked
-Form 6198 blank. The candidate's required physical test passed separately on
-`01c9b5947`. Coverage and the production web and browser checks for
-`95c43aef2` were still in progress.
+Successor `95c43aef2` also passed the full local checks recorded below.
+The Form 6198 blank was tracked and its mandatory physical test passed
+separately on `01c9b5947`.
+
+## November 28 exact local release checks on 95c43aef2
+
+All 11 retained checks passed from the exact `95c43aef2` archive. The unit
+and coverage suites each passed 31,621 tests with 84 skips.
+Branch coverage was 88.82% against the 85% gate. Managed Chromium passed
+655 cases with 5 skips across all 9 windows. The standalone
+app created an encrypted backup, deleted the synthetic workspace and
+restored it. Both isolated listeners closed. Node 26.13.1, pypdf 6.10.0,
+15 hash-verified official sample PDFs and the offline AI evaluation
+artifact check were used. Manifest SHA-256 `62a29ef234d161fcf9c4eb2f2ee4112a1f61c5ccf7f7e8ae6d10c1f3a85412cc`.
 
 ## November 28 original 2026 Form 6198 Part II sources
 
