@@ -43,7 +43,7 @@ describe("ScheduleA actual charity reporting", () => {
     input.priorYear.charitableCarryforwardByYear = [];
     input.donations = input.donations.map((row, index) => ({ ...row,
       dateOfDonation: "2026-05-01", amount: index === 0 ? "100.49" : "200.49",
-      supportingOrganization: false, donorAdvisedFund: false,
+      recipientCategory: "fifty-percent", supportingOrganization: false, donorAdvisedFund: false,
     }));
     const result = calculateScheduleA(input, d("10000"), "single", FEDERAL_2026_CONSTANTS);
     expect(result.cashCharitable.toString()).toBe("100.49");

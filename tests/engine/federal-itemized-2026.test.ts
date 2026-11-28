@@ -49,7 +49,7 @@ const reitCashReturn = (amount: string) => ({
 
 describe("2026 federal itemized limitation integration", () => {
   it("reduces itemized deductions after the charitable floor without changing AGI", () => {
-    const input = TaxYearInputSchema.parse({ ...base, donations: [{ organization: "Synthetic public charity", type: "cash", amount: "103500", dateOfDonation: "2026-01-01", qualifiedOrganization: true, supportingOrganization: false, donorAdvisedFund: false, isPrivateFoundation: false }] });
+    const input = TaxYearInputSchema.parse({ ...base, donations: [{ organization: "Synthetic public charity", type: "cash", amount: "103500", dateOfDonation: "2026-01-01", qualifiedOrganization: true, supportingOrganization: false, donorAdvisedFund: false, isPrivateFoundation: false, recipientCategory: "fifty-percent" as const }] });
     const result = calculateFederalTax(input);
     expect(result.agi.toString()).toBe("700000");
     expect(result.itemizedDeductionReduction?.toString()).toBe("3211");
@@ -107,6 +107,20 @@ describe("2026 federal itemized limitation integration", () => {
     expect(comparison?.value.toFixed()).toBe(`-${tax}`);
     expect(calculateFederalTax(structuredClone(original))).toEqual(automatic);
     expect(input).toEqual(original);
+  });
+
+  it("compares the same automatic REIT cash return with a zero charity row", () => {
+    const raw = reitCashReturn("23100");
+    const result = calculatePublicFederalTax(parseInput({ ...raw, donations: [...raw.donations, {
+      organization: "Synthetic unused charity", type: "cash", amount: "0.00", dateOfDonation: "2026-01-02",
+      qualifiedOrganization: true, supportingOrganization: false, donorAdvisedFund: false,
+    }] }));
+    const baseline = calculatePublicFederalTax(parseInput(raw));
+    expect(result.deductionUsed).toBe("standard");
+    expect(result.totalTax.toFixed()).toBe("277296");
+    expect(result.taxableIncome).toEqual(baseline.taxableIncome);
+    expect(result.allLines.at(-1)).toEqual(baseline.allLines.at(-1));
+    expect(result.scheduleA?.charitableSourceDigest).not.toBe(baseline.scheduleA?.charitableSourceDigest);
   });
 
   // spec/federal/itemized-deduction-limit.yaml, automatic-reit-dividend-precision

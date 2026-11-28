@@ -87,7 +87,11 @@ export function DeductionSourceDetails({ data, onChange, includeMortgages = true
       const clearCashBasis = { cashAmountBasis: null, ...clearBenefit };
       const isGross = entry.type === "cash" && entry.cashAmountBasis === "gross-payment";
       const benefit = parseGuidedDisplayAmount(entry.cashBenefitValue);
-      const confirmExcess = isGross && benefit.gt(0) && parseGuidedDisplayAmount(entry.amount).gt(benefit);
+      const amount = parseGuidedDisplayAmount(entry.amount);
+      const confirmExcess = isGross && benefit.gt(0) && amount.gt(benefit);
+      const legacyPublic = taxYear !== 2026 && entry.recipientCategory === undefined && entry.isPrivateFoundation === false;
+      const categoryRequired = taxYear === 2026 && entry.qualifiedOrganization === true && amount.gt(0)
+        && (!isGross || benefit.isZero() || (confirmExcess && entry.cashExcessGiftIntended === true));
       const amountLabel = entry.type !== "cash" ? "Donation amount / fair market value"
         : isGross ? "Gross cash payment" : entry.cashAmountBasis === "net-contribution" ? "Net charitable contribution" : "Cash amount";
       const updateRecipient = (organization: string) => {
@@ -128,11 +132,11 @@ export function DeductionSourceDetails({ data, onChange, includeMortgages = true
             ...(guidedAmountChanged(entry.cashBenefitValue, cashBenefitValue) ? { cashExcessGiftIntended: undefined } : {}),
           })} required />}
         {confirmExcess && <BooleanFact label="Did you intend to contribute the excess as a gift?" value={entry.cashExcessGiftIntended} onChange={cashExcessGiftIntended => update({ cashExcessGiftIntended })} />}
-        <label className="guided-field"><span className="guided-field-label">Recipient tax category</span><select className="guided-input"
-          value={entry.recipientCategory === undefined && entry.isPrivateFoundation === false ? "legacy-public" : entry.recipientCategory ?? ""}
+        <label className="guided-field"><span className="guided-field-label">Recipient tax category</span><select className="guided-input" aria-required={categoryRequired}
+          value={legacyPublic ? "legacy-public" : entry.recipientCategory ?? ""}
           onChange={(event) => update({ recipientCategory: event.target.value === "" ? null : event.target.value as DonationEntryData["recipientCategory"] })}>
           <option value="">Confirm from the recipient&apos;s records</option>
-          {entry.recipientCategory === undefined && entry.isPrivateFoundation === false && <option value="legacy-public" disabled>Saved public / 50% limit classification</option>}
+          {legacyPublic && <option value="legacy-public" disabled>Saved public / 50% limit classification</option>}
           <option value="fifty-percent">Public charity or qualifying 50% limit foundation</option>
           <option value="private-nonoperating">Private nonoperating foundation outside the 50% limit category</option>
           <option value="other-thirty-percent">Other qualified 30% limit organization</option>

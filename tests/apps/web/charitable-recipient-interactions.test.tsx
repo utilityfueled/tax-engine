@@ -7,6 +7,25 @@ import {DeductionSourceDetails} from '@/components/guided-interview/deduction-so
 import {emptyDeductionData,emptyDonationEntry,type DeductionData} from '@/lib/guided-interview-flow';
 import {buildDonationsInput} from '@/lib/guided-interview-bridge';
 import {actualGuidedCharitableCarryover} from '../../fixtures/guided-charitable-carryover';
+
+it('shows a 2026 saved nonfoundation category as unconfirmed', async () => {
+ (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT=true;
+ const element=document.createElement('div');
+ const root=createRoot(element);
+ const data:DeductionData={...emptyDeductionData,method:'standard',donationEntries:[{...emptyDonationEntry,
+  organization:'Synthetic eligible nonprofit cemetery',type:'cash',cashAmountBasis:'net-contribution',amount:'500',date:'2026-03-31',
+  qualifiedOrganization:true,isPrivateFoundation:false,supportingOrganization:false,donorAdvisedFund:false}]};
+ try {
+  await act(async()=>root.render(<DeductionSourceDetails includeMortgages={false} taxYear={2026} data={data} onChange={()=>{ throw new Error('Rendering rewrote saved evidence'); }}/>));
+  const select=[...element.querySelectorAll('label')].find(row=>row.querySelector('.guided-field-label')?.textContent==='Recipient tax category')?.querySelector('select');
+  expect(select?.value).toBe('');
+  expect(select?.getAttribute('aria-required')).toBe('true');
+  expect(data.donationEntries?.[0]).toMatchObject({ isPrivateFoundation:false });
+  await act(async()=>root.render(<DeductionSourceDetails includeMortgages={false} taxYear={2025} data={data} onChange={()=>{ throw new Error('Rendering rewrote saved evidence'); }}/>));
+  expect(select?.value).toBe('legacy-public');
+ } finally { await act(async()=>root.unmount()); }
+});
+
 it('collects actual recipient classification without promoting the saved ambiguous flag',async()=>{
  (globalThis as {IS_REACT_ACT_ENVIRONMENT?:boolean}).IS_REACT_ACT_ENVIRONMENT=true;
  const element=document.createElement('div');document.body.appendChild(element);const root=createRoot(element);

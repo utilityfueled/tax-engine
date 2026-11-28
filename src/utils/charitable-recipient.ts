@@ -10,11 +10,12 @@ export interface CharitableRecipientResolution {
 export function resolveCharitableRecipient(source: {
   recipientCategory?: string | null;
   isPrivateFoundation?: boolean | null;
-}): CharitableRecipientResolution {
+}, taxYear?: number | null): CharitableRecipientResolution {
   if (source.recipientCategory === 'fifty-percent') return { percentageCategory: 'fifty-percent', privateNonoperating: false, provenance: 'actual-category' };
   if (source.recipientCategory === 'private-nonoperating') return { percentageCategory: 'other-thirty-percent', privateNonoperating: true, provenance: 'actual-category' };
   if (source.recipientCategory === 'other-thirty-percent') return { percentageCategory: 'other-thirty-percent', privateNonoperating: false, provenance: 'actual-category' };
-  // Null is an explicitly cleared answer; only absence can retain the old public answer.
+  if (taxYear === 2026) throw new Error('Confirm the actual charitable recipient tax category for 2026');
+  // Null is an explicitly cleared answer; only historical absence can retain the old public answer.
   if (source.recipientCategory === undefined && source.isPrivateFoundation === false) return { percentageCategory: 'fifty-percent', privateNonoperating: false, provenance: 'legacy-public' };
   throw new Error('Charitable recipient category classification is unknown or ambiguous; confirm the actual recipient tax category');
 }

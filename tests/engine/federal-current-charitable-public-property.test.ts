@@ -16,7 +16,7 @@ it('binds mixed current category carry to final selection without granting stand
     if (!input.standardDeductionFacts) throw new Error('Missing actual synthetic eligibility');
     input.standardDeductionFacts.spouseItemizes = election === 'nonitemized';
     input.donations.push({ organization: 'Synthetic public property charity', type: 'property', amount: '5000', costBasis: '3000',
-      dateOfDonation: '2026-06-01', qualifiedOrganization: true, isPrivateFoundation: false, isLongTermCapitalGain: false });
+      dateOfDonation: '2026-06-01', qualifiedOrganization: true, isPrivateFoundation: false, recipientCategory: 'fifty-percent' as const, isLongTermCapitalGain: false });
     const before = JSON.stringify(input), result = calculateFederalTax(input);
     expect(result.deductionUsed).toBe(method);
     expect(result.scheduleA?.charitableTotal.toFixed()).toBe('4950');

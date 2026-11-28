@@ -196,13 +196,19 @@ export function deductionFactErrors(data: DeductionData | undefined, taxYear?: n
     }
     if (typeof entry.qualifiedOrganization !== "boolean") errors[`donation-${index}-qualification`] = "Confirm the recipient's actual charitable qualification.";
     if (entry.qualifiedOrganization === false) return;
+    let contribution = error ? undefined : parseGuidedCurrency(entry.amount);
     if (entry.type === "cash" && entry.qualifiedOrganization === true && !error) {
-      try { guidedDonationValue(entry); }
-      catch (cause) { errors[`donation-${index}-cash-basis`] = cause instanceof Error ? cause.message : "Confirm the actual cash contribution amount."; }
+      try { contribution = guidedDonationValue(entry); }
+      catch (cause) {
+        contribution = undefined;
+        errors[`donation-${index}-cash-basis`] = cause instanceof Error ? cause.message : "Confirm the actual cash contribution amount.";
+      }
     }
     let privateNonoperating = false;
-    try { privateNonoperating = resolveCharitableRecipient(entry).privateNonoperating; }
-    catch { errors[`donation-${index}-classification`] = "Confirm the actual recipient tax category; the saved foundation answer is ambiguous."; }
+    if (taxYear !== 2026 || contribution?.gt(0)) {
+      try { privateNonoperating = resolveCharitableRecipient(entry, taxYear).privateNonoperating; }
+      catch { errors[`donation-${index}-classification`] = "Confirm the actual recipient tax category from its records."; }
+    }
     if (requiresGuidedTangiblePropertyUse(entry) && !readGuidedTangiblePropertyUse(entry)) {
       errors[`donation-${index}-tangible-property-use`] = tangiblePropertyUseError(entry);
     }

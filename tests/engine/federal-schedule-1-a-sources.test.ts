@@ -39,7 +39,7 @@ function cardTipInput() {
 it("reports the 2026 draft Form 1040 deduction transfers without changing their amounts", () => {
   const input = TaxYearInputSchema.parse({ ...cardTipInput(), donations: [{
     organization: "Fictional public charity", type: "cash", amount: "250", dateOfDonation: "2026-05-15",
-    qualifiedOrganization: true, isPrivateFoundation: false, supportingOrganization: false, donorAdvisedFund: false,
+    qualifiedOrganization: true, isPrivateFoundation: false, recipientCategory: "fifty-percent" as const, supportingOrganization: false, donorAdvisedFund: false,
   }] });
   const result = calculateFederalTax(input);
   const returnLines = result.allLines.filter(row => row.form === "1040");

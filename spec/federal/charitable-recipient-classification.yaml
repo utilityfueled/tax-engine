@@ -5,6 +5,7 @@ irsReference: "https://www.irs.gov/publications/p526"
 references:
   - "https://uscode.house.gov/us/usc/119-118/t26/s170/"
   - "https://uscode.house.gov/us/usc/119-120/t26/s170/"
+  - "https://uscode.house.gov/us/usc/119-124/t26/s170/ (IRC 170(b)(1)(A) and (p))"
 notes: |
   Refreshed2026-10-25. IRC170(b)(1)(A)(vii)/(F) includes qualifying private
   operating and certain other foundations in the50percent recipient category.
@@ -14,8 +15,8 @@ notes: |
   distinguish fifty-percent, private-nonoperating and other-thirty-percent.
   Original legacy isPrivateFoundation is retained, not overwritten. Its true
   answer conflated private foundation and second category, so requires actual
-  classification. Explicit legacy false retains its historical public-category
-  meaning with legacy provenance, never a new affirmative source. Clearing a
+  classification. Explicit legacy false retains its 2025 historical public-category
+  meaning with legacy provenance. It does not establish a 2026 recipient category. Clearing a
   new guided answer remains unknown even when legacy false is retained.
   Crypto legacy other-qualified likewise cannot establish foundation valuation;
   preserve it as unresolved. No source name or institution inference is allowed.
@@ -28,7 +29,7 @@ lines:
     testRef: "tests/engine/forms/charitable-recipient-classification.test.ts::separates actual recipient limits and foundation valuation without rewriting legacy facts"
   - line: "migration"
     description: "Ambiguous legacy answers cannot establish current classification"
-    formula: "Positive eligible legacy foundation=true without new category rejects in both years. Explicitfalse remains a legacy public source. Omitted or invalid new category never becomes public. Known ineligible or zero gifts create no deduction or carry."
+    formula: "Positive eligible legacy foundation=true without new category rejects in both years. Explicit false remains a legacy public source only in 2025. Known ineligible or zero gifts create no deduction or carry."
     testRef: "tests/engine/forms/charitable-recipient-classification.test.ts::preserves unresolved legacy categories and actual false without inventing eligibility"
   - line: "crypto"
     description: "Crypto uses the same foundation distinction"
@@ -43,6 +44,40 @@ lines:
     formula: "For 2025 and 2026, preserve the actual recipient, eligibility answer, gift type, exact amount and date when the guide reopens a saved noncash gift. For a gift to a confirmed unqualified recipient, omit unanswered basis and holding period from canonical inputs. Retain explicitly entered zero basis and false holding period. The gift produces no deduction. A gift to a qualified recipient still needs its actual basis and holding period. Existing annual calculation and filing gates apply."
     irsRef: "IRC 170(c) and IRS Publication 526, Organizations That Qualify To Receive Deductible Contributions."
     testRef: "tests/guided-interview/guided-charitable-recipient.test.ts::reopens noncash gifts to a known unqualified recipient in %i"
+  - line: "2026-actual-recipient"
+    description: "Require the current gift's actual limit category for 2026"
+    formula: >-
+      A positive current gift reported to a qualified recipient requires the
+      original recipient tax category before itemized deduction or nonitemizer
+      comparison. An old nonfoundation answer cannot establish an organization
+      listed in section 170(b)(1)(A). Preserve that answer, the actual gift facts,
+      and an absent or cleared category on reopen. Prompt for an explicit category
+      and leave calculation pending. Under section 170(p), a documented $500 cash
+      gift to a qualified other-30-percent recipient yields zero nonitemizer
+      deduction. A documented eligible $500 cash gift to a 50-percent recipient
+      yields $500 when within the applicable caps. Explicit zero contributions and
+      confirmed unqualified recipients do not need a deduction limit category.
+      An actual zero, including a gross payment fully offset by a confirmed
+      benefit, stays zero from guided save and reopen through canonical Schedule A
+      even when the taxpayer has no legacy foundation answer. An explicit zero
+      row leaves the qualified automatic REIT and cash deduction comparison
+      unchanged. For NOL source reconciliation, use a validated 2026 cash
+      contribution after benefits, even if the workspace separately retains its
+      gross payment in the original total.
+      Pending direct gift facts belong to Deductions and do not prevent navigating
+      from Adjustments. Full reconciliation still binds the completed current gifts
+      to the required loss and charitable history sources before calculation.
+      Keep the 2025 historical source contract and filing gates.
+    sources:
+      - "https://uscode.house.gov/us/usc/119-124/t26/s170/ (IRC 170(b)(1)(A) and (p))"
+      - "https://www.irs.gov/publications/p526 (first and second categories of qualified organizations)"
+    testRef: "tests/guided-interview/guided-charitable-recipient.test.ts::reopens a 2026 saved nonfoundation gift as pending actual category"
+    testRefs:
+      - "tests/engine/forms/charitable-recipient-classification.test.ts::requires the actual category for positive 2026 original receipts"
+      - "tests/apps/web/charitable-recipient-interactions.test.tsx::shows a 2026 saved nonfoundation category as unconfirmed"
+      - "tests/engine/federal-itemized-2026.test.ts::compares the same automatic REIT cash return with a zero charity row"
+      - "tests/guided-interview/guided-charitable-recipient.test.ts::keeps a 2026 gross payment offset by benefits out of NOL charitable history"
+      - "tests/guided-interview/guided-charitable-recipient.test.ts::leaves pending 2026 direct charity facts to Deductions during NOL navigation"
   - line: "controls"
     description: "Real intake controls can resolve an ambiguous saved source"
     formula: "A saved true source renders unchanged and pending; actual fifty-percent selection can establish a qualifying operating-foundation category without replacing that legacy value. New rows and cleared answers remain unknown; private-nonoperating alone exposes the qualified-stock question."

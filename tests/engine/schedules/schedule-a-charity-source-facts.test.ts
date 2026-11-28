@@ -19,7 +19,7 @@ import { charitableCarryoverFixture } from "../../fixtures/charitable-carryover.
 function fixture(year: number, type: "cash" | "property", qualifiedOrganization: boolean | undefined, organization = "Synthetic recipient") {
   return TaxYearInputSchema.parse({ ...simpleW2Fixture, taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: year },
     donations: [{ organization, type, amount: "20000.49", costBasis: "20000.49", dateOfDonation: `${year}-04-15`,
-      qualifiedOrganization, isPrivateFoundation: false, isLongTermCapitalGain: false, supportingOrganization: false, donorAdvisedFund: false }] });
+      qualifiedOrganization, isPrivateFoundation: false, recipientCategory: "fifty-percent" as const, isLongTermCapitalGain: false, supportingOrganization: false, donorAdvisedFund: false }] });
 }
 const recipientReturns = [
   { year: 2025, election: "itemized", itemizedGift: "20000", standardGift: "0" },

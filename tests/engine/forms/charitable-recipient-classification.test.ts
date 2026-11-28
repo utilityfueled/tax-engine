@@ -36,6 +36,18 @@ it('preserves unresolved legacy categories and actual false without inventing el
  expect(calculateScheduleA(legacy,d('10000'),'single',getConstants(2025)).cashCharitable.toFixed()).toBe('6000');
  expect(TaxYearInputSchema.safeParse({...legacy,donations:[{...legacy.donations[0],recipientCategory:'fabricated-category'}]}).success).toBe(false);
 });
+it('requires the actual category for positive 2026 original receipts', () => {
+ for (const deductionElection of ['standard', 'itemized', 'automatic'] as const) {
+  const raw = { ...input({ organization: 'Synthetic eligible nonprofit cemetery', amount: '500.00', isPrivateFoundation: false }, 2026), deductionElection };
+  const canonical = TaxYearInputSchema.parse(raw);
+  const before = JSON.stringify(canonical);
+  expect(canonical.donations[0]).not.toHaveProperty('recipientCategory');
+  expect(() => calculateScheduleA(canonical, d('75000'), 'single', FEDERAL_2026_CONSTANTS)).toThrow(/actual.*recipient.*category/i);
+  expect(JSON.stringify(canonical)).toBe(before);
+ }
+ expect(calc({ isPrivateFoundation: false, recipientCategory: 'other-thirty-percent', amount: '500.00' }, 2026, '75000').nonitemizerCharitableDeduction.toFixed(2)).toBe('0.00');
+ expect(calc({ isPrivateFoundation: false, recipientCategory: 'fifty-percent', amount: '500.00' }, 2026, '75000').nonitemizerCharitableDeduction.toFixed(2)).toBe('500.00');
+});
 it('binds crypto valuation to the same actual category and rejects the ambiguous legacy enum',()=>{
  const source={asset:'ETH',quantity:'1',dateAcquired:'2023-01-01',dateDonated:'2025-05-01',fairMarketValueAtDonation:'2000',costBasis:'1000',charityName:'Actual recipient',isQualifiedOrganization:true,capitalAsset:true,sourceFactsConfirmed:true,fullOwnershipInterestDonated:true,noGoodsOrServicesReceived:true,substantiationRequirementsMet:true,appraisalRequired:false};
  for(const [recipientCategory,expected,category] of [['fifty-percent','2000','capitalGainPublic'],['private-nonoperating','1000','capitalGainPrivate'],['other-thirty-percent','2000','capitalGainPrivate']] as const){

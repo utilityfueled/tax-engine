@@ -9,7 +9,7 @@ function source(cash = '40000', property = '30000', fmv = property) {
   input.deductionElection = 'itemized';
   input.donations.push({ organization: 'Actual public property recipient', type: 'property', amount: fmv,
     costBasis: property, dateOfDonation: '2026-06-01', qualifiedOrganization: true,
-    isPrivateFoundation: false, isLongTermCapitalGain: false });
+    isPrivateFoundation: false, recipientCategory: 'fifty-percent' as const, isLongTermCapitalGain: false });
   return input;
 }
 function context(cash: string, property: string, base = '100000') {
@@ -43,7 +43,7 @@ it('requires exact original public property valuation and supported source chara
   const original = source('40000', '30000', '50000');
   expect(calculateCurrentCharitableCandidates(original, context('40000', '30000')).itemized.exactNonCashDeduction.toFixed()).toBe('9500');
   for (const patch of [{ costBasis: undefined }, { costBasis: '-1' }, { isLongTermCapitalGain: undefined },
-    { isLongTermCapitalGain: true }, { isPrivateFoundation: true }, { amount: '29999.99' }]) {
+    { isLongTermCapitalGain: true }, { recipientCategory: 'private-nonoperating' }, { amount: '29999.99' }]) {
     const changed = structuredClone(original); Object.assign(changed.donations[1], patch);
     expect(() => calculateCurrentCharitableCandidates(changed, context('40000', '30000'))).toThrow();
   }

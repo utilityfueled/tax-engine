@@ -23,12 +23,12 @@ it('preserves actual property sources and both carries while retaining the close
   const history = actualGuidedCharitableCarryover(); history.sourceTaxYear = '2026'; history.vintages = [];
   const property = { ...emptyDonationEntry, organization: 'Actual public property charity', type: 'property' as const, amount: '5000.49',
     costBasis: '3000.24', isLongTermCapitalGain: false, date: '2026-05-15', qualifiedOrganization: true,
-    isPrivateFoundation: false, supportingOrganization: false, donorAdvisedFund: false };
+    isPrivateFoundation: false, recipientCategory: 'fifty-percent' as const, supportingOrganization: false, donorAdvisedFund: false };
   state.sectionData.deductions = { ...emptyDeductionData, method: 'itemized', medicalExpenses: '0', stateLocalTaxes: '0', realEstateTaxes: '0',
     mortgageInterest: '0', casualtyLosses: '0', otherItemized: '0', gamblingWinnings: '0',
     nonW2IncomeTaxesDeductedElsewhere: '0', charitableContributions: '9000.60', charitableCarryoverSources: history,
     donationEntries: [{ ...emptyDonationEntry, organization: 'Actual public cash charity', type: 'cash', cashAmountBasis: 'net-contribution', amount: '4000.11', date: '2026-05-15',
-      qualifiedOrganization: true, isPrivateFoundation: false, supportingOrganization: false, donorAdvisedFund: false }, property] };
+      qualifiedOrganization: true, isPrivateFoundation: false, recipientCategory: 'fifty-percent' as const, supportingOrganization: false, donorAdvisedFund: false }, property] };
   const before = JSON.stringify(state);
   expect(validateSection(state, 'deductions').status).toBe('complete');
   const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));

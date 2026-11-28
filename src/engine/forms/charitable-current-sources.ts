@@ -17,7 +17,7 @@ export function eligibleCurrentCharitableDonations(input: TaxYearInput): TaxYear
     if (typeof source.qualifiedOrganization !== "boolean") throw new Error("Charitable recipient qualification is unknown");
     if (!source.qualifiedOrganization) return false;
     if (typeof source.organization !== "string" || !source.organization.trim()) throw new Error("Charitable contribution requires the actual recipient name");
-    resolveCharitableRecipient(source);
+    resolveCharitableRecipient(source, input.taxpayer.taxYear);
     return true;
   });
 }

@@ -23,12 +23,12 @@ it('preserves actual prior cash and current property without opening the year ga
     adjustedThroughTaxYear: '2025', allHistoryIncluded: true, ordinaryPercentageMethodConfirmed: true, history: [] }];
   const property = { ...emptyDonationEntry, organization: 'Actual public property charity', type: 'property' as const, amount: '5000',
     costBasis: '3000', isLongTermCapitalGain: false, date: '2026-05-15', qualifiedOrganization: true,
-    isPrivateFoundation: false, supportingOrganization: false, donorAdvisedFund: false };
+    isPrivateFoundation: false, recipientCategory: 'fifty-percent' as const, supportingOrganization: false, donorAdvisedFund: false };
   state.sectionData.deductions = { ...emptyDeductionData, method: 'itemized', medicalExpenses: '0', stateLocalTaxes: '0', realEstateTaxes: '0',
     mortgageInterest: '0', casualtyLosses: '0', otherItemized: '0', gamblingWinnings: '0',
     nonW2IncomeTaxesDeductedElsewhere: '0', charitableContributions: '6000', charitableCarryoverSources: history,
     donationEntries: [{ ...emptyDonationEntry, organization: 'Actual public cash charity', type: 'cash', cashAmountBasis: 'net-contribution', amount: '1000', date: '2026-05-15',
-      qualifiedOrganization: true, isPrivateFoundation: false, supportingOrganization: false, donorAdvisedFund: false }, property] };
+      qualifiedOrganization: true, isPrivateFoundation: false, recipientCategory: 'fifty-percent' as const, supportingOrganization: false, donorAdvisedFund: false }, property] };
   const before = JSON.stringify(state);
   expect(validateSection(state, 'deductions').status).toBe('complete');
   const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));

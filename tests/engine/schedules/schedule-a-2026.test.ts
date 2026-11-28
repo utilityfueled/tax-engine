@@ -7,7 +7,7 @@ import { FEDERAL_2026_CONSTANTS } from "@/models/federal-2026-indexed.js";
 import { getConstants, type FilingStatus } from "@/models/constants.js";
 const d = (v: string) => new Decimal(v);
 const person = { taxYear: 2026, filingStatus: "single", primary: { firstName: "Test", lastName: "Taxpayer", ssn: "900-00-0001", dateOfBirth: "1980-01-01" }, address: { street: "1 Test", city: "Test", state: "TX", zip: "00000" } };
-const donation = { organization: "Synthetic qualified public charity", type: "cash", amount: "1500", dateOfDonation: "2026-04-01", qualifiedOrganization: true, supportingOrganization: false, donorAdvisedFund: false, isPrivateFoundation: false };
+const donation = { organization: "Synthetic qualified public charity", type: "cash", amount: "1500", dateOfDonation: "2026-04-01", qualifiedOrganization: true, supportingOrganization: false, donorAdvisedFund: false, isPrivateFoundation: false, recipientCategory: "fifty-percent" as const };
 function calc(donations: Record<string, unknown>[] = [], agi = "100000", filingStatus: FilingStatus = "single", taxYear = 2026) {
   const input = TaxYearInputSchema.parse({ taxpayer: { ...person, filingStatus, taxYear }, donations });
   return calculateScheduleA(input, d(agi), filingStatus, taxYear === 2026 ? FEDERAL_2026_CONSTANTS : getConstants(2025));
@@ -77,7 +77,7 @@ describe("2026 charitable qualification facts", () => {
     expect(result.cashCharitable.toString()).toBe("0");
   });
   it("preserves missing private/public classification as unknown", () => {
-    expect(() => calc([{ ...donation, isPrivateFoundation: undefined }])).toThrow(/classification/i);
+    expect(() => calc([{ ...donation, recipientCategory: undefined }])).toThrow(/recipient tax category/i);
   });
   it("uses basis for ordinary property and refuses unknown basis or holding status", () => {
     const property = { ...donation, type: "property", amount: "2000", costBasis: "1000", isLongTermCapitalGain: false };

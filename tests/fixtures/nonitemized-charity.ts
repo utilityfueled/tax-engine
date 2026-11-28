@@ -9,6 +9,6 @@ export function nonitemizedCharityFixture() {
     deductionElection: 'nonitemized',
     w2s: [{ ...simpleW2Fixture.w2s[0], wages: '75000' }],
     donations: [{ organization: 'Synthetic public charity', type: 'cash', amount: '1500', dateOfDonation: '2026-05-15',
-      qualifiedOrganization: true, isPrivateFoundation: false, supportingOrganization: false, donorAdvisedFund: false }],
+      qualifiedOrganization: true, isPrivateFoundation: false, recipientCategory: 'fifty-percent', supportingOrganization: false, donorAdvisedFund: false }],
   });
 }

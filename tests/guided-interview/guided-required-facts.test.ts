@@ -23,7 +23,7 @@ describe("required guided source facts", () => {
     const stock: DonationEntryData = { ...donation, organization: "Original Foundation", type: "appreciated_stock", amount: "5000", costBasis: "800",
       date: "2026-06-04", isLongTermCapitalGain: true, isPrivateFoundation: true, recipientCategory: "private-nonoperating",
       qualifiedAppreciatedStock: true, cashAmountBasis: undefined };
-    const cash: DonationEntryData = { ...donation, date: "2026-06-04", amount: "111", cashAmountBasis: "net-contribution" };
+    const cash: DonationEntryData = { ...donation, date: "2026-06-04", amount: "111", cashAmountBasis: "net-contribution", recipientCategory: "fifty-percent" };
     const otherStock = { ...stock, organization: "Separate Foundation", date: "2026-04-22" };
     const deductions = { ...emptyDeductionData, method: "itemized" as const, charitableContributions: "10111", donationEntries: [stock, otherStock, cash] };
     state.sectionData.deductions = deductions;
@@ -226,7 +226,7 @@ describe("2026 eligibility facts", () => {
     const deductions = { ...emptyDeductionData, donationEntries: [gift] };
     const state = { ...stateWith("deductions", deductions), taxYear: 2026 };
     expect(buildTaxInputFromGuidedData(state)).toBeNull();
-    const eligible = { ...gift, qualifiedOrganization: true, supportingOrganization: false, donorAdvisedFund: false, qualifiedAppreciatedStock: false };
+    const eligible = { ...gift, qualifiedOrganization: true, recipientCategory: "fifty-percent" as const, supportingOrganization: false, donorAdvisedFund: false, qualifiedAppreciatedStock: false };
     const result = buildTaxInputFromGuidedData({ ...state, sectionData: { ...state.sectionData, deductions: { ...deductions, donationEntries: [eligible] } } });
     expect(result?.donations[0]).toMatchObject({ qualifiedOrganization: true, supportingOrganization: false, donorAdvisedFund: false, qualifiedAppreciatedStock: false });
     const student = { ...completeAocEligibility, name: "Jordan Example", qualifiedExpenses: "4000", priorYearsClaimed: "0", studentSsnEligible: false, institutionEin: "12-3456789" };

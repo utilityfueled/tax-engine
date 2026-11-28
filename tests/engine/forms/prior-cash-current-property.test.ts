@@ -9,7 +9,7 @@ function source(cash = '10000', property = '30000', entries = [{ taxYear: 2025, 
   input.deductionElection = 'itemized';
   input.donations.push({ organization: 'Actual public property recipient', type: 'property', amount: property,
     costBasis: property, dateOfDonation: '2026-06-01', qualifiedOrganization: true,
-    isPrivateFoundation: false, isLongTermCapitalGain: false });
+    isPrivateFoundation: false, recipientCategory: 'fifty-percent' as const, isLongTermCapitalGain: false });
   return input;
 }
 function context(cash: string, property: string, base = '100000') {

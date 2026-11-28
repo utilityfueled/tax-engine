@@ -102,7 +102,7 @@ describe("saved workspace draft reconciliation", () => {
       nonW2IncomeTaxesDeductedElsewhere: "0",
       charitableContributions: "100",
       donationEntries: [{ ...emptyDonationEntry, organization: "Sample charity", type: "cash", cashAmountBasis: "net-contribution",
-        amount: "100", date: "2026-11-27", qualifiedOrganization: true, isPrivateFoundation: false, supportingOrganization: false, donorAdvisedFund: false }],
+        amount: "100", date: "2026-11-27", qualifiedOrganization: true, isPrivateFoundation: false, recipientCategory: "fifty-percent" as const, supportingOrganization: false, donorAdvisedFund: false }],
     };
     expect(validateSection(state, "deductions").status).toBe("partial");
     expect(saveGuidedFlowState(storage, id, state)).toBe(true);

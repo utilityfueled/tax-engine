@@ -3,8 +3,9 @@ import { assertNolFilingUnitAgreement } from '@/utils/nol-filing-unit-timeline';
 import { buildNolFilingUnitTimeline, buildNolFilingUnitOrigin, buildNolFilingUnitUses, buildNolSameCoupleJointHistory, buildNolNewMarriageCurrentSources, type NolNewMarriageCurrentSourcesData, type NolFilingUnitHistoryData, type NolFilingUnitOriginData, type NolFilingUnitUseData, type NolSameCoupleJointHistoryData } from './guided-nol-filing-unit';
 import { NetOperatingLossSourcesSchema, type TaxYearInput } from '@/models/inputs';
 import { calculateNetOperatingLoss } from '@/engine/forms/net-operating-loss';
-import type { DeductionData, FilingStatus, PersonalInfoData } from './guided-interview-flow';
+import type { DeductionData, DonationEntryData, FilingStatus, PersonalInfoData } from './guided-interview-flow';
 import { parseGuidedCurrency } from './guided-currency';
+import { guidedDonationValue } from './guided-required-facts';
 import { guidedSourceValuesChanged } from './guided-source-confirmation';
 import { parseGuidedQbiLossPacket, type K1LossSourcesData } from './guided-qbi-loss-data';
 import { calculateQbiEblNol } from '@/engine/forms/qbi-ebl-nol';
@@ -111,13 +112,21 @@ function collectGuidedNetOperatingLoss(validateDeductions: boolean, data: NetOpe
   }
   const history = alternative.charitableCarryoverHistory;
   const hasOriginalCharitableSources = deductions?.k1CharitableSources !== undefined || deductions?.cryptoDonations !== undefined;
-  const hasGifts = [deductions?.charitableContributions, ...(deductions?.donationEntries?.map(row => row.amount) ?? [])]
-    .some(value => value?.trim() && !parseGuidedCurrency(value).isZero());
+  // In 2026, Deductions owns the qualification and payment facts for direct gifts.
+  const directGiftFacts = taxYear === 2026 && !validateDeductions ? undefined : deductions;
+  const donations = directGiftFacts?.donationEntries ?? [];
+  const contributionAmount = (row: DonationEntryData) => taxYear === 2026 && row.type === 'cash'
+    && row.qualifiedOrganization === true && row.cashAmountBasis === 'gross-payment'
+    ? guidedDonationValue(row) : parseGuidedCurrency(row.amount);
+  // The saved total reconciles original payments, which can include benefits.
+  const savedTotal = taxYear === 2026 && donations.length ? undefined : directGiftFacts?.charitableContributions;
+  const hasGifts = (savedTotal?.trim() && !parseGuidedCurrency(savedTotal).isZero())
+    || donations.some(row => row.amount?.trim() && !contributionAmount(row).isZero());
   const positiveAlternative = alternative.vintages?.some(row => row.openingCarryforward?.trim() && parseGuidedCurrency(row.openingCarryforward).gt(0));
   const positiveRegular = data.vintages?.some(row => row.openingCarryforward?.trim() && parseGuidedCurrency(row.openingCarryforward).gt(0));
-  const hasNonPublicCashGift = deductions?.donationEntries?.some(row => row.amount?.trim()
-    && parseGuidedCurrency(row.amount).gt(0) && row.qualifiedOrganization !== false
-    && (row.type !== 'cash' || resolveCharitableRecipient(row).percentageCategory !== 'fifty-percent'));
+  const hasNonPublicCashGift = donations.some(row => row.amount?.trim()
+    && contributionAmount(row).gt(0) && row.qualifiedOrganization !== false
+    && (row.type !== 'cash' || resolveCharitableRecipient(row, taxYear).percentageCategory !== 'fifty-percent'));
   if (history !== undefined || hasOriginalCharitableSources || (positiveAlternative && hasGifts) || (positiveRegular && hasNonPublicCashGift)) {
     if (!history || year(history.sourceTaxYear, 'charitable histories source year') !== taxYear - 1 || !history.sourceReference?.trim()
       || history.sourceFactsConfirmed !== true || history.allCarryoversIncluded !== true

@@ -17,7 +17,7 @@ it('selects the prior-cash current-property carry only after the actual deductio
     if (!input.standardDeductionFacts) throw new Error('Missing actual synthetic eligibility');
     input.standardDeductionFacts.spouseItemizes = method === 'nonitemized';
     input.donations.push({ organization: 'Synthetic public property charity', type: 'property', amount: '5000', costBasis: '3000',
-      dateOfDonation: '2026-06-01', qualifiedOrganization: true, isPrivateFoundation: false, isLongTermCapitalGain: false });
+      dateOfDonation: '2026-06-01', qualifiedOrganization: true, isPrivateFoundation: false, recipientCategory: 'fifty-percent' as const, isLongTermCapitalGain: false });
     const before = JSON.stringify(input), result = calculateFederalTax(input);
     expect(result.deductionUsed).toBe(method);
     expect([result.scheduleA?.charitableCurrentCash.toFixed(), result.scheduleA?.charitableCurrentNoncash.toFixed(),

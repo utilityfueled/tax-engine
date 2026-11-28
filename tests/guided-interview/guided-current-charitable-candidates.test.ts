@@ -25,7 +25,7 @@ it('preserves actual current candidates without opening year or export gates', a
     mortgageInterest: '0', casualtyLosses: '0', otherItemized: '0', gamblingWinnings: '0',
     nonW2IncomeTaxesDeductedElsewhere: '0', charitableContributions: '9000.99', charitableCarryoverSources: history,
     donationEntries: [{ ...emptyDonationEntry, organization: 'Actual public charity', type: 'cash', cashAmountBasis: 'net-contribution', amount: '9000.99', date: '2026-05-15',
-      qualifiedOrganization: true, isPrivateFoundation: false, supportingOrganization: false, donorAdvisedFund: false }] };
+      qualifiedOrganization: true, isPrivateFoundation: false, recipientCategory: 'fifty-percent' as const, supportingOrganization: false, donorAdvisedFund: false }] };
   const before = JSON.stringify(state);
   expect(validateSection(state, 'deductions').status).toBe('complete');
   const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));

@@ -431,7 +431,7 @@ export function calculateScheduleA(
       const date = new Date(`${donation.dateOfDonation}T00:00:00Z`);
       if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== donation.dateOfDonation) throw new Error("Invalid donation date");
       if (!donation.dateOfDonation.startsWith(`${input.taxpayer.taxYear}-`)) throw new Error("Donation date must be in the return tax year");
-      const recipient = resolveCharitableRecipient(donation);
+      const recipient = resolveCharitableRecipient(donation, input.taxpayer.taxYear);
       if (donation.type !== "cash" || amount.isZero()) continue;
       if (donation.qualifiedOrganization && !donation.supportingOrganization && !donation.donorAdvisedFund && recipient.percentageCategory === "fifty-percent") eligibleCash = eligibleCash.plus(amount);
     }

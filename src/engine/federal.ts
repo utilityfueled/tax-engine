@@ -433,11 +433,12 @@ function compareAutomaticReitCashDeduction(input: TaxYearInput, itemized: TaxRet
       itemized.capitalGainLoss, itemized.otherIncome, itemized.adjustmentsToIncome].some(amount => !amount.isZero())) return itemized;
 
   const charity = itemized.scheduleA;
+  const positiveDonations = input.donations.filter(donation => d(donation.amount).gt(0));
   if (!charity?.charitableCurrentCash.gt(0) || !charity.totalItemized.eq(charity.charitableCurrentCash)
     || !charity.nonitemizerCharitableDeduction.gt(0) || !itemized.carryforwards.charitableContributions.isZero()
-    || !input.donations.length || !input.donations.every(donation => donation.type === "cash"
+    || !positiveDonations.length || !positiveDonations.every(donation => donation.type === "cash"
       && donation.qualifiedOrganization === true && donation.supportingOrganization === false
-      && donation.donorAdvisedFund === false && resolveCharitableRecipient(donation).percentageCategory === "fifty-percent")) return itemized;
+      && donation.donorAdvisedFund === false && resolveCharitableRecipient(donation, itemized.taxYear).percentageCategory === "fifty-percent")) return itemized;
 
   const penaltyFacts = input.form2210;
   const penalty = itemized.form2210;
