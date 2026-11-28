@@ -3,15 +3,57 @@
 import { describe, expect, it } from "vitest";
 import { buildEducationInput, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { educationFactErrors } from "@/lib/guided-required-facts";
-import { emptyCreditsData, loadGuidedFlowState, saveGuidedFlowState, validateSection, type EducationCreditData } from "@/lib/guided-interview-flow";
+import { emptyCreditsData, loadGuidedFlowState, saveGuidedFlowState, updateSectionData, validateSection, type EducationCreditData } from "@/lib/guided-interview-flow";
 import { calculateFederalTax } from "@/engine/federal";
 import { EducationExpensesSchema, TaxYearInputSchema } from "../../src/models/inputs";
-import { completeAocEligibility, completeEducationClaimant, completePersonalInfo, completeW2Entry, startCompleteInterview } from "./complete-facts";
+import { completeAocEligibility, completeDependent, completeEducationClaimant, completePersonalInfo, completeW2Entry, startCompleteInterview } from "./complete-facts";
 
 const institution = { name: "Actual College", address: "100 College Rd, Columbus OH 43215", ein: "12-3456789", receivedCurrentYear1098T: true, receivedPriorYear1098TWithBox7: false };
 const student = { name: "Jordan Example", studentTaxId: "111-22-3333", studentRole: "primary" as const, qualifiedExpenses: "0.10", studentSsnEligible: true, studentTinEligible: true, institutionEligible: true, expensesEligibilityConfirmed: true, form1098TRequirementMet: true, institutions: [institution] };
 const base: EducationCreditData = { aocStudents: [], llcExpenses: "", primarySsnEligible: true, primaryTinEligible: true, canBeClaimedAsDependent: false, claimedAsDependent: false, nonresidentAlien: false, aocBanInEffect: false, form8862Required: false, possessionIncomeExclusion: "0" };
 describe("guided actual education source facts", () => {
+  it.each(["primary", "spouse", "dependent"] as const)("binds the reopened 2026 %s student name to the return household", role => {
+    function reopen(name: string) {
+      const state = startCompleteInterview({ filingStatus: role === "spouse" ? "mfj" : "single", incomeTypes: [], lifeEvents: [], stateCode: null });
+      state.taxYear = 2026;
+      const personal = state.sectionData["personal-info"];
+      if (!personal) throw new Error("Expected the return household fixture");
+      if (role === "primary") personal.middleName = "Robin";
+      const member = role === "spouse" ? personal.spouse : role === "dependent" ? completeDependent : personal;
+      if (!member) throw new Error("Expected the student in the return household fixture");
+      if (role === "dependent") {
+        personal.dependentCount = "1";
+        personal.dependents = [completeDependent];
+      }
+      const student = { ...completeAocEligibility, name, studentRole: role, studentTaxId: member.ssn, qualifiedExpenses: "4000", priorYearsClaimed: "0" };
+      const entered = updateSectionData(state, "credits", { ...emptyCreditsData, education: {
+        ...completeEducationClaimant, aotcClaimantFactsTaxYear: 2026, llcExpenses: "",
+        aocStudents: role === "dependent" ? [] : [student],
+        llcStudents: role === "dependent" ? [{ ...student, courseEligibilityConfirmed: true }] : [],
+      } });
+      expect(saveGuidedFlowState(localStorage, `fictional-2026-line-20-${role}`, entered)).toBe(true);
+      const reopened = loadGuidedFlowState(localStorage, `fictional-2026-line-20-${role}`);
+      if (!reopened) throw new Error("Expected the student draft to reopen");
+      const education = reopened.sectionData.credits?.education;
+      expect((education?.llcStudents?.[0] ?? education?.aocStudents[0])?.name).toBe(name);
+      return reopened;
+    }
+
+    const expectedName = { primary: "Jordan R Example", spouse: "Taylor Example", dependent: "Alex Example" }[role];
+    const matching = reopen(`  ${expectedName.toLowerCase().replace(" ", "  ")}  `);
+    expect(validateSection(matching, "credits")).toMatchObject({ status: "complete", fieldErrors: {} });
+    const canonical = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(matching));
+    const education = canonical.educationExpenses;
+    expect.soft((education?.llcStudents?.[0] ?? education?.aocStudents[0])?.name).toBe(expectedName);
+    if (role === "primary") expect.soft(canonical.taxpayer.primary.firstName).toBe("Jordan R");
+
+    const field = `${role === "dependent" ? "llc" : "student"}-0-name`;
+    for (const name of ["Unrelated Person", ""]) {
+      const held = reopen(name);
+      expect.soft(validateSection(held, "credits")).toMatchObject({ status: "partial", fieldErrors: { [field]: expect.stringMatching(/student(?:'s)? name/i) } });
+      expect.soft(buildTaxInputFromGuidedData(held)).toBeNull();
+    }
+  });
   it("reconciles actual LLC students and preserves zero and false qualification", () => {
     const data = { ...emptyCreditsData, education: { ...base, llcExpenses: "0.10", llcStudents: [{ ...student, courseEligibilityConfirmed: false }] } };
     expect(educationFactErrors(data, 2026, "single", completePersonalInfo)).toEqual({});

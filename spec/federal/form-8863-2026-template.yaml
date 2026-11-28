@@ -58,6 +58,11 @@ lines:
       mismatched claimant or institution records, an exhausted prior claim
       history, and non-2026 evidence.
     testRef: "tests/pdf/form-8863-2026-candidate.test.ts::holds stale, incomplete, or mismatched AOTC transfer evidence"
+  - line: "private-student-return-name"
+    description: "Verify line 20 identity without printing it in the private transfer review"
+    formula: "Require the positive primary AOTC student's name to match the actual return name by spelling and punctuation, ignoring differences in case and whitespace. Hold a blank or mismatched name even when current workpapers match the canonical input hash. Leave line 20 and all other identity widgets blank on the private PDF."
+    irsRef: "Final 2026 Form 8863, Part III line 20 (https://www.irs.gov/pub/irs-prior/f8863--2026.pdf#page=2)"
+    testRef: "tests/pdf/form-8863-2026-candidate.test.ts::verifies the return name and leaves the line 20 identity blank in the review"
   - line: "exact-printed-aotc-factor"
     description: "Bind the original printed line 6 to the exact calculated factor"
     formula: >-

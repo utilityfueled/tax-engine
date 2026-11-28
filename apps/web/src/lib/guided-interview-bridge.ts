@@ -56,6 +56,7 @@ import { buildStudentLoanInputs, studentLoanFactErrors, studentLoanEducationSour
 import { buildGuidedMortgageInputs } from "./guided-mortgage-worksheet";
 import { buildStandardDeductionFacts } from "./guided-standard-deduction-facts";
 import { buildActualEducationInput, requiresLlcYearReview } from "./guided-education-facts";
+import { combineGivenNameWithMiddleInitial } from "./guided-taxpayer-identity";
 import { buildEducationDistributionInputs, educationDistributionFactErrors, guidedEducationDistributionContext } from "./guided-education-distributions";
 import { buildSavingsBondInputs, savingsBondFactErrors } from "./guided-savings-bond-facts";
 /**
@@ -166,25 +167,6 @@ function toOptionalDecimalString(value: string | undefined): string | undefined 
 }
 
 const hasValue = hasGuidedCurrency;
-
-function combineGivenNameWithMiddleInitial(
-  firstName: string | undefined,
-  middleName: string | undefined,
-) {
-  const first = firstName?.trim() ?? "";
-  const middle = middleName?.trim() ?? "";
-
-  if (!first) {
-    return "";
-  }
-
-  if (!middle) {
-    return first;
-  }
-
-  const middleInitial = middle.replace(/[^A-Za-z]/g, "").charAt(0).toUpperCase();
-  return middleInitial ? `${first} ${middleInitial}` : first;
-}
 
 function getConfirmedW2FieldValue(
   entry: W2EntryData,

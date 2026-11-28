@@ -75,6 +75,30 @@ it("allows either joint spouse's confirmed SSN and denies the credit when both a
   expect(ineligible.form8863?.totalRefundable.toString()).toBe("0");
 });
 
+it.each(["primary", "spouse", "dependent"] as const)("binds the 2026 %s education claim to the name on the return", role => {
+  const input = claim(true, true, role === "spouse" ? { household: true, education: true } : undefined);
+  const dependent = { firstName: "Morgan", lastName: "O'Example", ssn: "333-44-5555", relationship: "child",
+    dateOfBirth: "2004-01-02", monthsLivedWithYou: 12, qualifiesForCTC: false, qualifiesForODC: false };
+  input.taxpayer.dependents = role === "dependent" ? [dependent] : [];
+  const member = role === "dependent" ? dependent : input.taxpayer[role];
+  const education = input.educationExpenses;
+  if (!member || !education) throw new Error("Expected the return student fixture");
+  const expectedName = `${member.firstName} ${member.lastName}`;
+  const source = { ...education.aocStudents[0], studentRole: role, studentTaxId: member.ssn, studentSsnEligible: true };
+  const calculate = (name: string, taxYear = 2026, qualifiedExpenses = "4000") => calculateFederalTax(TaxYearInputSchema.parse({
+    ...input, taxpayer: { ...input.taxpayer, taxYear }, educationExpenses: {
+      ...education, primaryTinEligible: true, aocStudents: [{ ...source, name, qualifiedExpenses }],
+    },
+  })).form8863;
+  const formatted = `  ${expectedName.toLowerCase().replace(" ", "  ")}  `;
+  expect.soft(calculate(formatted)?.aocPerStudent[0]).toMatchObject({ name: expectedName });
+  expect(calculate(expectedName)?.aocAfterPhaseOut.toFixed()).toBe("2500");
+  const mismatched = role === "dependent" ? "Morgan OExample" : "Unrelated Person";
+  for (const name of [mismatched, ""]) expect.soft(() => calculate(name)).toThrow(/student name.*on the return/i);
+  expect(calculate(mismatched, 2025)?.aocAfterPhaseOut.toFixed()).toBe("2500");
+  expect(calculate(mismatched, 2026, "0")?.aocAfterPhaseOut.toFixed()).toBe("0");
+});
+
 it("holds a conflicting spouse student SSN but accepts the spouse with actual timely TIN facts", () => {
   const input = claim(true, true, { household: false, education: false });
   const education = input.educationExpenses;

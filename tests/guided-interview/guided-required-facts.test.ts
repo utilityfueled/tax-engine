@@ -229,7 +229,7 @@ describe("2026 eligibility facts", () => {
     const eligible = { ...gift, qualifiedOrganization: true, supportingOrganization: false, donorAdvisedFund: false, qualifiedAppreciatedStock: false };
     const result = buildTaxInputFromGuidedData({ ...state, sectionData: { ...state.sectionData, deductions: { ...deductions, donationEntries: [eligible] } } });
     expect(result?.donations[0]).toMatchObject({ qualifiedOrganization: true, supportingOrganization: false, donorAdvisedFund: false, qualifiedAppreciatedStock: false });
-    const student = { ...completeAocEligibility, name: "Actual Student", qualifiedExpenses: "4000", priorYearsClaimed: "0", studentSsnEligible: false, institutionEin: "12-3456789" };
+    const student = { ...completeAocEligibility, name: "Jordan Example", qualifiedExpenses: "4000", priorYearsClaimed: "0", studentSsnEligible: false, institutionEin: "12-3456789" };
     const credits = { ...emptyCreditsData, education: { ...completeEducationClaimant, aotcClaimantFactsTaxYear: 2026, aocStudents: [student], llcExpenses: "", refundableAocEligible: false, primarySsnEligible: false } };
     const educationState = { ...stateWith("credits", credits), taxYear: 2026 };
     educationState.sectionData["personal-info"] = { ...completePersonalInfo, employmentValidSsnIssuedByDueDate: false };

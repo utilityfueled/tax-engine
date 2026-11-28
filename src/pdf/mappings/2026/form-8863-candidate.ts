@@ -4,6 +4,7 @@ import { z } from "zod";
 import { calculateForm8863 } from "@/engine/forms/form-8863.js";
 import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs.js";
 import { d } from "@/utils/decimal.js";
+import { educationStudentReturnName } from "@/utils/education-student-return-name.js";
 
 const page1 = "topmostSubform[0].Page1[0].";
 const page2 = "topmostSubform[0].Page2[0].";
@@ -160,6 +161,8 @@ export function projectForm88632026Transfers(rawInput: TaxYearInput, rawWorkpape
     || student.institutionEligible !== true || student.expensesEligibilityConfirmed !== true || student.form1098TRequirementMet !== true) {
     throw new Error("Form 8863 review requires the actual eligible primary student and confirmed education facts.");
   }
+  const name = educationStudentReturnName(student.name, primary);
+  if (name === undefined) throw new Error("Form 8863 review student name must match the name on the return.");
   if (student.institutions?.length !== 1 || !school?.name.trim() || !school.address.trim()
     || !school.ein || school.ein.replaceAll("-", "") !== student.institutionEin?.replaceAll("-", "")
     || school.receivedCurrentYear1098T !== true) {
@@ -174,7 +177,7 @@ export function projectForm88632026Transfers(rawInput: TaxYearInput, rawWorkpape
     refundableAocFacts: refundableFacts && {
       ...refundableFacts, earnedIncome: d(refundableFacts.earnedIncome), totalSupport: d(refundableFacts.totalSupport),
     },
-    aocStudents: [{ ...student, qualifiedExpenses: d(student.qualifiedExpenses) }], llcExpenses: d(0),
+    aocStudents: [{ ...student, name, qualifiedExpenses: d(student.qualifiedExpenses) }], llcExpenses: d(0),
     magi: d(originals.form1040Line11a), taxLiabilityLimit: d(originals.creditLimitWorksheetRemainingTax),
   });
   if (!result.sourceFactsVerified || !result.aocAfterPhaseOut.gt(0)) {

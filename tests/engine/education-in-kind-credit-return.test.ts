@@ -66,6 +66,7 @@ it('binds in-kind recipients to actual return identities before routing income',
     if (!jointBeneficiary || !jointForm || !jointStudent) throw new Error('Missing joint source');
     jointBeneficiary.studentTaxId = '987654321'; jointForm.recipientOwner = 'spouse';
     jointStudent.studentTaxId = '987-65-4321'; jointStudent.studentRole = 'spouse';
+    jointStudent.name = `${joint.taxpayer.spouse.firstName} ${joint.taxpayer.spouse.lastName}`;
     expect(calculateFederalTax(joint).form1099Q?.taxableEarnings.toFixed()).toBe('200');
     jointForm.recipientOwner = 'other'; jointForm.recipientId = 'outside-person';
     expect(() => calculateFederalTax(joint)).toThrow(/in-kind.*recipient/);

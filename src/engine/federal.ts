@@ -54,6 +54,7 @@ import { assertFederalPaymentSources } from "./forms/federal-payment-date-source
 import { assertCode3DisabilityPensionSources } from "./forms/form-1099-r-disability-source.js";
 import { d, sum, zeroFloor, min, roundDollar } from "@/utils/decimal.js";
 import { sumSourceMoney, sumSourceMoneyValues } from "@/utils/sum-source-money.js";
+import { educationStudentReturnName } from "@/utils/education-student-return-name.js";
 import { sumSourceMoneyRatios } from "@/utils/sum-source-money-ratios.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { resolveForm2555Sources } from "./forms/form-2555-source-binding.js";
@@ -4480,6 +4481,7 @@ function calculateFederalTaxCore(sourceInput: TaxYearInput, marketplace?: Market
       if (year < 2025 || !qualifiedExpenses.gt(0) || !student.studentTaxId) return { ...student, qualifiedExpenses };
       const studentTin = year === 2025 ? student.studentTaxId.trim() : student.studentTaxId;
       const id = studentTin.replaceAll("-", "");
+      let name = student.name;
       const isJointSpouseStudent = student.studentRole === "spouse" && filingStatus === "married_filing_jointly";
       if (year === 2025 && isAocStudent && student.studentRole === "dependent" && student.studentTinEligible === true
         && /^\d{9}$/.test(id) && input.taxpayer.dependents.some(dependent => dependent.ssn.trim().replaceAll("-", "") === id
@@ -4487,8 +4489,14 @@ function calculateFederalTaxCore(sourceInput: TaxYearInput, marketplace?: Market
         throw new Error("Form 8863: reconcile the dependent student's timely TIN answer with the Credit for Other Dependents answer.");
       }
       if (year >= 2026) {
-        const actual = student.studentRole === "primary" ? [input.taxpayer.primary.ssn] : student.studentRole === "spouse" ? [input.taxpayer.spouse?.ssn] : input.taxpayer.dependents.map(dep => dep.ssn);
-        if (!actual.some(tin => tin?.replaceAll("-", "") === id)) throw new Error("Form8863 student identity does not match the actual return household role");
+        const people = student.studentRole === "primary" ? [input.taxpayer.primary] : student.studentRole === "spouse" ? [input.taxpayer.spouse] : input.taxpayer.dependents;
+        const actual = people.find(person => person?.ssn.replaceAll("-", "") === id);
+        if (!actual) throw new Error("Form8863 student identity does not match the actual return household role");
+        if (year === 2026) {
+          const returnName = educationStudentReturnName(student.name, actual);
+          if (returnName === undefined) throw new Error("Form 8863 student name must match the name on the return");
+          name = returnName;
+        }
         const claimantSsnEligible = student.studentRole === "primary" ? primarySsnEligible
           : isJointSpouseStudent ? spouseSsnEligible : undefined;
         if (claimantSsnEligible !== undefined && student.studentSsnEligible !== undefined &&
@@ -4506,7 +4514,7 @@ function calculateFederalTaxCore(sourceInput: TaxYearInput, marketplace?: Market
       }
       const knownIneligible = householdTinEligible === false && student.studentTinEligible === undefined &&
         (year === 2025 || student.studentSsnEligible === true);
-      return { ...student, ...(knownIneligible ? { studentTinEligible: false } : {}), qualifiedExpenses };
+      return { ...student, name, ...(knownIneligible ? { studentTinEligible: false } : {}), qualifiedExpenses };
     }
     const aocStudents = education.aocStudents.map(student => educationStudentForCalculation(student, true));
     const llcStudents = education.llcStudents?.map(student => educationStudentForCalculation(student, false));

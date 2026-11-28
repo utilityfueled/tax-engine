@@ -203,6 +203,28 @@ describe("Final 2026 Form 8863 physical candidate", () => {
     }).transfers.map(row => row.amount)).toEqual(["1000", "1500"]);
   });
 
+  it("verifies the return name and leaves the line 20 identity blank in the review", async () => {
+    const { renderPrivateForm88632026TransferReview } = await import("@/pdf/mappings/2026/form-8863-transfer-review.js");
+    const [candidate, template] = await Promise.all([mapping(), readFile(blank)]);
+    const source = actualAotcReturn();
+    const education = source.educationExpenses;
+    if (!education) throw new Error("Expected the synthetic AOTC return");
+    const render = (studentName: string, firstName = "Jane") => {
+      const input = { ...source,
+        taxpayer: { ...source.taxpayer, primary: { ...source.taxpayer.primary, firstName } },
+        educationExpenses: { ...education, aocStudents: [{ ...education.aocStudents[0], name: studentName }] },
+      };
+      return renderPrivateForm88632026TransferReview(input, actualTransferWorkpapers(input), template);
+    };
+    const reopened = (await PDFDocument.load(await render("  jane  DOE  "))).getForm();
+    expect(reopened.getTextField(candidate.fields.line8).getText()).toBe("500");
+    expect(reopened.getTextField(candidate.fields.line20StudentName).getText()).toBeUndefined();
+    expect(reopened.getTextField(candidate.fields.line21StudentSsnFirst).getText()).toBeUndefined();
+    await expect.soft(render("Unrelated Person")).rejects.toThrow(/student name.*on the return/i);
+    await expect.soft(render("")).rejects.toThrow(/student name.*on the return/i);
+    await expect.soft(render("Doe", "")).rejects.toThrow(/student name.*on the return/i);
+  });
+
   it("reopens only the verified private lines 8 and 19 on the pinned final PDF", async () => {
     const { renderPrivateForm88632026TransferReview } = await import("@/pdf/mappings/2026/form-8863-transfer-review.js");
     const [candidate, template] = await Promise.all([mapping(), readFile(blank)]);
