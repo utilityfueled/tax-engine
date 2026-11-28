@@ -16,6 +16,18 @@ lines:
     formula: "Require actual tax year, owner, borrower, lender, original loan date, payment-year confirmation and legal/education eligibility. Sum supported paid interest plus separately substantiated additional interest. Linked1098E source allocations must reconcile Box1 once; actual checked Box2 supports unreported pre-Sep1,2004 amounts only with separate records."
     irsRef: "Pub970 chapter4; IRC221(d); Instructions1098E Box1/2"
     testRef: "tests/engine/forms/student-loan-interest-sources.test.ts::reconciles actual loan sources and separately supported unreported interest"
+  - line: "21-origination-observation"
+    description: "Hold an actual 2026 interest claim when its loan has yet to originate"
+    formula: >-
+      For a 2026 return with retained 2026 loan originals, require known valid
+      origination dates on or before the federal calculation's observation
+      date before using the original loan facts. Use the caller's actual
+      civil as-of date no later than today or default to the current local
+      civil date. Preserve same-day origination, actual zero and historical
+      source handling. This check does not supply a payment date or replace
+      confirmation of actual paid interest.
+    irsRef: "26 USC 221(a), (d)(1) at https://uscode.house.gov/us/usc/119-120/t26/s221/; 2026 Form 1098-E Box 1 at https://www.irs.gov/pub/irs-pdf/f1098e.pdf"
+    testRef: "tests/engine/federal-student-loan-sources.test.ts::holds future 2026 loan origination before deducting current-year interest"
   - line: "21-eligibility"
     description: "Apply actual claimant and loan eligibility"
     formula: "Known MFS or actual claimed dependency disallows the return deduction. Known ineligible legal obligation, sole education purpose, institution, half-time credential student, origination relationship/timing, related lender or employer-plan loan gives zero for that source. Unknown eligibility is not false or true."

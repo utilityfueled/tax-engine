@@ -209,7 +209,7 @@ import { calculateScheduleJ } from "./forms/schedule-j.js";
 import { calculateForm8915F, type Form8915FResult } from "./forms/form-8915-f.js";
 import { calculateTaxableRefundWorksheet, type TaxableRefundWorksheetResult } from "./forms/taxable-refund-worksheet.js";
 import {calculateTaxableStateRefundRecoveries, type TaxableStateRefundRecoveriesResult} from "./forms/taxable-state-refund-recoveries.js";
-import { calculateStudentLoanInterestDeduction } from "./forms/student-loan-interest.js";
+import { assertObservedStudentLoanOriginations, calculateStudentLoanInterestDeduction } from "./forms/student-loan-interest.js";
 import { calculateNetOperatingLossReturn, type NetOperatingLossReturnResult, type NolIncomeContext, type NolAlternativeIncomeContext } from "./forms/net-operating-loss-return.js";
 import { calculateQbiEblNol } from "./forms/qbi-ebl-nol.js";
 import { calculateForm1098E, type Form1098EResult } from "./forms/form-1098-e.js";
@@ -299,6 +299,15 @@ type FederalInputWithRentalUseDate = TaxYearInput & { [rentalUseAsOfDate]?: stri
 function calculateFederalTaxReturn(input: TaxYearInput, context?: { asOfDate?: string }): TaxReturnResult {
   if (duplicate2026ReturnTaxIdentifierIndexes(input.taxpayer).length) {
     throw new Error(HOUSEHOLD_TAX_IDENTIFIER_CONFLICT);
+  }
+  const studentLoanFacts = input.studentLoanInterestFacts;
+  if (input.taxpayer.taxYear === 2026 && studentLoanFacts?.sourceTaxYear === 2026 && studentLoanFacts.loans?.length) {
+    const today = currentLocalCivilDate();
+    const asOfDate = context?.asOfDate ?? today;
+    if (!isActualDate(asOfDate) || asOfDate > today) {
+      throw new Error("Student loan sources require a valid calculation as-of date on or before today.");
+    }
+    assertObservedStudentLoanOriginations(studentLoanFacts.loans, asOfDate);
   }
   const professionalW2G = input.scheduleC?.professionalWagering?.w2gSources;
   if (input.taxpayer.taxYear === 2026 && professionalW2G) {

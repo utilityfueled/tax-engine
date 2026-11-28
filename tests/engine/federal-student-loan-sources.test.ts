@@ -40,6 +40,40 @@ describe("Canonical actual student loan return worksheet", () => {
     expect(() => calculate({ ...raw(2026), studentLoanInterestFacts: undefined, adjustments: { studentLoanInterest: "1200" } })).toThrow(/student.loan.*source|source.*student.loan/i);
     expect(() => calculate({ ...raw(), studentLoanInterestFacts: facts(2025, { sourceFactsConfirmed: false }) })).toThrow(/confirm/i);
   });
+  it("holds future 2026 loan origination before deducting current-year interest", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 10, 28, 12));
+    try {
+      const withOriginal = (loanOriginationDate: string) => TaxYearInputSchema.parse({
+        ...raw(2026),
+        form1098E: [{
+          sourceId: "synthetic-1098e", taxYear: 2026, borrowerId: "borrower1", accountHolder: "primary",
+          lender: "Synthetic lender", studentLoanInterestReceived: "1200.15",
+          box2ExcludesOriginationFeesOrCapitalizedInterest: false,
+        }],
+        studentLoanInterestFacts: facts(2026, { loans: [
+          loan({ sourceKind: "form1098e", form1098ESourceId: "synthetic-1098e", loanOriginationDate }),
+        ] }),
+      });
+      const sameDay = withOriginal("2026-11-28");
+      const result = calculateFederalTax(sameDay, { asOfDate: "2026-11-28" });
+      expect(result.schedule1?.studentLoanInterest.toFixed()).toBe("1200");
+      expect(result.agi.toFixed()).toBe("48800");
+      expect(() => calculateFederalTax(withOriginal("2026-12-31"))).toThrow(/loan origination.*as-of date/i);
+      expect(() => calculateFederalTax(sameDay, { asOfDate: "2026-11-27" })).toThrow(/loan origination.*as-of date/i);
+      expect(() => calculateFederalTax(sameDay, { asOfDate: "2026-11-29" })).toThrow(/valid calculation as-of date/i);
+      expect(() => calculateFederalTax(sameDay, { asOfDate: "2026-11-31" })).toThrow(/valid calculation as-of date/i);
+      expect(deduction({ ...raw(2026), studentLoanInterestFacts: facts(2026, {
+        loans: [loan({ loanOriginationDate: "2026-11-28", interestPaid: "0" })],
+      }) })).toBe("0");
+      expect(deduction({ ...raw(2026), studentLoanInterestFacts: facts(2026, { loans: [] }) })).toBe("0");
+      expect(deduction({ ...raw(), studentLoanInterestFacts: facts(2025, {
+        loans: [loan({ loanOriginationDate: "2025-12-31" })],
+      }) })).toBe("1200");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
   it("uses all return income and actual possession addbacks for the phaseout", () => {
     const input = raw();
     const result = calculate({ ...input, w2s: [{ ...input.w2s[0], wages: "85000" }],

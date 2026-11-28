@@ -1,7 +1,8 @@
 import Decimal from "decimal.js";
 import { Form1098ESchema, StudentLoanInterestFactsSchema, type Form1098E } from "@/models/inputs";
-import { calculateStudentLoanInterestDeduction } from "@/engine/forms/student-loan-interest";
+import { assertObservedStudentLoanOriginations, calculateStudentLoanInterestDeduction } from "@/engine/forms/student-loan-interest";
 import { calculateForm1099Q, type Form1099QResult } from "@/engine/forms/form-1099-q";
+import { currentLocalCivilDate } from "@/utils/civil-date";
 import type { AdjustmentData, CreditsData, FilingStatus, PersonalInfoData } from "./guided-interview-flow";
 import { buildActualEducationInput } from "./guided-education-facts";
 import { buildEducationDistributionInputs } from "./guided-education-distributions";
@@ -77,6 +78,7 @@ export function buildStudentLoanInputs(data: StudentLoanData | undefined, filing
     puertoRicoIncomeExclusion: money(data.puertoRicoIncomeExclusion, "Puerto Rico excluded income"), americanSamoaIncomeExclusion: money(data.americanSamoaIncomeExclusion, "American Samoa excluded income"), loans });
   const form1098E = [...forms.values()];
   const checked = calculateStudentLoanInterestDeduction({ taxYear, filingStatus: statuses[filingStatus], facts, forms: form1098E, educationLoanInterest });
+  if (taxYear === 2026 && facts.loans?.length) assertObservedStudentLoanOriginations(facts.loans, currentLocalCivilDate());
   if (legacy && !checked.sources.reduce((sum, source) => sum.plus(source.grossInterest), new Decimal(0)).eq(legacy)) throw new Error("Reconcile the saved gross student-loan interest with the actual source amounts.");
   return { studentLoanInterestFacts: facts, form1098E };
 }

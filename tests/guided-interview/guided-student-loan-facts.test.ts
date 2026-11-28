@@ -1,10 +1,10 @@
 // Spec: spec/federal/guided-student-loan.yaml.
 import assert from "node:assert/strict";
 import Decimal from "decimal.js";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { buildStudentLoanInputs, emptyStudentLoanFacts, emptyStudentLoanSource, type StudentLoanData } from "@/lib/guided-student-loan-facts";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
-import { emptyAdjustmentData, emptyCreditsData, emptyEducationStudent, setInterviewTaxYear, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
+import { emptyAdjustmentData, emptyCreditsData, emptyEducationStudent, parseGuidedFlowState, setInterviewTaxYear, startInterview, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
 import { emptyEducatorSource } from "@/lib/guided-educator-facts";
 import { calculateStudentLoanInterestDeduction } from "@/engine/forms/student-loan-interest";
 import { TaxYearInputSchema } from "@/models/inputs";
@@ -17,6 +17,46 @@ function sourceFacts(): StudentLoanData {
     enrolledAtLeastHalfTime: true, pursuingCredential: true, studentRelationshipAtOrigination: "self", expensesWithinReasonablePeriod: true, relatedLender: false, employerPlanLoan: false,
     employerAssistanceExcluded: "0", otherTaxFreeAssistance: "0", interestDeductibleElsewhere: "0", qtpTaxFreeEarningsUsedForInterest: "0", reductionsDistinctConfirmed: true, educationExpenseIds: [] }] };
 }
+
+it("holds future 2026 loan origination after saved facts reopen", () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 10, 28, 12));
+  try {
+    const interview = startInterview({ filingStatus: "single", incomeTypes: [], lifeEvents: ["student-loans"], stateCode: null }, 2026);
+    const state = updateSectionData(interview, "personal-info", { ...completePersonalInfo, spouse: undefined });
+    const initial = sourceFacts();
+    const originalLoan = initial.loans?.[0];
+    assert(originalLoan);
+    const withOrigination = (loanOriginationDate: string, interestPaid = "1200.15") => {
+      const adjustedLoan = {
+        ...originalLoan, loanOriginationDate, interestPaid,
+        ...(interestPaid !== "0" ? {
+          sourceKind: "form1098e" as const, form1098ESourceId: "synthetic-1098e", form1098ETaxYear: "2026",
+          form1098EBox1: interestPaid, box2ExcludesOriginationFeesOrCapitalizedInterest: false,
+        } : {}),
+      };
+      const adjustments = { ...emptyAdjustmentData, studentLoanFacts: { ...initial, sourceTaxYear: "2026", loans: [adjustedLoan] } };
+      const entered = updateSectionData(state, "adjustments", adjustments);
+      const confirmed = updateSectionData(entered, "adjustments", adjustments);
+      return parseGuidedFlowState(JSON.stringify(confirmed));
+    };
+
+    const sameDay = withOrigination("2026-11-28");
+    expect(validateSection(sameDay, "adjustments").status).toBe("complete");
+    expect(buildTaxInputFromGuidedData(sameDay)?.form1098E?.[0]?.studentLoanInterestReceived).toBe("1200.15");
+    const zero = withOrigination("2026-11-28", "0");
+    expect(buildTaxInputFromGuidedData(zero)?.studentLoanInterestFacts?.loans?.[0]?.interestPaid).toBe("0");
+
+    const future = withOrigination("2026-12-31");
+    expect(validateSection(future, "adjustments").status).toBe("partial");
+    expect(validateSection(future, "adjustments").fieldErrors?.studentLoanSources).toMatch(/loan origination.*as-of date/i);
+    expect(buildTaxInputFromGuidedData(future)).toBeNull();
+    const saved = future.sectionData.adjustments?.studentLoanFacts?.loans?.[0];
+    expect(saved).toMatchObject({ loanOriginationDate: "2026-12-31", interestPaid: "1200.15", form1098EBox1: "1200.15" });
+  } finally {
+    vi.useRealTimers();
+  }
+});
 
 it("preserves actual loan facts and reconciles the saved gross amount", () => {
   const data = sourceFacts();

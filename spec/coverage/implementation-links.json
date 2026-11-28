@@ -1874,6 +1874,23 @@
         "tests/guided-interview/guided-schedule-c-form-6198.test.ts::reopens actual originals and clears review after controlling edits"
       ],
       "note": "Guided original Schedule C and Form 6198 records reopen after encrypted recovery and require current owner and source confirmation. Qualified human review and export remain open."
+    },
+    {
+      "key": "federal/guided-student-loan",
+      "enginePath": "src/engine/forms/student-loan-interest.ts",
+      "testRefs": [
+        "tests/guided-interview/guided-student-loan-facts.test.ts::holds future 2026 loan origination after saved facts reopen",
+        "tests/guided-interview/guided-student-loan-facts.test.ts::preserves actual loan facts and reconciles the saved gross amount"
+      ],
+      "note": "Guided original lender statements and current loan facts feed the supported deduction. Qualified human review and filing export remain open."
+    },
+    {
+      "key": "federal/student-loan-interest-sources",
+      "enginePath": "src/engine/forms/student-loan-interest.ts",
+      "testRefs": [
+        "tests/engine/federal-student-loan-sources.test.ts::holds future 2026 loan origination before deducting current-year interest"
+      ],
+      "note": "Original current paid interest, observed loan origination and supported qualified education loan facts. Qualified human review and filing export remain open."
     }
   ]
 }

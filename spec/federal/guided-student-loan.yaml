@@ -22,6 +22,16 @@ lines:
     formula: "Selected student-loan routes require actual source facts; legacy aggregates stay saved but incomplete until reconciled. Source-only validation does not compute a deduction before canonical MAGI."
     irsRef: "Schedule1 line21; Pub970 Worksheet4-1"
     testRef: "tests/guided-interview/guided-student-loan-facts.test.ts::requires actual loan sources in the guided return and forwards them once"
+  - line: "guided-origination-observation"
+    description: "Require an observed origination date before accepting 2026 loan facts"
+    formula: >-
+      Compare an entered actual 2026 loan source's origination date with the
+      current local civil date before emitting canonical facts. Keep a date
+      after today pending correction even after the saved workspace reopens.
+      Preserve the saved date, printed interest and explicit zero. Allow a
+      same-day or earlier date when the existing originals reconcile.
+    irsRef: "26 USC 221(a), (d)(1) at https://uscode.house.gov/us/usc/119-120/t26/s221/; 2026 Form 1098-E Box 1 at https://www.irs.gov/pub/irs-pdf/f1098e.pdf"
+    testRef: "tests/guided-interview/guided-student-loan-facts.test.ts::holds future 2026 loan origination after saved facts reopen"
   - line: "confirmation"
     description: "Invalidate changed source facts without confirmation cycles"
     formula: "Substantive household, payroll or education-source edits invalidate linked student-loan and educator confirmations. Changing only sourceFactsConfirmed metadata does not invalidate another source confirmation. Actual eligibility answers always count as substantive."

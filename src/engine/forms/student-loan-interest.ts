@@ -6,6 +6,7 @@ import { getConstants } from "@/models/constants.js";
 import { FEDERAL_2026_CONSTANTS } from "@/models/federal-2026-indexed.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { roundEducationSourceAmounts } from "@/utils/annual-cash-qtp.js";
+import { isActualDate } from "@/utils/civil-date.js";
 
 export interface StudentLoanInterestOptions {
   taxYear: number;
@@ -29,9 +30,20 @@ function text(value: string | undefined, name: string): string {
 }
 function actualDate(value: string | undefined): string {
   const date = text(value, "loan origination date");
-  const parsed = new Date(`${date}T12:00:00Z`);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== date) throw new Error("Student loan source requires an actual loan origination date.");
+  if (!isActualDate(date)) throw new Error("Student loan source requires an actual loan origination date.");
   return date;
+}
+
+export function assertObservedStudentLoanOriginations(
+  loans: Readonly<NonNullable<StudentLoanInterestFacts["loans"]>>,
+  asOfDate: string,
+): void {
+  for (const loan of loans) {
+    const date = loan.loanOriginationDate?.trim();
+    if (date && isActualDate(date) && date > asOfDate) {
+      throw new Error("Student loan origination must have occurred on or before the as-of date.");
+    }
+  }
 }
 
 export function calculateStudentLoanInterestDeduction(options: StudentLoanInterestOptions) {
