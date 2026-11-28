@@ -36,6 +36,22 @@ describe("public scenario and output capability disclosure", () => {
     }
   });
 
+  it("publishes the selected 2026 state forms and draft residency methods without offering return outputs", () => {
+    const html = renderToStaticMarkup(<SupportPage />);
+    for (const [jurisdiction, form] of [["Pennsylvania", "PA-40"], ["Ohio", "IT 1040"]]) {
+      const row = taxYearSupportRows.find(row => row[0] === "2026" && row[1] === jurisdiction);
+      if (!row) throw new Error(`Missing 2026 support for ${jurisdiction}`);
+      expect(row[2]).toBe("No qualified residency scenarios");
+      expect(row[3]).toContain(`${form} draft methods`);
+      expect(row[3]).toContain("full-year resident, part-year resident and nonresident");
+      expect(row[3]).toContain("selected ordinary wage, bank-interest and ordinary dividend scenarios");
+      expect(row[4]).toContain("full return calculation and PDFs unavailable");
+      expect(row[5]).toBe("Unavailable");
+      expect(html).toContain(row[3]);
+    }
+    expect(html).toContain("IT NRC draft credit work covers selected part-year and nonresident cases.");
+  });
+
   it("limits Help Center estimates and review downloads to supported 2025 cases", () => {
     const html = renderToStaticMarkup(<HelpPage />);
     expect(html).toContain("In supported 2025 cases, your estimate updates");

@@ -1,8 +1,16 @@
 const draftCapabilities2026 = "Save facts and encrypted local backups; full return calculation and PDFs unavailable";
 const guidedSourceDescriptions2026 = [
   ["Federal"],
-  ["Pennsylvania", "In the guided return, record and confirm an inventory showing no qualifying children for the earned income credit (EIC)."],
-  ["Ohio", "For supported full-year employee cases, confirm earned-income school district sources in the guided return and preview the district rate, resident compensation and school withholding."],
+  [
+    "Pennsylvania",
+    "In the guided return, record and confirm an inventory showing no qualifying children for the earned income credit (EIC).",
+    "PA-40 draft methods under review for full-year resident, part-year resident and nonresident returns, including selected ordinary wage, bank-interest and ordinary dividend scenarios.",
+  ],
+  [
+    "Ohio",
+    "For supported full-year employee cases, confirm earned-income school district sources in the guided return and preview the district rate, resident compensation and school withholding.",
+    "IT 1040 draft methods under review for full-year resident, part-year resident and nonresident returns, including selected ordinary wage, bank-interest and ordinary dividend scenarios. IT NRC draft credit work covers selected part-year and nonresident cases.",
+  ],
   ["New York"],
   ["New Jersey"],
   ["Illinois"],
@@ -27,8 +35,9 @@ export const taxYearSupportRows = [
   ["2025", "Illinois", "Resident; Schedule NR allocation inputs for nonresident/part-year cases", "IL-1040, Schedule NR and implemented credit/withholding modules", "Experimental IL-1040 review PDF; supporting attachments remain incomplete", "Unavailable"],
   ["2025", "California", "Resident and nonresident/part-year calculation components", "Form 540 and 540NR tax, deduction, credit and AMT components; complete scenario review pending", "Experimental calculation components; no official California return PDF packet", "Unavailable"],
   ["2025", "Other states and DC", "No qualified residency scenarios", "Generic draft calculations or no general income-tax path; special and local taxes may be missing", "Experimental previews where implemented", "Unavailable"],
-  ...guidedSourceDescriptions2026.map(([jurisdiction, guidedSources]) => [
-    "2026", jurisdiction, "No qualified residency scenarios", "Year-specific rules, conformity, facts and final forms remain under review",
+  ...guidedSourceDescriptions2026.map(([jurisdiction, guidedSources, draftMethods]) => [
+    "2026", jurisdiction, "No qualified residency scenarios",
+    draftMethods ?? "Year-specific rules, conformity, facts and final forms remain under review",
     guidedSources ? `${guidedSources} ${draftCapabilities2026}` : draftCapabilities2026,
     "Unavailable",
   ]),

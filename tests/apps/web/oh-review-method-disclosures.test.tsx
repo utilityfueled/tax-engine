@@ -49,7 +49,11 @@ it('public 2026 support discloses Pennsylvania and Ohio source work without prom
   expect(rows).toHaveLength(8);
   for(const [,jurisdiction,residency,notes,capabilities,filing] of rows){
     expect(residency).toBe('No qualified residency scenarios');
-    expect(notes).toBe('Year-specific rules, conformity, facts and final forms remain under review');
+    if(jurisdiction==='Pennsylvania'||jurisdiction==='Ohio'){
+      expect(notes).toContain('draft methods under review');
+    }else{
+      expect(notes).toBe('Year-specific rules, conformity, facts and final forms remain under review');
+    }
     expect(capabilities).toContain(generic);
     expect(filing).toBe('Unavailable');
     if(jurisdiction!=='Pennsylvania'&&jurisdiction!=='Ohio')expect(capabilities).toBe(generic);

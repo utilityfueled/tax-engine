@@ -52,3 +52,13 @@ lines:
       rows retain fact saving and encrypted local backup availability and disclose
       that full return calculations, PDFs and filing are unavailable.
     testRef: "tests/apps/web/oh-review-method-disclosures.test.tsx::public 2026 support discloses Pennsylvania and Ohio source work without promoting returns"
+  - line: "public-support-2026-state-residency"
+    description: "State draft methods and public availability appear separately in the 2026 support matrix"
+    formula: |
+      Identify Pennsylvania PA-40 and Ohio IT 1040 draft methods under review
+      for full-year resident, part-year resident and nonresident returns. Describe
+      ordinary wages, bank interest and ordinary dividends as selected draft
+      scenarios. Scope Ohio IT NRC credit work to selected part-year and
+      nonresident cases. Preserve the existing guided fact previews and show that
+      full calculation, PDF and filing outputs remain unavailable across both states.
+    testRef: "tests/apps/web/tax-year-support.test.tsx::publishes the selected 2026 state forms and draft residency methods without offering return outputs"
