@@ -6,6 +6,14 @@ Use the `resume` object in the [checkpoint](upgrade-2026-checkpoint.json) for
 the latest application revision, exact-source runs and open dependencies. The
 [execution brief](upgrade-2026-execution-brief.md) defines completion.
 
+To resume, start with the branch, the active checklist below and these two
+checkpoint fields. Open older evidence by the key for the package under review.
+
+```sh
+git status --short --branch --untracked-files=no
+jq '.resume | {latestScopedApplicationCommit, remaining}' docs/upgrade-2026-checkpoint.json
+```
+
 | Package | Remaining release evidence |
 | --- | --- |
 | Baseline and advisories | `57b64cb23` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. Qualify each final runtime image with its SBOM and advisory dispositions. |
@@ -14,6 +22,17 @@ the latest application revision, exact-source runs and open dependencies. The
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. Current ARM64 and exact AMD64 jobs for the `57b64cb23` application await runner assignment. The older ARM64 comparison failed nine strict browser cases after archive and recovery passed. Qualify both final runtime images before publishing. |
+
+## November 28 Ohio draft edit costs
+
+`42d8091d9` preserves unrelated draft objects when a field is updated in the
+Ohio school district or resident header editor. An edit still clears prior
+confirmation. Two regressions failed before the change. The exact package
+passed 34 focused tests and eight static checks. In a local benchmark
+using the same fixture and equivalent serialized output, median time per
+edit and serialization fell from 27.4 to 3.7 microseconds for school records
+and from 47.2 to 6.9 microseconds for header records. These measurements cover
+only the edit and serialization. The strict ARM64 browser gate remains open.
 
 ## November 28 actual IRA charitable transfer dates
 

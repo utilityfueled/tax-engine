@@ -4,7 +4,7 @@
     "asOf": "2026-11-28",
     "branch": "main",
     "applicationCommit": "57b64cb231e10a4de762e2966c6b5fdf234f5ee3",
-    "latestScopedApplicationCommit": "32257efbfd00f9e8122ba7fe2ed784eaa2479d7f",
+    "latestScopedApplicationCommit": "42d8091d9e54c6429741c09629351a303a8ba1cc",
     "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
     "latestSchedule8812PayrollActcEvidenceKey": "activeContinuation.nov27Schedule8812PayrollActc",
     "latestGuidedHsaCivilDatesEvidenceKey": "activeContinuation.nov27GuidedHsaCivilDates",
@@ -217,6 +217,38 @@
     ]
   },
   "activeContinuation": {
+    "nov28OhioDraftEditCopyCost": {
+      "commit": "42d8091d9e54c6429741c09629351a303a8ba1cc",
+      "archiveSha256": "00665e59d6afbb81c3791577e106bf84b6f95335d1f8570d6d459e2bf6d51129",
+      "sourceTree": "32b51b699647d257a12bbc29efa22d65183525ae",
+      "localEvidenceMarker": "nov27-ohio-draft-copy-path",
+      "exactFocusedTestsPassed": 34,
+      "checksPassed": [
+        "focused",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
+      "implementationRegressionFailuresBeforeFix": 2,
+      "developerFocusedTestsPassed": 72,
+      "benchmarkSamples": 7,
+      "benchmarkIterationsPerSample": 5000,
+      "benchmarkIncludesOnly": "pure draft edit and serialization with deep-equal serialized output",
+      "schoolMedianMicrosecondsBeforeAfter": [
+        27.4,
+        3.7
+      ],
+      "headerMedianMicrosecondsBeforeAfter": [
+        47.2,
+        6.9
+      ],
+      "strictArm64BrowserVerified": false
+    },
     "nov28QcdObservedTransferDates": {
       "commit": "32257efbfd00f9e8122ba7fe2ed784eaa2479d7f",
       "archiveSha256": "06d61f0de2f94e19bdc7f8b7bd63de597cab4c61c84e66f47e22d9297d321f16",
