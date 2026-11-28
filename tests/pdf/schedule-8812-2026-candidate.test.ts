@@ -40,6 +40,20 @@ describe("Final 2026 Schedule 8812 wage-only specimen", () => {
     w2s: [{ taxYear: 2026, owner: "primary", employerEin: "99-8887777", box1: "35000", codeQ: "0" }],
   };
 
+  const payrollSource = {
+    ...sources, filingStatus: "married_filing_separately", qualifyingChildren: 3, adjustedGrossIncome: "3000", worksheetALine5: "0",
+    w2s: [
+      { ...sources.w2s[0], box1: "500", ordinaryPayroll: { sourceReference: "Original W-2 A", box3: "500", box4: "31", box5: "500", box6: "7.25", box7: "0" } },
+      { ...sources.w2s[0], employerEin: "99-8887778", box1: "2500", ordinaryPayroll: { sourceReference: "Original W-2 B", box3: "2500", box4: "155", box5: "2500", box6: "36.25", box7: "0" } },
+    ],
+    partIIB: {
+      taxYear: 2026, sourceReference: "Confirmed Form 1040, Schedule 3 and Part II-B working copy",
+      originalWorkpapersConfirmed: true, noAdditionalMedicareOrRrtaConfirmed: true,
+      schedule1Line15: "0", schedule2Line16c: "0", schedule2Line17c: "0",
+      form1040Line27a: "0", schedule3Line11: "0", reportedLine24: "0",
+    },
+  };
+
   it("places the published ATS scenario 14 credit amounts and branch marks on the saved final form", async () => {
     const fields = await mapping().then(candidate => candidate.fields);
     const projected = await projection(sources);
@@ -127,9 +141,109 @@ describe("Final 2026 Schedule 8812 wage-only specimen", () => {
     await expect(projection({ ...sources, qualifyingChildren: 0 })).rejects.toThrow(/source/i);
   });
 
+  it("reopens the verified three-child Part II-B payroll alternative", async () => {
+    const { fields } = await mapping();
+    const projected = await projection(payrollSource);
+    expect(projected.checked).toEqual([fields.line12Yes, fields.line19Yes, fields.nextYes]);
+    const values = { line16b: "5100", line17: "5100", line20: "75", line21: "230", line22: "0", line23: "230",
+      line24: "0", line25: "230", line26: "230", line27: "230" } as const;
+    const pdf = await PDFDocument.load(await readFile(blank));
+    removeTrustedTemplateLegacyFormData(pdf);
+    const form = pdf.getForm();
+    for (const [name, value] of Object.entries(projected.text)) form.getTextField(name).setText(value);
+    for (const name of projected.checked) form.getCheckBox(name).check();
+    await markReviewPdf(pdf);
+    const saved = (await PDFDocument.load(await pdf.save())).getForm();
+    for (const [key, value] of Object.entries(values)) expect(saved.getTextField(fields[key as keyof typeof values]).getText()).toBe(value);
+    expect(saved.getCheckBox(fields.nextYes).isChecked()).toBe(true);
+    expect(saved.getCheckBox(fields.nextNo).isChecked()).toBe(false);
+    for (const key of ["name", "ssn", "line15Reserved"] as const) expect(saved.getTextField(fields[key]).getText()).toBeUndefined();
+    const offset = await projection({ ...payrollSource, partIIB: {
+      ...payrollSource.partIIB, form1040Line27a: "1350", reportedLine24: "1350",
+      form1040SeparationCheckboxConfirmed: true, scheduleEicChildResidenceConfirmed: true,
+    } });
+    expect(offset.text).toMatchObject({ [fields.line24]: "1350", [fields.line25]: "0", [fields.line26]: "75", [fields.line27]: "75" });
+    const [first, second] = payrollSource.w2s;
+    const joint = await projection({ ...payrollSource, filingStatus: "married_filing_jointly",
+      w2s: [first, { ...second, owner: "spouse", employerEin: first.employerEin }] });
+    expect(joint.text).toMatchObject({ [fields.line21]: "230", [fields.line27]: "230" });
+  });
+
+  it("holds Part II-B earned income credit above the published 2026 maximum", async () => {
+    const { fields } = await mapping();
+    const household = {
+      ...payrollSource, filingStatus: "head_of_household", adjustedGrossIncome: "18290",
+      w2s: [{ ...payrollSource.w2s[0], box1: "18290", ordinaryPayroll: {
+        sourceReference: "Original W-2", box3: "18290", box4: "1133.98", box5: "18290", box6: "265.21", box7: "0",
+      } }],
+    };
+    for (const [form1040Line27a, reportedLine24] of [["999999", "999999"], ["8231.01", "8231"]]) {
+      await expect(projection({ ...household, partIIB: { ...household.partIIB, form1040Line27a, reportedLine24 } }))
+        .rejects.toThrow(/Part II-B.*earned income credit maximum/i);
+    }
+    const limit = await projection({ ...household, partIIB: { ...household.partIIB, form1040Line27a: "8231", reportedLine24: "8231" } });
+    expect(limit.text).toMatchObject({ [fields.line24]: "8231", [fields.line25]: "0", [fields.line27]: "2369" });
+  });
+
+  it("holds positive separate-return earned income credit without both original attestations", async () => {
+    const offset = { ...payrollSource.partIIB, form1040Line27a: "1350", reportedLine24: "1350" };
+    for (const patch of [
+      {},
+      { scheduleEicChildResidenceConfirmed: true },
+      { form1040SeparationCheckboxConfirmed: false, scheduleEicChildResidenceConfirmed: true },
+      { form1040SeparationCheckboxConfirmed: true },
+      { form1040SeparationCheckboxConfirmed: true, scheduleEicChildResidenceConfirmed: false },
+    ]) {
+      await expect(projection({ ...payrollSource, partIIB: { ...offset, ...patch } }))
+        .rejects.toThrow(/Part II-B.*separation.*qualifying-child residence/i);
+    }
+  });
+
+  it("bypasses Part II-B only when printed and exact line 20 cover line 17", async () => {
+    const { fields } = await mapping();
+    const bypass = { ...sources, qualifyingChildren: 3 };
+    const result = await projection(bypass);
+    expect(result.checked).toEqual([fields.line12Yes, fields.line19Yes, fields.nextYes]);
+    expect(result.text).toMatchObject({ [fields.line17]: "4577", [fields.line20]: "4875", [fields.line27]: "4577" });
+    for (const line of [fields.line21, fields.line22, fields.line23, fields.line24, fields.line25, fields.line26]) {
+      expect(result.text[line]).toBeUndefined();
+    }
+    expect(await projection({ ...bypass, partIIB: { taxYear: 2025, schedule3Line11: "1" },
+      w2s: [{ ...bypass.w2s[0], ordinaryPayroll: { box4: "unverified" } }] })).toEqual(result);
+    const boundary = { ...bypass, adjustedGrossIncome: "36500", worksheetALine5: "0", w2s: [{ ...bypass.w2s[0], box1: "36500" }] };
+    expect((await projection(boundary)).text).toMatchObject({ [fields.line17]: "5100", [fields.line20]: "5100", [fields.line27]: "5100" });
+    await expect(projection({ ...boundary, adjustedGrossIncome: "36496.66", w2s: [{ ...boundary.w2s[0], box1: "36496.66" }] })).rejects.toThrow(/printed.*rounded/i);
+  });
+
+  it("holds missing and contradictory Part II-B originals", async () => {
+    await expect(projection({ ...payrollSource, partIIB: undefined })).rejects.toThrow(/Part II-B.*source/i);
+    for (const patch of [
+      { taxYear: 2025 }, { sourceReference: " " }, { originalWorkpapersConfirmed: false }, { noAdditionalMedicareOrRrtaConfirmed: false },
+      { schedule1Line15: undefined }, { schedule2Line16c: "1" }, { schedule2Line17c: "unknown" },
+      { schedule3Line11: "1" }, { form1040Line27a: undefined }, { form1040Line27a: "1" }, { reportedLine24: "1" },
+    ]) await expect(projection({ ...payrollSource, partIIB: { ...payrollSource.partIIB, ...patch } })).rejects.toThrow(/Part II-B.*source|line 24/i);
+    const [first, second] = payrollSource.w2s;
+    for (const ordinaryPayroll of [undefined, ...[
+      { sourceReference: "" }, { box4: "30.99" }, { box5: "400" }, { box6: "7.26" }, { box7: "1" },
+    ].map(patch => ({ ...first.ordinaryPayroll, ...patch }))]) {
+      await expect(projection({ ...payrollSource, w2s: [{ ...first, ordinaryPayroll }, second] })).rejects.toThrow(/W-2.*payroll/i);
+    }
+    await expect(projection({ ...payrollSource, w2s: [first, { ...second, owner: "spouse" }] })).rejects.toThrow(/W-2.*owner/i);
+    const highPayroll = (w2: typeof first, taxableWages: string, socialSecurity: string, medicare: string) => ({ ...w2, ordinaryPayroll: {
+      ...w2.ordinaryPayroll, box3: taxableWages, box4: socialSecurity, box5: taxableWages, box6: medicare,
+    } });
+    await expect(projection({ ...payrollSource, w2s: [highPayroll(first, "60000", "3720", "870"), highPayroll(second, "70000", "4340", "1015")] }))
+      .rejects.toThrow(/Additional Medicare Tax worksheet/i);
+    await expect(projection({ ...payrollSource, filingStatus: "head_of_household",
+      w2s: [highPayroll(first, "100000", "6200", "1450"), highPayroll(second, "100000", "6200", "1450")] }))
+      .rejects.toThrow(/zero excess Social Security/i);
+    await expect(projection({ ...payrollSource, filingStatus: "head_of_household",
+      partIIB: { ...payrollSource.partIIB, form1040Line27a: "0.49" } })).rejects.toThrow(/printed.*rounded/i);
+  });
+
   it("rejects incomplete and out-of-cohort sources", async () => {
     for (const patch of [
-      { taxYear: 2025 }, { parentForm: "1040-NR" }, { qualifyingChildren: 3 }, { otherDependents: 1 },
+      { taxYear: 2025 }, { parentForm: "1040-NR" }, { otherDependents: 1 },
       { nonPuertoRicoResidentConfirmed: false }, { worksheetAConfirmed: false }, { adjustedGrossIncome: "34999.99" },
       { w2s: [{ ...sources.w2s[0], codeQ: undefined }] }, { w2s: [{ ...sources.w2s[0], owner: "spouse" }] },
       { w2s: [sources.w2s[0], sources.w2s[0]] }, { wageOnlyNoExclusionsOrWorksheetBConfirmed: false },

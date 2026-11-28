@@ -812,6 +812,21 @@ and 21 require and how the joint return affects the under-24 test.
 [Final 2026 Form 8863](https://www.irs.gov/pub/irs-prior/f8863--2026.pdf) ·
 [Draft 2026 Form 8863 instructions](https://www.irs.gov/pub/irs-dft/i8863--dft.pdf).
 
+## November 27 Schedule 8812 payroll-based additional child tax credit
+
+Consider a married-filing-separately return with three qualifying children,
+$3,000 of wages, zero Worksheet A tax, zero EIC, zero excess Social Security
+withholding and no taxes added on Schedule 8812 line 22. The verified W-2s
+show $500 and $2,500 of Box 1, 3 and 5 wages. Their Box 4 and Box 6 amounts
+are $31 and $7.25 on the first W-2 and $155 and $36.25 on the second.
+Independently complete lines 16b through 27 and identify when to round the
+combined source taxes. In a second case with a confirmed $0.49 allowable
+offset, explain how to handle the difference between rounding after source
+subtraction and subtracting the displayed whole-dollar lines. Review the
+second case as a rounding boundary using an assumed parent offset.
+[Final 2026 Schedule 8812](https://www.irs.gov/pub/irs-prior/f1040s8--2026.pdf#page=2) ·
+[Draft 2026 Schedule 8812 instructions](https://www.irs.gov/pub/irs-dft/i1040s8--dft.pdf#page=4).
+
 ## November 27 commercial clean vehicle credit and carryback
 
 For a single calendar-year taxpayer materially participating in a sole

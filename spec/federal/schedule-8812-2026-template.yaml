@@ -8,7 +8,7 @@ notes: |
   Physical source and bounded wage-only field projection for internal review.
   The final English instructions endpoint served 2025 instructions when checked.
   The 2026 instructions identify themselves as a draft. Final instructions,
-  parent-form mapping, Part II-B and qualified review remain pending.
+  parent-form mapping and qualified review remain pending.
 lines:
   - line: "revision"
     description: "Pin the official final annual PDF"
@@ -32,7 +32,7 @@ lines:
     testRef: "tests/pdf/schedule-8812-2026-candidate.test.ts::keeps every export gate closed"
   - line: "wage-only-projection"
     description: "Fill the disabled financial specimen from a confirmed wage-only annual source packet"
-    formula: "Require a confirmed 2026 Form 1040, zero to two source-reviewed qualifying children and a known count of eligible other dependents. Require separate source confirmation for a positive other-dependent count and at least one eligible dependent overall. Require confirmed absence of foreign or possession adjustments, no Worksheet B or Puerto Rico method, a confirmed Worksheet A line 5, and complete matching original W-2 Box 1 and Code Q. Verify that line 11b equals actual taxable Box 1 wages. Use the 2026 Schedule 8812 calculator and actual Code Q once. Compare exact and displayed-dollar calculation paths, refusing discrepancies in the phaseout, ACTC income threshold, or transferred credits. Respect the printed stops on lines 12, 16a and 16b and the branch on line 19. Keep identity, reserved line 15 and Part II-B blank."
+    formula: "Require a confirmed 2026 Form 1040, a source-reviewed qualifying-child count and a known count of eligible other dependents. Require separate source confirmation for a positive other-dependent count and at least one eligible dependent overall. Require confirmed absence of foreign or possession adjustments, no Worksheet B or Puerto Rico method, a confirmed Worksheet A line 5, and complete matching original W-2 Box 1 and Code Q. Verify that line 11b equals actual taxable Box 1 wages. Use the 2026 Schedule 8812 calculator and actual Code Q once. Compare exact and displayed-dollar calculation paths, refusing discrepancies in the phaseout, ACTC income threshold, Part II-B branch, or transferred credits. Respect the printed stops on lines 12, 16a and 16b and the branch on line 19. Keep identity and reserved line 15 blank."
     irsRef: "https://www.irs.gov/pub/irs-prior/f1040s8--2026.pdf; https://www.irs.gov/pub/irs-dft/i1040s8--dft.pdf; https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-14.pdf"
     testRef: "tests/pdf/schedule-8812-2026-candidate.test.ts::Final 2026 Schedule 8812 wage-only specimen"
   - line: "other-dependents"
@@ -40,3 +40,40 @@ lines:
     formula: "Enter the confirmed other-dependent count on line 6 and multiply it by $500 on line 7. Use both credits on line 8 and apply the combined phaseout and Worksheet A limit. If line 16a is positive, line 16b uses only the qualifying-child count from line 4. An other-dependent-only return enters zero on line 16b and leaves all later entries blank."
     irsRef: "Final 2026 Schedule 8812 lines 4–14 and 16a–17, https://www.irs.gov/pub/irs-pdf/f1040s8.pdf"
     testRef: "tests/pdf/schedule-8812-2026-candidate.test.ts::uses confirmed other dependents without increasing the refundable child cap"
+  - line: "ordinary-wage-only-part-ii-b"
+    description: "Review the ordinary W-2 payroll alternative for at least three qualifying children"
+    formula: >-
+      Mark the printed line 16b threshold Yes for at least $5,100. If line 20
+      covers line 17, use line 17 on line 27 and leave lines 21 through 26 blank.
+      Otherwise require independently confirmed 2026 original IRS-line
+      workpapers, Form 1040 line 27a and known-zero amounts on Schedule 1
+      line 15, Schedule 2 lines 16c and 17c, and Schedule 3 line 11. Hold missing,
+      nonzero unsupported amounts and any reported line 24 that disagrees with
+      the actual rounded offsets. Before rounding, hold a line 27a transfer
+      above the published 2026 earned income credit maximum of $8,231. A positive
+      line 27a for married filing separately requires confirmed same-return
+      Form 1040 separation and Schedule EIC qualifying-child residence for more
+      than half the year. Obtain line 21 from the exact sum of original
+      W-2 boxes 4 and 6 for this return, rounding the total once. This cohort
+      requires ordinary withheld amounts reconciling to Box 3 and Box 5 to the
+      cent, no Social Security tips, no excess withheld Social Security, and no
+      Additional Medicare or RRTA worksheet. Keep owner and wage-base checks.
+      Add lines 21 and 22 for line 23. Floor line 23 less 24 at zero for line 25.
+      Hold when rounding the exact net payroll once disagrees with the
+      calculation from the displayed whole-dollar lines.
+      Use the larger of lines 20 and 25 on line 26 and the smaller of lines 17
+      and 26 on line 27. Apply existing redaction and export gates.
+    sources:
+      - "https://www.irs.gov/pub/irs-prior/f1040s8--2026.pdf#page=2"
+      - "https://www.irs.gov/pub/irs-dft/i1040s8--dft.pdf#page=4 (2026 draft, Part II-B, line 21)"
+      - "https://www.irs.gov/instructions/iw2w3 (2026, W-2 boxes 3 through 7)"
+      - "https://www.irs.gov/irb/2025-45_IRB (Rev. Proc. 2025-32 section 4.06, 2026 EIC maximum)"
+      - "https://uscode.house.gov/us/usc/119-124/t26/s32/ (26 U.S.C. 32(d)(2)(B), separated spouse)"
+      - "https://www.irs.gov/pub/irs-dft/f1040--dft.pdf#page=2 (2026 draft, separation checkbox)"
+      - "https://www.irs.gov/pub/irs-dft/f1040sei--dft.pdf#page=2 (2026 draft, qualifying-child residence)"
+    testRef: "tests/pdf/schedule-8812-2026-candidate.test.ts::reopens the verified three-child Part II-B payroll alternative"
+    testRefs:
+      - "tests/pdf/schedule-8812-2026-candidate.test.ts::bypasses Part II-B only when printed and exact line 20 cover line 17"
+      - "tests/pdf/schedule-8812-2026-candidate.test.ts::holds missing and contradictory Part II-B originals"
+      - "tests/pdf/schedule-8812-2026-candidate.test.ts::holds Part II-B earned income credit above the published 2026 maximum"
+      - "tests/pdf/schedule-8812-2026-candidate.test.ts::holds positive separate-return earned income credit without both original attestations"
