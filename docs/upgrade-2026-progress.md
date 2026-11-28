@@ -23,6 +23,18 @@ jq '.resume | {latestScopedApplicationCommit, remaining}' docs/upgrade-2026-chec
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. Current ARM64 and exact AMD64 jobs for the `57b64cb23` application await runner assignment. The older ARM64 comparison failed nine strict browser cases after archive and recovery passed. Qualify both final runtime images before publishing. |
 
+## November 28 2026 rental residence expense limits
+
+`2d174de8b` carries the documented Schedule E residence through Worksheet 5-1
+for one verified lease, rental-only advertising and shared insurance. The
+synthetic case deducts $100 of advertising and $900 of allocated insurance,
+retains a $100 operating expense carryover and reports $0 net on Schedule E.
+The exact break-even case carries $0 forward. Both are excluded from Form
+8582. The guided flow requires the original facts to be reconfirmed after
+an edit. The positive-net method remains held pending NIIT and EIC
+classification. Independent engineering review passed 17 tests. The exact
+package passed 814 tests and eight static checks. [IRS Publication 527](https://www.irs.gov/publications/p527) · [Form 8582 instructions](https://www.irs.gov/instructions/i8582) · [26 U.S.C. §280A](https://uscode.house.gov/us/usc/119-124/t26/s280A/)
+
 ## November 28 Ohio draft edit costs
 
 `42d8091d9` preserves unrelated draft objects when a field is updated in the

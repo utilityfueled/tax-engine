@@ -4,7 +4,7 @@
     "asOf": "2026-11-28",
     "branch": "main",
     "applicationCommit": "57b64cb231e10a4de762e2966c6b5fdf234f5ee3",
-    "latestScopedApplicationCommit": "42d8091d9e54c6429741c09629351a303a8ba1cc",
+    "latestScopedApplicationCommit": "2d174de8b0a5759e8c53858b458da7f955e4965a",
     "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
     "latestSchedule8812PayrollActcEvidenceKey": "activeContinuation.nov27Schedule8812PayrollActc",
     "latestGuidedHsaCivilDatesEvidenceKey": "activeContinuation.nov27GuidedHsaCivilDates",
@@ -217,6 +217,41 @@
     ]
   },
   "activeContinuation": {
+    "nov28RentalResidenceWorksheet": {
+      "commit": "2d174de8b0a5759e8c53858b458da7f955e4965a",
+      "archiveSha256": "093033f74f33f35d0dbbe170032c2517f3bf7bb0c0047cdd3b9090ea63903e7b",
+      "sourceTree": "344f0a4076e02e6c2ce838562a389e1a48eb5e79",
+      "localEvidenceMarker": "nov27-rental-residence-worksheet-path",
+      "exactFocusedTestsPassed": 814,
+      "checksPassed": [
+        "focused",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
+      "independentEngineeringTestsPassed": 17,
+      "implementationFocusedTestsPassed": 587,
+      "fixtureGrossRents": "1000",
+      "fixtureDirectAdvertising": "100",
+      "fixtureAllocatedInsuranceBeforeLimit": "1000",
+      "fixtureAllocatedInsuranceAllowed": "900",
+      "fixtureOperatingExpenseCarryover": "100",
+      "fixtureScheduleENet": "0",
+      "fixtureForm8582ActivityCount": 0,
+      "breakEvenCarryover": "0",
+      "positiveNetHeld": true,
+      "filingQualified": false,
+      "sources": [
+        "https://www.irs.gov/publications/p527",
+        "https://www.irs.gov/instructions/i8582",
+        "https://uscode.house.gov/us/usc/119-124/t26/s280A/"
+      ]
+    },
     "nov28OhioDraftEditCopyCost": {
       "commit": "42d8091d9e54c6429741c09629351a303a8ba1cc",
       "archiveSha256": "00665e59d6afbb81c3791577e106bf84b6f95335d1f8570d6d459e2bf6d51129",
