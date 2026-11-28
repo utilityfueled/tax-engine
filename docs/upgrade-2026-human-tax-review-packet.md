@@ -223,6 +223,24 @@ identify any additional records needed before allowing an official export.
 [Official blank](https://www.irs.gov/pub/irs-pdf/f6198.pdf) ·
 [Engineering evidence](upgrade-2026-progress.md#november-28-form-6198-physical-candidate-and-linux-rehearsal).
 
+### 2026 observed student-loan origination
+
+Consider an otherwise eligible single taxpayer with $50,000 of modified
+AGI and a lender Box 1 record of $1,200.15 in qualifying interest. The
+taxpayer is the borrower and paid the interest. The loan covers qualified
+expenses, and the source contains no duplicate or excluded interest. Use
+November 28, 2026 as the observation date. Derive the Schedule 1 line 21
+amount for an original showing November 28 origination. Then consider a
+record with the same current paid interest and December 31 origination.
+
+The engineering result rounds the first deduction to $1,200 and holds the
+inconsistent future-dated record for correction. Confirm the treatment and
+the evidence needed to resume the deduction. Include the result when the
+same-day original records explicitly report zero qualifying interest.
+[26 CFR §1.221-1](https://www.ecfr.gov/current/title-26/section-1.221-1) ·
+[2026 Form 1098-E](https://www.irs.gov/pub/irs-pdf/f1098e.pdf) ·
+[Engineering evidence](upgrade-2026-progress.md#november-28-student-loan-original-facts).
+
 ### Capital loss carryover from 2025 into 2026
 
 Independently complete the IRS Capital Loss Carryover Worksheet for a single
