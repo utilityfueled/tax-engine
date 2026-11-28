@@ -82,7 +82,19 @@ function qualityComparison() {
     if (!entry?.independentReview) throw new Error("Missing test-only response review.");
     return { entry, review: entry.independentReview };
   };
-  return { summarize, reviewedEntry, baselineIds: profiles.slice(1) };
+  return { entries, summarize, reviewedEntry, baselineIds: profiles.slice(1) };
+}
+
+function costBoundaryComparison(candidateInputTokens: number) {
+  const { entries, summarize, reviewedEntry } = qualityComparison();
+  for (const entry of entries) {
+    if (entry.profileId === "luna-high") entry.attempts[0].usage = { inputTokens: candidateInputTokens, outputTokens: 1000 };
+    if (entry.profileId === "baseline-gpt-5-mini") entry.attempts[0].usage = { inputTokens: 1000, outputTokens: 400 };
+  }
+  // A $0.094501 Mini total gives a repeating cost per accepted run.
+  reviewedEntry("baseline-gpt-5-mini").entry.attempts[0].usage = { inputTokens: 1004, outputTokens: 400 };
+  const reportGroup = (profileId: string) => summarize().groups.find(group => group.profileId === profileId && group.task === "income-extraction");
+  return { reportGroup, candidateRun: reviewedEntry("luna-high") };
 }
 
 function escalatedIncomeCohort() {
@@ -325,6 +337,33 @@ describe("measured task model evaluation", () => {
       expect(new Decimal(baseline?.filingSeasonCostPerAcceptedUsd ?? "Infinity").lt("0.0036")).toBe(true);
     }
     expect(report.productionPromotion).toBe(false);
+  });
+  it("compares the exact inclusive ten percent cost benefit across adjacent token charges", () => {
+    const { reportGroup, candidateRun } = costBoundaryComparison(4450);
+    expect(reportGroup("baseline-gpt-5-mini")).toMatchObject({ acceptedRuns: 90, filingSeasonCostUsd: "0.094501", blockers: [] });
+    expect(reportGroup("baseline-gemini-3-flash-preview")).toMatchObject({ acceptedRuns: 90, filingSeasonCostUsd: "0.315", blockers: [] });
+    for (const [inputTokens, total, eligible] of [
+      [4458, "0.0850508", true],
+      [4459, "0.0850509", true],
+      [4460, "0.085051", false],
+    ] as const) {
+      candidateRun.entry.attempts[0].usage = { inputTokens, outputTokens: 1000 };
+      expect(reportGroup("luna-high")).toMatchObject({ acceptedRuns: 90, filingSeasonCostUsd: total, eligibleForPromotionReview: eligible,
+        blockers: eligible ? [] : ["no-measured-quality-or-cost-benefit"] });
+    }
+  });
+  it("uses each cohort's accepted count in the exact cost benefit comparison", () => {
+    const { reportGroup, candidateRun } = costBoundaryComparison(4334);
+    candidateRun.review.qualityAccepted = false;
+    const attempt = candidateRun.entry.attempts[0];
+    attempt.usage = { inputTokens: 5341, outputTokens: 1000, cachedInputTokens: 9 };
+    expect(reportGroup("luna-high")).toMatchObject({ acceptedRuns: 89, filingSeasonCostUsd: "0.08410589", filingSeasonCostPerAcceptedUsd: "0.00094501",
+      blockers: ["grounding-quality-or-abstention"], eligibleForPromotionReview: false });
+
+    attempt.usage = { inputTokens: 5342, outputTokens: 1000, cachedInputTokens: 10 };
+    // One cached input token puts the rate above the threshold even though the totals alone pass.
+    expect(reportGroup("luna-high")).toMatchObject({ acceptedRuns: 89, filingSeasonCostUsd: "0.0841059",
+      blockers: ["grounding-quality-or-abstention", "no-measured-quality-or-cost-benefit"], eligibleForPromotionReview: false });
   });
   it("requires grounded independent baseline reviews and candidate acceptance for the quality comparison", () => {
     const { summarize, reviewedEntry, baselineIds } = qualityComparison();

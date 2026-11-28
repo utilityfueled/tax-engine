@@ -552,8 +552,12 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
       }
     }
     const meaningfulBenefit = baselines.length === 2 && baselines.every(baseline => {
-      if (!baseline.filingSeasonCostPerAcceptedUsd || !group.filingSeasonCostPerAcceptedUsd) return false;
-      const cheaper = new Money(group.filingSeasonCostPerAcceptedUsd).lte(new Money(baseline.filingSeasonCostPerAcceptedUsd).times("0.90"));
+      if (baseline.filingSeasonCostUsd === null || group.filingSeasonCostUsd === null
+        || baseline.acceptedRuns === 0 || group.acceptedRuns === 0) return false;
+      // Cross-multiply the totals to keep the displayed quotients out of the comparison.
+      const scaledCandidateCost = new Money(group.filingSeasonCostUsd).times(baseline.acceptedRuns).times(10);
+      const baselineThreshold = new Money(baseline.filingSeasonCostUsd).times(group.acceptedRuns).times(9);
+      const cheaper = scaledCandidateCost.lte(baselineThreshold);
       const qualityGain = group.acceptedRuns / group.expectedRuns - baseline.acceptedRuns / baseline.expectedRuns;
       return cheaper || qualityGain >= evaluationGates.minimumQualityGain;
     });

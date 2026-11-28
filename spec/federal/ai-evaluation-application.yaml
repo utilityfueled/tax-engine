@@ -168,3 +168,15 @@ lines:
     testRefs:
       - "tests/engine/provider-model-eval.test.ts::qualifies a measured quality gain against both cheaper baselines"
       - "tests/engine/provider-model-eval.test.ts::requires grounded independent baseline reviews and candidate acceptance for the quality comparison"
+  - line: "exact-comparison-cost-benefit"
+    description: "Apply the inclusive ten percent cost benefit at exact accepted-run rates"
+    formula: >-
+      For each baseline, require known filing-season totals and positive accepted
+      counts. The cost benefit passes when ten times the candidate total times
+      the baseline accepted count is at most nine times the baseline total
+      times the candidate accepted count. Use the exact totals for this
+      comparison and continue reporting cost-per-accepted quotients. Preserve
+      the alternative quality-gain test and every evidence and promotion gate.
+    testRef: "tests/engine/provider-model-eval.test.ts::compares the exact inclusive ten percent cost benefit across adjacent token charges"
+    testRefs:
+      - "tests/engine/provider-model-eval.test.ts::uses each cohort's accepted count in the exact cost benefit comparison"
