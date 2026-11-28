@@ -58,6 +58,26 @@ lines:
       mismatched claimant or institution records, an exhausted prior claim
       history, and non-2026 evidence.
     testRef: "tests/pdf/form-8863-2026-candidate.test.ts::holds stale, incomplete, or mismatched AOTC transfer evidence"
+  - line: "private-joint-spouse-aotc-transfer-review"
+    description: "Verify the transfers for a documented joint-return student spouse"
+    formula: >-
+      Apply the same one-student, one-current-Form-1098-T original-workpaper
+      contract to a married filing jointly return where the student is the
+      listed spouse. Match Part III lines 20 and 21 to that spouse by role,
+      name and timely TIN. At least one spouse must have the independently
+      confirmed, timely employment-valid SSN. Reconcile claimant and student
+      SSN and TIN answers to the return, including the case in which the
+      other spouse qualifies and the student has a timely TIN. Use the
+      $180,000 threshold and $20,000 phase-out band for line 6. The joint
+      return does not take the under-24 restriction on line 7. Apply the
+      existing whole-dollar transfers and actual Credit Limit Worksheet
+      amount. Keep both spouses' identifiers out of the saved review PDF.
+    sources:
+      - "https://www.irs.gov/pub/irs-prior/f8863--2026.pdf"
+      - "https://www.irs.gov/pub/irs-dft/i8863--dft.pdf (2026 draft, identification requirement and lines 7, 20 and 21)"
+    testRef: "tests/pdf/form-8863-2026-candidate.test.ts::reopens verified joint student-spouse AOTC transfers without identity fields"
+    testRefs:
+      - "tests/pdf/form-8863-2026-candidate.test.ts::holds contradictory or unverified joint student-spouse evidence"
   - line: "private-student-return-name"
     description: "Verify line 20 identity without printing it in the private transfer review"
     formula: "Require the positive primary AOTC student's name to match the actual return name by spelling and punctuation, ignoring differences in case and whitespace. Hold a blank or mismatched name even when current workpapers match the canonical input hash. Leave line 20 and all other identity widgets blank on the private PDF."

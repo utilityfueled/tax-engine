@@ -125,6 +125,18 @@ const transferWorkpapers = z.object({
   form8863Line19: wholeDollars,
 }).strict();
 
+function jointClaimantSsn(person: TaxYearInput["taxpayer"]["primary"], educationAnswer: boolean | undefined, role: "primary" | "spouse") {
+  const householdAnswer = person.employmentValidSsnIssuedByDueDate;
+  if (householdAnswer !== undefined && educationAnswer !== undefined && householdAnswer !== educationAnswer) {
+    throw new Error(`Form 8863 review ${role} employment-valid SSN answers conflict with the return.`);
+  }
+  const eligible = educationAnswer ?? householdAnswer;
+  if (eligible === true && person.tinIssuedByDueDate === false) {
+    throw new Error(`Form 8863 review ${role} employment-valid SSN conflicts with the timely TIN answer.`);
+  }
+  return eligible;
+}
+
 /** Verify separate, confirmed original workpapers without turning on the full 2026 return. */
 export function projectForm88632026Transfers(rawInput: TaxYearInput, rawWorkpapers: unknown) {
   const { taxYear, sha256, printedReferences } = FORM_8863_2026_CANDIDATE;
@@ -142,27 +154,53 @@ export function projectForm88632026Transfers(rawInput: TaxYearInput, rawWorkpape
     throw new Error("Form 8863 review workpapers must match the current canonical return.");
   }
 
-  const { educationExpenses: education, taxpayer: { primary, filingStatus } } = input;
-  if (filingStatus !== "single" || !education || education.aocStudents.length !== 1 || education.llcStudents?.length
+  const { educationExpenses: education, taxpayer: { primary, spouse, filingStatus } } = input;
+  const joint = filingStatus === "married_filing_jointly";
+  if ((!joint && filingStatus !== "single") || !education || education.aocStudents.length !== 1 || education.llcStudents?.length
     || !d(education.llcExpenses).isZero() || input.form2555 || education.possessionIncomeExclusion === undefined
     || !d(education.possessionIncomeExclusion).isZero() || education.claimedAsDependent !== false
     || education.nonresidentAlien !== false || input.standardDeductionFacts?.nonresidentAlien === true
     || input.standardDeductionFacts?.dualStatusAlien === true || education.aocBanInEffect !== false
     || education.form8862Required !== false) {
-    throw new Error("Form 8863 review requires one ordinary primary AOTC claim on a single return.");
+    throw new Error("Form 8863 review requires one ordinary AOTC claim for a single filer or a student spouse on a joint return.");
   }
   const [student] = education.aocStudents;
   const school = student.institutions?.[0];
   const primaryTin = primary.ssn.replaceAll("-", "");
-  const primarySsnEligible = education.primarySsnEligible ?? primary.employmentValidSsnIssuedByDueDate;
-  if (!/^\d{9}$/.test(primaryTin) || student.studentRole !== "primary" || student.studentTaxId?.replaceAll("-", "") !== primaryTin
-    || primarySsnEligible !== true || primary.employmentValidSsnIssuedByDueDate === false || primary.tinIssuedByDueDate === false
-    || education.primaryTinEligible === false || student.studentSsnEligible === false || student.studentTinEligible !== true
-    || student.institutionEligible !== true || student.expensesEligibilityConfirmed !== true || student.form1098TRequirementMet !== true) {
-    throw new Error("Form 8863 review requires the actual eligible primary student and confirmed education facts.");
+  const person = joint ? spouse : primary;
+  const studentTin = person?.ssn.replaceAll("-", "");
+  if (!person || !/^\d{9}$/.test(primaryTin) || !studentTin || !/^\d{9}$/.test(studentTin)
+    || student.studentRole !== (joint ? "spouse" : "primary") || student.studentTaxId?.replaceAll("-", "") !== studentTin
+    || (joint && (primaryTin === studentTin || !primary.firstName.trim() || !primary.lastName.trim()))) {
+    throw new Error("Form 8863 review student identity must match the actual return household role.");
   }
-  const name = educationStudentReturnName(student.name, primary);
+  const name = educationStudentReturnName(student.name, person);
   if (name === undefined) throw new Error("Form 8863 review student name must match the name on the return.");
+  if (student.studentTinEligible !== true || person.tinIssuedByDueDate === false || (joint && person.tinIssuedByDueDate !== true)) {
+    throw new Error("Form 8863 review requires confirmed student timely TIN facts.");
+  }
+
+  const primarySsnEligible = joint ? jointClaimantSsn(primary, education.primarySsnEligible, "primary")
+    : education.primarySsnEligible ?? primary.employmentValidSsnIssuedByDueDate;
+  const spouseSsnEligible = joint ? jointClaimantSsn(person, education.spouseSsnEligible, "spouse") : undefined;
+  if (joint) {
+    if (education.primaryTinEligible !== undefined && ((primary.tinIssuedByDueDate !== undefined
+      && education.primaryTinEligible !== primary.tinIssuedByDueDate) || (primarySsnEligible === true && !education.primaryTinEligible))) {
+      throw new Error("Form 8863 review primary timely TIN answers conflict with the joint return.");
+    }
+    if (spouseSsnEligible === undefined || (student.studentSsnEligible !== undefined && student.studentSsnEligible !== spouseSsnEligible)) {
+      throw new Error("Form 8863 review student SSN answers are unknown or conflict with the joint return.");
+    }
+    if (primarySsnEligible !== true && spouseSsnEligible !== true) {
+      throw new Error("Form 8863 review requires at least one spouse with a timely employment-valid SSN.");
+    }
+  } else if (primarySsnEligible !== true || primary.employmentValidSsnIssuedByDueDate === false
+    || education.primaryTinEligible === false || student.studentSsnEligible === false) {
+    throw new Error("Form 8863 review requires the actual eligible primary student.");
+  }
+  if (student.institutionEligible !== true || student.expensesEligibilityConfirmed !== true || student.form1098TRequirementMet !== true) {
+    throw new Error("Form 8863 review requires confirmed student education facts.");
+  }
   if (student.institutions?.length !== 1 || !school?.name.trim() || !school.address.trim()
     || !school.ein || school.ein.replaceAll("-", "") !== student.institutionEin?.replaceAll("-", "")
     || school.receivedCurrentYear1098T !== true) {
@@ -170,7 +208,7 @@ export function projectForm88632026Transfers(rawInput: TaxYearInput, rawWorkpape
   }
   const refundableFacts = education.refundableAocFacts;
   const result = calculateForm8863({
-    taxYear, filingStatus, primarySsnEligible, primaryDateOfBirth: primary.dateOfBirth,
+    taxYear, filingStatus, primarySsnEligible, spouseSsnEligible, primaryDateOfBirth: primary.dateOfBirth,
     claimedAsDependent: education.claimedAsDependent, nonresidentAlien: education.nonresidentAlien,
     aocBanInEffect: education.aocBanInEffect, form8862Required: education.form8862Required,
     refundableAocEligible: education.refundableAocEligible,
