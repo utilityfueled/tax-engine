@@ -3,7 +3,7 @@
     "aiSourceFirstCaseReviewEvidenceKey": "activeContinuation.nov27AiSourceFirstCaseReview",
     "asOf": "2026-11-27",
     "branch": "main",
-    "applicationCommit": "f8c87ff7261e3f673a8bbc79ad7be6e7eaefb261",
+    "applicationCommit": "513fba11dad05e177a5cb12301b6adcf1f13d490",
     "latestScopedApplicationCommit": "513fba11dad05e177a5cb12301b6adcf1f13d490",
     "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
     "latestSchedule8812PayrollActcEvidenceKey": "activeContinuation.nov27Schedule8812PayrollActc",
@@ -203,11 +203,11 @@
     "annualScheduleBSourceEvidenceKey": "activeContinuation.nov24ScheduleBFinalSource",
     "annualScheduleBReviewEvidenceKey": "activeContinuation.nov24ScheduleBOrdinaryReview",
     "pensionTaxableAmountEvidenceKey": "activeContinuation.nov24ReportedPensionTaxableAmount",
-    "completeLocalBaselineEvidenceKey": "activeContinuation.nov27AiAndStudentSpouseCombined",
+    "completeLocalBaselineEvidenceKey": "activeContinuation.nov27GuidedHsaCivilDatesCombined",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov27ExactFederalPaymentCombined",
     "remaining": [
-      "Both strict Linux browser gates and final image evidence remain open. AMD64 CI 46102497156, Web 46102497114 and Docker 46102497101 for fc7c3bd9 were queued. The ARM64 incumbent 46085907600 was queued for a runner and e32a4591e 46091464368 was pending in the same concurrency group. The separate older ARM64 comparison 46066052234 passed archive and Compose recovery and failed nine strict browser cases. Its worker diagnostic timed out with both settings. Earlier AMD64 46023825170 passed recovery and failed runtime browser and immutable image evidence.",
+      "Both strict Linux browser gates and final image evidence remain open. The exact 513fba11d AMD64 CI 46106161592, Web 46106161639 and Docker 46106161572 were queued with no artifacts. The ARM64 incumbent 46085907600 was queued for a runner and e32a4591e 46091464368 was pending in the same concurrency group. The separate older ARM64 comparison 46066052234 passed archive and Compose recovery and failed nine strict browser cases. Its worker diagnostic timed out with both settings. Earlier AMD64 46023825170 passed recovery and failed runtime browser and immutable image evidence.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 27 public npm audits of the unchanged lockfile returned zero findings across 550 total and 457 production packages.",
@@ -215,11 +215,88 @@
     ]
   },
   "activeContinuation": {
+    "nov27GuidedHsaCivilDatesCombined": {
+      "commit": "513fba11dad05e177a5cb12301b6adcf1f13d490",
+      "browserStoragePreflight": {
+        "requiredAvailableKiB": 3670016,
+        "firstAvailableKiB": 3646004,
+        "passingAvailableKiB": 5092776,
+        "preflightRetryPassed": true
+      },
+      "exactArchiveSha256": "6742dbdd8d1f3907823057e00bfdaa96f06d1f29b8784f9ee30b37c5a1358d55",
+      "localEvidenceMarker": "nov27-guided-hsa-civil-dates-path",
+      "manifestSha256": "57aa693e84f73e6ddcffb474c2fbca508ca6567b72fc4d29b0b42a07c6e71c47",
+      "allElevenLocalChecksPassed": true,
+      "commandsPassed": [
+        "test",
+        "coverage",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "build",
+        "build-web",
+        "lint",
+        "browser"
+      ],
+      "prerequisites": {
+        "node": "26.13.1",
+        "pypdf": "6.10.0"
+      },
+      "officialSampleDocumentsVerified": 15,
+      "offlineEvaluatorArtifactCheckPassed": true,
+      "unit": {
+        "passed": 31492,
+        "skipped": 83
+      },
+      "coverage": {
+        "passed": 31492,
+        "skipped": 83,
+        "branchPercent": "88.77"
+      },
+      "browser": {
+        "passed": 655,
+        "skipped": 5,
+        "windows": 9,
+        "listenerCleanup": true,
+        "summarySha256": "9b3b747164b6ed96e1e1a76fb1a4fe487578af6f1a0f950081bba4cda5f65bc2",
+        "sourceBuildSha256": "39980f71d321e214f1bce410c4457cef83a9a75eb3693323808eb452f1391cb9"
+      },
+      "standaloneEncryptedRecovery": {
+        "exit": 0,
+        "logSha256": "6657410a51252f2b96d694700e1cf710e6ab8757ed00104a5d42732794ef30a6",
+        "receiptSha256": "bbd3f286c796bf62c9231b1405e9f6613c95c62bb737277dffb4818986ab2f55",
+        "listenerCleanup": true
+      },
+      "linuxNativeQualified": false,
+      "hostedQualified": false
+    },
+    "nov27FinalParentFormRefresh": {
+      "asOf": "2026-11-27",
+      "federal": {
+        "currentFinalYear": 2025,
+        "draftCreatedDate": "2026-08-19",
+        "currentFinal": "https://www.irs.gov/pub/irs-pdf/f1040.pdf",
+        "draft2026": "https://www.irs.gov/pub/irs-dft/f1040--dft.pdf"
+      },
+      "pennsylvania": {
+        "currentFinalYear": 2025,
+        "currentFinal": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40.pdf"
+      },
+      "ohio": {
+        "draftFormsAnnounced": "2026-11-06",
+        "draftInstructionsAnnounced": "2026-11-13",
+        "draftInstructions": "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf",
+        "standalone2026FormVerified": false
+      },
+      "final2026ParentPacketsVerified": false
+    },
     "nov27MainPushProductionCustody": {
       "firstCommit": "17d1dc024",
-      "lastCommit": "e9ebf072d",
-      "observedProductionTargetRecords": 7,
-      "canceled": 7,
+      "lastCommit": "ad217622f",
+      "observedProductionTargetRecords": 8,
+      "canceled": 8,
       "activeOrReady": 0,
       "source": "https://vercel.com/utility-fueled-llc/tax-engine/deployments"
     },
