@@ -246,7 +246,10 @@ export function summarizeProviderEvalJournal(plan: ProviderEvalPlan, records: re
     const results = records.filter((item): item is Extract<EvalJournalRecord, { type: "result" }> => item.type === "result" && item.attemptId === dispatch.attemptId);
     const reconciliations = records.filter((item): item is Extract<EvalJournalRecord, { type: "reconcile" }> => item.type === "reconcile" && item.attemptId === dispatch.attemptId);
     const [result] = results;
-    if (result?.observedAt && !timestampAtOrBefore(dispatch.startedAt, result.observedAt)) {
+    // Only a legacy result can omit its observation. A dispatch without a result is unobserved.
+    const observedAt = result ? result.observedAt : null;
+    const observation = observedAt === undefined ? {} : { observedAt };
+    if (observedAt && !timestampAtOrBefore(dispatch.startedAt, observedAt)) {
       throw new Error("Journal result observation cannot precede dispatch.");
     }
     const requestedModel = profile(dispatch.profileId).model;
@@ -285,14 +288,14 @@ export function summarizeProviderEvalJournal(plan: ProviderEvalPlan, records: re
       if (assumedUsage) legacyUnverified = legacyUnverified.plus(calculateAiCost(requestedModel, dispatch.startedAt, evalUsageSchema.parse(assumedUsage)).providerCostUsd);
     }
     if (dispatch.kind === "capability") {
-      const capabilityPassed = !!resultUsage && result?.capabilityPassed === true && result.observedAt !== null;
+      const capabilityPassed = !!resultUsage && result?.capabilityPassed === true && observedAt !== null;
       capabilityAccounting.push({
         profileId: dispatch.profileId, startedAt: dispatch.startedAt, maximumUsd: dispatch.maximumUsd,
-        settlement: usage ? { usage, recordedAt: resultUsage ? result?.observedAt ?? null : reconciliation.at } : null,
+        settlement: usage ? { usage, recordedAt: resultUsage ? observedAt ?? null : reconciliation.at } : null,
       });
       template.availability?.push({ profileId: dispatch.profileId, status: capabilityPassed ? "available" : result?.status === "unavailable" ? "unavailable" : "failed",
         checkedAt: dispatch.startedAt, expiresAt: new Date(Date.parse(dispatch.startedAt) + PROVIDER_EVAL_CONTRACT.capabilityLifetimeMs).toISOString(),
-        ...(result?.observedAt === undefined ? {} : { observedAt: result.observedAt }),
+        ...observation,
         evidenceReference: `run:${plan.runId}:${dispatch.attemptId}`, structuredOutput: capabilityPassed,
         reasoningEffort: capabilityPassed, reportedUsage: !!usage,
         reason: capabilityPassed ? "Account accepted the selected model/effort and returned the strict probe with reported usage. This does not prove reasoning quality or account retention settings." : "Capability request failed, was unavailable or lacked authoritative usage/model/schema evidence." });
@@ -304,8 +307,7 @@ export function summarizeProviderEvalJournal(plan: ProviderEvalPlan, records: re
       template.entries.push({ profileId: dispatch.profileId, fixtureId: dispatch.fixtureId, fixtureVersion: 1, repeat: dispatch.repeat,
         elapsedMs: result?.elapsedMs ?? null, applicationSchemaValid: evaluation?.applicationSchemaValid ?? null,
         output: evaluation?.output ?? null, independentReview: null,
-        attempts: [{ profileId: dispatch.profileId, startedAt: dispatch.startedAt, usage,
-          ...(result?.observedAt === undefined ? {} : { observedAt: result.observedAt }),
+        attempts: [{ profileId: dispatch.profileId, startedAt: dispatch.startedAt, usage, ...observation,
           ...(reconciliation?.billedModel === undefined || evidenceDigest === undefined ? {} : { billingEvidence: {
             billedModel: reconciliation.billedModel, evidenceReference: evidenceDigest,
             recordedAt: reconciliation.at, usageSource: "reconciliation" as const,

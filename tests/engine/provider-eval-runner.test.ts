@@ -22,6 +22,13 @@ function setup(maximumProviderUsd = "1", start = at, expiresAt = "2026-10-25T13:
 const good = { status: "completed" as const, usage: { inputTokens: 100, outputTokens: 100 }, elapsedMs: 50,
   reportedModel: "gpt-6-luna", responseReference: "response:test", payload: { probe: "ok" } };
 
+function interruptAfterDispatch(state: ReturnType<typeof setup>, kind: "capability" | "case") {
+  return async (record: EvalJournalRecord) => {
+    await state.append(record);
+    if (record.type === "dispatch" && record.kind === kind) throw new Error("Synthetic interruption after durable dispatch.");
+  };
+}
+
 async function priorVerifiedReceiptAndNextHold() {
   const state = setup();
   const transport = vi.fn().mockResolvedValueOnce(good)
@@ -153,11 +160,78 @@ describe("guarded repeated provider executor", () => {
       p95LatencyMs: null, schemaValidity: null,
     });
     for (const cutoff of [caseAt, "2026-10-25T12:00:00.006007Z"]) {
-      expect.soft(group(cutoff)).toMatchObject({ knownProviderCostUsd: "0.00006", knownFilingSeasonCostUsd: "0.00006", p95LatencyMs: 4 });
+      expect.soft(group(cutoff)).toMatchObject({ knownProviderCostUsd: "0.00006", knownFilingSeasonCostUsd: "0.00006", p95LatencyMs: 4,
+        schemaValidity: 0, criticalFieldExactMatch: 0 });
     }
+    const legacyRecords = state.records.map(record => {
+      if (record.type !== "result" || !record.attemptId.endsWith(":1")) return record;
+      const { observedAt: _observedAt, ...legacy } = record;
+      return legacy;
+    });
+    const legacyTemplate = summarizeProviderEvalJournal(state.plan, legacyRecords).template;
+    expect(legacyTemplate.entries[0]?.attempts[0]).not.toHaveProperty("observedAt");
+    expect(summarizeProviderModelLiveEvalTemplate(legacyTemplate, undefined, probeAt).groups
+      .find(item => item.profileId === "luna-high" && item.task === "income-extraction"))
+      .toMatchObject({ knownProviderCostUsd: "0.00006", p95LatencyMs: 4, schemaValidity: 0, criticalFieldExactMatch: 0 });
     expect(transport).toHaveBeenCalledTimes(4);
     expect(result.knownProviderCostUsd).toBe("0.00024");
     expect(result.productionPromotion).toBe(false);
+  });
+  it("excludes a bare case dispatch from observed quality even after a dated receipt", async () => {
+    const state = setup();
+    const dispatchedAt = "2026-10-25T12:00:00.000002Z";
+    const settledAt = "2026-10-25T12:00:00.000004Z";
+    let clock = at;
+    const transport = vi.fn(async () => {
+      clock = dispatchedAt;
+      return good;
+    });
+    await expect(executeProviderEval({ ...state, now: () => clock, transport, append: interruptAfterDispatch(state, "case") }))
+      .rejects.toThrow("Synthetic interruption after durable dispatch.");
+    expect(transport).toHaveBeenCalledTimes(1);
+    const pending = summarizeProviderEvalJournal(state.plan, state.records);
+    expect(pending).toMatchObject({ knownProviderCostUsd: "0.00006", unknownMaximumUsd: "0.0111056" });
+    const reportGroup = (template: typeof pending.template, cutoff: string) => summarizeProviderModelLiveEvalTemplate(template, undefined, cutoff)
+      .groups.find(item => item.profileId === "luna-high" && item.task === "income-extraction");
+    const noObservedResult = { completedRuns: 0, acceptedRuns: 0, schemaValidity: null, criticalFieldExactMatch: null, p95LatencyMs: null };
+    expect(reportGroup(pending.template, at)).toMatchObject(noObservedResult);
+    expect.soft(reportGroup(pending.template, dispatchedAt)).toMatchObject({ ...noObservedResult, knownProviderCostUsd: "0", providerCostUsd: null });
+
+    await state.append(reconcileProviderEvalAttempt(state.plan, state.records, {
+      attemptId: "luna-high:case-income-w2-zero-withholding:1", evidenceReference: "test-only-case-receipt",
+      billedModel: "gpt-6-luna", usage: good.usage, at: settledAt,
+    }));
+    const recovered = summarizeProviderEvalJournal(state.plan, state.records);
+    expect(recovered).toMatchObject({ knownProviderCostUsd: "0.00012", unknownMaximumUsd: "0" });
+    expect.soft(recovered.template.entries[0]?.attempts[0]).toHaveProperty("observedAt", null);
+    expect.soft(reportGroup(recovered.template, "2026-10-25T12:00:00.000003Z"))
+      .toMatchObject({ ...noObservedResult, knownProviderCostUsd: "0", providerCostUsd: null });
+    expect.soft(reportGroup(recovered.template, settledAt))
+      .toMatchObject({ ...noObservedResult, knownProviderCostUsd: "0.00006", providerCostUsd: "0.00006" });
+  });
+  it("keeps a bare capability dispatch held without reporting failed capability", async () => {
+    const state = setup();
+    const transport = vi.fn(async () => good);
+    await expect(executeProviderEval({ ...state, transport, append: interruptAfterDispatch(state, "capability") }))
+      .rejects.toThrow("Synthetic interruption after durable dispatch.");
+    expect(transport).not.toHaveBeenCalled();
+    const pending = summarizeProviderEvalJournal(state.plan, state.records);
+    const report = (template: typeof pending.template, cutoff: string) => summarizeProviderModelLiveEvalTemplate(template, undefined, cutoff);
+    const availability = (summary: ReturnType<typeof report>) => summary.groups.find(item => item.profileId === "luna-high" && item.task === "income-extraction")?.availability;
+    expect(report(pending.template, "2026-10-25T11:59:59.999999Z").capabilityAccounting).toEqual([]);
+    const pendingAtDispatch = report(pending.template, at);
+    expect.soft(availability(pendingAtDispatch)).toBeNull();
+    expect(pendingAtDispatch.capabilityAccounting?.[0]).toMatchObject({ providerCostUsd: null, unknownMaximumUsd: "0.0016896" });
+
+    const settledAt = "2026-10-25T12:00:00.000002Z";
+    await state.append(reconcileProviderEvalAttempt(state.plan, state.records, {
+      attemptId: "luna-high:capability:0", evidenceReference: "test-only-probe-receipt", billedModel: "gpt-6-luna", usage: good.usage, at: settledAt,
+    }));
+    const { template } = summarizeProviderEvalJournal(state.plan, state.records);
+    expect.soft(template.availability?.[0]).toHaveProperty("observedAt", null);
+    const settled = report(template, settledAt);
+    expect.soft(availability(settled)).toBeNull();
+    expect(settled.capabilityAccounting?.[0]).toMatchObject({ providerCostUsd: "0.00006", unknownMaximumUsd: "0" });
   });
   it("stops before transport when the send clock precedes the durable dispatch", async () => {
     const state = setup();

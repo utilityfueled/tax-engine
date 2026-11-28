@@ -266,8 +266,11 @@ lines:
       latency, response references and direct usage at the observation instant.
       Before then, a dispatched case has unknown actual and filing-season costs
       and its response is excluded from observed quality rates.
+      A durable case or probe dispatch with no result exports an explicit null
+      observation. Its reservation remains visible, but neither case quality
+      nor capability status is observed, even after billing reconciliation.
       Keep receipt-dated reconciliation independent of result observation and
-      preserve existing behavior for historical records without the field.
+      preserve existing behavior for historical result records without the field.
       For a case with a later escalation, include each earlier dispatched
       attempt's observed costs and evidence at the cutoff. Keep the combined
       costs unknown while any recorded attempt is still undispatched at the
@@ -282,3 +285,5 @@ lines:
       - "tests/engine/provider-eval-runner.test.ts::releases the reservation when pre-send clock sampling throws"
       - "tests/engine/provider-eval-runner.test.ts::preserves authoritative probe and case charges when result clock sampling throws"
       - "tests/engine/provider-model-eval.test.ts::keeps unobserved responses and later receipts out of earlier reports"
+      - "tests/engine/provider-eval-runner.test.ts::excludes a bare case dispatch from observed quality even after a dated receipt"
+      - "tests/engine/provider-eval-runner.test.ts::keeps a bare capability dispatch held without reporting failed capability"
