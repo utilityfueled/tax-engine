@@ -48,6 +48,7 @@ import { actualCompensationSourceYear } from "./guided-compensation-reporting";
 import { buildTipIncomeInputs, tipIncomeFactErrors } from "./guided-tip-income-facts";
 import { buildGuidedForm8919ReasonA } from "./guided-form-8919-reason-a";
 import { buildGuidedRenterHomeOffice } from "./guided-form-8829-renter";
+import { buildGuidedOwnedHomeOffice } from "./guided-form-8829-owned-home";
 import { buildGuidedSaversCredit, guidedSaversCreditContext } from "./guided-savers-credit";
 import { buildHealthInsuranceInput, healthInsuranceSourceErrors } from "./guided-health-insurance-facts";
 import { buildHsaInputs, hsaFactErrors } from "./guided-hsa-facts";
@@ -873,7 +874,8 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     assertKnownFacts(combatPayElectionErrors(w2Data?.entries, w2Data?.combatPayElection, segmentation.filingStatus));
     assertKnownFacts(investmentFactErrors(investData, segmentation.filingStatus, state.taxYear, stateReturnData, segmentation.stateCode, personalInfo, qofDiscovery.answer === false));
     assertKnownFacts(businessFactErrors(seData, segmentation.filingStatus, w2Data?.entries, stateReturnData, state.taxYear, state));
-    homeOffice = buildGuidedRenterHomeOffice(seData?.businessFacts?.homeOfficeRenter, state.taxYear, segmentation.stateCode);
+    homeOffice = buildGuidedOwnedHomeOffice(seData?.businessFacts?.homeOfficeOwned, state)
+      ?? buildGuidedRenterHomeOffice(seData?.businessFacts?.homeOfficeRenter, state.taxYear, segmentation.stateCode);
     if (creditsData?.saversCredit) form8880 = buildGuidedSaversCredit(creditsData.saversCredit, guidedSaversCreditContext(state));
     standardMileage = readGuidedBusinessMileage(seData, state);
     professionalWagering = seData && readGuidedProfessionalWagering(seData, state);

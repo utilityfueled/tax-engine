@@ -6,6 +6,7 @@ import Decimal from "decimal.js";
 import type { FilingStatus, GuidedFlowState, NecEntryData, SelfEmploymentSectionData, StateReturnData, W2EntryData } from "./guided-interview-flow";
 import { readGuidedBusinessMileage, type BusinessMileageDraft } from "./guided-business-mileage";
 import { buildGuidedRenterHomeOffice, type RenterHomeOfficeDraft } from "./guided-form-8829-renter";
+import { buildGuidedOwnedHomeOffice, type OwnedHomeOfficeDraft } from "./guided-form-8829-owned-home";
 import { readGuidedProfessionalWagering, type ProfessionalWageringDraft } from "./guided-professional-wagering";
 import { parseGuidedCurrency, sumGuidedDisplayAmounts } from "./guided-currency";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
@@ -17,6 +18,7 @@ export interface BusinessSourceData {
   goodwillAmortization?: GuidedGoodwillDraft;
   standardMileage?: BusinessMileageDraft;
   homeOfficeRenter?: RenterHomeOfficeDraft;
+  homeOfficeOwned?: OwnedHomeOfficeDraft;
   professionalWagering?: ProfessionalWageringDraft;
   depreciationMethod?: "manual" | "assets" | "passenger";
   passengerSources?: import("./guided-passenger-sources").GuidedPassengerDraft;
@@ -79,6 +81,11 @@ export function businessFactErrors(data: SelfEmploymentSectionData | undefined, 
   try { buildGuidedRenterHomeOffice(facts.homeOfficeRenter, returnYear, flow?.segmentation.stateCode); }
   catch (error) { errors.homeOfficeRenter = error instanceof Error ? error.message : "Check the original home-office records."; }
   if (facts.homeOfficeRenter && facts.professionalWagering) errors.homeOfficeRenter = "This home-office worksheet requires one ordinary Schedule C business.";
+  try { buildGuidedOwnedHomeOffice(facts.homeOfficeOwned, flow); }
+  catch (error) { errors.homeOfficeOwned = error instanceof Error ? error.message : "Check the original owned home-office records."; }
+  if (facts.homeOfficeOwned && (facts.homeOfficeRenter || facts.professionalWagering)) {
+    errors.homeOfficeOwned = "This owned home-office worksheet requires one home and one ordinary Schedule C business.";
+  }
   const wageringStarted = facts.professionalWagering !== undefined;
   try { readGuidedProfessionalWagering(data, flow); }
   catch (error) { errors.professionalWagering = error instanceof Error ? error.message : "Check the professional wagering ledger."; }

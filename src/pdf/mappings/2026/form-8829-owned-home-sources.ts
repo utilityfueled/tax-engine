@@ -1,4 +1,4 @@
-/** Private Form 8829 owned-home projection. Spec: spec/federal/form-8829-2026-template.yaml. */
+/** Form 8829 owned-home source binding. Spec: spec/federal/form-8829-2026-template.yaml. */
 import Decimal from "decimal.js";
 import { z } from "zod";
 import { Form8829Schema, type Form8829Input } from "@/models/inputs.js";
@@ -14,7 +14,7 @@ const qualifiedExpense = currentPropertyAmount.extend({
   qualifiedPaidOrKnownZeroNotDeductedElsewhereConfirmed: z.literal(true),
 });
 
-const ownedHomeReviewSources = z.strictObject({
+const ownedHomePropertySources = z.strictObject({
   taxYear: z.literal(2026),
   propertyReference: reference,
   purchase: datedPropertyOriginal,
@@ -29,15 +29,18 @@ const ownedHomeReviewSources = z.strictObject({
     businessSquareFeet: z.number().int().positive(),
     totalSquareFeet: z.number().int().positive(),
   }),
+  adjustedBasis: firstUseValuation,
+  fairMarketValue: firstUseValuation,
+  mortgageInterest: qualifiedExpense,
+  realEstateTaxes: qualifiedExpense,
+});
+
+const ownedHomeReviewSources = ownedHomePropertySources.extend({
   scheduleCLine29: currentPropertyAmount.extend({
     singleScheduleCBusinessUsingHomeConfirmed: z.literal(true),
     allGrossIncomeFromBusinessUseOfHomeConfirmed: z.literal(true),
     incomeSourceNote: reference,
   }),
-  adjustedBasis: firstUseValuation,
-  fairMarketValue: firstUseValuation,
-  mortgageInterest: qualifiedExpense,
-  realEstateTaxes: qualifiedExpense,
 });
 
 // IRS Form 8829 line 41 uses the published 39-year GDS full-year table rate.
@@ -50,10 +53,17 @@ function valuation({ total, land }: { total: string; land: string }) {
 }
 
 export function buildForm8829OwnedHomeReviewInput(raw: unknown): Form8829Input {
-  const source = ownedHomeReviewSources.parse(raw);
-  const { propertyReference, purchase, firstBusinessUse, floorArea, scheduleCLine29,
-    adjustedBasis, fairMarketValue, mortgageInterest, realEstateTaxes } = source;
-  if ([purchase, firstBusinessUse, floorArea, scheduleCLine29, adjustedBasis, fairMarketValue, mortgageInterest, realEstateTaxes]
+  const { scheduleCLine29, ...originals } = ownedHomeReviewSources.parse(raw);
+  if (scheduleCLine29.propertyReference !== originals.propertyReference) {
+    throw new Error("Form 8829 owned-home originals must identify the same property.");
+  }
+  return { ...buildForm8829OwnedHomePropertyInput(originals), grossIncomeLimit: scheduleCLine29.amount };
+}
+
+export function buildForm8829OwnedHomePropertyInput(raw: unknown): Form8829Input {
+  const { propertyReference, purchase, firstBusinessUse, floorArea,
+    adjustedBasis, fairMarketValue, mortgageInterest, realEstateTaxes } = ownedHomePropertySources.parse(raw);
+  if ([purchase, firstBusinessUse, floorArea, adjustedBasis, fairMarketValue, mortgageInterest, realEstateTaxes]
     .some(original => original.propertyReference !== propertyReference)) {
     throw new Error("Form 8829 owned-home originals must identify the same property.");
   }
@@ -80,7 +90,6 @@ export function buildForm8829OwnedHomeReviewInput(raw: unknown): Form8829Input {
   return Form8829Schema.parse({
     areaUsedForBusiness: businessSquareFeet,
     totalAreaOfHome: totalSquareFeet,
-    grossIncomeLimit: scheduleCLine29.amount,
     indirectExpenses: { excessMortgageInterest: mortgageInterest.amount, excessRealEstateTaxes: realEstateTaxes.amount },
     adjustedBasisOrFairMarketValue: lower.total.toFixed(),
     landValue: lower.land.toFixed(),

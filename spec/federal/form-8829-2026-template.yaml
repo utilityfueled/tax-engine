@@ -140,6 +140,27 @@ lines:
     testRef: "tests/pdf/form-8829-2026-candidate.test.ts::holds conflicting owned-home basis, land, dates, and expense originals"
     testRefs:
       - "tests/pdf/form-8829-2026-candidate.test.ts::uses the lower first-use market value and confirmed zero home expenses"
+  - line: "guided-ordinary-owned-home"
+    description: "Calculate from one owned home's confirmed source records in the federal interview"
+    formula: >-
+      Apply the ordinary owned-home expense, area and first-use depreciation
+      source contract to one federal-only 2026 return with an explicit
+      standard deduction election and an ordinary Schedule C activity. Bind
+      the original purchase, first business use, basis, market value, area,
+      paid qualified mortgage interest and paid real estate taxes to the
+      same home. Require confirmation of continuous unchanged exclusive
+      qualifying use and the same allocation percentage for both expenses.
+      Use the live Schedule C line 29 as Form 8829 line 8, without accepting
+      a separate amount for line 8 or the deduction. Transfer available
+      Form 8829 line 36 once to Schedule C line 30. Hold concurrent renter
+      or wagering worksheets, missing or inconsistent originals, other
+      return years, and amendments to the home, business, filer or deduction
+      election until the relevant source facts are reconfirmed.
+    sources:
+      - "https://www.irs.gov/pub/irs-prior/f8829--2026.pdf"
+      - "https://www.irs.gov/instructions/i8829 (2025 final, lines 8, 16, 17, and 37–41)"
+      - "https://www.irs.gov/pub/irs-dft/i8829--dft.pdf (2026 draft)"
+    testRef: "tests/guided-interview/guided-form-8829-renter.test.ts::projects documented owned-home expenses through the live Schedule C calculation"
   - line: "closed-exports"
     description: "Keep the candidate outside public review and filing"
     formula: "Keep the historical packet reference, review template registry and 2026 export policy in effect. The physical candidate has no export registration."

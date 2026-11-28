@@ -1830,6 +1830,7 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
   const cardTipSchedule = additionalDeductions?.schedule1A?.businessTips.some(row => row.form1099KProof) ? additionalDeductions.schedule1A : undefined;
   const businessFacts = selfEmployment?.businessFacts;
   const renterHomeOffice = businessFacts?.homeOfficeRenter;
+  const ownedHomeOffice = businessFacts?.homeOfficeOwned;
   const rentals = state.sectionData["income-rental"];
   const royalties = state.sectionData["income-royalties"];
   const investments = state.sectionData["income-investments"];
@@ -1905,7 +1906,7 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
           } : {}),
         },
       } : {}),
-      ...(selfEmployment && (selfEmployment.cardTipSource || businessFacts?.incomeReconciled === true || businessFacts?.expensesReconciled === true || renterHomeOffice?.confirmed === true) ? {
+      ...(selfEmployment && (selfEmployment.cardTipSource || businessFacts?.incomeReconciled === true || businessFacts?.expensesReconciled === true || renterHomeOffice?.confirmed === true || ownedHomeOffice?.confirmed === true) ? {
         "income-self-employment": {
           ...selfEmployment,
           ...(selfEmployment.cardTipSource ? { cardTipSource: clearCardTipStatementConfirmation(selfEmployment.cardTipSource) } : {}),
@@ -1914,6 +1915,7 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
             ...(businessFacts.incomeReconciled === true ? { incomeReconciled: null } : {}),
             ...(businessFacts.expensesReconciled === true ? { expensesReconciled: null } : {}),
             ...(renterHomeOffice?.confirmed === true ? { homeOfficeRenter: { ...renterHomeOffice, confirmed: false } } : {}),
+            ...(ownedHomeOffice?.confirmed === true ? { homeOfficeOwned: { ...ownedHomeOffice, confirmed: false } } : {}),
           } } : {}),
         },
       } : {}),
@@ -2689,7 +2691,19 @@ export function updateSectionData(
       businessMileageOriginals(previousBusiness?.businessFacts), businessMileageOriginals(nextBusiness?.businessFacts),
     ))
   );
-  const scheduleCValues=(value:SelfEmploymentSectionData|undefined)=>value?{...value,businessFacts:value.businessFacts?{...value.businessFacts,incomeReconciled:undefined,expensesReconciled:undefined,standardMileage:undefined,homeOfficeRenter:value.businessFacts.homeOfficeRenter?{...value.businessFacts.homeOfficeRenter,confirmed:undefined}:undefined,passengerSources:value.businessFacts.passengerSources?{...value.businessFacts.passengerSources,sourceFactsConfirmed:undefined,originalInput:undefined,originalDraft:undefined}:undefined,macrsAssets:value.businessFacts.macrsAssets?{...value.businessFacts.macrsAssets,sourceFactsConfirmed:undefined,originalBusiness:undefined,originalCollection:undefined}:undefined}:undefined}:value;
+  const scheduleCValues = (value: SelfEmploymentSectionData | undefined) => value && {
+    ...value,
+    businessFacts: value.businessFacts && {
+      ...value.businessFacts,
+      incomeReconciled: undefined,
+      expensesReconciled: undefined,
+      standardMileage: undefined,
+      homeOfficeRenter: value.businessFacts.homeOfficeRenter ? { ...value.businessFacts.homeOfficeRenter, confirmed: undefined } : undefined,
+      homeOfficeOwned: value.businessFacts.homeOfficeOwned ? { ...value.businessFacts.homeOfficeOwned, confirmed: undefined } : undefined,
+      passengerSources: value.businessFacts.passengerSources ? { ...value.businessFacts.passengerSources, sourceFactsConfirmed: undefined, originalInput: undefined, originalDraft: undefined } : undefined,
+      macrsAssets: value.businessFacts.macrsAssets ? { ...value.businessFacts.macrsAssets, sourceFactsConfirmed: undefined, originalBusiness: undefined, originalCollection: undefined } : undefined,
+    },
+  };
   const previousCreditValues = state.sectionData.credits;
   const nextCreditValues = sectionId === "credits" ? data as CreditsData | undefined : undefined;
   const commercialReviewEntered = state.taxYear === 2026 && sectionId === "credits"
@@ -2703,6 +2717,8 @@ export function updateSectionData(
       ? guidedSourceValuesChanged(creditsWithoutCommercialOriginal(previousCreditValues), creditsWithoutCommercialOriginal(nextCreditValues))
       : sourceValuesChanged;
   const renterHomeOfficeChanged = scheduleCValuesChanged && ["personal-info", "income-self-employment"].includes(sectionId) && nextBusiness?.businessFacts?.homeOfficeRenter;
+  const ownedHomeOfficeChanged = scheduleCValuesChanged && ["personal-info", "income-self-employment", "deductions"].includes(sectionId)
+    && nextBusiness?.businessFacts?.homeOfficeOwned;
   const scheduleCSourcesChanged=scheduleCValuesChanged && ["personal-info","income-self-employment","adjustments","credits"].includes(sectionId) && nextBusiness?.businessFacts?.scheduleCSourceFacts;
   const macrsSourcesChanged=scheduleCValuesChanged && ["personal-info","income-self-employment","income-rental","income-royalties","adjustments","credits"].includes(sectionId) && nextBusiness?.businessFacts?.macrsAssets;
   const passengerSourcesChanged=scheduleCValuesChanged && nextBusiness?.businessFacts?.passengerSources;
@@ -3056,13 +3072,14 @@ export function updateSectionData(
       } } : {}),
       ...((invalidatedOhioStateReturn ?? invalidatedPAStateReturn) ? { "state-return": invalidatedOhioStateReturn ?? invalidatedPAStateReturn } : {}),
       ...(invalidatedW2 ? { "income-w2": invalidatedW2 } : {}),
-      ...((scheduleCSourcesChanged || macrsSourcesChanged || passengerSourcesChanged || mileageSourcesChanged || wageringSourcesChanged || renterHomeOfficeChanged || cardTipRecipientChanged) && nextBusiness ? {
+      ...((scheduleCSourcesChanged || macrsSourcesChanged || passengerSourcesChanged || mileageSourcesChanged || wageringSourcesChanged || renterHomeOfficeChanged || ownedHomeOfficeChanged || cardTipRecipientChanged) && nextBusiness ? {
         "income-self-employment": {
           ...nextBusiness,
           ...(cardTipRecipientChanged && cardTipRecipient ? { cardTipSource: clearCardTipStatementConfirmation(cardTipRecipient) } : {}),
           businessFacts: {
             ...nextBusiness.businessFacts,
             ...(renterHomeOfficeChanged ? { homeOfficeRenter: { ...renterHomeOfficeChanged, confirmed: false } } : {}),
+            ...(ownedHomeOfficeChanged ? { homeOfficeOwned: { ...ownedHomeOfficeChanged, confirmed: false } } : {}),
             ...(scheduleCSourcesChanged ? { scheduleCSourceFacts: { ...scheduleCSourcesChanged, sourceFactsConfirmed: null } } : {}),
             ...(macrsSourcesChanged ? { macrsAssets: { ...macrsSourcesChanged, sourceFactsConfirmed: null } } : {}),
             ...(passengerSourcesChanged ? { passengerSources: { ...passengerSourcesChanged, sourceFactsConfirmed: null } } : {}),

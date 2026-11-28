@@ -7,12 +7,14 @@ import {GoodwillAmortizationDetails} from "./goodwill-amortization-details";
 import { MacrsAssetDetails } from "./macrs-asset-details";
 import { CurrencyField } from "./currency-field";
 import { guidedSourceValuesChanged } from "@/lib/guided-source-confirmation";
+import { OwnedHomeOfficeDetails } from "./owned-home-office-details";
 import { RenterHomeOfficeDetails } from "./renter-home-office-details";
 
 export function BusinessSourceDetails({ data = {}, taxYear, onChange, onCapturePassenger }: { data?: BusinessSourceData; taxYear: number | null | undefined; onChange: (data: BusinessSourceData) => void; onCapturePassenger?:(facts:BusinessSourceData)=>GuidedPassengerDraft }) {
   const patch = (next: Partial<BusinessSourceData>) => {
     const values = (facts: BusinessSourceData) => ({ ...facts, incomeReconciled: undefined, expensesReconciled: undefined, goodwillAmortization:facts.goodwillAmortization?{...facts.goodwillAmortization,sourceFactsConfirmed:undefined,originalCollection:undefined}:undefined, passengerSources:facts.passengerSources?{...facts.passengerSources,sourceFactsConfirmed:undefined,originalInput:undefined,originalDraft:undefined}:undefined,
       homeOfficeRenter: facts.homeOfficeRenter ? { ...facts.homeOfficeRenter, confirmed: undefined } : undefined,
+      homeOfficeOwned: facts.homeOfficeOwned ? { ...facts.homeOfficeOwned, confirmed: undefined } : undefined,
     });
     const changed = guidedSourceValuesChanged(values(data), values({ ...data, ...next }));
     const goodwillValues=(facts:BusinessSourceData)=>({...values(facts),scheduleCSourceFacts:facts.scheduleCSourceFacts?{...facts.scheduleCSourceFacts,sourceFactsConfirmed:undefined}:undefined});
@@ -104,9 +106,10 @@ export function BusinessSourceDetails({ data = {}, taxYear, onChange, onCaptureP
     <TextFact label="Description of other deductible business expenses" value={data.otherExpenseDescription ?? ""} onChange={otherExpenseDescription => patch({ otherExpenseDescription, expensesReconciled: null })} />
     <BooleanFact label="Is this a specified service trade or business for section 199A?" value={data.isSST} onChange={isSST => patch({ isSST })} />
     <BooleanFact label="Is all your investment in this activity at risk under section 465?" value={data.allInvestmentAtRisk} onChange={allInvestmentAtRisk => patch({ allInvestmentAtRisk })} />
-    <RenterHomeOfficeDetails data={data.homeOfficeRenter} taxYear={taxYear} onChange={homeOfficeRenter => patch({ homeOfficeRenter })} />
+    {(!data.homeOfficeOwned || data.homeOfficeRenter) && <RenterHomeOfficeDetails data={data.homeOfficeRenter} taxYear={taxYear} onChange={homeOfficeRenter => patch({ homeOfficeRenter })} />}
+    {(!data.homeOfficeRenter || data.homeOfficeOwned) && <OwnedHomeOfficeDetails data={data.homeOfficeOwned} taxYear={taxYear} onChange={homeOfficeOwned => patch({ homeOfficeOwned })} />}
     <BooleanFact label={taxYear === 2026
-      ? "Does this activity need any worksheets beyond the renter home-office records above, such as another home-office worksheet, passive-loss, accounting-method-change, or special income exclusions?"
+      ? "Does this activity need any worksheets beyond the supported home-office records above, such as another home-office worksheet, passive-loss, accounting-method-change, or special income exclusions?"
       : "Does this activity require other unsupported worksheets, such as home-office, passive-loss, accounting-method-change or special income exclusions?"}
       value={data.additionalWorksheetRequired} onChange={additionalWorksheetRequired => patch({ additionalWorksheetRequired })} />
     <BooleanFact label="Are the meal amounts eligible business meals subject to the ordinary 50% limit?" value={data.mealsEligibilityConfirmed} onChange={mealsEligibilityConfirmed => patch({ mealsEligibilityConfirmed })} />
