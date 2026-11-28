@@ -15,6 +15,17 @@ the latest application revision, exact-source runs and open dependencies. The
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. The ARM64 group and the AMD64 jobs for `08c705b12` await runner assignment. The older ARM64 comparison failed nine strict browser cases after image and recovery passed. Qualify both final runtime images before publishing. |
 
+## November 27 source-first AI case review packet
+
+`9009af968` generates a source packet and blank decision worksheet for all
+240 frozen synthetic cases. They share the corpus and fixture digests and
+preserve the 160 development and 80 held-out cases. Reviewers receive the
+same requested field names, types, and audit IDs as the provider. Draft
+answers, review criteria and labels are omitted from the source packet.
+All 166 focused tests, evaluator typecheck, CLI export validation, eight
+static checks and independent engineering review passed. Human review
+remains pending for all 240 cases. [Independent case review instructions](ai-evaluation-executor.md#independent-case-review)
+
 ## November 27 exact local release checks on 505b82023
 
 All 11 retained checks passed from the exact `505b82023` archive. The unit

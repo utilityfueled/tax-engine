@@ -1,5 +1,6 @@
 {
   "resume": {
+    "aiSourceFirstCaseReviewEvidenceKey": "activeContinuation.nov27AiSourceFirstCaseReview",
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "08c705b1237f8a9a31c98dc5f1b58d0fbd17d3f0",
@@ -209,6 +210,36 @@
     ]
   },
   "activeContinuation": {
+    "nov27AiSourceFirstCaseReview": {
+      "commit": "9009af968452724ebd941fc1a94614ff3b60ef4f",
+      "exactArchiveSha256": "0bc660e1d4f564c383729549ee84caedc63cbae16656d7673ce9aa4ec91f0748",
+      "localEvidenceMarker": "nov27-ai-source-first-review-exact-path",
+      "fixtureCorpusSha256": "ef53b4f397db6470a8892157c4096864ce7bb202a99dad7164ce5ed5fcdd6d8b",
+      "sourcePacketSha256": "00008be013aa8bbfbd6d50dec60361d4c37c040b4d810a84b74a89a7c13186b0",
+      "blankDecisionWorksheetSha256": "4199fa70ca74a5215faca43ac4328ef83033ae35bbbc54d063f7d4a49032fc13",
+      "caseCounts": {
+        "development": 160,
+        "held-out": 80
+      },
+      "exactFocusedPassed": 166,
+      "checksPassed": [
+        "focused",
+        "offline-eval",
+        "contracts",
+        "spec",
+        "inventory",
+        "typecheck",
+        "build",
+        "web-types",
+        "lint",
+        "packet"
+      ],
+      "sameRequestedFieldTypesAndAuditIdsAsProvider": true,
+      "independentEngineeringReviewPassed": true,
+      "humanReviewsRecorded": 0,
+      "qualificationPassed": false,
+      "providerCalls": 0
+    },
     "nov27GuidedMortgageActualDatesCombined": {
       "commit": "08c705b1237f8a9a31c98dc5f1b58d0fbd17d3f0",
       "exactArchiveSha256": "a532fe05135c8c07d562a27afd4a35af615d0118d4873ad0af67f8c07b8ee138",
