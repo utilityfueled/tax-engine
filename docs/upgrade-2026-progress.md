@@ -8,12 +8,12 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `505b82023` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `39ae1406e` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
-| Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. The ARM64 group and the AMD64 jobs for `39ae1406e` await runner assignment. The older ARM64 comparison failed nine strict browser cases after image and recovery passed. Qualify both final runtime images before publishing. |
+| Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. The ARM64 group and the AMD64 jobs for `08c705b12` await runner assignment. The older ARM64 comparison failed nine strict browser cases after image and recovery passed. Qualify both final runtime images before publishing. |
 
 ## November 27 exact local release checks on 505b82023
 
@@ -25,6 +25,30 @@ app created an encrypted backup, deleted the synthetic workspace and
 restored it. Both isolated listeners closed. Node 26.13.1, pypdf 6.10.0,
 15 hash-verified official sample PDFs and the offline AI evaluation
 artifact check were used. Manifest SHA-256 `ae050cda8facb51d051646178a77276de4afdf74e8ad31ba4ded4dc63aec1a03`.
+
+## November 27 actual 2026 mortgage dates
+
+`08c705b12` holds a 2026 guided original when Box 3 origination, a
+purchase-points payment claimed in full, or an insurance contract issue
+date is later than local today. Each saved entry stays available and can
+qualify on its event date if the other checks pass. The existing requirement
+for lender-transfer reconciliation still applies to Box 11. All three
+regressions were reproduced before the fix. The exact archive passed 536
+focused tests, eight static checks and independent engineering review.
+[Form 1098 instructions](https://www.irs.gov/instructions/i1098) · [Publication 936](https://www.irs.gov/publications/p936) · [2026 Publication 505](https://www.irs.gov/publications/p505)
+
+The exact Linux jobs were queued for assignment. [AMD64 CI](https://github.com/utilityfueled/tax-engine/actions/runs/46099424628) · [Web](https://github.com/utilityfueled/tax-engine/actions/runs/46099424592) · [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/46099424569)
+
+## November 27 exact local release checks on 39ae1406e
+
+All 11 retained checks passed from the exact `39ae1406e` archive. The unit
+and coverage suites each passed 31,469 tests with 83 skips.
+Branch coverage was 88.75% against the 85% gate. Managed Chromium passed
+655 cases with 5 skips across all 9 windows. The standalone
+app created an encrypted backup, deleted the synthetic workspace and
+restored it. Both isolated listeners closed. Node 26.13.1, pypdf 6.10.0,
+15 hash-verified official sample PDFs and the offline AI evaluation
+artifact check were used. Manifest SHA-256 `85132150e82b4ddcf3244b056c31438f9646b9e007ffe67729ce1ca0ded9b399`.
 
 ## November 27 actual Form 8880 receipt dates
 

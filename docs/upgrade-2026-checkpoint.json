@@ -2,11 +2,11 @@
   "resume": {
     "asOf": "2026-11-27",
     "branch": "main",
-    "applicationCommit": "505b82023f61b71bc029117a6181c7e85bf7d1e3",
-    "latestScopedApplicationCommit": "39ae1406e0e6b8f27dd2cc4a84d25e8cb75752ce",
-    "latestCombinedCandidateCommit": "39ae1406e0e6b8f27dd2cc4a84d25e8cb75752ce",
+    "applicationCommit": "39ae1406e0e6b8f27dd2cc4a84d25e8cb75752ce",
+    "latestScopedApplicationCommit": "08c705b1237f8a9a31c98dc5f1b58d0fbd17d3f0",
+    "latestCombinedCandidateCommit": "08c705b1237f8a9a31c98dc5f1b58d0fbd17d3f0",
     "nov27FullBrowserCollectionEvidenceKey": "activeContinuation.nov27FullBrowserCollection",
-    "latestScopedChecksEvidenceKey": "activeContinuation.nov27Form8880ReceiptDate",
+    "latestScopedChecksEvidenceKey": "activeContinuation.nov27GuidedMortgageActualDates",
     "nov27ExactFederalPaymentTotalsEvidenceKey": "activeContinuation.nov27ExactFederalPaymentTotals",
     "nov27ExactFederalPaymentCombinedEvidenceKey": "activeContinuation.nov27ExactFederalPaymentCombined",
     "nov27Arm64WorkerPairEvidenceKey": "activeContinuation.nov27Arm64WorkerPair",
@@ -197,11 +197,11 @@
     "annualScheduleBSourceEvidenceKey": "activeContinuation.nov24ScheduleBFinalSource",
     "annualScheduleBReviewEvidenceKey": "activeContinuation.nov24ScheduleBOrdinaryReview",
     "pensionTaxableAmountEvidenceKey": "activeContinuation.nov24ReportedPensionTaxableAmount",
-    "completeLocalBaselineEvidenceKey": "activeContinuation.nov27Form8829OwnedHomeCombined",
+    "completeLocalBaselineEvidenceKey": "activeContinuation.nov27Form8880ReceiptDateCombined",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov27ExactFederalPaymentCombined",
     "remaining": [
-      "Both strict Linux browser gates and final image evidence remain open. AMD64 CI 46096174247, Web 46096174251 and Docker 46096174231 for 39ae1406e were queued. The ARM64 incumbent 46085907600 was queued for a runner and e32a4591e 46091464368 was pending in the same concurrency group. The separate older ARM64 comparison 46066052234 passed archive and Compose recovery and failed nine strict browser cases. Its worker diagnostic timed out with both settings. Earlier AMD64 46023825170 passed recovery and failed runtime browser and immutable image evidence.",
+      "Both strict Linux browser gates and final image evidence remain open. AMD64 CI 46099424628, Web 46099424592 and Docker 46099424569 for 08c705b12 were queued. The ARM64 incumbent 46085907600 was queued for a runner and e32a4591e 46091464368 was pending in the same concurrency group. The separate older ARM64 comparison 46066052234 passed archive and Compose recovery and failed nine strict browser cases. Its worker diagnostic timed out with both settings. Earlier AMD64 46023825170 passed recovery and failed runtime browser and immutable image evidence.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 27 public npm audits of the unchanged lockfile returned zero findings across 550 total and 457 production packages.",
@@ -209,6 +209,89 @@
     ]
   },
   "activeContinuation": {
+    "nov27GuidedMortgageActualDates": {
+      "commit": "08c705b1237f8a9a31c98dc5f1b58d0fbd17d3f0",
+      "exactArchiveSha256": "a532fe05135c8c07d562a27afd4a35af615d0118d4873ad0af67f8c07b8ee138",
+      "localEvidenceMarker": "nov27-guided-mortgage-actual-dates-path",
+      "commandsPassed": [
+        "focused",
+        "offline-eval",
+        "contracts",
+        "spec",
+        "inventory",
+        "typecheck",
+        "build",
+        "web-types",
+        "lint"
+      ],
+      "focusedTestsPassed": 536,
+      "independentEngineeringReviewPassed": true,
+      "independentFocusedTestsPassed": 53,
+      "scope": "2026 guided actual originals require Box 3 origination, current-year full-deduction purchase-point payment and qualified insurance issue dates on or before local today. Stored entries and existing lender-transfer review are retained.",
+      "sources": [
+        "https://www.irs.gov/instructions/i1098",
+        "https://www.irs.gov/publications/p936",
+        "https://www.irs.gov/publications/p505"
+      ],
+      "preFixRegressionsReproduced": 3,
+      "amd64": {
+        "ciQueued": 46099424628,
+        "webQueued": 46099424592,
+        "dockerQueued": 46099424569
+      },
+      "filingQualified": false
+    },
+    "nov27Form8880ReceiptDateCombined": {
+      "commit": "39ae1406e0e6b8f27dd2cc4a84d25e8cb75752ce",
+      "exactArchiveSha256": "a860b939877f268db07e2d3cb19d4f21209886fb55652c8189350ec059bc5453",
+      "localEvidenceMarker": "nov27-form8880-receipt-date-path",
+      "manifestSha256": "85132150e82b4ddcf3244b056c31438f9646b9e007ffe67729ce1ca0ded9b399",
+      "allElevenLocalChecksPassed": true,
+      "commandsPassed": [
+        "test",
+        "coverage",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "build",
+        "build-web",
+        "lint",
+        "browser"
+      ],
+      "prerequisites": {
+        "node": "26.13.1",
+        "pypdf": "6.10.0"
+      },
+      "officialSampleDocumentsVerified": 15,
+      "offlineEvaluatorArtifactCheckPassed": true,
+      "unit": {
+        "passed": 31469,
+        "skipped": 83
+      },
+      "coverage": {
+        "passed": 31469,
+        "skipped": 83,
+        "branchPercent": "88.75"
+      },
+      "browser": {
+        "passed": 655,
+        "skipped": 5,
+        "windows": 9,
+        "listenerCleanup": true,
+        "summarySha256": "9b3b747164b6ed96e1e1a76fb1a4fe487578af6f1a0f950081bba4cda5f65bc2",
+        "sourceBuildSha256": "3a27f1a361531e563f7dcea6ca4331e17896376740a34a4ee1e78ae95255c44c"
+      },
+      "standaloneEncryptedRecovery": {
+        "exit": 0,
+        "logSha256": "f5b1137dcfa8b4977125588e2dedbdb3ce5c7104a752f565231278cf5eaa8740",
+        "receiptSha256": "30ed56b319ce8ed11f664ed2544213ce28ea9c813756473eef3a23ea76dbfa68",
+        "listenerCleanup": true
+      },
+      "linuxNativeQualified": false,
+      "hostedQualified": false
+    },
     "nov27Form8829OwnedHomeCombined": {
       "commit": "505b82023f61b71bc029117a6181c7e85bf7d1e3",
       "exactArchiveSha256": "2541e51c7564c802818e6b7f5679789226f21e9203d812be882ecbc776e1ab8f",
