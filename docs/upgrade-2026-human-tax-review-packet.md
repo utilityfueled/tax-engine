@@ -1070,3 +1070,27 @@ Explain how the opening basis and the $4,000 prior at-risk balance affect
 the separate worksheets. Identify any fact that would require Part III or
 recapture in this scenario.
 [Form 6198](https://www.irs.gov/pub/irs-pdf/f6198.pdf) · [IRS instructions](https://www.irs.gov/instructions/i6198) · [26 U.S.C. §465](https://uscode.house.gov/us/usc/119-124/t26/s465/)
+
+## November 28 recipient classification for direct 2026 gifts
+
+For `c545b7a76`, use a single 2026 taxpayer who takes the standard
+deduction, has a $100,000 contribution base and has no charitable
+carryovers or other gifts. Each gift has the required documentation.
+Evaluate these three independent cases and identify the recipient facts
+that determine the result.
+
+- A $500 cash gift to an eligible public charity described in
+  §170(b)(1)(A). The organization is neither a supporting organization
+  nor a donor-advised fund. The taxpayer receives no benefit.
+- A $500 cash gift to a qualified nonprofit cemetery described in
+  §170(c)(5), for its general exempt purposes. The cemetery has no
+  qualifying §170(b)(1)(A) status. The taxpayer receives no benefit.
+- A $500 payment to the eligible public charity in the first case.
+  The fair market value of the goods and services received is $500.
+
+Derive the allowable standard-deduction charitable amount under §170(p)
+for each case. Explain whether a saved answer that the recipient is not a
+private foundation can establish §170(b)(1)(A) status on its own. For the
+last case, also state whether the payment creates any charitable carryover
+or affects a charitable calculation involving a net operating loss.
+[26 U.S.C. §170](https://uscode.house.gov/us/usc/119-124/t26/s170/) · [IRS Publication 526](https://www.irs.gov/publications/p526)
