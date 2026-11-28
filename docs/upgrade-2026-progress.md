@@ -23,6 +23,19 @@ jq '.resume | {latestScopedApplicationCommit, remaining}' docs/upgrade-2026-chec
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local Chromium and encrypted recovery passed. [Exact Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/46123814219), [CI](https://github.com/utilityfueled/tax-engine/actions/runs/46123814311) and [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/46123814368) remained queued. [ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/46120985997) remained pending on the earlier revision. The previous ARM64 image and Compose checks passed and the strict browser check failed nine cases. |
 
+## November 28 actual zero Form 6198 Part II capacity
+
+`3afb03ba4` applies the ordinary 2026 Part II calculation when the original
+workpaper produces exactly zero on line 10a. In the synthetic partnership
+case, the $6,000 basis-admitted loss is fully suspended, Form 6198 lines 10b,
+20 and 21 are zero, and federal AGI remains $85,000. A negative result of
+one cent still stops for separate Part III and recapture review before the
+worksheet floor. The exact-zero regression failed before the change.
+Independent engineering passed six controls. The exact package passed
+577 focused tests and eight static checks. Filing qualification
+remains open. [IRS Form 6198 instructions](https://www.irs.gov/instructions/i6198)
+· [26 U.S.C. §465](https://uscode.house.gov/us/usc/t26/s465/)
+
 ## November 28 prepaid mortgage insurance charitable fixture
 
 `c545b7a76` passed its focused tests but the full unit suite found four

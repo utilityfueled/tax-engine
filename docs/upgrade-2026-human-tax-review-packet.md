@@ -1069,6 +1069,10 @@ Part IV lines 20 and 21, the Schedule E transfer and the suspended loss.
 Explain how the opening basis and the $4,000 prior at-risk balance affect
 the separate worksheets. Identify any fact that would require Part III or
 recapture in this scenario.
+For `3afb03ba4`, repeat the case with the full $12,000 included in basis
+but protected against loss. Derive lines 10a, 10b, 20 and 21, the current
+Schedule E deduction and the suspended loss. Explain the recapture inquiry
+if the actual Part II decreases instead exceed opening basis by one cent.
 [Form 6198](https://www.irs.gov/pub/irs-pdf/f6198.pdf) · [IRS instructions](https://www.irs.gov/instructions/i6198) · [26 U.S.C. §465](https://uscode.house.gov/us/usc/119-124/t26/s465/)
 
 ## November 28 recipient classification for direct 2026 gifts

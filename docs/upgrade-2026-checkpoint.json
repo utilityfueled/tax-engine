@@ -4,7 +4,7 @@
     "asOf": "2026-11-28",
     "branch": "main",
     "applicationCommit": "7c1dfb42e459217dca53e3afc57db66d4369c91e",
-    "latestScopedApplicationCommit": "7c1dfb42e459217dca53e3afc57db66d4369c91e",
+    "latestScopedApplicationCommit": "3afb03ba441a689a88f4251c1d1c63fcde82acc3",
     "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
     "latestSchedule8812PayrollActcEvidenceKey": "activeContinuation.nov27Schedule8812PayrollActc",
     "latestGuidedHsaCivilDatesEvidenceKey": "activeContinuation.nov27GuidedHsaCivilDates",
@@ -217,6 +217,31 @@
     ]
   },
   "activeContinuation": {
+    "nov28Form6198OriginalExactZero": {
+      "commit": "3afb03ba441a689a88f4251c1d1c63fcde82acc3",
+      "archiveSha256": "1d57b8911d2b9aee730c1769b7267a8fcb87a1de6a743c6ebea800799892f4a4",
+      "sourceTree": "1ba06348007cc8f31eb0aec5c3ae615599d3f965",
+      "localEvidenceMarker": "nov27-form6198-zero-capacity-path",
+      "exactFocusedTestsPassed": 577,
+      "checksPassed": [
+        "focused",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
+      "reproducedExactZeroRegression": true,
+      "independentEngineeringTestsPassed": 6,
+      "fullySuspendedBasisAdmittedOrdinaryLossDollars": "6000",
+      "federalAgiDollars": "85000",
+      "negativeOneCentHeldBeforePartIIFloor": true,
+      "finalQualifiedTaxReviewComplete": false,
+      "filingPromoted": false
+    },
     "nov28ExactFilingAiCharityCombined": {
       "commit": "7c1dfb42e459217dca53e3afc57db66d4369c91e",
       "exactArchiveSha256": "37b4c66b491b366cc39ccd337082159594d1ef7ccf28eed92ddee67449480a8d",
