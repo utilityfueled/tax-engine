@@ -13,7 +13,19 @@ the latest application revision, exact-source runs and open dependencies. The
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
-| Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. The ARM64 group and the AMD64 jobs for `505b82023` await runner assignment. The older ARM64 comparison failed nine strict browser cases after image and recovery passed. Qualify both final runtime images before publishing. |
+| Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. The ARM64 group and the AMD64 jobs for `39ae1406e` await runner assignment. The older ARM64 comparison failed nine strict browser cases after image and recovery passed. Qualify both final runtime images before publishing. |
+
+## November 27 actual Form 8880 receipt dates
+
+`39ae1406e` holds future Form 8880 receipts in the 2026 interview. A saved
+receipt can qualify on its local civil date if it is before the ordinary
+or extended due date. The saved source, confirmed-zero path and direct
+canonical aggregate contract are preserved. Three cases failed before the
+change, and 319 exact-source focused tests passed afterward. Independent
+engineering review verified the New York midnight transition and historical
+private PDF compatibility. [Final 2026 Form 8880, line 4](https://www.irs.gov/pub/irs-prior/f8880--2026.pdf#page=2)
+
+The exact Linux jobs await assignment. [AMD64 CI](https://github.com/utilityfueled/tax-engine/actions/runs/46096174247) · [Web](https://github.com/utilityfueled/tax-engine/actions/runs/46096174251) · [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/46096174231)
 
 ## November 27 education identity and owned-home review
 
