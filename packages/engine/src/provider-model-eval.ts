@@ -168,10 +168,17 @@ function wasObservedBy(observedAt: string | null | undefined, cutoff?: string): 
   return observedAt !== null && (observedAt === undefined || cutoff === undefined || timestampAtOrBefore(observedAt, cutoff));
 }
 
-function entryAsOf(entry: ProviderModelLiveEvalEntry, cutoff?: string): ProviderModelLiveEvalEntry {
-  if (wasObservedBy(entry.attempts.at(-1)?.observedAt, cutoff)) return entry;
+type ReportEntry = ProviderModelLiveEvalEntry & { awaitingDispatch: boolean; responseObserved: boolean };
+
+function entryAsOf(entry: ProviderModelLiveEvalEntry, cutoff?: string): ReportEntry {
+  const attempts = cutoff === undefined ? entry.attempts
+    : entry.attempts.filter(attempt => timestampAtOrBefore(attempt.startedAt, cutoff));
+  const awaitingDispatch = attempts.length !== entry.attempts.length;
+  const responseObserved = !awaitingDispatch && wasObservedBy(attempts.at(-1)?.observedAt, cutoff);
+  if (responseObserved) return { ...entry, awaitingDispatch, responseObserved };
   const { measurement } = entry;
-  return { ...entry, elapsedMs: null, applicationSchemaValid: null, output: null, independentReview: null,
+  return { ...entry, attempts, awaitingDispatch, responseObserved,
+    elapsedMs: null, applicationSchemaValid: null, output: null, independentReview: null,
     ...(measurement && { measurement: { ...measurement, normalizationStatus: "failed", applicationOutput: null,
       privacyFailure: false, responseReference: null, reportedModel: null } }) };
 }
@@ -196,7 +203,7 @@ export function scoreProviderEvalEntry(entry: ProviderModelLiveEvalEntry, fixtur
   const observed = entryAsOf(entry);
   return scoreForCorpus(observed, fixture, providerEvalCorpusDigest(), countAttemptEvidenceReferences([observed]));
 }
-function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEvalFixture, currentCorpusDigest: string,
+function scoreForCorpus(entry: ReportEntry, fixture: ProviderEvalFixture, currentCorpusDigest: string,
   evidenceReferences: ReadonlyMap<string, number>, cutoff?: string) {
   const provenanceMatches = hasCurrentProviderEvalProvenance(entry.measurement, fixture, currentCorpusDigest)
     && entry.fixtureId === fixture.id && entry.fixtureVersion === fixture.version;
@@ -249,7 +256,7 @@ function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEval
   let knownFilingSeasonCost = new Money(0);
   let assumedActualCost = new Money(0);
   let assumedFilingSeasonCost = new Money(0);
-  let allCostsKnown = entry.attempts.length > 0;
+  let allCostsKnown = entry.attempts.length > 0 && !entry.awaitingDispatch;
   let billingEvidenceUnverified = false;
   for (const { attempt, usage, billingEvidence } of attemptsAsOf) {
     const profile = candidate(attempt.profileId);
@@ -376,8 +383,8 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
   const validated = parseProviderModelLiveEvalTemplate(template);
   const reportCutoff = z.iso.datetime({ offset: true }).parse(reportAt);
   const reportEntries = validated.entries
-    .filter(entry => entry.attempts.every(attempt => timestampAtOrBefore(attempt.startedAt, reportCutoff)))
-    .map(entry => entryAsOf(entry, reportCutoff));
+    .map(entry => entryAsOf(entry, reportCutoff))
+    .filter(entry => !entry.awaitingDispatch || entry.attempts.length > 0);
   const reportPreflights = (validated.preflightEntries ?? []).filter(entry => timestampAtOrBefore(entry.at, reportCutoff));
   const reportAvailability = (validated.availability ?? []).filter(evidence =>
     timestampAtOrBefore(evidence.checkedAt, reportCutoff) && wasObservedBy(evidence.observedAt, reportCutoff));
@@ -432,7 +439,7 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
   // again by a subsequent report.
   const preparedCases = new Map(fixtures.map(fixture => [fixture.id, prepareProviderEvalCase(fixture)]));
   const entryScores = new Map<ProviderModelLiveEvalEntry, ReturnType<typeof scoreForCorpus>>();
-  const scoreEntry = (entry: ProviderModelLiveEvalEntry, fixture: ProviderEvalFixture) => {
+  const scoreEntry = (entry: ReportEntry, fixture: ProviderEvalFixture) => {
     const previous = entryScores.get(entry);
     if (previous) return previous;
     const score = scoreForCorpus(entry, fixture, currentCorpusDigest, attemptEvidenceReferences, reportCutoff);
@@ -450,7 +457,7 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
       return { entry, result: scoreEntry(entry, fixture) };
     });
     const complete = scored.filter(item => item.result.complete);
-    const observedScores = scored.filter(({ entry }) => wasObservedBy(entry.attempts.at(-1)?.observedAt, reportCutoff));
+    const observedScores = scored.filter(({ entry }) => entry.responseObserved);
     const fields = observedScores.reduce((sum, item) => sum + item.result.requiredFields, 0);
     const exact = observedScores.reduce((sum, item) => sum + item.result.exactFields, 0);
     const accepted = scored.filter(item => item.result.accepted).length;
@@ -533,8 +540,7 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     const comparisonPlans = new Set([group, ...baselines].flatMap(item => [...(groupPlans.get(`${item.profileId}:${item.task}`) ?? [])]));
     if (comparisonPlans.size > 1) group.blockers.push("qualification-comparison-mixed-plans");
     if (baselines.some(item => !comparableBaselines.has(`${item.profileId}:${item.task}`))) group.blockers.push("baseline-comparison-incomplete");
-    const candidateEntries = reportEntries.filter(entry => entry.profileId === group.profileId
-      && wasObservedBy(entry.attempts.at(-1)?.observedAt, reportCutoff)
+    const candidateEntries = reportEntries.filter(entry => entry.profileId === group.profileId && entry.responseObserved
       && fixtures.find(fixture => fixture.id === entry.fixtureId)?.task === group.task);
     for (const entry of candidateEntries) {
       const fixture = fixtures.find(item => item.id === entry.fixtureId);

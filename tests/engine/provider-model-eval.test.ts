@@ -419,10 +419,10 @@ describe("measured task model evaluation", () => {
     const before = summarizeProviderModelLiveEvalTemplate(template, fixtures, justBefore);
     const beforeCandidate = before.groups.find(group => group.profileId === "luna-high" && group.task === extraction.task);
     const beforePreflight = before.groups.find(group => group.profileId === "sol-high" && group.task === preflight.task);
-    expect(before.entries).toBe(1);
+    expect.soft(before.entries).toBe(2);
     expect(beforeCandidate).toMatchObject({
       completedRuns: 1, acceptedRuns: 1, schemaValidity: 1,
-      providerCostUsd: scoreProviderEvalEntry(initial, extraction).actualCostUsd,
+      knownProviderCostUsd: "0.0012", providerCostUsd: null,
     });
     expect(beforeCandidate?.blockers).not.toContain("qualification-comparison-mixed-plans");
     expect(beforeCandidate?.blockers).not.toContain("provider-response-evidence-missing-or-reused");
@@ -443,6 +443,71 @@ describe("measured task model evaluation", () => {
     baselineAttempt.usage.inputTokens = -1;
     expect(() => summarizeProviderModelLiveEvalTemplate(template, fixtures, justBefore)).toThrow(/Invalid provider model live-eval file/);
     expect(() => summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [] }, fixtures, "2026-10-32T12:00:00Z")).toThrow();
+  });
+  it.each(["initial usage known", "initial usage unknown"])("preserves earlier escalation-chain accounting as of each dispatch and observation (%s)", evidence => {
+    const entry = run(extraction);
+    const initialObservedAt = "2026-10-24T12:00:01.000001Z";
+    const escalationStartedAt = "2026-10-24T12:00:04.000001Z";
+    const finalObservedAt = "2026-10-24T12:00:05.000002Z";
+    const initial = entry.attempts[0];
+    initial.observedAt = initialObservedAt;
+    initial.usage = evidence === "initial usage known" ? { inputTokens: 100, outputTokens: 100 } : null;
+    if (initial.usage) recordInitialBillingEvidence(entry, initialObservedAt);
+    entry.attempts.push({ profileId: "sol-high", startedAt: escalationStartedAt, observedAt: finalObservedAt,
+      usage: { inputTokens: 100, outputTokens: 100 } });
+    if (!entry.measurement) throw new Error("Missing synthetic measurement");
+    entry.measurement.reportedModel = "gpt-6.1-sol";
+    entry.independentReview = null;
+    entry.elapsedMs = 5001;
+
+    const template: ProviderModelLiveEvalTemplate = { version: 2, entries: [entry], availability };
+    const report = (cutoff: string) => summarizeProviderModelLiveEvalTemplate(template, undefined, cutoff);
+    const group = (cutoff: string) => report(cutoff).groups.find(item => item.profileId === entry.profileId && item.task === extraction.task);
+    expect(report("2026-10-24T11:59:59.999999Z").entries).toBe(0);
+    expect.soft(report(initial.startedAt).entries).toBe(1);
+    expect(group("2026-10-24T12:00:01.000000Z")).toMatchObject({ knownProviderCostUsd: "0", providerCostUsd: null });
+    const initialCost = initial.usage ? "0.00006" : "0";
+    for (const cutoff of [initialObservedAt, "2026-10-24T12:00:04.000000Z", escalationStartedAt, "2026-10-24T12:00:05.000001Z"]) {
+      expect(group(cutoff)).toMatchObject({
+        knownProviderCostUsd: initialCost, knownFilingSeasonCostUsd: initialCost, providerCostUsd: null, filingSeasonCostUsd: null,
+        schemaValidity: null, p95LatencyMs: null, completedRuns: 0, acceptedRuns: 0, eligibleForPromotionReview: false,
+      });
+    }
+    const settledCost = initial.usage ? "0.00126" : null;
+    for (const cutoff of [finalObservedAt, "2026-10-24T12:00:05.000003Z"]) {
+      expect(group(cutoff)).toMatchObject({
+        knownProviderCostUsd: settledCost ?? "0.0012", knownFilingSeasonCostUsd: settledCost ?? "0.0012",
+        providerCostUsd: settledCost, filingSeasonCostUsd: settledCost,
+        schemaValidity: 1, p95LatencyMs: 5001, completedRuns: 0, acceptedRuns: 0, eligibleForPromotionReview: false,
+      });
+    }
+  });
+  it("counts an early escalation receipt until a reused reference is observed", () => {
+    const entry = run(extraction);
+    const reference = providerEvalDigest("unit-test-only-reused-escalation-reference");
+    const receiptAt = "2026-10-24T12:00:01.000001Z";
+    const finalObservedAt = "2026-10-24T12:00:03.000001Z";
+    const initial = entry.attempts[0];
+    initial.observedAt = null;
+    initial.usage = { inputTokens: 100, outputTokens: 100 };
+    initial.billingEvidence = { billedModel: "gpt-6-luna", evidenceReference: reference, recordedAt: receiptAt, usageSource: "reconciliation" };
+    entry.attempts.push({ profileId: "sol-high", startedAt: "2026-10-24T12:00:02Z", observedAt: finalObservedAt,
+      usage: { inputTokens: 100, outputTokens: 100 },
+      billingEvidence: { billedModel: "gpt-6.1-sol", evidenceReference: reference, recordedAt: finalObservedAt } });
+    if (!entry.measurement) throw new Error("Missing synthetic measurement");
+    entry.measurement.reportedModel = "gpt-6.1-sol";
+    entry.measurement.responseReference = reference;
+    entry.independentReview = null;
+    entry.elapsedMs = 3001;
+    const group = (cutoff: string) => summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [entry], availability }, undefined, cutoff)
+      .groups.find(item => item.profileId === entry.profileId && item.task === extraction.task);
+
+    expect(group("2026-10-24T12:00:01.000000Z")).toMatchObject({ knownProviderCostUsd: "0", providerCostUsd: null });
+    for (const cutoff of [receiptAt, "2026-10-24T12:00:03.000000Z"]) {
+      expect(group(cutoff)).toMatchObject({ knownProviderCostUsd: "0.00006", assumedProviderCostUsd: "0", providerCostUsd: null });
+    }
+    expect(group(finalObservedAt)).toMatchObject({ knownProviderCostUsd: "0", assumedProviderCostUsd: "0.00126", providerCostUsd: null,
+      blockers: expect.arrayContaining(["attempt-billing-evidence-unverified"]) });
   });
   it("counts only dated response reviews that follow the measured result and meet the report cutoff", () => {
     const fixtureReviews = reviewedFixtures("2026-10-24");

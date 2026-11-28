@@ -222,6 +222,11 @@ probe overhead until regenerated from their journals. Regenerated historical
 journals can include an undated cost. A report with a time cutoff keeps its
 maximum separate because the journal lacks a response timestamp.
 
+When a report falls between case attempts, its known cost includes usage
+already observed or authoritatively reconciled by that cutoff. The combined
+case cost stays unknown while a recorded attempt has yet to start. The final
+response, latency and qualification count only once the response is observed.
+
 The reporter validates the recorded plan’s request policy. For a historical
 plan whose policy has changed, use its pinned source revision in `report` mode
 with credentials absent from the environment. Keep the original plan and

@@ -268,8 +268,15 @@ lines:
       and its response is excluded from observed quality rates.
       Keep receipt-dated reconciliation independent of result observation and
       preserve existing behavior for historical records without the field.
+      For a case with a later escalation, include each earlier dispatched
+      attempt's observed costs and evidence at the cutoff. Keep the combined
+      costs unknown while any recorded attempt is still undispatched at the
+      cutoff. Exclude the final response, latency and qualification until the
+      final observation.
     testRef: "tests/engine/provider-eval-runner.test.ts::reports probe availability and direct case usage only at or after observing each result"
     testRefs:
+      - "tests/engine/provider-model-eval.test.ts::preserves earlier escalation-chain accounting as of each dispatch and observation (%s)"
+      - "tests/engine/provider-model-eval.test.ts::counts an early escalation receipt until a reused reference is observed"
       - "tests/engine/provider-eval-runner.test.ts::stops before transport when the send clock precedes the durable dispatch"
       - "tests/engine/provider-eval-runner.test.ts::preserves known charges without dating a result when the clock regresses"
       - "tests/engine/provider-eval-runner.test.ts::releases the reservation when pre-send clock sampling throws"
