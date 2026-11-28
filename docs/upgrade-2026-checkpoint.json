@@ -2,7 +2,7 @@
   "resume": {
     "asOf": "2026-11-27",
     "branch": "main",
-    "applicationCommit": "183535fb25e1559d4acbb62d208e32c4b30e1a4d",
+    "applicationCommit": "dcfd227f5febe42d318ac8f4ebf1f7fd048caa53",
     "latestScopedApplicationCommit": "b5efb12bcbde7e18468202e7f983984e92e973b8",
     "latestCombinedCandidateCommit": "dcfd227f5febe42d318ac8f4ebf1f7fd048caa53",
     "nov27FullBrowserCollectionEvidenceKey": "activeContinuation.nov27FullBrowserCollection",
@@ -187,7 +187,7 @@
     "annualScheduleBSourceEvidenceKey": "activeContinuation.nov24ScheduleBFinalSource",
     "annualScheduleBReviewEvidenceKey": "activeContinuation.nov24ScheduleBOrdinaryReview",
     "pensionTaxableAmountEvidenceKey": "activeContinuation.nov24ReportedPensionTaxableAmount",
-    "completeLocalBaselineEvidenceKey": "activeContinuation.nov27CommercialVehicleCarryback",
+    "completeLocalBaselineEvidenceKey": "activeContinuation.nov27FullBrowserCollection",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov27CombinedDependentDonationExact",
     "remaining": [
@@ -223,11 +223,77 @@
       "actualDeductionsCount": 36,
       "arm64Workflow": {
         "correctedRun": 46085907600,
-        "correctedRunStatus": "pending",
+        "correctedRunStatus": "queued",
         "supersededRun": 46084566024,
         "supersededRunConclusion": "cancelled"
       },
-      "combinedLocalChecks": "running"
+      "combinedLocalChecks": "all 11 passed",
+      "combinedLocalManifestSha256": "203d95ae13d91bff9e7154ca93778ec2a89587e3f62049cbb6d6a1e1ae785a44",
+      "completedChecks": [
+        "test",
+        "coverage",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "build",
+        "build-web",
+        "lint",
+        "browser"
+      ],
+      "officialSampleCount": 15,
+      "prerequisites": {
+        "node": "26.13.1",
+        "pypdf": "6.10.0"
+      },
+      "unit": {
+        "passed": 31424,
+        "skipped": 83
+      },
+      "coverage": {
+        "passed": 31424,
+        "skipped": 83,
+        "branchPercent": "88.74"
+      },
+      "browser": {
+        "passed": 655,
+        "skipped": 5,
+        "windows": 9,
+        "listenerCleanup": true,
+        "summarySha256": "9b3b747164b6ed96e1e1a76fb1a4fe487578af6f1a0f950081bba4cda5f65bc2",
+        "sourceBuildSha256": "9a601cbf22292891d74bb49991d4fdb5b8cf332b5b8e72f06f67e8aa05016431"
+      },
+      "standalone": {
+        "exit": 0,
+        "logSha256": "1647bea122705434cb150cc3d0b325891b7d5ec22e54ef0f30d486cf11167143",
+        "receiptSha256": "ca9d8e631e07e1d25deef474d9c18f2786c6b91d3b635264a66867115249483c",
+        "listenerCleanup": true
+      },
+      "exactRemoteRuns": {
+        "arm64": 46085907600,
+        "amd64Web": 46085895008,
+        "docker": 46085895106,
+        "ci": 46085895070,
+        "statusAtVerification": "queued"
+      },
+      "priorNativeArm64Rehearsal": {
+        "run": 46057962832,
+        "job": 140720960329,
+        "revisionPrefix": "86fe42b9b",
+        "strictCases": 659,
+        "strictPassed": 643,
+        "strictFailed": 11,
+        "strictSkips": 5,
+        "strictPerCaseDeadlineMs": 30000,
+        "strictRetries": 0,
+        "sameFailureSourceLocationAsEarlier": 5,
+        "isolatedComposeRecoveryPassed": true,
+        "immutableRuntimeEvidencePassed": true,
+        "sanitizedTimingArtifact": 15239357722,
+        "workerComparisonRun": 46066052234,
+        "workerComparisonStatusAtVerification": "in_progress"
+      }
     },
     "nov27Form8863PrivateTransfer": {
       "commit": "b5efb12bcbde7e18468202e7f983984e92e973b8",

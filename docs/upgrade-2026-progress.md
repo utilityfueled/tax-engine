@@ -8,12 +8,12 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `183535fb2` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. `dcfd227f5` is the exact successor in verification after correcting the browser collection pin. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `dcfd227f5` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
-| Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
+| Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. The updated native ARM64 run and the AMD64 jobs need runner assignment. The previous ARM64 browser still failed 11 cases after image and recovery passed. Qualify both final runtime images before publishing. |
 
 ## November 27 full browser collection correction
 
@@ -26,14 +26,35 @@ web builds and standalone encrypted recovery. The full browser runner
 stopped during collection because the deduction file had 36 tests
 and its independent inventory still pinned 35.
 
-`dcfd227f5` records 660 discovered tests across nine windows. The
+`dcfd227f5` records 660 collected tests across nine windows. The
 30-second diagnostic collection matches all 14 existing targets.
 The request ceilings and the five expected skips are preserved.
-All 166 focused checks and eight static checks passed. The
-exact-source combined local run is now in Chromium. GitHub queued
-the corrected ARM64 rehearsal and cancelled the earlier pending
-stale-audit run through workflow concurrency.
-[Corrected ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/46085907600).
+All 166 focused checks and eight static checks passed.
+
+The clean tracked archive passed the 11 required local checks with
+Node 26.13.1, pypdf 6.10.0 and 15 verified official sample PDFs. The
+unit and coverage commands each passed 31,424 tests and retained 83
+skips. Branch coverage was 88.74%. Strict local Chromium passed 655
+cases with five existing skips across nine windows. The standalone
+synthetic encrypted backup, deletion and restoration passed. Both
+test listeners closed. Manifest SHA-256
+`203d95ae13d91bff9e7154ca93778ec2a89587e3f62049cbb6d6a1e1ae785a44`.
+
+GitHub queued the corrected ARM64 rehearsal and cancelled the pending
+stale-audit run through workflow concurrency. The preceding ARM64
+revision passed the independent image import, Compose upgrade and
+recovery, and immutable runtime evidence. Its strict browser run
+failed the same 11 of 659 cases as the earlier run, with five skips,
+30-second deadlines and zero retries. Only five failures stopped
+at the same source location. The timing records identify neither a
+single application bottleneck nor a measured infrastructure cause.
+The independent worker-count comparison is still running, and the
+exact corrected run and AMD64 jobs await runner assignment.
+[Previous ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/46057962832) ·
+[Timing artifact](https://github.com/utilityfueled/tax-engine/actions/runs/46057962832/artifacts/15239357722) ·
+[Corrected ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/46085907600) ·
+[Worker-count comparison](https://github.com/utilityfueled/tax-engine/actions/runs/46066052234) ·
+[Corrected AMD64 Web run](https://github.com/utilityfueled/tax-engine/actions/runs/46085895008).
 
 ## November 27 private Form 8863 transfer proof
 
