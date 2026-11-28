@@ -323,7 +323,11 @@ describe("Final 2026 Form 8889 physical candidate", () => {
 
   it("renders a fully qualified family distribution as an explicit zero", async () => {
     const spouse = TaxYearInputSchema.parse({
-      ...ordinary, taxpayer: { ...ordinary.taxpayer, filingStatus: "married_filing_jointly", spouse: ordinary.taxpayer.primary },
+      ...ordinary, taxpayer: {
+        ...ordinary.taxpayer,
+        filingStatus: "married_filing_jointly",
+        spouse: { ...ordinary.taxpayer.primary, firstName: "Fictional spouse", ssn: "999-88-7777" },
+      },
       form8889: undefined,
       form8889ByOwner: { spouse: { coverageByMonth: Array(12).fill("family"), contributionsMade: "8750", qualifiedMedicalExpenses: "850.65" } },
       w2s: [], form1099SA: ordinary.form1099SA?.map(statement => ({ ...statement, accountHolder: "spouse" })),

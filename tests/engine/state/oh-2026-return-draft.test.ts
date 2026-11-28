@@ -366,7 +366,8 @@ describe('Ohio2026 current ordinary source-to-return draft', () => {
     current(p.input.taxpayer.spouse).ssn = p.input.taxpayer.primary.ssn;
     current(current(w2(p, 1).stateLocalSources).owner.originalTaxpayer).ssn = p.input.taxpayer.primary.ssn;
     rebindOhio2026Ordinary(p);
-    expect(() => run(p)).toThrow(/distinct|owner/);
+    expect(() => TaxYearInputSchema.parse(p.input)).toThrow('This taxpayer identifier is already used for another person on this return.');
+    expect(() => run(p)).toThrow('Ohio2026 ordinary actual sources: actual current2026 taxpayer and source year required');
   });
   it('rejects reciprocal compensation without losing its deduction', () => {
     const p = ohio2026OrdinaryFixture('nonresident', '50000', '50000');
