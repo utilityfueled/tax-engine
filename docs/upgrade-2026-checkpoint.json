@@ -3,7 +3,7 @@
     "aiSourceFirstCaseReviewEvidenceKey": "activeContinuation.nov27AiSourceFirstCaseReview",
     "asOf": "2026-11-28",
     "branch": "main",
-    "applicationCommit": "513fba11dad05e177a5cb12301b6adcf1f13d490",
+    "applicationCommit": "57b64cb231e10a4de762e2966c6b5fdf234f5ee3",
     "latestScopedApplicationCommit": "57b64cb231e10a4de762e2966c6b5fdf234f5ee3",
     "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
     "latestSchedule8812PayrollActcEvidenceKey": "activeContinuation.nov27Schedule8812PayrollActc",
@@ -204,11 +204,11 @@
     "annualScheduleBSourceEvidenceKey": "activeContinuation.nov24ScheduleBFinalSource",
     "annualScheduleBReviewEvidenceKey": "activeContinuation.nov24ScheduleBOrdinaryReview",
     "pensionTaxableAmountEvidenceKey": "activeContinuation.nov24ReportedPensionTaxableAmount",
-    "completeLocalBaselineEvidenceKey": "activeContinuation.nov27GuidedHsaCivilDatesCombined",
+    "completeLocalBaselineEvidenceKey": "activeContinuation.nov28SourceBackedRentalCombined",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov27ExactFederalPaymentCombined",
     "remaining": [
-      "Both strict Linux browser gates and final image evidence remain open. The exact 57b64cb23 AMD64 CI 46112070298, Web 46112070248 and Docker 46112070237 were queued without runners. The ARM64 incumbent 46085907600 was queued for a runner and e32a4591e 46091464368 was pending in the same concurrency group. The separate older ARM64 comparison 46066052234 passed archive and Compose recovery and failed nine strict browser cases. Its worker diagnostic timed out with both settings. Earlier AMD64 46023825170 passed recovery and failed runtime browser and immutable image evidence.",
+      "Both strict Linux browser gates and final image evidence remain open. The exact 57b64cb23 AMD64 CI 46112070298, Web 46112070248 and Docker 46112070237 were queued without runners. The earlier ARM64 incumbent 46085907600 is in progress and e32a4591e 46091464368 was pending in the same concurrency group. The separate older ARM64 comparison 46066052234 passed archive and Compose recovery and failed nine strict browser cases. Its worker diagnostic timed out with both settings. Earlier AMD64 46023825170 passed recovery and failed runtime browser and immutable image evidence.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 27 public npm audits of the unchanged lockfile returned zero findings across 550 total and 457 production packages.",
@@ -216,6 +216,57 @@
     ]
   },
   "activeContinuation": {
+    "nov28SourceBackedRentalCombined": {
+      "commit": "57b64cb231e10a4de762e2966c6b5fdf234f5ee3",
+      "exactArchiveSha256": "8b1eb2a352f63b9aa5bd96443511ba5fde8d6fc5f4e7c26a55b0111b180b4394",
+      "localEvidenceMarker": "nov27-rental-allocation-source-path",
+      "manifestSha256": "95d7dde24fc7b2c75e7faf6d22f76e29b3a552fc5f47e7dd8e86f660536aa37a",
+      "allElevenLocalChecksPassed": true,
+      "commandsPassed": [
+        "test",
+        "coverage",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "build",
+        "build-web",
+        "lint",
+        "browser"
+      ],
+      "prerequisites": {
+        "node": "26.13.1",
+        "pypdf": "6.10.0"
+      },
+      "officialSampleDocumentsVerified": 15,
+      "offlineEvaluatorArtifactCheckPassed": true,
+      "unit": {
+        "passed": 31524,
+        "skipped": 83
+      },
+      "coverage": {
+        "passed": 31524,
+        "skipped": 83,
+        "branchPercent": "88.78"
+      },
+      "browser": {
+        "passed": 655,
+        "skipped": 5,
+        "windows": 9,
+        "listenerCleanup": true,
+        "summarySha256": "9b3b747164b6ed96e1e1a76fb1a4fe487578af6f1a0f950081bba4cda5f65bc2",
+        "sourceBuildSha256": "349985a37a2b1ead3f91026cb4cfc57a41cbf6584c3635c54a8e50c03df0b586"
+      },
+      "standaloneEncryptedRecovery": {
+        "exit": 0,
+        "logSha256": "e624f6c0e147d1baed1adc7475abdb77133694ac236b51d42a08dd645471fbe2",
+        "receiptSha256": "173ae5829fc5f70a7082026a40b2b3c9378960095d96f5836bd02683bca38bdb",
+        "listenerCleanup": true
+      },
+      "linuxNativeQualified": false,
+      "hostedQualified": false
+    },
     "nov28CombinedNativeQueue": {
       "commit": "57b64cb231e10a4de762e2966c6b5fdf234f5ee3",
       "observedOn": "2026-11-28",

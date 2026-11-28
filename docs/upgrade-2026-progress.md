@@ -8,12 +8,12 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `513fba11d` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `57b64cb23` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
-| Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. The ARM64 group and exact AMD64 jobs for `57b64cb23` await runner assignment. The older ARM64 comparison failed nine strict browser cases after archive and recovery passed. Qualify both final runtime images before publishing. |
+| Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. The earlier ARM64 rehearsal started. Exact AMD64 jobs for `57b64cb23` await runner assignment. The older ARM64 comparison failed nine strict browser cases after archive and recovery passed. Qualify both final runtime images before publishing. |
 
 ## November 28 combined-source native queue and form publications
 
@@ -172,6 +172,23 @@ external filing-qualification dependency.
   fields. The exact commit passed 242 focused tests and eight static checks.
   Both source-specific scenarios passed independent engineering review.
   Public exports and filing remain gated. [Final 2026 form](https://www.irs.gov/pub/irs-prior/f8863--2026.pdf) · [Draft instructions](https://www.irs.gov/pub/irs-dft/i8863--dft.pdf)
+
+## November 28 exact local release checks on 57b64cb23
+
+All 11 retained checks passed from the exact `57b64cb23` archive. The unit
+and coverage suites each passed 31,524 tests with 83 skips.
+Branch coverage was 88.78% against the 85% gate. Managed Chromium passed
+655 cases with 5 skips across all 9 windows. The standalone
+app created an encrypted backup, deleted the synthetic workspace and
+restored it. Both isolated listeners closed. Node 26.13.1, pypdf 6.10.0,
+15 hash-verified official sample PDFs and the offline AI evaluation
+artifact check were used. Manifest SHA-256 `95d7dde24fc7b2c75e7faf6d22f76e29b3a552fc5f47e7dd8e86f660536aa37a`.
+
+The initial combined test run exposed two fixture assumptions. The
+successor fixture run passed those cases and reported a sandbox refusal for
+the loopback listener. All 62 loopback tests passed in the isolated rerun.
+The final checks above use the exact combined application revision and
+include the local listener tests.
 
 ## November 27 exact local release checks on 513fba11d
 
