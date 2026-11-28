@@ -23,6 +23,19 @@ jq '.resume | {latestScopedApplicationCommit, remaining}' docs/upgrade-2026-chec
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local Chromium and encrypted recovery passed. [Exact Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/46123814219), [CI](https://github.com/utilityfueled/tax-engine/actions/runs/46123814311) and [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/46123814368) remained queued. [ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/46120985997) remained pending on the earlier revision. The previous ARM64 image and Compose checks passed and the strict browser check failed nine cases. |
 
+## November 28 original outside-basis and at-risk carries
+
+`924a53fa8` reconciles the actual current outside-basis workpaper before
+applying Form 6198 to a loss limited at the basis step. In the $6,000
+ordinary loss control, the outside-basis ledger retains $1,000, Form 6198
+suspends $2,000 from the basis-admitted amount, and Schedule E transfers
+$3,000. A one-cent source change preserves both carries to the cent.
+An entirely basis-disallowed loss stays in the outside-basis ledger. The
+three new regressions failed before the calculation change. Independent
+engineering passed nine tests. The exact package passed 580 focused
+tests and eight static checks. [IRS Schedule K-1 instructions](https://www.irs.gov/instructions/i1065sk1)
+· [IRS Form 6198 instructions](https://www.irs.gov/instructions/i6198)
+
 ## November 28 actual zero Form 6198 Part II capacity
 
 `3afb03ba4` applies the ordinary 2026 Part II calculation when the original

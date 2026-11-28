@@ -4,7 +4,7 @@
     "asOf": "2026-11-28",
     "branch": "main",
     "applicationCommit": "7c1dfb42e459217dca53e3afc57db66d4369c91e",
-    "latestScopedApplicationCommit": "3afb03ba441a689a88f4251c1d1c63fcde82acc3",
+    "latestScopedApplicationCommit": "924a53fa8e5b76471fb184a4d530e30cc4099458",
     "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
     "latestSchedule8812PayrollActcEvidenceKey": "activeContinuation.nov27Schedule8812PayrollActc",
     "latestGuidedHsaCivilDatesEvidenceKey": "activeContinuation.nov27GuidedHsaCivilDates",
@@ -217,6 +217,33 @@
     ]
   },
   "activeContinuation": {
+    "nov28Form6198OutsideBasisAndRiskCarry": {
+      "commit": "924a53fa8e5b76471fb184a4d530e30cc4099458",
+      "archiveSha256": "f6324c98a7e458204683d99bed2e20d3e19479914c5d8e3f4bf326d441eec2f9",
+      "sourceTree": "1a625110a49a52a7fbd4297abb8662d46a2c1cae",
+      "localEvidenceMarker": "nov27-form6198-basis-split-path",
+      "exactFocusedTestsPassed": 580,
+      "checksPassed": [
+        "focused",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
+      "isolatedPreFixCalculationFailures": 3,
+      "independentEngineeringTestsPassed": 9,
+      "basisSuspendedDollars": "1000",
+      "atRiskSuspendedDollars": "2000",
+      "scheduleEOrdinaryLossDollars": "3000",
+      "independentActualBasisWorkpaperRequiredWhenBasisLimited": true,
+      "fullyBasisDisallowedLossExcludedFromAtRiskCarry": true,
+      "finalQualifiedTaxReviewComplete": false,
+      "filingPromoted": false
+    },
     "nov28Form6198OriginalExactZero": {
       "commit": "3afb03ba441a689a88f4251c1d1c63fcde82acc3",
       "archiveSha256": "1d57b8911d2b9aee730c1769b7267a8fcb87a1de6a743c6ebea800799892f4a4",

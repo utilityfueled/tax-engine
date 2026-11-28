@@ -1073,7 +1073,15 @@ For `3afb03ba4`, repeat the case with the full $12,000 included in basis
 but protected against loss. Derive lines 10a, 10b, 20 and 21, the current
 Schedule E deduction and the suspended loss. Explain the recapture inquiry
 if the actual Part II decreases instead exceed opening basis by one cent.
+For `924a53fa8`, instead use $5,000 of opening outside basis, $5,000 shown
+on the completed current basis workpaper before the Box 1 loss, and
+$2,000 of the opening basis protected against loss. There are no other
+basis changes. Derive the separate outside-basis and at-risk suspension
+amounts and the allowed Schedule E loss. Then use verified zero for both
+outside-basis amounts and all Part II changes, and determine which carry
+worksheet records the $6,000.
 [Form 6198](https://www.irs.gov/pub/irs-pdf/f6198.pdf) · [IRS instructions](https://www.irs.gov/instructions/i6198) · [26 U.S.C. §465](https://uscode.house.gov/us/usc/119-124/t26/s465/)
+[IRS Schedule K-1 instructions](https://www.irs.gov/instructions/i1065sk1)
 
 ## November 28 recipient classification for direct 2026 gifts
 
