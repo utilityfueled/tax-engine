@@ -1016,3 +1016,33 @@ with a signature dated before retirement. Derive the tentative, limit
 and allowed lines before any public transfer is qualified.
 [Final Schedule R](https://www.irs.gov/pub/irs-prior/f1040sr--2026.pdf) ·
 [Schedule R instructions](https://www.irs.gov/instructions/i1040sr).
+
+## November 28 ordinary mixed-use dwelling
+
+Independently calculate the Schedule E amounts for the synthetic
+sole-owner dwelling with one fair-market lease for 90 days and ten
+separate personal-use days. Rent installments total $2,500.27. The
+rental-only advertising is $100.05. Shared insurance, utilities and
+property tax are $1,000.10, $100.20 and $100.00. A $50.00 expense is
+entirely personal. The taxpayer elected the standard deduction. The
+original asset register records that the building's $60,000 depreciable
+basis was fully recovered before 2026 and shows no current assets.
+
+Verify the home-use threshold, category allocation and treatment of
+personal and vacant days. Confirm which exact and rounded amounts
+transfer to Schedule E and Form 1040. Check that the lease and receipt
+records establish the ordinary rental classification. Document the
+separate worksheet required if the home-use threshold is exceeded.
+[IRS Publication 527](https://www.irs.gov/publications/p527) · [26 U.S.C. §280A](https://uscode.house.gov/us/usc/119-124/t26/s280A/) · [Draft 2026 Schedule E instructions](https://www.irs.gov/pub/irs-dft/i1040se--dft.pdf#page=7) · [Synthetic fixture](../tests/engine/schedules/schedule-e-personal-use-2026.test.ts).
+
+## November 28 Pennsylvania purchases in two localities
+
+Independently derive annual use tax for a Pennsylvania resident with
+one $10,000 taxable purchase delivered in Philadelphia and another
+$10,000 taxable purchase delivered in Allegheny County. No sales or use
+tax was previously paid. Confirm the amount reported on PA-40 Line 25
+and the rate and credit applied to each purchase. Also confirm whether
+a confirmed receipt dated after the application snapshot should be
+excluded from that snapshot. Reconcile the final annual blank and
+directions before approving filing output.
+[Pennsylvania use-tax guidance](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/sales-use-and-hotel-occupancy-tax/use-tax/use-tax-for-individuals) · [2025 PA-40 instructions](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf) · [Synthetic fixture](../tests/engine/state/pa-2026-ordinary-draft.test.ts).

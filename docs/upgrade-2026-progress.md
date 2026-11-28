@@ -15,6 +15,14 @@ the latest application revision, exact-source runs and open dependencies. The
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. The earlier ARM64 rehearsal started. Exact AMD64 jobs for `57b64cb23` await runner assignment. The older ARM64 comparison failed nine strict browser cases after archive and recovery passed. Qualify both final runtime images before publishing. |
 
+## November 28 current ARM64 recovery rehearsal
+
+The dispatched revision `9f8fcff52` differs from the verified application
+`57b64cb23` by two evidence documents. The current run is pending on
+the public ARM64 workflow. The earlier already-running comparison reached
+the strict browser step. GitHub's concurrency group superseded the older
+pending run. [Current rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/46113946817) · [Earlier comparison](https://github.com/utilityfueled/tax-engine/actions/runs/46085907600)
+
 ## November 28 combined-source native queue and form publications
 
 The exact `57b64cb23` CI, Web and Docker runs had zero assigned

@@ -111,6 +111,7 @@
     "ohioBankInterestResidencyEvidenceKey": "activeContinuation.nov26OhioBankInterestAllResidency",
     "latestExactLinuxResultsEvidenceKey": "activeContinuation.nov26LocalReturnReopening",
     "latestLinuxQueueEvidenceKey": "activeContinuation.nov28CombinedNativeQueue",
+    "currentArm64DispatchEvidenceKey": "activeContinuation.nov28CurrentArm64Dispatch",
     "latestSchedule8812AndNativeTimingEvidenceKey": "activeContinuation.nov26Schedule8812AndNativeTiming",
     "ohioUnemploymentEducatorHoursAndForm4137EvidenceKey": "activeContinuation.nov26OhioUnemploymentEducatorHoursAndForm4137",
     "latestFederalAnnualSourceEvidenceKey": "activeContinuation.nov25FederalAnnualSourceRefresh",
@@ -208,7 +209,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov27ExactFederalPaymentCombined",
     "remaining": [
-      "Both strict Linux browser gates and final image evidence remain open. The exact 57b64cb23 AMD64 CI 46112070298, Web 46112070248 and Docker 46112070237 were queued without runners. The earlier ARM64 incumbent 46085907600 is in progress and e32a4591e 46091464368 was pending in the same concurrency group. The separate older ARM64 comparison 46066052234 passed archive and Compose recovery and failed nine strict browser cases. Its worker diagnostic timed out with both settings. Earlier AMD64 46023825170 passed recovery and failed runtime browser and immutable image evidence.",
+      "Both strict Linux browser gates and final image evidence remain open. The exact 57b64cb23 AMD64 CI 46112070298, Web 46112070248 and Docker 46112070237 were queued without runners. The earlier ARM64 incumbent 46085907600 is in progress and exact-application run 46113946817 is pending in the same concurrency group. The earlier pending 46091464368 was superseded. The separate older ARM64 comparison 46066052234 passed archive and Compose recovery and failed nine strict browser cases. Its worker diagnostic timed out with both settings. Earlier AMD64 46023825170 passed recovery and failed runtime browser and immutable image evidence.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 27 public npm audits of the unchanged lockfile returned zero findings across 550 total and 457 production packages.",
@@ -216,6 +217,29 @@
     ]
   },
   "activeContinuation": {
+    "nov28CurrentArm64Dispatch": {
+      "sourceCommit": "9f8fcff52176f2175234b06c7c9d644e7c8097cc",
+      "exactApplicationCommit": "57b64cb231e10a4de762e2966c6b5fdf234f5ee3",
+      "diffPathsFromLocalVerifiedSource": [
+        "docs/upgrade-2026-checkpoint.json",
+        "docs/upgrade-2026-progress.md"
+      ],
+      "currentRun": {
+        "id": 46113946817,
+        "status": "pending",
+        "runner": "ubuntu-24.04-arm"
+      },
+      "earlierComparisonRun": {
+        "id": 46085907600,
+        "status": "in_progress",
+        "stage": "strict browser flows"
+      },
+      "previousPendingRun": {
+        "id": 46091464368,
+        "status": "cancelled",
+        "reason": "superseded by current main dispatch"
+      }
+    },
     "nov28SourceBackedRentalCombined": {
       "commit": "57b64cb231e10a4de762e2966c6b5fdf234f5ee3",
       "exactArchiveSha256": "8b1eb2a352f63b9aa5bd96443511ba5fde8d6fc5f4e7c26a55b0111b180b4394",
