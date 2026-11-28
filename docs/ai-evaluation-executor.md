@@ -186,6 +186,17 @@ If the evidence names a different model, leave the hold in place pending
 investigation. Use a CLI that supports `--billed-model` to open journals with
 the new records.
 
+If a previously recorded, model-bound receipt reused another attempt's
+reference, its full hold remains in place. After reviewing both records and
+obtaining distinct authoritative usage evidence, run the reconciliation command
+below with `--supersedes-reference=EXACT_PRIOR_REFERENCE`. Use the original
+receipt's reference for that option, the new reference for `--reference`, and
+the new evidence's actual usage and billed model. The journal appends one linked
+correction and preserves the original receipt and its reference. The correction
+releases only the affected hold and keeps the missing response and capability
+status as recorded. Any other affected hold still requires its own evidence.
+Use a CLI that supports `--supersedes-reference` to reopen a corrected journal.
+
 The reporter validates the recorded plan’s request policy. For a historical
 plan whose policy has changed, use its pinned source revision in `report` mode
 with credentials absent from the environment. Keep the original plan and

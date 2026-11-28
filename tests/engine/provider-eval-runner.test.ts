@@ -341,6 +341,66 @@ describe("guarded repeated provider executor", () => {
       } finally { await reopened.close(); }
     } finally { await rm(dir, { recursive: true, force: true }); }
   });
+  it("corrects a selected collision after an older unverified receipt", async () => {
+    const { state, transport, references, evidence } = await priorResponseAndNextHold();
+    const priorAt = "2026-10-25T12:00:01.000001Z";
+    await state.append({ type: "reconcile", attemptId: evidence(references.case).attemptId, evidenceReference: "legacy-unverified-invoice", usage: good.usage, at });
+    await state.append({ type: "reconcile", ...evidence(references.case), at: priorAt });
+    const original = structuredClone(state.records);
+    const input = { ...evidence("  corrected-invoice-row  "), at: "2026-10-25T08:00:01.000001-04:00", usage: { inputTokens: 200, outputTokens: 100 } };
+    const reconcile = (supersedesEvidenceReference?: string) => reconcileProviderEvalAttempt(state.plan, state.records, { ...input, supersedesEvidenceReference });
+    expect(() => reconcile()).toThrow(/once/i);
+    expect(() => reconcile("legacy-unverified-invoice")).toThrow(/prior model-bound receipt/i);
+    for (const evidenceReference of ["legacy-unverified-invoice", references.own]) {
+      expect(() => reconcileProviderEvalAttempt(state.plan, state.records, { ...input, evidenceReference, supersedesEvidenceReference: references.case }))
+        .toThrow(/unused reference/i);
+    }
+    const correction = reconcile(`\t${references.case}\n`);
+    expect(correction).toMatchObject({ type: "reconcile-correction", evidenceReference: "corrected-invoice-row",
+      supersedesEvidenceDigest: providerEvalDigest(references.case), billedModel: "gpt-6-luna", usage: input.usage });
+    await state.append(correction);
+    expect(state.records.slice(0, -1)).toEqual(original);
+    validateProviderEvalJournal(state.plan, state.records);
+    const report = summarizeProviderEvalJournal(state.plan, state.records);
+    expect(report).toMatchObject({ knownProviderCostUsd: "0.00019", unknownMaximumUsd: "0", legacyUnverifiedProviderCostUsd: "0",
+      dispatchedRequests: 3, bindingBlockers: [], productionPromotion: false });
+    expect(report.template.entries[1]).toMatchObject({ output: null, independentReview: null,
+      attempts: [{ usage: input.usage, billingEvidence: { evidenceReference: providerEvalDigest("corrected-invoice-row"), recordedAt: input.at } }] });
+    expect(() => reconcile(references.case)).toThrow(/only one correction/i);
+    expect(transport).toHaveBeenCalledTimes(3);
+    expect(await executeProviderEval({ ...state, transport })).toMatchObject({ stoppedReason: "completed", knownProviderCostUsd: "0.00025", unknownMaximumUsd: "0" });
+    expect(transport).toHaveBeenCalledTimes(4);
+    expect(transport.mock.calls[3]?.[0]).toMatchObject({ attemptId: "luna-high:case-income-w2-zero-withholding:3" });
+  });
+  it("keeps the other attempt held and rejects corrections without prior collision proof", async () => {
+    const { state, transport, evidence } = await priorVerifiedReceiptAndNextHold();
+    const previousReference = "synthetic-invoice-line";
+    const correctionInput = { ...evidence(1, "replacement-invoice-row"), supersedesEvidenceReference: previousReference,
+      at: "2026-10-25T12:00:00.000001Z" };
+    expect(() => reconcileProviderEvalAttempt(state.plan, state.records, correctionInput)).toThrow(/cross-attempt collision/i);
+    const collision = { type: "reconcile", ...evidence(2, previousReference) } as const;
+    await state.append(collision);
+    const correction = reconcileProviderEvalAttempt(state.plan, state.records, correctionInput);
+    const prefix = state.records.slice(0, -1);
+    expect(() => validateProviderEvalJournal(state.plan, [...prefix, correction, collision])).toThrow(/cross-attempt collision/i);
+    const early = state.records.map(record => record.type === "reconcile" && record.attemptId === correctionInput.attemptId
+      ? { ...record, at: "2026-10-25T11:59:59.999999Z" } : record);
+    expect(() => validateProviderEvalJournal(state.plan, [...early, correction])).toThrow(/cross-attempt collision/i);
+    for (const [change, error] of [
+      [{ supersedesEvidenceDigest: providerEvalDigest("other-reference") }, /prior model-bound receipt/i],
+      [{ evidenceReference: previousReference }, /unused reference/i],
+      [{ evidenceReference: "response:test" }, /unused reference/i],
+      [{ billedModel: "gpt-6.1-sol" }, /billed model.*approved profile/i],
+      [{ at: "2026-10-25T11:59:59.999999Z" }, /before the prior receipt/i],
+    ] as const) {
+      expect(() => validateProviderEvalJournal(state.plan, [...state.records, { ...correction, ...change }])).toThrow(error);
+    }
+    expect(() => validateProviderEvalJournal(state.plan, [...state.records, correction, correction])).toThrow(/only one correction/i);
+    await state.append(correction);
+    expect(await executeProviderEval({ ...state, transport })).toMatchObject({ stoppedReason: "unknown-usage", knownProviderCostUsd: "0.00012",
+      unknownMaximumUsd: "0.0111056", legacyUnverifiedProviderCostUsd: "0.00006", bindingBlockers: ["reconciliation-evidence-reference-reused"] });
+    expect(transport).toHaveBeenCalledTimes(3);
+  });
   it("reconciles only at or after dispatch with exact fractional seconds and UTC offsets", async () => {
     const start = "2026-10-25T12:00:00.000001Z";
     const state = setup("1", start);

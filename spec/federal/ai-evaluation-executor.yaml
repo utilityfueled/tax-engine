@@ -131,6 +131,23 @@ lines:
       - "tests/engine/provider-eval-runner.test.ts::preserves charges and holds when a historical receipt reuses a %s response"
       - "tests/engine/provider-eval-runner.test.ts::treats a blank provider reference as missing"
       - "tests/engine/provider-eval-transport.test.ts::normalizes provider references before choosing a fallback"
+  - line: "reconciliation-collision-correction"
+    description: "Correct one historical cross-attempt receipt collision using distinct authoritative evidence"
+    formula: >-
+      Require explicit selection of the prior model-bound reference on the
+      same attempt. Append one correction linked to its normalized digest.
+      Replay must prove that the prior receipt was dated on or after dispatch,
+      matched the approved model, and collided with another attempt's evidence
+      before the correction. The correction must use an unused normalized
+      reference, a matching billed model, exact reported usage, and a timestamp
+      at or after the targeted receipt. Allow an earlier legacy unverified
+      receipt. Preserve all records and retain the prior reference in the
+      collision index. Settle only the corrected attempt using the new usage,
+      retain other unresolved holds and never treat cost as response evidence.
+    testRef: "tests/engine/provider-eval-runner.test.ts::corrects a selected collision after an older unverified receipt"
+    testRefs:
+      - "tests/engine/provider-eval-runner.test.ts::keeps the other attempt held and rejects corrections without prior collision proof"
+      - "tests/engine/provider-eval-cli.test.ts::appends one explicit receipt correction offline"
   - line: "reconciliation-time-order"
     description: "Release a usage reservation only with evidence recorded at or after dispatch"
     formula: >-

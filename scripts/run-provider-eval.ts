@@ -8,7 +8,7 @@ import { openProviderEvalJournal } from "./lib/provider-eval-journal";
 import { requireDistinctProviderEvalPaths } from "./lib/provider-eval-paths";
 import type { ProviderEvalFixture } from "../packages/engine/src/provider-eval-fixtures";
 const args = process.argv.slice(2); const command = args.shift();
-const known = new Set(["run-id", "purpose", "profiles", "fixtures", "max-usd", "max-requests", "expires-at", "plan", "approval-template", "approval", "journal", "output", "reviewed-fixtures", "live-authorized", "attempt", "usage", "reference", "billed-model"]);
+const known = new Set(["run-id", "purpose", "profiles", "fixtures", "max-usd", "max-requests", "expires-at", "plan", "approval-template", "approval", "journal", "output", "reviewed-fixtures", "live-authorized", "attempt", "usage", "reference", "billed-model", "supersedes-reference"]);
 const options = new Map<string, string>();
 for (const arg of args) {
   const match = /^--([a-z-]+)(?:=(.*))?$/.exec(arg);
@@ -35,6 +35,7 @@ async function reviewed(): Promise<ProviderEvalFixture[] | undefined> {
   return value.fixtures as ProviderEvalFixture[];
 }
 try {
+  if (options.has("supersedes-reference") && command !== "reconcile") throw new Error("Use --supersedes-reference only with reconcile.");
   await requireDistinctProviderEvalPaths(["plan", "approval-template", "approval", "journal", "output", "usage", "reviewed-fixtures"]
     .flatMap(key => options.has(key) ? [required(key)] : []), options.get("journal"));
   if (command === "plan") {
@@ -67,9 +68,10 @@ try {
       if (command === "reconcile") {
         const usage = await json(required("usage"));
         const record = reconcileProviderEvalAttempt(plan, journal.records, { attemptId: required("attempt"), evidenceReference: required("reference"), billedModel: required("billed-model"),
-          usage: usage as Parameters<typeof reconcileProviderEvalAttempt>[2]["usage"], at: new Date().toISOString() });
+          usage: usage as Parameters<typeof reconcileProviderEvalAttempt>[2]["usage"], at: new Date().toISOString(),
+          supersedesEvidenceReference: options.get("supersedes-reference") });
         await journal.append(record);
-        console.log(JSON.stringify({ reconciled: record.type === "reconcile" ? record.attemptId : null, liveRequests: 0 }));
+        console.log(JSON.stringify({ reconciled: record.attemptId, ...(record.type === "reconcile-correction" ? { corrected: true } : {}), liveRequests: 0 }));
       } else {
         let result;
         if (command === "execute") {

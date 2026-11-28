@@ -66,6 +66,57 @@ describe("offline evaluation CLI", () => {
       expect(JSON.parse(await readFile(outputFile, "utf8")).availability).toMatchObject([{ status: "failed" }]);
     } finally { await rm(directory, { recursive: true, force: true }); }
   });
+  it("appends one explicit receipt correction offline", async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "ai-eval-correction-"));
+    const planFile = path.join(directory, "plan.json"); const journalFile = path.join(directory, "run.jsonl");
+    const usageFile = path.join(directory, "usage.json"); const outputFile = path.join(directory, "result.json");
+    const at = "2026-10-25T12:00:00.000Z";
+    const plan = createProviderEvalPlan({ runId: "receipt-correction", purpose: "capability", profileIds: ["luna-high", "sol-high"],
+      maximumProviderUsd: "1", maximumRequests: 2, createdAt: at, expiresAt: "2026-10-25T13:00:00.000Z" });
+    const approval = { version: 1, planDigest: providerEvalDigest(plan), authorizedBy: "synthetic-only",
+      authorizationReference: "synthetic-only", approvedAt: at, expiresAt: plan.expiresAt, maximumProviderUsd: "1",
+      maximumRequests: 2, accountReference: "synthetic-only", syntheticOnly: true };
+    const invoke = (...args: string[]) => exec(process.execPath, ["--import", "tsx", "scripts/run-provider-eval.ts", ...args,
+      `--plan=${planFile}`, `--journal=${journalFile}`], { env: { PATH: process.env.PATH } });
+    const usage = { inputTokens: 100, outputTokens: 100 };
+    const attemptId = "sol-high:capability:0";
+    const sharedReference = "synthetic-probe-reference";
+    try {
+      await writeFile(planFile, JSON.stringify(plan));
+      await writeFile(usageFile, JSON.stringify(usage));
+      const journal = await openProviderEvalJournal(journalFile);
+      try {
+        const stopped = await executeProviderEval({ plan, approval, ...journal, now: () => at,
+          transport: async request => {
+            if (request.profile.id === "sol-high") throw new Error("synthetic timeout");
+            return { status: "completed", reportedModel: "gpt-6-luna", usage, elapsedMs: 1, responseReference: sharedReference, payload: { probe: "ok" } };
+          } });
+        expect(stopped).toMatchObject({ stoppedReason: "unknown-usage", knownProviderCostUsd: "0.00006", dispatchedRequests: 2 });
+        await journal.append({ type: "reconcile", attemptId, evidenceReference: sharedReference, billedModel: "gpt-6.1-sol", usage, at });
+      } finally { await journal.close(); }
+      const before = await readFile(journalFile, "utf8");
+      const reconcile = (...args: string[]) => invoke("reconcile", `--attempt=${attemptId}`, `--usage=${usageFile}`,
+        "--reference=distinct-authoritative-row", "--billed-model=gpt-6.1-sol", ...args);
+      await expect(reconcile()).rejects.toMatchObject({ stderr: expect.stringMatching(/once/i) });
+      await expect(reconcile("--supersedes-reference=wrong")).rejects.toMatchObject({ stderr: expect.stringMatching(/prior model-bound receipt/i) });
+      await expect(invoke("report", `--output=${outputFile}`, `--supersedes-reference=${sharedReference}`))
+        .rejects.toMatchObject({ stderr: expect.stringMatching(/only with reconcile/i) });
+      expect(await readFile(journalFile, "utf8")).toBe(before);
+      const corrected = await reconcile(`--supersedes-reference=${sharedReference}`);
+      expect(JSON.parse(corrected.stdout)).toMatchObject({ reconciled: attemptId, corrected: true, liveRequests: 0 });
+      const after = await readFile(journalFile, "utf8");
+      expect(after.startsWith(before)).toBe(true);
+      expect(JSON.parse(after.slice(before.length)).record).toMatchObject({ type: "reconcile-correction", attemptId,
+        supersedesEvidenceDigest: providerEvalDigest(sharedReference), evidenceReference: "distinct-authoritative-row" });
+      await expect(reconcile(`--supersedes-reference=${sharedReference}`)).rejects.toMatchObject({ stderr: expect.stringMatching(/only one correction/i) });
+      expect(await readFile(journalFile, "utf8")).toBe(after);
+      const report = await invoke("report", `--output=${outputFile}`);
+      expect(JSON.parse(report.stdout)).toMatchObject({ knownProviderCostUsd: "0.00126", unknownMaximumUsd: "0", bindingBlockers: [], dispatchedRequests: 2 });
+      expect(JSON.parse(await readFile(outputFile, "utf8")).availability).toMatchObject([
+        { status: "available", reportedUsage: true }, { status: "failed", reportedUsage: true },
+      ]);
+    } finally { await rm(directory, { recursive: true, force: true }); }
+  });
   it("rejects canonical and inode output aliases before touching the journal", async () => {
     const directory = await mkdtemp(path.join(tmpdir(), "ai-eval-alias-")); const alias = `${directory}-alias`;
     try {
