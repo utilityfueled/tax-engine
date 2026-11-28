@@ -13,7 +13,20 @@ the latest application revision, exact-source runs and open dependencies. The
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
-| Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. The earlier ARM64 rehearsal started. Exact AMD64 jobs for `57b64cb23` await runner assignment. The older ARM64 comparison failed nine strict browser cases after archive and recovery passed. Qualify both final runtime images before publishing. |
+| Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. Current ARM64 and exact AMD64 jobs for the `57b64cb23` application await runner assignment. The older ARM64 comparison failed nine strict browser cases after archive and recovery passed. Qualify both final runtime images before publishing. |
+
+## November 28 earlier ARM64 comparison result
+
+The earlier `dcfd227f5` ARM64 run passed native image and archive
+verification, Compose upgrade and recovery, and its immutable
+evidence step. The strict browser gate failed nine timeouts in
+windows 6, 7 and 8. It recorded 646 passes and five skips across all
+nine windows, and the candidate listener closed. All nine failure
+identifiers recur in the earlier independent comparison. The observed
+timings do not isolate a server or application phase. Strict deadlines
+remain in force. Sanitized observation SHA-256
+`b534dd2687cf9be1c65de01d15e1bbb77b961c824bc9fc59d85feaa34ceab8f7`.
+[Completed comparison](https://github.com/utilityfueled/tax-engine/actions/runs/46085907600) · [Earlier comparison](https://github.com/utilityfueled/tax-engine/actions/runs/46066052234) · [Queued current ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/46113946817)
 
 ## November 28 current ARM64 recovery rehearsal
 

@@ -209,7 +209,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov27ExactFederalPaymentCombined",
     "remaining": [
-      "Both strict Linux browser gates and final image evidence remain open. The exact 57b64cb23 AMD64 CI 46112070298, Web 46112070248 and Docker 46112070237 were queued without runners. The earlier ARM64 incumbent 46085907600 is in progress and exact-application run 46113946817 is pending in the same concurrency group. The earlier pending 46091464368 was superseded. The separate older ARM64 comparison 46066052234 passed archive and Compose recovery and failed nine strict browser cases. Its worker diagnostic timed out with both settings. Earlier AMD64 46023825170 passed recovery and failed runtime browser and immutable image evidence.",
+      "Both strict Linux browser gates and final image evidence remain open. The exact 57b64cb23 AMD64 CI 46112070298, Web 46112070248 and Docker 46112070237 were queued without runners. The earlier ARM64 46085907600 passed archive and Compose recovery and failed nine strict browser cases. Current application run 46113946817 is queued in the same concurrency group. The earlier pending 46091464368 was superseded. The separate older ARM64 comparison 46066052234 passed archive and Compose recovery and failed nine strict browser cases. Its worker diagnostic timed out with both settings. Earlier AMD64 46023825170 passed recovery and failed runtime browser and immutable image evidence.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 27 public npm audits of the unchanged lockfile returned zero findings across 550 total and 457 production packages.",
@@ -217,6 +217,28 @@
     ]
   },
   "activeContinuation": {
+    "nov28Arm64CompletedComparison": {
+      "sourceCommit": "dcfd227f5febe42d318ac8f4ebf1f7fd048caa53",
+      "run": 46085907600,
+      "job": 140799637560,
+      "status": "failure",
+      "browserObservationSha256": "b534dd2687cf9be1c65de01d15e1bbb77b961c824bc9fc59d85feaa34ceab8f7",
+      "browser": {
+        "qualification": "DIAGNOSTIC_ONLY",
+        "passed": 646,
+        "skipped": 5,
+        "failed": 9,
+        "batches": 9,
+        "cleanup": true
+      },
+      "archiveAndComposeRecoveryPassed": true,
+      "immutableEvidenceStepPassed": true,
+      "repeatFailureIdsComparedToRun": 46066052234,
+      "identicalFailureCaseCount": 9,
+      "currentArm64Run": 46113946817,
+      "currentArm64RunStatusAtObservation": "queued",
+      "qualifiedCurrentRuntime": false
+    },
     "nov28CurrentArm64Dispatch": {
       "sourceCommit": "9f8fcff52176f2175234b06c7c9d644e7c8097cc",
       "exactApplicationCommit": "57b64cb231e10a4de762e2966c6b5fdf234f5ee3",
