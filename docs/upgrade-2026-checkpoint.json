@@ -2,7 +2,7 @@
   "resume": {
     "asOf": "2026-11-27",
     "branch": "main",
-    "applicationCommit": "39ae1406e0e6b8f27dd2cc4a84d25e8cb75752ce",
+    "applicationCommit": "08c705b1237f8a9a31c98dc5f1b58d0fbd17d3f0",
     "latestScopedApplicationCommit": "08c705b1237f8a9a31c98dc5f1b58d0fbd17d3f0",
     "latestCombinedCandidateCommit": "08c705b1237f8a9a31c98dc5f1b58d0fbd17d3f0",
     "nov27FullBrowserCollectionEvidenceKey": "activeContinuation.nov27FullBrowserCollection",
@@ -197,7 +197,7 @@
     "annualScheduleBSourceEvidenceKey": "activeContinuation.nov24ScheduleBFinalSource",
     "annualScheduleBReviewEvidenceKey": "activeContinuation.nov24ScheduleBOrdinaryReview",
     "pensionTaxableAmountEvidenceKey": "activeContinuation.nov24ReportedPensionTaxableAmount",
-    "completeLocalBaselineEvidenceKey": "activeContinuation.nov27Form8880ReceiptDateCombined",
+    "completeLocalBaselineEvidenceKey": "activeContinuation.nov27GuidedMortgageActualDatesCombined",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov27ExactFederalPaymentCombined",
     "remaining": [
@@ -209,6 +209,57 @@
     ]
   },
   "activeContinuation": {
+    "nov27GuidedMortgageActualDatesCombined": {
+      "commit": "08c705b1237f8a9a31c98dc5f1b58d0fbd17d3f0",
+      "exactArchiveSha256": "a532fe05135c8c07d562a27afd4a35af615d0118d4873ad0af67f8c07b8ee138",
+      "localEvidenceMarker": "nov27-guided-mortgage-actual-dates-path",
+      "manifestSha256": "2ef69412bac834683a766371a35c1455479472596c4d48c919822b8a5daf8ccc",
+      "allElevenLocalChecksPassed": true,
+      "commandsPassed": [
+        "test",
+        "coverage",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "build",
+        "build-web",
+        "lint",
+        "browser"
+      ],
+      "prerequisites": {
+        "node": "26.13.1",
+        "pypdf": "6.10.0"
+      },
+      "officialSampleDocumentsVerified": 15,
+      "offlineEvaluatorArtifactCheckPassed": true,
+      "unit": {
+        "passed": 31472,
+        "skipped": 83
+      },
+      "coverage": {
+        "passed": 31472,
+        "skipped": 83,
+        "branchPercent": "88.76"
+      },
+      "browser": {
+        "passed": 655,
+        "skipped": 5,
+        "windows": 9,
+        "listenerCleanup": true,
+        "summarySha256": "9b3b747164b6ed96e1e1a76fb1a4fe487578af6f1a0f950081bba4cda5f65bc2",
+        "sourceBuildSha256": "70eae91937e99987a7763ec53dc5ab6746b7dda4f8b6add9e59ae642b0514ec4"
+      },
+      "standaloneEncryptedRecovery": {
+        "exit": 0,
+        "logSha256": "b94401224ec371d68d20a49fd09e5bdf2344f93d8030b4da0ef57c2be84cb3ab",
+        "receiptSha256": "3bd4c7ee268a56512d8e2947f6f48689d262556be12004cce4eafceeeb1d8886",
+        "listenerCleanup": true
+      },
+      "linuxNativeQualified": false,
+      "hostedQualified": false
+    },
     "nov27GuidedMortgageActualDates": {
       "commit": "08c705b1237f8a9a31c98dc5f1b58d0fbd17d3f0",
       "exactArchiveSha256": "a532fe05135c8c07d562a27afd4a35af615d0118d4873ad0af67f8c07b8ee138",

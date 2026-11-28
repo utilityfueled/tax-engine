@@ -8,7 +8,7 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `39ae1406e` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `08c705b12` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
@@ -25,6 +25,17 @@ app created an encrypted backup, deleted the synthetic workspace and
 restored it. Both isolated listeners closed. Node 26.13.1, pypdf 6.10.0,
 15 hash-verified official sample PDFs and the offline AI evaluation
 artifact check were used. Manifest SHA-256 `ae050cda8facb51d051646178a77276de4afdf74e8ad31ba4ded4dc63aec1a03`.
+
+## November 27 exact local release checks on 08c705b12
+
+All 11 retained checks passed from the exact `08c705b12` archive. The unit
+and coverage suites each passed 31,472 tests with 83 skips.
+Branch coverage was 88.76% against the 85% gate. Managed Chromium passed
+655 cases with 5 skips across all 9 windows. The standalone
+app created an encrypted backup, deleted the synthetic workspace and
+restored it. Both isolated listeners closed. Node 26.13.1, pypdf 6.10.0,
+15 hash-verified official sample PDFs and the offline AI evaluation
+artifact check were used. Manifest SHA-256 `2ef69412bac834683a766371a35c1455479472596c4d48c919822b8a5daf8ccc`.
 
 ## November 27 actual 2026 mortgage dates
 
