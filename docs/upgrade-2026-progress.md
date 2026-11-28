@@ -21,7 +21,7 @@ jq '.resume | {latestScopedApplicationCommit, remaining}' docs/upgrade-2026-chec
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
-| Self-host release | Exact local Chromium and encrypted recovery passed on `19fc8c5e6`. The latest completed ARM64 run passed image verification and Compose recovery, then timed out in 11 Chromium cases. The queued successor includes the Ohio edit optimization. See the run receipts below. |
+| Self-host release | Exact local Chromium and encrypted recovery passed on `19fc8c5e6`. The latest completed ARM64 run passed image verification and Compose recovery, then timed out in 11 Chromium cases. Its successor reached the strict browser step and includes the Ohio edit optimization. See the run receipts below. |
 
 ## November 28 professional W-2G originals and AI evaluation
 
@@ -44,8 +44,9 @@ comparison evidence remain required for model promotion.
 ## November 28 Form 6198 physical candidate and Linux rehearsal
 
 `43adee403` maps the rolling IRS Form 6198 blank labeled November 2025.
-Four tests against the retrieved official PDF verified the page, all 34
-widget names and positions, and all six checked states. The inventory still
+`01c9b5947` pins the official PDF under `forms/blank/2026/` and makes the
+physical comparison mandatory. Four tests verified the page, all 34 widget
+names and positions, and all six checked states. The inventory still
 records the candidate as unsupported and the public renderer has no entry
 for it. Qualification still needs reviewed transfers and a registered, gated
 export. [Official IRS blank](https://www.irs.gov/pub/irs-pdf/f6198.pdf).
@@ -53,10 +54,10 @@ export. [Official IRS blank](https://www.irs.gov/pub/irs-pdf/f6198.pdf).
 ARM64 `9f8fcff52` passed image verification, isolated Compose upgrade and
 database recovery, immutable archive checks and listener cleanup. Chromium
 passed 644 cases, skipped five and timed out in 11 under the existing
-requirement. The successor on `0c594ea43` remained queued on November 28
-and includes `42d8091d9`, which removes the Ohio per-edit clone.
+requirement. The successor on `0c594ea43` began strict browser flows on
+November 28. It includes `42d8091d9`, which removes the Ohio per-edit clone.
 [Completed ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/46113946817)
-· [Queued successor](https://github.com/utilityfueled/tax-engine/actions/runs/46120985997).
+· [ARM64 successor](https://github.com/utilityfueled/tax-engine/actions/runs/46120985997).
 
 ## November 28 guided sole-proprietor Form 6198 records
 

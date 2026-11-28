@@ -237,6 +237,9 @@
     },
     "nov28Form6198PhysicalCandidate": {
       "applicationCommit": "43adee4032f5c6abd23279f546d39949bf16d470",
+      "trackedBlankCommit": "01c9b5947181efaa7a16ced581903ef2f8394419",
+      "trackedBlank": "forms/blank/2026/f6198.pdf",
+      "requiredLayoutTestLogSha256": "30e361208ccf1b91a05879bd73967ca10db47de45cbb9fa2aa16fdf53a289c5f",
       "source": "https://www.irs.gov/pub/irs-pdf/f6198.pdf",
       "sourceRevision": "November 2025, retrieved November 28, 2026",
       "officialBlankSha256": "8ae169186ad9f62910e73205ebaeb02a73bc74bb1a47954074ec14e4645a6389",
@@ -253,7 +256,7 @@
       "successorRun": 46120985997,
       "successorRevision": "0c594ea43f11970620c108a504a9c0fc1d23fc23",
       "successorContains": "42d8091d9e54c6429741c09629351a303a8ba1cc",
-      "successorStatus": "Queued when checked November 28, 2026. Strict browser qualification remains open."
+      "successorStatus": "An ARM64 runner started it November 28, 2026 at 10:16 UTC and reached strict browser flows. Strict browser qualification remains open."
     },
     "nov28GuidedScheduleCForm6198Originals": {
       "applicationCommit": "77e1fe6f664633fa2397f3f22e484957f9259703",
