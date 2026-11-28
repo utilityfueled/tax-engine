@@ -3,7 +3,7 @@
     "aiSourceFirstCaseReviewEvidenceKey": "activeContinuation.nov27AiSourceFirstCaseReview",
     "asOf": "2026-11-28",
     "branch": "main",
-    "applicationCommit": "7c1dfb42e459217dca53e3afc57db66d4369c91e",
+    "applicationCommit": "19fc8c5e60bf082465b9e5cb2952742d5a522f93",
     "latestScopedApplicationCommit": "19fc8c5e60bf082465b9e5cb2952742d5a522f93",
     "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
     "latestSchedule8812PayrollActcEvidenceKey": "activeContinuation.nov27Schedule8812PayrollActc",
@@ -205,11 +205,11 @@
     "annualScheduleBSourceEvidenceKey": "activeContinuation.nov24ScheduleBFinalSource",
     "annualScheduleBReviewEvidenceKey": "activeContinuation.nov24ScheduleBOrdinaryReview",
     "pensionTaxableAmountEvidenceKey": "activeContinuation.nov24ReportedPensionTaxableAmount",
-    "completeLocalBaselineEvidenceKey": "activeContinuation.nov28ExactFilingAiCharityCombined",
+    "completeLocalBaselineEvidenceKey": "activeContinuation.nov28ExactGuidedForm6198Combined",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov27ExactFederalPaymentCombined",
     "remaining": [
-      "Both strict Linux browser gates and final runtime image evidence remain open. Exact application 7c1dfb42e CI 46123814311, Web 46123814219 and Docker 46123814368 were queued. ARM64 rehearsal 46120985997 was pending on the earlier documentation successor 0c594ea43. Earlier 46085907600 passed archive and Compose recovery and failed nine strict browser cases.",
+      "Both strict Linux browser gates and final runtime image evidence remain open. Exact application 19fc8c5e6 CI 46127803068, Web 46127803042 and Docker 46127803025 were queued. ARM64 rehearsal 46120985997 was pending on the earlier documentation successor 0c594ea43. Run 46113946817 on 9f8fcff52 reached the strict ARM64 browser step. Earlier 46085907600 passed archive and Compose recovery and failed nine strict browser cases.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 27 public npm audits of the unchanged lockfile returned zero findings across 550 total and 457 production packages.",
@@ -217,6 +217,81 @@
     ]
   },
   "activeContinuation": {
+    "nov28ExactGuidedForm6198Combined": {
+      "commit": "19fc8c5e60bf082465b9e5cb2952742d5a522f93",
+      "exactArchiveSha256": "dd71fc2e7ac9bcdc520559eabb36f683c58c74ec388f33e8e94b79f814229830",
+      "localEvidenceMarker": "nov27-guided-form6198-part-ii-path",
+      "manifestSha256": "e82757429832c8208590b594b664f63de7542a6133db019004448442eeec072a",
+      "allElevenLocalChecksPassed": true,
+      "commandsPassed": [
+        "test",
+        "coverage",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "build",
+        "build-web",
+        "lint",
+        "browser"
+      ],
+      "prerequisites": {
+        "node": "26.13.1",
+        "pypdf": "6.10.0"
+      },
+      "officialSampleDocumentsVerified": 15,
+      "offlineEvaluatorArtifactCheckPassed": true,
+      "unit": {
+        "passed": 31557,
+        "skipped": 83
+      },
+      "coverage": {
+        "passed": 31557,
+        "skipped": 83,
+        "branchPercent": "88.8"
+      },
+      "browser": {
+        "passed": 655,
+        "skipped": 5,
+        "windows": 9,
+        "listenerCleanup": true,
+        "summarySha256": "9b3b747164b6ed96e1e1a76fb1a4fe487578af6f1a0f950081bba4cda5f65bc2",
+        "sourceBuildSha256": "2b0aa044589d93a7777741f36d4432e8ec447b84667b1799add784c63203f6b7"
+      },
+      "standaloneEncryptedRecovery": {
+        "exit": 0,
+        "logSha256": "de39591404792960bb62d320b4e02c43b2dea4618301f992f83efd6e6cef6513",
+        "receiptSha256": "dbdc24dcca89207123b506cffa76c2c003c089e6bdb393ad71b226c916882bdd",
+        "listenerCleanup": true
+      },
+      "linuxNativeQualified": false,
+      "hostedQualified": false,
+      "initialLocalStorageFailure": {
+        "sameExactArchiveReplay": true,
+        "coverageFailureLogSha256": "2e2818a741317578bcf11a84b3ea14210fd6a415155c4652fc5121d5c3a1bc33",
+        "browserFailureLogSha256": "8da50ea4f47b5378bc1fde5b4cca70b2fc3dc0b5d9aaa48f9cd97a28aa366569",
+        "generatedWebpackCacheCleanupReceiptSha256": "89df09537d81d590da18bde40478bc113dd85a5fe0fa858e66faa55ade714835"
+      },
+      "ownedForm6198DesktopAndPhoneSmoke": [
+        {
+          "viewport": 1280,
+          "fitsViewport": true,
+          "originalIntakeSaved": true,
+          "outsideBasisEntered": false,
+          "explicitZeroReopened": true,
+          "editInvalidated": true
+        },
+        {
+          "viewport": 390,
+          "fitsViewport": true,
+          "originalIntakeSaved": true,
+          "outsideBasisEntered": true,
+          "explicitZeroReopened": true,
+          "editInvalidated": true
+        }
+      ]
+    },
     "nov28GuidedForm6198Originals": {
       "commit": "19fc8c5e60bf082465b9e5cb2952742d5a522f93",
       "archiveSha256": "dd71fc2e7ac9bcdc520559eabb36f683c58c74ec388f33e8e94b79f814229830",
