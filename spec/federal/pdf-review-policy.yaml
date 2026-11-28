@@ -9,6 +9,15 @@ notes: |
   Existing document Subject metadata never establishes a visible page notice.
   Unchanged template hashes, year and filing gates remain mandatory.
 lines:
+  - line: "filing-actual-fact-presence"
+    description: "Validate original fact presence before using parsed defaults in the filing lane"
+    formula: >-
+      A qualified scenario receives the original source input and the parsed tax input
+      when checking facts before calculation and template reads. A parsed default does
+      not establish that a source fact was supplied. A missing required collection stays
+      unknown even if parsing supplies an empty array. An explicit empty collection can
+      establish an absence when the separately reviewed scenario permits it.
+    testRef: "tests/pdf/filing-return.test.ts::distinguishes omitted source statements from an explicit empty list"
   - line: "compression-byte-compatibility"
     description: "PDF compression preserves bytes and reset semantics with native zero filling"
     formula: "The pinned pako1.0.11 local patch may clear internal buffers with native fill(0) when available, retaining the original fallback. Compressed output for repeated and chunked streams, full flush, typed/untyped buffers, dictionaries, raw and gzip modes must match the unmodified bundled implementation and decode with an independent zlib reader. PDF content, notices, privacy and qualification gates are unchanged."

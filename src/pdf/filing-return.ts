@@ -41,9 +41,8 @@ export async function buildFilingReturn(
     || !scenario.independentSecurityReview.trim() || !scenario.releaseApproval.trim()) {
     throw new Error("Filing qualification does not match the current year, rules or required approvals.");
   }
-  // This per-scenario validator must require actual facts; parsing defaults alone
-  // do not establish completeness. No redaction is applied to this input.
-  scenario.validateCompleteInput(input);
+  // The scenario checks original fact presence before using any parsed defaults.
+  scenario.validateCompleteInput({ original: rawInput, parsed: input });
   const result = calculateFederalTax(input);
   if (result.taxYear !== year) throw new Error("Filing calculation and input years must match.");
   if (!result.scheduleB?.partThreeComplete) {

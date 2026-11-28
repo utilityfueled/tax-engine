@@ -22,8 +22,8 @@ export interface QualifiedFilingScenario {
   readonly independentSecurityReview: string;
   readonly releaseApproval: string;
   readonly forms: Readonly<Record<string, QualifiedFilingForm>>;
-  /** Must reject unknown required facts and all scenarios outside the reviewed scope. */
-  readonly validateCompleteInput: (input: TaxYearInput) => void;
+  /** Check original fact presence and parsed values within the reviewed scope. */
+  readonly validateCompleteInput: (source: Readonly<{ original: unknown; parsed: TaxYearInput }>) => void;
   /** Complete attachment list, derived from the independently checked result. */
   readonly selectForms: (input: TaxYearInput, result: TaxReturnResult) => readonly string[];
 }

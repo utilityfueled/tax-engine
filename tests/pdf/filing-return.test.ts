@@ -154,6 +154,21 @@ print(json.dumps({
     await expect(buildFilingReturn(simpleW2Fixture, "synthetic", "/synthetic")).rejects.toThrow(/unknown/);
     expect(mocks.calculate).not.toHaveBeenCalled();
   });
+  it("distinguishes omitted source statements from an explicit empty list", async () => {
+    complete.mockImplementation(({ original, parsed }) => {
+      expect(parsed.form1099Int).toEqual([]);
+      if (!original || typeof original !== "object" || !Object.hasOwn(original, "form1099Int")
+        || !Array.isArray(Reflect.get(original, "form1099Int"))) {
+        throw new Error("Interest statement facts are unknown.");
+      }
+    });
+    const { form1099Int, ...omitted } = simpleW2Fixture;
+    await expect(buildFilingReturn(omitted, "synthetic", "/synthetic")).rejects.toThrow(/interest statement facts are unknown/i);
+    await expect(buildFilingReturn({ ...omitted, form1099Int: undefined }, "synthetic", "/synthetic")).rejects.toThrow(/interest statement facts are unknown/i);
+    expect(mocks.calculate).not.toHaveBeenCalled();
+    expect(mocks.read).not.toHaveBeenCalled();
+    await expect(buildFilingReturn({ ...omitted, form1099Int }, "synthetic", "/synthetic")).resolves.toMatchObject({ purpose: "filing" });
+  });
   it("rejects a mismatched calculation year", async () => {
     mocks.calculate.mockReturnValue({ taxYear: 2026 });
     await expect(buildFilingReturn(simpleW2Fixture, "synthetic", "/synthetic")).rejects.toThrow(/years must match/);
