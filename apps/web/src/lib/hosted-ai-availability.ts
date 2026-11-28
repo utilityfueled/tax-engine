@@ -5,14 +5,16 @@ import { PRODUCTION_WORKSPACE_AI_EXECUTION } from "./production-ai-config";
 
 /** Do not sell extra credits during qualification or a limited rollout. */
 export function canPurchaseHostedAiCredits(
-  at = new Date().toISOString(),
+  at?: string,
   env: Record<string, string | undefined> = process.env,
 ): boolean {
   const execution = PRODUCTION_WORKSPACE_AI_EXECUTION;
   const rollout = execution.productionRollout;
   if (execution.mode !== "production" || !rollout || rollout.cohortSecret.length < 32) return false;
   const state = (rollout.states ?? PRODUCTION_AI_ROLLOUTS).find(entry => entry.task === "workspace-summary");
-  if (!state || state.stage !== 100 || !qualifiedAiEvidence(state.current, "workspace-summary", at)) return false;
+  const sampledMillisecond = at === undefined;
+  const qualificationAt = sampledMillisecond ? new Date().toISOString() : at;
+  if (!state || state.stage !== 100 || !qualifiedAiEvidence(state.current, "workspace-summary", qualificationAt, sampledMillisecond)) return false;
   if (env.MODEL_PROVIDER_BASE_URL?.trim()
     && env.MODEL_PROVIDER_BASE_URL.replace(/\/+$/, "") !== "https://api.openai.com/v1") return false;
   const apiKeys = execution.apiKeys ?? {

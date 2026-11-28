@@ -6,6 +6,7 @@ Version: 2026-10-25. This defines software behavior; it does not qualify a model
 
 - The server owns task, profile, effort, prompt/schema version, output budget and provider endpoint. Request JSON cannot select evaluation mode or supply rollout evidence.
 - Production has no enabled route without current, independently reviewed qualification and owner approval. Credentials alone do not enable a model. Optional Google selection is explicit. A failed provider attempt never silently switches providers or retries.
+- After credit reservation and immediately before transport, reselect the production route using the dispatch clock, then require the same profile and qualification report as before reservation. Expiry or a different selection releases the reservation for that undispatched attempt and returns deterministic help without charging for the attempt. A release failure surfaces as an accounting error without dispatch.
 - Local help is the default per workspace. Opt-out or missing qualification produces deterministic help with no provider cost. Failed preference writes keep the current session local. Switching workspace clears the helper conversation and aborts pending work.
 - Only redacted extracted text reaches a provider; PDFs/images and direct identifiers are rejected. OpenAI uses fixed HTTPS, redirects disabled, `store:false`, standard service tier, and explicit caching with no breakpoints. No response cache is enabled.
 - Input bound is UTF-8 byte length of content, instructions and JSON schema plus 1,024 framing tokens. Task output limits include reasoning. Routine timeout is 30 seconds; complex reconciliation is 120 seconds and requires a cancellation signal. Response bytes are bounded at 1 MiB.
@@ -41,6 +42,7 @@ model remains unresolved pending provider investigation.
 - Gates include 99.5% schema/critical exact fields, no observed safety failures or critical regression, independent prose/PII review, and accepted-task costs including failures at actual and January 2027 prices.
 - Initial P50/P95 limits are 10/30 seconds routinely and 60/120 seconds for reconciliation; accepted-task spend limits are USD 0.50/1.00. A candidate must show at least 10% cost reduction or one percentage point quality gain against both baseline reports. Missing baseline evidence blocks promotion review.
 - A measured report permits human promotion review only. Production config remains empty. Authorized rollouts progress 5% → 25% → 100%, using stable HMAC cohorts scoped to owner/task and reviewed observations from the previous stage. Rollback selects a still-qualified previous route or deterministic help immediately. Changed prompts/schemas, expired evidence or opt-out fail closed.
+- Extra-credit sales require the current, fully rolled-out workspace route to be qualified throughout the sampled millisecond, using the same clock rule as dispatch. Explicit instants for eligibility checks retain fractional precision, with inclusive qualification and exclusive expiry.
 
 ## Migration and rollback
 

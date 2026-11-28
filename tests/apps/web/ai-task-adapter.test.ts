@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { executeAiTask, type AiTaskExecution, type AiTaskRequest } from "../../../apps/web/src/lib/ai-task-adapter";
+import type { AiQualificationEvidence, AiRolloutState } from "../../../apps/web/src/lib/ai-rollout";
 vi.mock("server-only", () => ({}));
 
 const schema = z.object({ summary: z.string().max(300) }).strict();
@@ -16,6 +17,30 @@ function envelope(output = '{"summary":"Confirm the W-2."}', overrides = {}) {
 function execution(payload = envelope()): AiTaskExecution & { fetchFn: ReturnType<typeof vi.fn> } {
   return { mode: "evaluation", syntheticFixtureId: "synthetic-w2-1", apiKey: "fixture-key",
     now: () => "2027-01-15T12:00:00Z", fetchFn: vi.fn().mockResolvedValue(Response.json(payload)) };
+}
+
+function qualifiedProductionExecution() {
+  const evidence: AiQualificationEvidence = {
+    task: "workspace-summary", profileId: "luna-high", model: "gpt-6-luna",
+    promptVersion: "workspace-summary/4", schemaVersion: "workspace-summary/3",
+    reportSha256: "a".repeat(64), corpusSha256: "b".repeat(64),
+    accountCapabilityReference: "synthetic-capability", author: "fixture-author",
+    independentReviewer: "fixture-reviewer", approvedBy: "fixture-owner", approvalReference: "synthetic-approval",
+    qualifiedAt: "2027-01-14T12:00:00Z", expiresAt: "2027-01-15T12:00:00.500Z",
+    measuredGates: { eligibleForPromotionReview: true, blockers: [], reviewedCases: 240,
+      repeatedHeldOut: true, januaryPricingIncluded: true },
+  };
+  const state: AiRolloutState = {
+    task: "workspace-summary", stage: 100, current: evidence, previous: null, revision: 3, changeReference: "synthetic-rollout",
+  };
+  const clock = { at: "2027-01-15T12:00:00Z" };
+  return {
+    evidence, state, clock,
+    deps: {
+      ...execution(), mode: "production" as const, now: () => clock.at,
+      productionRollout: { ownerScope: "synthetic-owner", cohortSecret: "x".repeat(32), states: [state] },
+    },
+  };
 }
 
 describe("task-based candidate AI adapter", () => {
@@ -308,6 +333,59 @@ describe("task-based candidate AI adapter", () => {
     })).rejects.toMatchObject({ name: "AbortError" });
     expect(deps.fetchFn).not.toHaveBeenCalled();
     expect(recordUndispatchedAttempt).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ attempt: 1 }));
+    expect(recordUnknownAttempt).not.toHaveBeenCalled();
+  });
+  it.each(["expires", "rolls back to a different profile", "selects a different report for the same profile"] as const)(
+    "releases the production reservation when qualification %s before dispatch", async change => {
+      const { deps, evidence, state, clock } = qualifiedProductionExecution();
+      const beforeAttempt = vi.fn<NonNullable<AiTaskExecution["beforeAttempt"]>>(async () => {
+        await Promise.resolve();
+        if (change === "expires") clock.at = evidence.expiresAt;
+        if (change === "rolls back to a different profile") {
+          state.stage = 0;
+          state.previous = { ...evidence, profileId: "sol-low", model: "gpt-6.1-sol" };
+        }
+        if (change === "selects a different report for the same profile") {
+          state.current = { ...evidence, reportSha256: "c".repeat(64) };
+        }
+      });
+      const recordUndispatchedAttempt = vi.fn();
+      const recordAttempt = vi.fn();
+      const recordUnknownAttempt = vi.fn();
+      await expect(executeAiTask(request(), {
+        ...deps, beforeAttempt, recordUndispatchedAttempt, recordAttempt, recordUnknownAttempt,
+      })).resolves.toBeNull();
+      expect(beforeAttempt).toHaveBeenCalledOnce();
+      expect(recordUndispatchedAttempt).toHaveBeenCalledExactlyOnceWith(beforeAttempt.mock.lastCall?.[0]);
+      expect(deps.fetchFn).not.toHaveBeenCalled();
+      expect(recordAttempt).not.toHaveBeenCalled();
+      expect(recordUnknownAttempt).not.toHaveBeenCalled();
+    },
+  );
+  it("dispatches and settles the still-qualified production route after reservation", async () => {
+    const { deps, evidence, clock } = qualifiedProductionExecution();
+    const beforeAttempt = vi.fn<NonNullable<AiTaskExecution["beforeAttempt"]>>(async () => { clock.at = "2027-01-15T12:00:00.499Z"; });
+    const recordAttempt = vi.fn();
+    const recordUndispatchedAttempt = vi.fn();
+    const result = await executeAiTask(request(), { ...deps, beforeAttempt, recordAttempt, recordUndispatchedAttempt });
+    expect(result).toMatchObject({ accepted: true, accounting: { profileId: evidence.profileId, retailChargeCents: 1 } });
+    expect(deps.fetchFn).toHaveBeenCalledOnce();
+    expect(recordAttempt).toHaveBeenCalledExactlyOnceWith(beforeAttempt.mock.lastCall?.[0],
+      expect.objectContaining({ accepted: true, usage: expect.objectContaining({ inputTokens: 100, outputTokens: 2000 }) }));
+    expect(recordUndispatchedAttempt).not.toHaveBeenCalled();
+  });
+  it("propagates a failed release when production qualification expires before dispatch", async () => {
+    const { deps, evidence, clock } = qualifiedProductionExecution();
+    const recordUndispatchedAttempt = vi.fn().mockRejectedValue(new Error("ledger release unavailable"));
+    const recordUnknownAttempt = vi.fn();
+    const recordAttempt = vi.fn();
+    await expect(executeAiTask(request(), {
+      ...deps, beforeAttempt: async () => { clock.at = evidence.expiresAt; },
+      recordUndispatchedAttempt, recordAttempt, recordUnknownAttempt,
+    })).rejects.toThrow("ledger release unavailable");
+    expect(recordUndispatchedAttempt).toHaveBeenCalledOnce();
+    expect(deps.fetchFn).not.toHaveBeenCalled();
+    expect(recordAttempt).not.toHaveBeenCalled();
     expect(recordUnknownAttempt).not.toHaveBeenCalled();
   });
   it("propagates cancellation during an escalation refusal without writing an undispatched attempt", async () => {

@@ -37,6 +37,21 @@ describe("reversible qualified AI rollout", () => {
     expect(qualifiedAiEvidence({ ...evidence, qualifiedAt: "2026-10-24T20:00:00-04:00" }, "workspace-summary", at)).toBe(true);
     expect(qualifiedAiEvidence({ ...evidence, qualifiedAt: "2026-10-25T00:00:00.001Z" }, "workspace-summary", at)).toBe(false);
   });
+  it("honors inclusive qualification and exclusive expiry within the same millisecond", () => {
+    const current = { ...evidence, qualifiedAt: "2026-10-24T20:00:00.0000002-04:00", expiresAt: "2026-10-25T00:00:00.0000004Z" };
+    const states = [{ ...initial, stage: 100 as const, current }];
+    for (const [fraction, available] of [["1", false], ["2", true], ["3", true], ["4", false]] as const) {
+      expect.soft(Boolean(selectQualifiedAiRoute({ ...context, states, at: `2026-10-25T00:00:00.000000${fraction}Z` }))).toBe(available);
+    }
+    expect(qualifiedAiEvidence({ ...evidence, qualifiedAt: current.qualifiedAt }, "workspace-summary", "2026-10-25T00:00:00.0000001Z")).toBe(false);
+  });
+  it("requires the entire sampled millisecond to lie inside the qualification window", () => {
+    const sampled = { ...context, at: "2026-10-25T00:00:00.000Z", sampledMillisecond: true };
+    const route = (current: AiQualificationEvidence) => selectQualifiedAiRoute({ ...sampled, states: [{ ...initial, stage: 100, current }] });
+    expect.soft(route({ ...evidence, qualifiedAt: "2026-10-25T00:00:00.0000002Z" })).toBeNull();
+    expect.soft(route({ ...evidence, expiresAt: "2026-10-25T00:00:00.0009999Z" })).toBeNull();
+    expect(route({ ...evidence, qualifiedAt: sampled.at, expiresAt: "2026-10-25T00:00:00.001Z" })?.profile.id).toBe(evidence.profileId);
+  });
   it.each([{ reviewedCases: 199 }, { januaryPricingIncluded: false }, { repeatedHeldOut: false }, { blockers: ["pii"] }, { eligibleForPromotionReview: false }])("preserves measured gates %j", fields => {
     expect(qualifiedAiEvidence({ ...evidence, measuredGates: { ...evidence.measuredGates, ...fields } }, "workspace-summary", at)).toBe(false);
   });

@@ -1,6 +1,7 @@
 import "server-only";
 import { createHmac } from "node:crypto";
 import { AI_PROFILES, AI_TASKS, type AiProfileId, type AiTask } from "@tax-engine/engine/src/ai-task-registry";
+import { timestampAtOrBefore } from "@tax-engine/engine/src/provider-model-eval";
 import { z } from "zod";
 
 export interface AiQualificationEvidence {
@@ -30,7 +31,7 @@ interface AiRolloutObservation {
 export const PRODUCTION_AI_ROLLOUTS: readonly AiRolloutState[] = Object.freeze([]);
 const qualificationInstant = z.iso.datetime({ offset: true });
 
-export function qualifiedAiEvidence(evidence: AiQualificationEvidence | null, task: AiTask, at: string): evidence is AiQualificationEvidence {
+export function qualifiedAiEvidence(evidence: AiQualificationEvidence | null, task: AiTask, at: string, sampledMillisecond = false): evidence is AiQualificationEvidence {
   if (!evidence || evidence.task !== task) return false;
   const profile = AI_PROFILES[evidence.profileId];
   const policy = AI_TASKS[task];
@@ -38,12 +39,13 @@ export function qualifiedAiEvidence(evidence: AiQualificationEvidence | null, ta
   const reviewer = evidence.independentReviewer.normalize("NFKC").trim().toLowerCase();
   if (![at, evidence.qualifiedAt, evidence.expiresAt].every(value => qualificationInstant.safeParse(value).success)) return false;
   const time = Date.parse(at);
+  if (!Number.isFinite(time) || !timestampAtOrBefore(evidence.qualifiedAt, at) || timestampAtOrBefore(evidence.expiresAt, at)) return false;
+  if (sampledMillisecond && !timestampAtOrBefore(new Date(time + 1).toISOString(), evidence.expiresAt)) return false;
   return !!profile && !!policy && profile.model === evidence.model
     && evidence.promptVersion === policy.promptVersion && evidence.schemaVersion === policy.schemaVersion
     && /^[a-f0-9]{64}$/.test(evidence.reportSha256) && /^[a-f0-9]{64}$/.test(evidence.corpusSha256)
     && !!evidence.accountCapabilityReference.trim() && !!evidence.approvalReference.trim() && !!evidence.approvedBy.trim()
     && !!reviewer && !!author && reviewer !== author
-    && Number.isFinite(time) && Date.parse(evidence.qualifiedAt) <= time && Date.parse(evidence.expiresAt) > time
     && evidence.measuredGates.eligibleForPromotionReview && evidence.measuredGates.blockers.length === 0
     && evidence.measuredGates.reviewedCases >= 200 && evidence.measuredGates.repeatedHeldOut && evidence.measuredGates.januaryPricingIncluded;
 }
@@ -51,15 +53,15 @@ export function qualifiedAiEvidence(evidence: AiQualificationEvidence | null, ta
 /** The cohort is stable within an authenticated owner/task and cannot be chosen by request IDs. */
 export function selectQualifiedAiRoute(input: {
   task: AiTask; ownerScope: string; cohortSecret: string; optedOut?: boolean; at: string;
-  states?: readonly AiRolloutState[];
+  states?: readonly AiRolloutState[]; sampledMillisecond?: boolean;
 }) {
   if (input.optedOut) return null;
   if (!input.ownerScope.trim() || input.cohortSecret.length < 32) throw new Error("Private owner scope and cohort secret are required.");
   const state = (input.states ?? PRODUCTION_AI_ROLLOUTS).find(entry => entry.task === input.task);
   if (!state) return null;
   const bucket = createHmac("sha256", input.cohortSecret).update(`${input.ownerScope}\0${input.task}`).digest().readUInt32BE(0) % 100;
-  const selected = state.stage > bucket && qualifiedAiEvidence(state.current, input.task, input.at) ? state.current
-    : qualifiedAiEvidence(state.previous, input.task, input.at) ? state.previous : null;
+  const selected = state.stage > bucket && qualifiedAiEvidence(state.current, input.task, input.at, input.sampledMillisecond) ? state.current
+    : qualifiedAiEvidence(state.previous, input.task, input.at, input.sampledMillisecond) ? state.previous : null;
   if (!selected) return null;
   return { policy: AI_TASKS[input.task], profile: AI_PROFILES[selected.profileId], reportSha256: selected.reportSha256 };
 }

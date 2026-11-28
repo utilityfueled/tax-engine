@@ -11,6 +11,12 @@ const evidence: AiQualificationEvidence = { task: "workspace-summary", profileId
 const state: AiRolloutState = { task: "workspace-summary", stage: 100, current: evidence, previous: null, revision: 3, changeReference: "synthetic-only" };
 beforeEach(() => { fixture.execution = { mode: "production", apiKeys: { openai: "synthetic-test-key" }, productionRollout: { ownerScope: "synthetic", cohortSecret: "x".repeat(32), states: [structuredClone(state)] } }; });
 
+function setQualification(current: AiQualificationEvidence) {
+  const rollout = fixture.execution.productionRollout;
+  if (!rollout) throw new Error("Expected a synthetic rollout fixture.");
+  rollout.states = [{ ...state, current }];
+}
+
 describe("extra-credit sale qualification (synthetic evidence only)", () => {
   it("keeps the shipped executor and compiled registry unqualified", async () => {
     const actual = await vi.importActual<typeof import("../../../apps/web/src/lib/production-ai-config")>("../../../apps/web/src/lib/production-ai-config");
@@ -18,6 +24,30 @@ describe("extra-credit sale qualification (synthetic evidence only)", () => {
     fixture.execution = actual.PRODUCTION_WORKSPACE_AI_EXECUTION; expect(canPurchaseHostedAiCredits(at)).toBe(false);
   });
   it("permits a fully rolled-out approved executable route in the synthetic harness", () => { expect(canPurchaseHostedAiCredits(at)).toBe(true); });
+  it("requires qualification for the entire sampled millisecond before offering credits", () => {
+    const sampledAt = "2026-10-25T00:00:00.000Z";
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date(sampledAt));
+      setQualification({ ...evidence, expiresAt: "2026-10-25T00:00:00.0005Z" });
+      expect.soft(canPurchaseHostedAiCredits(undefined, {})).toBe(false);
+      expect.soft(canPurchaseHostedAiCredits(sampledAt, {})).toBe(true);
+
+      setQualification({ ...evidence, qualifiedAt: sampledAt, expiresAt: "2026-10-25T00:00:00.001Z" });
+      expect(canPurchaseHostedAiCredits(undefined, {})).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+  it("uses inclusive qualification and exclusive expiry for explicitly supplied fractional instants", () => {
+    const qualifiedAt = "2026-10-25T00:00:00.0002Z";
+    const expiresAt = "2026-10-25T00:00:00.0005Z";
+    setQualification({ ...evidence, qualifiedAt, expiresAt });
+    expect(canPurchaseHostedAiCredits("2026-10-25T00:00:00.0001Z", {})).toBe(false);
+    expect(canPurchaseHostedAiCredits(qualifiedAt, {})).toBe(true);
+    expect(canPurchaseHostedAiCredits("2026-10-25T00:00:00.0004Z", {})).toBe(true);
+    expect(canPurchaseHostedAiCredits(expiresAt, {})).toBe(false);
+  });
   it("does not sell credits when the selected provider has no credential", () => {
     fixture.execution.apiKeys = {};
     expect(canPurchaseHostedAiCredits(at)).toBe(false);

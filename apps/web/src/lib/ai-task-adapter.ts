@@ -108,8 +108,12 @@ const openAiBodyReference = openAiEnvelope.pick({ id: true });
 /** One attempt only. A caller may explicitly escalate once; no provider switching or hidden retries. */
 export async function executeAiTask<T>(request: AiTaskRequest<T>, execution: AiTaskExecution = { mode: "production" }) {
   if (request.optedOut) return null;
-  const route = execution.mode === "production" ? execution.productionRollout
-    ? selectQualifiedAiRoute({ ...execution.productionRollout, task: request.task, at: (execution.now ?? (() => new Date().toISOString()))() }) : null
+  const now = execution.now ?? (() => new Date().toISOString());
+  const qualifiedRouteAt = (at: string) => execution.productionRollout
+    ? selectQualifiedAiRoute({ ...execution.productionRollout, task: request.task, optedOut: request.optedOut, at,
+      sampledMillisecond: execution.now === undefined }) : null;
+  const productionRoute = execution.mode === "production" && execution.productionRollout ? qualifiedRouteAt(now()) : null;
+  const route = execution.mode === "production" ? productionRoute
     : resolveCandidateAiRoute(request.task, { mode: execution.mode, provider: execution.provider,
       escalationCount: execution.escalationCount, verifiedTaxContext: validateTaxContext(request.taxContext) });
   if (!route) return null;
@@ -150,7 +154,6 @@ export async function executeAiTask<T>(request: AiTaskRequest<T>, execution: AiT
       maxOutputTokens: policy.maxOutputTokens, thinkingConfig: { thinkingLevel: "HIGH" } },
   };
   const serializedBody = JSON.stringify(body);
-  const now = execution.now ?? (() => new Date().toISOString());
   const startedAt = now();
   const maximumCost = maximumAiRequestCost(profile.model, startedAt, policy.maxInputTokens, policy.maxOutputTokens);
   const attempt: AiAttemptMetadata = { task: request.task, profileId: profile.id, modelId: profile.model, startedAt,
@@ -160,7 +163,14 @@ export async function executeAiTask<T>(request: AiTaskRequest<T>, execution: AiT
   let readyToSend = false;
   try {
     signal.throwIfAborted();
-    readyToSend = !useFallback && getAiPrice(profile.model, now()).effectiveFrom === maximumCost.pricingEffectiveFrom;
+    if (!useFallback) {
+      const dispatchAt = now();
+      const currentRoute = productionRoute && qualifiedRouteAt(dispatchAt);
+      const qualificationStillCurrent = !productionRoute || (currentRoute?.profile.id === productionRoute.profile.id
+        && currentRoute.reportSha256 === productionRoute.reportSha256);
+      readyToSend = qualificationStillCurrent
+        && getAiPrice(profile.model, dispatchAt).effectiveFrom === maximumCost.pricingEffectiveFrom;
+    }
   } finally {
     if (!readyToSend && !useFallback) await execution.recordUndispatchedAttempt?.(attempt);
   }

@@ -19,5 +19,12 @@ lines:
     formula: >-
       Require real ISO timestamps with a timezone for the route check,
       qualification and expiration. Admit only at or after qualification and
-      strictly before expiration. Data rejected here cannot advance a rollout.
+      strictly before expiration, preserving any fractional digits in the
+      evidence and an exact supplied clock. When the adapter uses the default
+      millisecond clock, require qualification at or before its sampled instant
+      and expiry at or after the start of the next millisecond. Data rejected
+      here cannot advance a rollout.
     testRef: "tests/apps/web/ai-rollout.test.ts::rejects malformed review instants and preserves the valid qualification boundary"
+    testRefs:
+      - "tests/apps/web/ai-rollout.test.ts::honors inclusive qualification and exclusive expiry within the same millisecond"
+      - "tests/apps/web/ai-rollout.test.ts::requires the entire sampled millisecond to lie inside the qualification window"
