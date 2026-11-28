@@ -15,6 +15,21 @@ the latest application revision, exact-source runs and open dependencies. The
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. The updated native ARM64 run and the AMD64 jobs need runner assignment. The previous ARM64 browser still failed 11 cases after image and recovery passed. Qualify both final runtime images before publishing. |
 
+## November 27 exact federal payment totals
+
+`e32a4591e` preserves the exact Decimal total from the original federal
+estimated payments and applied credits through Form 1040 line 26 and the
+Form 2210 and 2210-F worksheets. The federal caller fixture preserves its
+final three cents through Form 2210. Separate worksheet fixtures reject
+rounded mismatches and retain their exact subtotals. Statutory and source-effective dates
+retain their existing treatment. All 335 exact focused tests, eight static
+checks and 10,314 spec references passed. Independent engineering review
+reran 43 tests. The complete local checks are scheduled on this exact
+revision, and the current ARM64 rehearsal was dispatched.
+[IRS Form 1040 instructions](https://www.irs.gov/instructions/i1040gi) ·
+[IRS Form 2210 instructions](https://www.irs.gov/instructions/i2210) ·
+[ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/46091464368).
+
 ## November 27 Form 2210 withholding and applied credits
 
 `0a09bd192` requires an observed date for elected actual withholding on
@@ -24,8 +39,8 @@ guided intake reconciles each credit's original refund and payment pieces
 using exact Decimal sums, including confirmed zero. Existing effective-date
 treatment for applied credits and statutory withholding installments remains
 in use. All 332 exact focused tests, eight static checks and 10,313 spec
-references passed. Independent engineering review passed. The combined
-local and native runs are pending on this exact revision.
+references passed. Independent engineering review passed. The queued
+local aggregate was superseded before starting by the exact-totals revision.
 [26 U.S.C. §6654(g)(1)](https://uscode.house.gov/us/usc/119-134/t26/s6654/) ·
 [Current IRS Form 2210 instructions for 2025](https://www.irs.gov/instructions/i2210) ·
 [ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/46090803858).

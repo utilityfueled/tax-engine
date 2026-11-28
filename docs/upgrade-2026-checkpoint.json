@@ -3,10 +3,11 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "dcfd227f5febe42d318ac8f4ebf1f7fd048caa53",
-    "latestScopedApplicationCommit": "0a09bd1923705b016314cd041d4dd5e0d05f5941",
-    "latestCombinedCandidateCommit": "0a09bd1923705b016314cd041d4dd5e0d05f5941",
+    "latestScopedApplicationCommit": "e32a4591ea0063f0f425ec4c761582f1b0df553f",
+    "latestCombinedCandidateCommit": "e32a4591ea0063f0f425ec4c761582f1b0df553f",
     "nov27FullBrowserCollectionEvidenceKey": "activeContinuation.nov27FullBrowserCollection",
-    "latestScopedChecksEvidenceKey": "activeContinuation.nov27Form2210ObservedWithholding",
+    "latestScopedChecksEvidenceKey": "activeContinuation.nov27ExactFederalPaymentTotals",
+    "nov27ExactFederalPaymentTotalsEvidenceKey": "activeContinuation.nov27ExactFederalPaymentTotals",
     "nov27Form2210ObservedWithholdingEvidenceKey": "activeContinuation.nov27Form2210ObservedWithholding",
     "nov27RetirementCodeHSourceEvidenceKey": "activeContinuation.nov27RetirementCodeHSource",
     "nov27AiReceiptCorrectionEvidenceKey": "activeContinuation.nov27AiReceiptCorrection",
@@ -301,6 +302,24 @@
       "generationRequestsMade": 0,
       "qualificationChanged": false
     },
+    "nov27ExactFederalPaymentTotals": {
+      "commit": "e32a4591ea0063f0f425ec4c761582f1b0df553f",
+      "verifiedTree": "501fc97989978ab89ab6d1e16412232890560fd1",
+      "exactArchiveSha256": "85c3fa30fa82411d25edefdd17c25f902df4f4bc6e8cdeae9035f1c95685d41d",
+      "targetedRedFailuresBeforeFix": 3,
+      "exactFocusedTestsPassed": 335,
+      "repositorySpecReferencesValidated": 10314,
+      "exactTreeChecksPassed": [
+        "typecheck", "contracts", "web-types", "spec", "inventory", "lint", "build", "offline-eval"
+      ],
+      "independentEngineeringReviewPassed": true,
+      "independentFocusedTestsPassed": 43,
+      "exactSyntheticLine26AndOrdinaryForm2210": "1000000000000000123.03",
+      "localCombinedStatus": "scheduled after prior isolated tracks",
+      "localEvidenceMarker": "nov27-form2210-exact-source-totals-path",
+      "arm64NativeRun": "https://github.com/utilityfueled/tax-engine/actions/runs/46091464368",
+      "filingQualified": false
+    },
     "nov27Form2210ObservedWithholding": {
       "commit": "0a09bd1923705b016314cd041d4dd5e0d05f5941",
       "verifiedTree": "18a16f234462b1fac96a1779c356b88193219d75",
@@ -313,7 +332,7 @@
         "typecheck", "contracts", "web-types", "spec", "inventory", "lint", "build", "offline-eval"
       ],
       "independentEngineeringReviewPassed": true,
-      "localCombinedStatus": "scheduled after prior isolated tracks",
+      "localCombinedStatus": "superseded before full tracks started",
       "localEvidenceMarker": "nov27-form2210-observed-withholding-path",
       "arm64NativeRun": "https://github.com/utilityfueled/tax-engine/actions/runs/46090803858",
       "filingQualified": false
