@@ -1095,7 +1095,11 @@ documents $8,000 in decreases. Derive the signed Form 6198 deductible loss,
 the Schedule C line 31 and Schedule 1 transfers, and the separately tracked
 carry. Repeat with exact zero capacity and explain which original records
 are needed to rule out recapture and trace a later allowed carry. The engine
-currently holds the negative amount for review. [Schedule C instructions](https://www.irs.gov/instructions/i1040sc)
+holds the negative amount for review until the original records qualify.
+For the verified canonical fixture in `00d07b0b5`, repeat with one ordinary
+expense ledger and a $6,000.57 pre-limit loss, $4,000.32 in documented
+at-risk capacity, and $85,000 in separate wages. Derive the signed line 21,
+the separate suspended amount and federal AGI. [Schedule C instructions](https://www.irs.gov/instructions/i1040sc)
 · [Form 6198 instructions](https://www.irs.gov/instructions/i6198).
 
 ## November 28 recipient classification for direct 2026 gifts

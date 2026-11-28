@@ -23,6 +23,21 @@ jq '.resume | {latestScopedApplicationCommit, remaining}' docs/upgrade-2026-chec
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local Chromium and encrypted recovery passed. [Exact Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/46127803042), [CI](https://github.com/utilityfueled/tax-engine/actions/runs/46127803068) and [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/46127803025) remained queued. [ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/46120985997) remained pending on the earlier revision. [Active ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/46113946817) reached the strict browser step. The previous ARM64 image and Compose checks passed and the strict browser check failed nine cases. |
 
+## November 28 sole-proprietor Form 6198 originals for federal calculation
+
+The canonical federal calculator in `00d07b0b5` accepts one
+original current ordinary Schedule C loss with a verified same-owner business
+reference, Box 32b, material participation and original Part II records. In the
+synthetic case the original $6,000.57 loss transferred $4,000.32 once to Schedule
+1, suspended $2,000.25 separately and produced $80,999.68 AGI. Line 21 remains
+signed and verified zero capacity suspends the full original loss.
+The reviewed scope holds negative capacity, missing records, prior carry,
+mixed activities and receipt sources that fail owner, year or total checks.
+The package passed 159 focused tests, four spec references and type checking.
+State transfers, public review PDFs and filing still need qualification.
+[Schedule C instructions](https://www.irs.gov/instructions/i1040sc) ·
+[Form 6198 instructions](https://www.irs.gov/instructions/i6198).
+
 ## November 28 explicit Schedule C at-risk loss
 
 The 2026 federal Schedule C engine holds an explicit box 32b loss before it
@@ -43,6 +58,12 @@ links the corresponding commits and focused verification.
 The final guard `1dbb0fdc2` records exact-source checks and retained
 reproductions in [the checkpoint](upgrade-2026-checkpoint.json). The most
 recent full local combined release verification was `19fc8c5e6`.
+
+The first broad run on the exact Schedule C guard revision passed 31,596 tests
+and failed to open a required local TLS listener under the shell sandbox.
+The same listener suite passed all 62 tests with loopback available. The full
+exact-source unit and coverage rerun still applies to the newer application
+revision.
 
 ## November 28 guided ordinary Form 6198 Part II originals
 

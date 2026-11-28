@@ -4,7 +4,7 @@
     "asOf": "2026-11-28",
     "branch": "main",
     "applicationCommit": "19fc8c5e60bf082465b9e5cb2952742d5a522f93",
-    "latestScopedApplicationCommit": "1dbb0fdc2d74702b06fada7cfbe81959c4b2d00a",
+    "latestScopedApplicationCommit": "00d07b0b51e610ba189f786f578de5d4f919bf4c",
     "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
     "latestSchedule8812PayrollActcEvidenceKey": "activeContinuation.nov27Schedule8812PayrollActc",
     "latestGuidedHsaCivilDatesEvidenceKey": "activeContinuation.nov27GuidedHsaCivilDates",
@@ -217,6 +217,28 @@
     ]
   },
   "activeContinuation": {
+    "nov28CanonicalSoleProprietorForm6198PartII": {
+      "commit": "00d07b0b51e610ba189f786f578de5d4f919bf4c",
+      "localEvidenceDirectory": "nov28-form6198-schedule-c",
+      "focusedPassed": 159,
+      "taxSpecReferencesPassed": 4,
+      "typecheckPassed": true,
+      "reproducedFailures": {
+        "canonical-red.log": "1c4ebe7c9be20a0de3099010f018f255f339f1a6d9ae595fa060bad13ede2864",
+        "canonical-audit-sign-red.log": "89433dc3531fa7e587c658f97efc600ca63967eb6f06a69e21dae9f41d7e0737",
+        "canonical-receipts-red.log": "6d2de9ce16fda960ab9ae2fc2781b418818567e1f6f587e24e455129d4c0e891"
+      },
+      "syntheticTransfer": {
+        "originalLoss": "-6000.57",
+        "form6198Line21": "-4000.32",
+        "scheduleCLine31": "-4000.32",
+        "currentAtRiskSuspendedLoss": "2000.25",
+        "federalAgi": "80999.68"
+      },
+      "exactZeroSuspendsFullLoss": true,
+      "filingQualified": false,
+      "independentQualifiedTaxReview": "pending"
+    },
     "nov28ScheduleCExplicitAtRiskGuard": {
       "commit": "1dbb0fdc2d74702b06fada7cfbe81959c4b2d00a",
       "localEvidenceMarker": "nov28-schedule-c-at-risk-candidate-path",
@@ -255,6 +277,18 @@
         "macrs-documented-red.log": "51fda6b74e4c9ea5d12a2075e0dd221b79d3dfdb212ec439386197525353b2ec",
         "form4562-part-i-red.log": "2f39c2d932007da1e6be7432a96076954f2bb12e896aa58d6dcb9be2c799c6ee",
         "macrs-disposition-audit.log": "6a35a22e569b7d5f2e122491f490efd918c5d9b891fbb0439d0f570688d0fbca"
+      },
+      "localSandboxUnitAttempt": {
+        "attempted": true,
+        "exactUnitExit": 1,
+        "failure": "sandbox denied the required local IPv4 listener",
+        "testsPassedBeforeSandboxFailure": 31596,
+        "localLoopbackRecheckPassed": 62,
+        "fullUnitRunStillRequired": true,
+        "logsSha256": {
+          "test.log": "b44c9d7211e274f33c90bb43458600c9c2589c8bfa34c31960107d4eef3277d2",
+          "tls-loopback-recheck.log": "55c0cb65d5fe88209af3f9c7af38e8672117d9c8834b32794df10854e0ef4281"
+        }
       },
       "filingQualified": false,
       "independentHumanReview": "pending"
