@@ -3,7 +3,7 @@
     "aiSourceFirstCaseReviewEvidenceKey": "activeContinuation.nov27AiSourceFirstCaseReview",
     "asOf": "2026-11-27",
     "branch": "main",
-    "applicationCommit": "fc7c3bd96f5158cade397ae9c13d16a3347d3054",
+    "applicationCommit": "f8c87ff7261e3f673a8bbc79ad7be6e7eaefb261",
     "latestScopedApplicationCommit": "513fba11dad05e177a5cb12301b6adcf1f13d490",
     "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
     "latestSchedule8812PayrollActcEvidenceKey": "activeContinuation.nov27Schedule8812PayrollActc",
@@ -203,7 +203,7 @@
     "annualScheduleBSourceEvidenceKey": "activeContinuation.nov24ScheduleBFinalSource",
     "annualScheduleBReviewEvidenceKey": "activeContinuation.nov24ScheduleBOrdinaryReview",
     "pensionTaxableAmountEvidenceKey": "activeContinuation.nov24ReportedPensionTaxableAmount",
-    "completeLocalBaselineEvidenceKey": "activeContinuation.nov27GuidedOwnedHomeForm8829Combined",
+    "completeLocalBaselineEvidenceKey": "activeContinuation.nov27AiAndStudentSpouseCombined",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov27ExactFederalPaymentCombined",
     "remaining": [
@@ -215,6 +215,65 @@
     ]
   },
   "activeContinuation": {
+    "nov27MainPushProductionCustody": {
+      "firstCommit": "17d1dc024",
+      "lastCommit": "e9ebf072d",
+      "observedProductionTargetRecords": 7,
+      "canceled": 7,
+      "activeOrReady": 0,
+      "source": "https://vercel.com/utility-fueled-llc/tax-engine/deployments"
+    },
+    "nov27AiAndStudentSpouseCombined": {
+      "commit": "f8c87ff7261e3f673a8bbc79ad7be6e7eaefb261",
+      "exactArchiveSha256": "b0517131f6f788132a33eb87f7a7ed181095c1728de64389884fac923d129a6d",
+      "localEvidenceMarker": "nov27-form8863-student-identity-path",
+      "manifestSha256": "13634ac4ea4888d5540cb4aa3e92a29c81835ee0a24d15f31ace54a09809bbd7",
+      "allElevenLocalChecksPassed": true,
+      "commandsPassed": [
+        "test",
+        "coverage",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "build",
+        "build-web",
+        "lint",
+        "browser"
+      ],
+      "prerequisites": {
+        "node": "26.13.1",
+        "pypdf": "6.10.0"
+      },
+      "officialSampleDocumentsVerified": 15,
+      "offlineEvaluatorArtifactCheckPassed": true,
+      "unit": {
+        "passed": 31482,
+        "skipped": 83
+      },
+      "coverage": {
+        "passed": 31482,
+        "skipped": 83,
+        "branchPercent": "88.76"
+      },
+      "browser": {
+        "passed": 655,
+        "skipped": 5,
+        "windows": 9,
+        "listenerCleanup": true,
+        "summarySha256": "9b3b747164b6ed96e1e1a76fb1a4fe487578af6f1a0f950081bba4cda5f65bc2",
+        "sourceBuildSha256": "667b9ec80f7f0b0130b8333ba7883bba69ddadd4dc8647b547e927335f53e5f2"
+      },
+      "standaloneEncryptedRecovery": {
+        "exit": 0,
+        "logSha256": "6a1aab490ba17da2086040d11e9a4ae723a4302798cc30c8dbe8585cd0d84a6f",
+        "receiptSha256": "3bed91340bfa0b4f5cc9103de3730ce926e3bd4cfb654763a0d9782f003d2494",
+        "listenerCleanup": true
+      },
+      "linuxNativeQualified": false,
+      "hostedQualified": false
+    },
     "nov27Form8863JointPrimary": {
       "commit": "c5b0aef142db39a86617d94becf40a08e153b2b5",
       "archiveSha256": "a3c1d0dd9b41665b450303a428d4537c317ac41f77694bac01925bee29292131",

@@ -8,7 +8,7 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `fc7c3bd96` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `f8c87ff72` passed all 11 local checks, the 85% branch gate and standalone encrypted recovery. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
@@ -39,6 +39,10 @@ The exact `513fba11d` Linux CI, Chromium and Docker runs are queued without
 artifacts. The ARM64 queue still has a separate incumbent and pending run.
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/46106161592) · [Web](https://github.com/utilityfueled/tax-engine/actions/runs/46106161639) · [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/46106161572)
 
+Vercel's deployment history shows all seven production-target records from
+`17d1dc024` through `e9ebf072d` as canceled.
+[Deployment history](https://vercel.com/utility-fueled-llc/tax-engine/deployments)
+
 ## November 27 shared AI probe costs and joint-student education review
 
 - `17d1dc024` exports billed capability probes and unresolved maximums once
@@ -56,6 +60,17 @@ artifacts. The ARM64 queue still has a separate incumbent and pending run.
   fields. The exact commit passed 242 focused tests and eight static checks.
   Both source-specific scenarios passed independent engineering review.
   Public exports and filing remain gated. [Final 2026 form](https://www.irs.gov/pub/irs-prior/f8863--2026.pdf) · [Draft instructions](https://www.irs.gov/pub/irs-dft/i8863--dft.pdf)
+
+## November 27 exact local release checks on f8c87ff72
+
+All 11 retained checks passed from the exact `f8c87ff72` archive. The unit
+and coverage suites each passed 31,482 tests with 83 skips.
+Branch coverage was 88.76% against the 85% gate. Managed Chromium passed
+655 cases with 5 skips across all 9 windows. The standalone
+app created an encrypted backup, deleted the synthetic workspace and
+restored it. Both isolated listeners closed. Node 26.13.1, pypdf 6.10.0,
+15 hash-verified official sample PDFs and the offline AI evaluation
+artifact check were used. Manifest SHA-256 `13634ac4ea4888d5540cb4aa3e92a29c81835ee0a24d15f31ace54a09809bbd7`.
 
 ## November 27 exact local release checks on fc7c3bd96
 
