@@ -23,6 +23,17 @@ jq '.resume | {latestScopedApplicationCommit, remaining}' docs/upgrade-2026-chec
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local Chromium and encrypted recovery passed. Current ARM64 and AMD64 workflows await runners. The earlier ARM64 image and Compose checks passed and the strict browser check failed nine cases. |
 
+## November 28 filing facts before parsed defaults
+
+`8993e5114` gives the compiled filing scenario validator the original source
+input and the parsed tax input. In the synthetic regression, an omitted
+interest-statement list previously reached the renderer after parsing supplied
+an empty array. The same reviewed validator now holds omitted and undefined
+lists before calculation or template reads. An explicit empty list passes the
+synthetic case. The public scenario registry remains empty. Independent
+engineering review passed 29 tests. The exact package passed 29 tests
+and eight static checks.
+
 ## November 28 exact local release checks on 6aadaaedd
 
 All 11 retained checks passed from the exact `6aadaaedd` archive. The unit

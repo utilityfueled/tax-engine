@@ -4,7 +4,7 @@
     "asOf": "2026-11-28",
     "branch": "main",
     "applicationCommit": "6aadaaeddc4931b13e4b14e387a93590224c6447",
-    "latestScopedApplicationCommit": "6aadaaeddc4931b13e4b14e387a93590224c6447",
+    "latestScopedApplicationCommit": "8993e5114175d2c0cdfe7f2ad66bc15cda0582b9",
     "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
     "latestSchedule8812PayrollActcEvidenceKey": "activeContinuation.nov27Schedule8812PayrollActc",
     "latestGuidedHsaCivilDatesEvidenceKey": "activeContinuation.nov27GuidedHsaCivilDates",
@@ -217,6 +217,30 @@
     ]
   },
   "activeContinuation": {
+    "nov28FilingOriginalFactPresence": {
+      "commit": "8993e5114175d2c0cdfe7f2ad66bc15cda0582b9",
+      "archiveSha256": "25858810373e172667445697421cbb259a0b01d06ee91a098709cb7248a4c135",
+      "sourceTree": "6904e17f14c9649610b994b00bf4d18da7ca8873",
+      "localEvidenceMarker": "nov27-filing-source-fact-presence-path",
+      "exactFocusedTestsPassed": 29,
+      "checksPassed": [
+        "focused",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
+      "genuineRedResolvedInsteadOfRejecting": true,
+      "independentEngineeringTestsPassed": 29,
+      "omittedOrUndefinedHeldBeforeCalculationAndTemplateReads": true,
+      "explicitEmptyListPassesSyntheticScenario": true,
+      "productionFilingRegistryEntries": 0,
+      "filingQualified": false
+    },
     "nov28Form6198CombinedReleaseChecks": {
       "commit": "6aadaaeddc4931b13e4b14e387a93590224c6447",
       "exactArchiveSha256": "bfc9cbf12ee051d53031c29a70fae31314b63f0bf1ced59a68af2eee375850e6",
