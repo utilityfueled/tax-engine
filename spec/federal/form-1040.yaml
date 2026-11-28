@@ -609,6 +609,7 @@ lines:
     testRef: "tests/engine/federal.test.ts::Form 1040 Line 26 - estimated tax payments"
     testRefs:
       - "tests/engine/federal-payment-date-sources.test.ts::holds undocumented estimates and extension payments even with no installment penalty"
+      - "tests/engine/federal-payment-date-sources.test.ts::carries exact federal line 26 source totals through the 2026 worksheet"
       - "tests/engine/federal-payment-date-sources.test.ts::holds 2026 future estimates and extensions until their recorded payment date"
       - "tests/engine/federal-payment-date-sources.test.ts::keeps the actual paid date distinct from the historical tax year application"
       - "tests/engine/federal-payment-date-sources.test.ts::preserves following-year estimates and extensions and a confirmed zero"
@@ -621,7 +622,9 @@ lines:
     notes: |
       Final 2025 Form 1040 instructions (https://www.irs.gov/instructions/i1040gi),
       Line 26 and Schedule 3 line 10, distinguish estimates from payments made
-      with the extension request. A preceding return's applied overpayment may
+      with the extension request. Sum estimate and applied-credit sources at
+      their entered decimal precision before return rounding. The same exact
+      Line 26 amount reconciles the dated Form 2210 worksheet. An overpayment may
       explicitly be zero. A sole taxpayer's explicit Form 2210 no-return history
       conflicts with a positive federal credit from that return. Hold the
       conflicting facts for reconciliation before crediting line 26, including

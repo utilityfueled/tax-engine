@@ -144,7 +144,10 @@ lines:
     formula: "Actual eligible dated payments plus withholding deemed one-quarter on each statutory date, unless actual-date election supplied"
     irsRef: "Form 2210 instructions line 11; IRC 6654(g)"
     notes: |
-      Estimated-payment totals must match their dated sources. A prior-year
+      The exact sum of dated estimates and applied credits must match the
+      Form 1040 line 26 source total. Preserve all entered digits in the
+      installment payment sums and the reported payment total through the
+      existing dates. A prior-year
       credit generated after April15 keeps its actual effective date. Withholding
       is divided by law, not represented as actual payroll dates. Actual-date
       election must reconcile all withholding. For 2026, elected withholding
@@ -162,6 +165,7 @@ lines:
     testRef: "tests/engine/forms/form-2210-dated.test.ts::reproduces IRS line 11 Example 1 using dated credit and estimated payments"
     testRefs:
       - "tests/engine/federal-payment-date-sources.test.ts::holds 2026 balance-due duplicates before they reduce the installment penalty"
+      - "tests/engine/forms/form-2210-dated.test.ts::matches and reports exact 2026 dated payments before return rounding"
       - "tests/engine/federal-payment-date-sources.test.ts::keeps independently documented 2026 installment payments and legacy 2025 entries"
       - "tests/guided-interview/guided-estimated-tax-facts.test.ts::holds future elected 2026 withholding dates in reopened drafts and canonical input"
       - "tests/engine/federal-payment-date-sources.test.ts::validates elected 2026 withholding dates before the under-1000 exception"

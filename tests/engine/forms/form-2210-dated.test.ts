@@ -57,6 +57,21 @@ describe("Form 2210 dated regular method", () => {
     expect(result.sourceFactsVerified).toBe(true);
   });
 
+  it("matches and reports exact 2026 dated payments before return rounding", () => {
+    const payments: Form2210Input["payments"] = [
+      { date: "2026-04-15", amount: "1000000000000000000", kind: "prior-year-credit" },
+      { date: "2026-06-15", amount: "0.01", kind: "prior-year-credit" },
+      { date: "2026-09-15", amount: "0", kind: "prior-year-credit" },
+      { date: "2027-04-16", amount: "10.99", kind: "return" },
+    ];
+    const run = (total: string) => calculateForm2210(input({ taxYear: 2026, estimatedPayments: d(total), payments }));
+    expect.soft(() => run("1000000000000000000")).toThrow(/dated estimated and prior-credit payments must reconcile/u);
+    const result = run("1000000000000000000.01");
+    expect(result.totalPayments.toFixed()).toBe("1000000000000000000.01");
+    expect(result.installments.map(row => row.payments.toFixed())).toEqual(["1000000000000000000", "0.01", "0", "0"]);
+    expect(result.penalty.isZero()).toBe(true);
+  });
+
   it("a late annual catch-up does not erase earlier installment penalties", () => {
     const result = calculateForm2210(input({
       estimatedPayments: d(9000),

@@ -53,7 +53,7 @@ import { getConstants, type FilingStatus } from "@/models/constants.js";
 import { assertFederalPaymentSources } from "./forms/federal-payment-date-sources.js";
 import { assertCode3DisabilityPensionSources } from "./forms/form-1099-r-disability-source.js";
 import { d, sum, zeroFloor, min, roundDollar } from "@/utils/decimal.js";
-import { sumSourceMoney } from "@/utils/sum-source-money.js";
+import { sumSourceMoney, sumSourceMoneyValues } from "@/utils/sum-source-money.js";
 import { sumSourceMoneyRatios } from "@/utils/sum-source-money-ratios.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { resolveForm2555Sources } from "./forms/form-2555-source-binding.js";
@@ -4890,11 +4890,8 @@ function calculateFederalTaxCore(sourceInput: TaxYearInput, marketplace?: Market
     "Lines 25a + 25b + 25c"
   );
 
-  const priorReturnAppliedPayments = (input.adjustments?.priorYearAppliedCredits ?? []).filter(payment => payment.type === "federal");
-  const currentEstimatedPayments = input.adjustments?.estimatedTaxPayments
-    ?.filter((p) => p.type === "federal")
-    .reduce((acc, p) => acc.plus(d(p.amount)), new Decimal(0)) ?? new Decimal(0);
-  const estimatedPayments = currentEstimatedPayments.plus(sum(...priorReturnAppliedPayments.map(payment => d(payment.amount))));
+  const line26Sources = [...(input.adjustments?.estimatedTaxPayments ?? []), ...(input.adjustments?.priorYearAppliedCredits ?? [])];
+  const estimatedPayments = sumSourceMoneyValues(line26Sources.filter(payment => payment.type === "federal").map(payment => d(payment.amount)));
   audit.record("1040", "26", "Estimated tax payments and prior-year applied credit", estimatedPayments, "Actual federal estimates + prior return overpayment applied to this return");
 
   // ═══════════════════════════════════════════════════════════

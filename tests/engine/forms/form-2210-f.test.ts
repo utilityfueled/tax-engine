@@ -30,6 +30,22 @@ describe('Form 2210-F', () => {
     expect(line(run({}, { priorYearTaxForForm2210: '25000' }), '11')).toBe('20010');
   });
 
+  it('matches and reports exact 2026 farmer payment sources through January 15', () => {
+    const payments: Form2210Input['payments'] = [
+      { date: '2026-04-15', amount: '1000000000000000000', kind: 'prior-year-credit' },
+      { date: '2026-06-15', amount: '0.01', kind: 'prior-year-credit' },
+      { date: '2026-09-15', amount: '0', kind: 'prior-year-credit' },
+      { date: '2027-01-15', amount: '0.02', kind: 'estimated' },
+      { date: '2027-01-16', amount: '10.99', kind: 'return' },
+    ];
+    const runWith = (total: string) => run({ taxYear: 2026, estimatedPayments: new Decimal(total), withholding: new Decimal('0.04'), payments });
+    expect.soft(() => runWith('1000000000000000000')).toThrow(/dated estimated and prior-credit payments must reconcile/u);
+    const result = runWith('1000000000000000000.03');
+    expect(line(result, '12')).toBe('1000000000000000000.07');
+    expect(result.totalPayments.toFixed()).toBe('1000000000000000000.07');
+    expect(result.penalty.isZero()).toBe(true);
+  });
+
   it('counts days from January 15 to payment or April 15', () => {
     const paid = run({}, {}, [{ date: '2026-03-20', amount: '5000' }]);
     expect([line(paid, '15'), paid.exactPenalty.toDecimalPlaces(2).toFixed(), paid.penalty.toFixed()]).toEqual(['64', '61.37', '61']);

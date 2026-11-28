@@ -5,6 +5,7 @@ import type { TaxYearInput } from "@/models/inputs.js";
 import type { FilingStatus } from "@/models/constants.js";
 import { zeroFloor, min, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { sumSourceMoney, sumSourceMoneyValues } from "@/utils/sum-source-money.js";
 import { calculateForm2210ScheduleAi, type Form2210ScheduleAiInput, type Form2210ScheduleAiReturn } from "./form-2210-schedule-ai.js";
 
 export interface Form2210Payment {
@@ -111,7 +112,6 @@ function dateNumber(value: string, name: string): number {
   return result / DAY_MS;
 }
 function dateString(day: number): string { return new Date(day * DAY_MS).toISOString().slice(0, 10); }
-function total(values: readonly Decimal[]): Decimal { return values.reduce((sum, value) => sum.plus(value), new Decimal(0)); }
 
 /** Strict source facts are required for2026 or whenever the caller supplies the new contract. */
 function validateScope(facts: NonNullable<Form2210Input["facts"]>): void {
@@ -180,15 +180,16 @@ function calculateForm2210F(input: Form2210Input, taxYear: number, facts: NonNul
     const filed = dateNumber(facts.returnFiledDate, "returnFiledDate"), paid = dateNumber(facts.returnPaidInFullDate, "returnPaidInFullDate"), yearEnd = dateNumber(`${taxYear}-12-31`, "tax year end");
     if (filed <= yearEnd || paid <= yearEnd) throw new Error("Form 2210 return filing/full payment dates must follow the tax year");
     if (!safeReason && filed <= lastDay && paid <= lastDay) {
-      if (line8.plus(total(payments.filter(payment => payment.day <= paid).map(payment => payment.amount))).lt(min(line6, roundDollar(line6)))) throw new Error("Form 2210 claimed full return payment does not reconcile to actual payments");
+      const paidByDate = sumSourceMoneyValues([line8, ...payments.filter(payment => payment.day <= paid).map(payment => payment.amount)]);
+      if (paidByDate.lt(min(line6, roundDollar(line6)))) throw new Error("Form 2210 claimed full return payment does not reconcile to actual payments");
       safeReason = `Filed and paid by ${dateString(lastDay)}`;
     }
   }
   if (!safeReason && line8.gte(required)) safeReason = "Withholding meets the required annual payment";
-  const line12 = line8.plus(total(payments.filter(payment => payment.day <= dueDay).map(payment => payment.amount)));
+  const line12 = sumSourceMoneyValues([line8, ...payments.filter(payment => payment.day <= dueDay).map(payment => payment.amount)]);
   const line13 = safeReason ? new Decimal(0) : zeroFloor(required.minus(line12));
   if (!safeReason && line13.isZero()) safeReason = "January 15 payments meet the required annual payment";
-  if (!total(payments.filter(payment => payment.kind === "estimated" || payment.kind === "prior-year-credit").map(payment => payment.amount)).eq(estimates)) {
+  if (!sumSourceMoneyValues(payments.filter(payment => payment.kind === "estimated" || payment.kind === "prior-year-credit").map(payment => payment.amount)).eq(estimates)) {
     throw new Error("Form 2210 dated estimated and prior-credit payments must reconcile to estimatedPayments");
   }
   let exact = new Decimal(0), days = 0;
@@ -253,7 +254,7 @@ export function calculateForm2210(input: Form2210Input): Form2210Result {
   const installments: Form2210Installment[] = [];
   const interestPeriods: Form2210InterestPeriod[] = [];
   let scheduleAi: Form2210Result["scheduleAi"];
-  const basePayments = withholding.plus(estimates);
+  const basePayments = sumSourceMoney(withholding, estimates);
   const finish = (safe: boolean, reason: string, balance: Decimal, exactPenalty: Decimal, payments = basePayments): Form2210Result => {
     const waiver = form2210Waiver(facts, roundDollar(exactPenalty));
     const penalty = waiver ? roundDollar(waiver.penaltyBeforeWaiver.minus(waiver.requestedAmount)) : roundDollar(exactPenalty);
@@ -349,7 +350,7 @@ export function calculateForm2210(input: Form2210Input): Form2210Result {
     actualDay: dateNumber(payment.date, "payment date"),
     amount: amount(payment.amount, `payment ${index + 1} amount`), kind: payment.kind,
   }));
-  if (!total(payments.filter((p) => p.kind === "estimated" || p.kind === "prior-year-credit").map((p) => p.amount)).eq(estimates)) {
+  if (!sumSourceMoneyValues(payments.filter((p) => p.kind === "estimated" || p.kind === "prior-year-credit").map((p) => p.amount)).eq(estimates)) {
     throw new Error("Form 2210 dated estimated and prior-credit payments must reconcile to estimatedPayments");
   }
   const cashPayments: Array<{ day: number; actualDay: number; amount: Decimal; kind: Form2210Payment["kind"] | "withholding" }> = [...payments];
@@ -360,7 +361,7 @@ export function calculateForm2210(input: Form2210Input): Form2210Result {
       if (day < firstDay || day >= dateNumber(`${taxYear + 1}-01-01`, "year end")) throw new Error("Form 2210 withholding date must be within the tax year");
       return { day: normalizedDate(payment.date, "withholding date"), actualDay: day, amount: amount(payment.amount, "withholding amount"), kind: "withholding" as const };
     });
-    if (!total(datedWithholding.map((p) => p.amount)).eq(withholding)) throw new Error("Form 2210 actual withholding payments must reconcile to withholding");
+    if (!sumSourceMoneyValues(datedWithholding.map((p) => p.amount)).eq(withholding)) throw new Error("Form 2210 actual withholding payments must reconcile to withholding");
     cashPayments.push(...datedWithholding);
   } else {
     for (const { day } of schedule) cashPayments.push({ day, actualDay: day, amount: withholding.div(4), kind: "withholding" as const });
@@ -375,7 +376,7 @@ export function calculateForm2210(input: Form2210Input): Form2210Result {
     if (filed <= dateNumber(`${taxYear}-12-31`, "tax year end") || paid <= dateNumber(`${taxYear}-12-31`, "tax year end")) {
       throw new Error("Form 2210 return filing/full payment dates must follow the tax year");
     }
-    const paidByDate = withholding.plus(total(payments.filter((p) => p.actualDay <= paid).map((p) => p.amount)));
+    const paidByDate = sumSourceMoneyValues([withholding, ...payments.filter((p) => p.actualDay <= paid).map((p) => p.amount)]);
     if (paidByDate.lt(min(taxShown, roundDollar(taxShown)))) throw new Error("Form 2210 claimed full return payment does not reconcile to actual payments");
     const earlyDeadline = dateNumber(taxYear === 2025 ? "2026-02-02" : "2027-02-01", "early return deadline");
     earlyReturn = filed <= earlyDeadline && paid <= earlyDeadline;
@@ -397,7 +398,7 @@ export function calculateForm2210(input: Form2210Input): Form2210Result {
   for (const [index, due] of schedule.entries()) {
     const suffix = String.fromCharCode(97 + index);
     const previousDue = schedule[index - 1]?.day;
-    const intervalPayments = total(cashPayments.filter((payment) => {
+    const intervalPayments = sumSourceMoneyValues(cashPayments.filter((payment) => {
       if (index === 3 && earlyPaidDay !== undefined && payment.kind === "return" && payment.actualDay <= earlyPaidDay) return previousDue !== undefined && payment.day > previousDue;
       return payment.day <= due.day && (previousDue === undefined || payment.day > previousDue);
     }).map((p) => p.amount));
@@ -459,7 +460,7 @@ export function calculateForm2210(input: Form2210Input): Form2210Result {
     accrue(index + 1, outstanding, due.day, endDay);
     remainingTotal = remainingTotal.plus(outstanding);
   }
-  const exactPenalty = total(interestPeriods.map((period) => period.exactPenalty));
-  const totalPaid = withholding.plus(total(payments.filter((p) => p.day <= endDay).map((p) => p.amount)));
+  const exactPenalty = interestPeriods.reduce((total, period) => total.plus(period.exactPenalty), new Decimal(0));
+  const totalPaid = sumSourceMoneyValues([withholding, ...payments.filter((p) => p.day <= endDay).map((p) => p.amount)]);
   return finish(allTimely, allTimely ? `Timely installments meet ${requiredReason}` : "No safe harbor met", remainingTotal, exactPenalty, totalPaid);
 }

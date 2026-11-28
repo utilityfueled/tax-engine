@@ -38,6 +38,35 @@ function datedPenaltyReturn(year: 2025 | 2026, adjustmentFacts: object, returnPa
 }
 
 describe("Actual federal payment dates and selected return application", () => {
+  it("carries exact federal line 26 source totals through the 2026 worksheet", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 10, 27, 12));
+    try {
+      const base = raw(2026, {
+        estimatedTaxPayments: [{ date: "2026-09-15", amount: "123.02", type: "federal" }],
+        priorYearAppliedCredits: [{ sourceTaxYear: 2025, amount: "1000000000000000000.01", type: "federal" }, { sourceTaxYear: 2025, amount: "0", type: "federal" }],
+      });
+      const input = TaxYearInputSchema.parse({
+        ...base, w2s: base.w2s.map(w2 => ({ ...w2, federalWithheld: "0" })),
+        form2210: {
+          calendarYearTaxpayer: true, residentReturn: true, farmerOrFisher: false, disasterReliefClaimed: false,
+          waiverRequested: false, calculationMethod: "regular", withholdingMethod: "equal-installments",
+          priorYearTaxStatus: "return-filed", priorYearFullYear: true, priorYearJointReturn: false,
+          priorYearTaxComputationConfirmed: true, priorYearTaxForForm2210: "8000", priorYearAgiForForm2210: "85000",
+          priorYearCreditPayments: [
+            { date: "2026-04-15", amount: "1000000000000000000" }, { date: "2026-06-15", amount: "0.01" }, { date: "2026-09-15", amount: "0" },
+          ],
+        },
+      });
+      const result = calculateFederalTax(input);
+      expect.soft(result.allLines.find(row => row.form === "1040" && row.line === "26")?.value.toFixed()).toBe("1000000000000000123.03");
+      expect.soft(result.form2210?.totalPayments.toFixed()).toBe("1000000000000000123.03");
+      expect(result.form2210?.installments.map(row => row.payments.toFixed())).toEqual(["1000000000000000000", "0.01", "123.02", "0"]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("holds a reused actual federal payment receipt before crediting payments", () => {
     for (const taxYear of [2025, 2026] as const) {
       const actual = { ...estimate, date: `${taxYear}-04-15`, receiptReference: "fictional-confirmation-070" };
