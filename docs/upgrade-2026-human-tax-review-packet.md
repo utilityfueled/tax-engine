@@ -1083,6 +1083,21 @@ worksheet records the $6,000.
 [Form 6198](https://www.irs.gov/pub/irs-pdf/f6198.pdf) · [IRS instructions](https://www.irs.gov/instructions/i6198) · [26 U.S.C. §465](https://uscode.house.gov/us/usc/119-124/t26/s465/)
 [IRS Schedule K-1 instructions](https://www.irs.gov/instructions/i1065sk1)
 
+## November 28 sole-proprietor at-risk loss
+
+For `1dbb0fdc2`, assume a single 2026 taxpayer materially participates
+in one continuing sole proprietorship and earns $85,000 in separate wages.
+The business originally reported $1,000 in gross receipts, $7,000 of
+ordinary supplies, and some investment for which the taxpayer was not at
+risk. Assume the opening asset-basis record establishes $12,000 before
+liabilities, the actual increases are zero and the current Part II record
+documents $8,000 in decreases. Derive the signed Form 6198 deductible loss,
+the Schedule C line 31 and Schedule 1 transfers, and the separately tracked
+carry. Repeat with exact zero capacity and explain which original records
+are needed to rule out recapture and trace a later allowed carry. The engine
+currently holds the negative amount for review. [Schedule C instructions](https://www.irs.gov/instructions/i1040sc)
+· [Form 6198 instructions](https://www.irs.gov/instructions/i6198).
+
 ## November 28 recipient classification for direct 2026 gifts
 
 For `c545b7a76`, use a single 2026 taxpayer who takes the standard

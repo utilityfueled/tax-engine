@@ -23,6 +23,27 @@ jq '.resume | {latestScopedApplicationCommit, remaining}' docs/upgrade-2026-chec
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local Chromium and encrypted recovery passed. [Exact Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/46127803042), [CI](https://github.com/utilityfueled/tax-engine/actions/runs/46127803068) and [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/46127803025) remained queued. [ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/46120985997) remained pending on the earlier revision. [Active ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/46113946817) reached the strict browser step. The previous ARM64 image and Compose checks passed and the strict browser check failed nine cases. |
 
+## November 28 explicit Schedule C at-risk loss
+
+The 2026 federal Schedule C engine holds an explicit box 32b loss before it
+transfers to Schedule 1. The canonical and separate-business inputs share
+the hold. Exact zero, profits, the all-at-risk answer and historical inputs
+retain their admitted treatment. The supported documentary sums include Part V,
+interest, and depreciation before the final loss check. Calculating an
+allowable sole-proprietor Form 6198 loss and its carry still requires a separate
+original-workpaper method and qualification. [Schedule C instructions](https://www.irs.gov/instructions/i1040sc)
+· [Form 6198 instructions](https://www.irs.gov/instructions/i6198).
+
+The independent engineering review traced bypasses to rounded upstream
+subtotals. Form 4562 line 22 is exact in `04464e68e`, the parallel MACRS
+deduction subtotals in `56275366e`, the asset rate and convention arithmetic in
+`3f075b955`, and amortization in `c81b74223`. Documented basis, Section 179
+and prior disposition-year amounts are also reconciled exactly. The checkpoint
+links the corresponding commits and focused verification.
+The final guard `1dbb0fdc2` records exact-source checks and retained
+reproductions in [the checkpoint](upgrade-2026-checkpoint.json). The most
+recent full local combined release verification was `19fc8c5e6`.
+
 ## November 28 guided ordinary Form 6198 Part II originals
 
 `19fc8c5e6` collects the original ordinary partnership K-1, opening basis,

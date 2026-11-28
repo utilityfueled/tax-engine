@@ -4,7 +4,7 @@
     "asOf": "2026-11-28",
     "branch": "main",
     "applicationCommit": "19fc8c5e60bf082465b9e5cb2952742d5a522f93",
-    "latestScopedApplicationCommit": "19fc8c5e60bf082465b9e5cb2952742d5a522f93",
+    "latestScopedApplicationCommit": "1dbb0fdc2d74702b06fada7cfbe81959c4b2d00a",
     "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
     "latestSchedule8812PayrollActcEvidenceKey": "activeContinuation.nov27Schedule8812PayrollActc",
     "latestGuidedHsaCivilDatesEvidenceKey": "activeContinuation.nov27GuidedHsaCivilDates",
@@ -217,6 +217,48 @@
     ]
   },
   "activeContinuation": {
+    "nov28ScheduleCExplicitAtRiskGuard": {
+      "commit": "1dbb0fdc2d74702b06fada7cfbe81959c4b2d00a",
+      "localEvidenceMarker": "nov28-schedule-c-at-risk-candidate-path",
+      "scopedManifestSha256": "86e4528b060bee2a5b07fa193392337350702eaa528bac2da59c0926472921de",
+      "exactScopedChecks": {
+        "revision": "1dbb0fdc2d74702b06fada7cfbe81959c4b2d00a",
+        "focusedPassed": 632,
+        "focusedSkipped": 0,
+        "checks": {
+          "auditedSource": true,
+          "install": true,
+          "typecheck": true,
+          "webTypes": true,
+          "spec": true,
+          "inventory": true,
+          "lint": true,
+          "focused": true
+        },
+        "archiveSha256": "80487ac55700130be46db34567873de24e3b08483f9247e6d6f81e372022d9cc"
+      },
+      "support": "2026 federal ordinary tentative Schedule C loss when some investment is explicitly not at risk",
+      "unsupportedWithoutSource": "Schedule C Form 6198 allowed loss and carry calculation",
+      "form4562ExactLine22Commit": "04464e68e8ed8ca1247245f667a6b10b3cf113af",
+      "macrsDeductionSubtotalsCommit": "56275366e9bf038478cd49a9a815cfed5cd544f5",
+      "macrsRatesCommit": "3f075b955cce63f57eefbf596dc4fb3d511ed903",
+      "amortizationCommit": "c81b74223da1ff756d6c3bcd5fdd53527a46618f",
+      "documentedBasisCommit": "754817ca5a4858630328b280714c8cbfbc0d38a9",
+      "section179Commit": "f13c39fbd68ad2885b6c447962909f33d59ea5b8",
+      "dispositionCommit": "e71c9117eadef1b154c0d5d461d76957092e391a",
+      "initialSourceReproductions": {
+        "part-v-red.log": "7011cade3b22483714286d4cfc4c037a107a665561976df7d9143fd0e5b672da",
+        "form4562-line22-red.log": "a77676f8fc042a33da3098c456a8f90b94a004a0c36603bd811df6d53e836890",
+        "macrs-red.log": "686a63f176db00b1c06675fe9848032ad8ab654c4a14e5bd0b60ac5ae124fce8",
+        "macrs-precision-red.log": "0a4f225295f9a89a53786836e9a7043990c841a7ea06bda3a0825ae1d040e72e",
+        "form4562-amortization-red.log": "afea8b89352864cda413dd4cb505015ac7c85f8e5127c7dce3e06d266f3bd141",
+        "macrs-documented-red.log": "51fda6b74e4c9ea5d12a2075e0dd221b79d3dfdb212ec439386197525353b2ec",
+        "form4562-part-i-red.log": "2f39c2d932007da1e6be7432a96076954f2bb12e896aa58d6dcb9be2c799c6ee",
+        "macrs-disposition-audit.log": "6a35a22e569b7d5f2e122491f490efd918c5d9b891fbb0439d0f570688d0fbca"
+      },
+      "filingQualified": false,
+      "independentHumanReview": "pending"
+    },
     "nov28ExactGuidedForm6198Combined": {
       "commit": "19fc8c5e60bf082465b9e5cb2952742d5a522f93",
       "exactArchiveSha256": "dd71fc2e7ac9bcdc520559eabb36f683c58c74ec388f33e8e94b79f814229830",
