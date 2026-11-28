@@ -5,7 +5,9 @@
     "branch": "main",
     "latestForm6198PhysicalEvidenceKey": "activeContinuation.nov28Form6198PhysicalCandidate",
     "applicationCommit": "19fc8c5e60bf082465b9e5cb2952742d5a522f93",
-    "latestScopedApplicationCommit": "77e1fe6f664633fa2397f3f22e484957f9259703",
+    "latestScopedApplicationCommit": "95c43aef288b0b04fa88d1e60aa89b55c26b8bac",
+    "latestW2GObservationEvidenceKey": "activeContinuation.nov28ProfessionalW2GObservationDate",
+    "latestAiExactBenefitEvidenceKey": "activeContinuation.nov28AiExactBenefitThreshold",
     "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
     "latestSchedule8812PayrollActcEvidenceKey": "activeContinuation.nov27Schedule8812PayrollActc",
     "latestGuidedHsaCivilDatesEvidenceKey": "activeContinuation.nov27GuidedHsaCivilDates",
@@ -218,6 +220,21 @@
     ]
   },
   "activeContinuation": {
+    "nov28ProfessionalW2GObservationDate": {
+      "applicationCommit": "95c43aef288b0b04fa88d1e60aa89b55c26b8bac",
+      "source": "https://www.irs.gov/instructions/iw2g",
+      "scope": "2026 linked professional cash slot winnings and withholding in the saved guide and canonical federal entry point. Same-day and explicit zero preserve meaning. Recreational and historical paths retain their existing behavior.",
+      "checks": "69 focused tests passed after two reproduced failures. Nine scoped spec references, exact-source root type and inventory checks, and web typecheck passed. Focused lint reported nine existing warnings and no errors.",
+      "evidenceDirectory": ".local/upgrade-evidence/nov28-future-w2g-civil-source",
+      "focusedLogSha256": "f6c10f9ad49e07700e907289c6d973cdd3e5bd079a7e31793849a958e143dca3"
+    },
+    "nov28AiExactBenefitThreshold": {
+      "applicationCommit": "30f1758decd8a79d68f4eebdafc7cf059474603d",
+      "scope": "Compare known January totals with opposite accepted counts at an inclusive ten percent saving. Displayed ratios and live evaluation requirements retain their existing treatment.",
+      "checks": "152 offline tests, 19 scoped spec references and exact-source root typecheck and inventory passed. The package-only TypeScript invocation reported existing workspace aliases and rootDir errors. No provider run or promotion evidence was created.",
+      "evidenceDirectory": ".local/upgrade-evidence/nov28-ai-exact-benefit-threshold",
+      "focusedLogSha256": "eb604b27ead0d32f6e6765826766dd24f788cd6d8aa7e314399bab5836d12b8f"
+    },
     "nov28Form6198PhysicalCandidate": {
       "applicationCommit": "43adee4032f5c6abd23279f546d39949bf16d470",
       "source": "https://www.irs.gov/pub/irs-pdf/f6198.pdf",

@@ -23,6 +23,24 @@ jq '.resume | {latestScopedApplicationCommit, remaining}' docs/upgrade-2026-chec
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local Chromium and encrypted recovery passed on `19fc8c5e6`. The latest completed ARM64 run passed image verification and Compose recovery, then timed out in 11 Chromium cases. The queued successor includes the Ohio edit optimization. See the run receipts below. |
 
+## November 28 professional W-2G originals and AI evaluation
+
+`95c43aef2` holds linked 2026 professional slot winnings and withholding
+when Box 2 follows the observation date. The saved guide retains the original
+row for correction. Same-day records and explicit zero withholding pass.
+Two regressions failed before the change and 69 focused cases passed afterward.
+Exact root types, spec and inventory checks passed. The private paper diagnostic
+remains unavailable through public export.
+[IRS W-2G instructions](https://www.irs.gov/instructions/iw2g).
+
+`30f1758de` measures the inclusive 10% AI cost benefit with exact filing-season
+totals and accepted-run counts. At 90 accepted runs each, $0.0850509 is exactly
+10% below $0.094501. Checks include the next and previous token charge and
+unequal accepted counts. All 152 offline cases passed. Exact root types and
+spec and inventory checks passed. The standalone engine TypeScript invocation
+still reports workspace alias and `rootDir` errors. Human review and provider
+comparison evidence remain required for model promotion.
+
 ## November 28 Form 6198 physical candidate and Linux rehearsal
 
 `43adee403` maps the rolling IRS Form 6198 blank labeled November 2025.
