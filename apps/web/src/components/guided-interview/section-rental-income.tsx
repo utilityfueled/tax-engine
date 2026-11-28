@@ -9,6 +9,7 @@ import { PARentalExpenseDetails } from "./pa-rental-expense-details";
 import type { PARentalIncomeExpensesData } from "@/lib/guided-pa-rental-facts";
 import { RentalCarrySourceDetails } from "./rental-carry-source-details";
 import { guidedSourceValuesChanged } from "@/lib/guided-source-confirmation";
+import { usesRentalDwellingAsHome } from "@/models/rental-use-allocation-2026.js";
 import { RentalUseAllocationDetails } from "./rental-use-allocation-details";
 
 function RentalPropertyCard({ entry, index, onEntryChange, onRemove, canRemove, stateCode, taxYear }: {
@@ -60,6 +61,7 @@ function RentalPropertyCard({ entry, index, onEntryChange, onRemove, canRemove, 
       <BooleanFact label="Is the auto and travel amount from the actual deductible vehicle and travel records?" value={entry.autoTravelWorksheetConfirmed} onChange={autoTravelWorksheetConfirmed => patch({ autoTravelWorksheetConfirmed })} />
     </details>
     {hasMixedUse && <RentalUseAllocationDetails value={entry.rentalUseAllocationSources}
+      usedAsHome={usesRentalDwellingAsHome(Number(entry.rentalDays), Number(entry.personalUseDays))}
       onChange={rentalUseAllocationSources => patch({ rentalUseAllocationSources })} />}
     {entry.rentalUseAllocationSources && <button className="utility-button utility-button-small" type="button"
       onClick={() => patch({ rentalUseAllocationSources: undefined })}>Remove 2026 rental allocation records</button>}

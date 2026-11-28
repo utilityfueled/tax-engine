@@ -73,6 +73,9 @@ const types = ["single_family", "multi_family", "vacation", "commercial", "land"
 
 function guidedRentalUseAllocationError(entry: RentalPropertyEntryData): string | undefined {
   const source = RentalUseAllocation2026Schema.safeParse(buildGuidedRentalUseAllocation(entry.rentalUseAllocationSources));
+  if (!source.success && source.error.issues.some(issue => issue.path[0] === "residenceWorksheet")) {
+    return "Complete the original same-dwelling 2025 carryover records and enter the actual 2026 casualty and theft loss.";
+  }
   if (!source.success) return "Complete the original 2026 calendar, rent, expense and fully recovered asset records.";
   if (entry.sourceFactsConfirmed !== true) return undefined;
   const property = RentalPropertySchema.safeParse({

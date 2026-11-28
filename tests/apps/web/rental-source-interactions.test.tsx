@@ -7,11 +7,18 @@ import { SectionRentalIncome } from "@/components/guided-interview/section-renta
 import { SectionReview } from "@/components/guided-interview/section-review";
 import { rentalFactErrors } from "@/lib/guided-rental-facts";
 import { buildRentalPropertyInputs, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
-import { emptyRentalPropertyEntry, type RentalPropertyEntryData } from "@/lib/guided-interview-flow";
+import { emptyDeductionData, emptyRentalPropertyEntry, parseGuidedFlowState, type RentalPropertyEntryData } from "@/lib/guided-interview-flow";
 import { calculateScheduleE } from "@/engine/schedules/schedule-e.js";
+import { calculateFederalTax } from "@/engine/public-federal-return.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import * as civilDate from "@/utils/civil-date.js";
 import { completeRentalSource, startCompleteInterview } from "../../guided-interview/complete-facts";
+
+vi.mock("@/models/constants.js", async importOriginal => {
+  const original = await importOriginal<typeof import("@/models/constants.js")>();
+  const { FEDERAL_2026_CONSTANTS } = await import("@/models/federal-2026-indexed.js");
+  return { ...original, getConstants: (year: number) => year === 2026 ? FEDERAL_2026_CONSTANTS : original.getConstants(year) };
+});
 
 let container: HTMLDivElement, root: Root, latest: RentalPropertyEntryData[];
 beforeEach(() => { (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true; container = document.createElement("div"); document.body.appendChild(container); root = createRoot(container); });
@@ -173,6 +180,58 @@ describe("actual rental source interactions", () => {
       await confirmEditedExpenseDate("2026-10-01");
       expect(current()?.rentalProperties[0].rentalUseAllocationSources?.expenseReceipts?.[0]?.datePaid).toBe("2026-10-01");
     } finally { today.mockRestore(); }
+  });
+
+  // Spec: spec/federal/guided-input.yaml, rental-residence-worksheet-records
+  it("requires confirmed same-dwelling residence worksheet history before guided transfer", async () => {
+    const propertyAddress = completeRentalSource.description;
+    const packetConfirmation = "Do these complete ordinary cash-rental records include all occupied days, rents and expenses, with no other rental classifications or special-use periods?";
+    const worksheetConfirmation = "Have you checked complete 2025 carryover records for this dwelling and the current casualty and theft amount?";
+    const entry: RentalPropertyEntryData = { ...completeRentalSource, rentalDays: "80", personalUseDays: "20", rents: "1000", advertising: "100", insurance: "1250",
+      rentalUseAllocationSources: { taxYear: 2026, propertyAddress, occupancySourceReference: "Calendar", rentSourceReference: "Rent ledger",
+        expenseSourceReference: "Bill ledger", confirmedCompleteOrdinaryUse: true, confirmedOrdinaryTenantRelationship: true,
+        periods: [{ sourceReference: "Lease", use: "fair_rental", start: "2026-06-01", end: "2026-08-19" },
+          { sourceReference: "Owner calendar", use: "personal", start: "2026-09-01", end: "2026-09-20" }],
+        rentReceipts: [{ sourceReference: "Paid rent", propertyAddress, leaseReference: "Lease", datePaid: "2026-06-01", amount: "1000" }],
+        expenseReceipts: [{ sourceReference: "Ad", propertyAddress, datePaid: "2026-08-20", amount: "100", category: "advertising", use: "rental_only" },
+          { sourceReference: "Policy", propertyAddress, datePaid: "2026-08-20", amount: "1250", category: "insurance", use: "shared" }],
+        depreciation: { propertyAddress, sourceReference: "Prior asset register", confirmedCompleteWithoutCurrentAssets: true,
+          assets: [{ sourceReference: "Building record", kind: "building", placedInServiceDate: "1990-01-01", basisFullyRecoveredDate: "2018-01-01",
+            depreciableBasis: "66000", priorAllowableDepreciation: "66000" }] } } };
+    const state = (method: "standard" | "automatic" = "standard") => {
+      const state = flow();
+      state.taxYear = 2026;
+      state.sectionData.deductions = { ...emptyDeductionData, method };
+      return state;
+    };
+    await render([entry], 2026);
+    expect(buildTaxInputFromGuidedData(state())).toBeNull();
+    await change("Dwelling address on the 2025 carryover records", propertyAddress);
+    await change("2025 carryover records reference", "Complete 2025 records");
+    await change("2025 operating expense carryover", "0.00");
+    await change("2026 casualty and theft loss", "0");
+    await change(worksheetConfirmation, "true");
+    await change(packetConfirmation, "true");
+    await change(confirmation, "true");
+    expect(buildTaxInputFromGuidedData(state())).toBeNull();
+    await change("2025 depreciation and casualty carryover", "0.00");
+    expect(control(worksheetConfirmation).value).toBe("");
+    await change(worksheetConfirmation, "true");
+    await change(packetConfirmation, "true");
+    await change(confirmation, "true");
+    expect(buildTaxInputFromGuidedData(state("automatic"))).toBeNull();
+    const restored = parseGuidedFlowState(JSON.stringify(state()));
+    expect(restored).not.toBeNull();
+    if (!restored) throw new Error("Could not reopen the saved synthetic rental sources.");
+    const canonical = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(restored));
+    expect(canonical.rentalProperties[0].rentalUseAllocationSources?.residenceWorksheet).toMatchObject({ priorYear: 2025, priorOperatingCarryover: "0.00" });
+    const result = calculateFederalTax(canonical, { asOfDate: "2026-10-01" });
+    expect(result.scheduleE?.rentalProperties[0].residenceWorksheet?.operatingCarryover.toFixed(2)).toBe("100.00");
+    expect(result.form8582?.activityRows).toEqual([]);
+    await click("Remove residence worksheet records");
+    expect(latest[0].rentalUseAllocationSources?.residenceWorksheet).toBeUndefined();
+    expect(latest[0].rentalUseAllocationSources?.expenseReceipts?.[1]?.amount).toBe("1250");
+    expect(buildTaxInputFromGuidedData(state())).toBeNull();
   });
 
   it("clears saved 2026 allocation only on explicit removal after a correction", async () => {

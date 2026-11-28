@@ -1,3 +1,4 @@
+// Spec: spec/federal/schedule-e.yaml, 280A-2026-actual-residence-worksheet
 import { describe, expect, it, vi } from "vitest";
 import { calculateFederalTax } from "@/engine/public-federal-return.js";
 import { calculateScheduleE } from "@/engine/schedules/schedule-e.js";
@@ -67,6 +68,24 @@ function verifiedRental() {
 
 const evaluationDate = { asOfDate: "2026-10-01" };
 
+function verifiedResidence() {
+  const { raw, allocation, property } = verifiedRental();
+  allocation.periods[0].end = "2026-08-19";
+  allocation.periods[1].end = "2026-09-20";
+  allocation.rentReceipts.splice(1);
+  allocation.rentReceipts[0].amount = "1000.00";
+  allocation.expenseReceipts.splice(2);
+  allocation.expenseReceipts[0].amount = "100.00";
+  allocation.expenseReceipts[1].amount = "1250.00";
+  Object.assign(property, { rentalDays: 80, personalUseDays: 20, rents: "1000.00", advertising: "100.00",
+    insurance: "1250.00", utilities: "0", taxes: "0" });
+  const history = { priorYear: 2025, propertyAddress: allocation.propertyAddress, sourceReference: "Complete 2025 same-dwelling carryover records",
+    confirmedCompletePriorYear: true, priorOperatingCarryover: "0.00", priorDepreciationAndCasualtyCarryover: "0",
+    currentCasualtyAndTheftLoss: "0" };
+  const residence = { ...allocation, residenceWorksheet: history };
+  return { raw: { ...raw, rentalProperties: [{ ...property, rentalUseAllocationSources: residence }] }, residence, history };
+}
+
 describe("2026 Schedule E personal-use admission", () => {
   it("holds subthreshold personal use in the direct 2026 Schedule E", () => {
     // $1,000 shared insurance for 90 rental and 10 personal days has a $900
@@ -105,6 +124,68 @@ describe("2026 Schedule E personal-use admission", () => {
     expect(result.scheduleE?.rentalProperties[0].netRentalIncome.toFixed(2)).toBe("1319.95");
     expect(result.otherIncome.toFixed()).toBe("1320");
     expect(result.form8582?.requiresForm8582).toBe(false);
+  });
+
+  it("limits verified residence insurance and transfers no passive activity", () => {
+    const input = TaxYearInputSchema.parse(verifiedResidence().raw);
+    const schedule = calculateScheduleE(input, undefined, evaluationDate);
+    const direct = schedule.rentalProperties[0];
+    expect(direct.allocatedExpenses?.advertising?.toFixed(2)).toBe("100.00");
+    expect(direct.allocatedExpenses?.insurance?.toFixed(2)).toBe("900.00");
+    expect(direct.totalExpenses.toFixed(2)).toBe("1000.00");
+    expect(direct.netRentalIncome.toFixed(2)).toBe("0.00");
+    expect(direct.isPassive).toBe(false);
+    expect(direct.residenceWorksheet?.operatingCarryover.toFixed(2)).toBe("100.00");
+    expect(direct.residenceWorksheet?.depreciationAndCasualtyCarryover.toFixed(2)).toBe("0.00");
+    expect(schedule.lines.filter(line => line.form === "Pub 527 Worksheet 5-1").map(line => [line.line, line.value.toFixed(2)])).toEqual([
+      ["2d", "100.00"], ["3", "900.00"], ["4a", "1000.00"], ["4f", "900.00"], ["7a", "100.00"], ["7b", "0.00"],
+    ]);
+    const federal = calculateFederalTax(input, evaluationDate);
+    expect(federal.scheduleE?.rentalProperties[0]).toEqual(direct);
+    expect(federal.deductionUsed).toBe("standard");
+    expect(federal.otherIncome.toFixed()).toBe("0");
+    expect(federal.form8582?.activityRows).toEqual([]);
+    expect(federal.form8582?.requiresForm8582).toBe(false);
+  });
+
+  it("transfers a verified break-even residence with no carryover", () => {
+    const { raw, residence } = verifiedResidence();
+    raw.rentalProperties[0].insurance = "1125.00";
+    residence.expenseReceipts[1].amount = "1125.00";
+    const federal = calculateFederalTax(TaxYearInputSchema.parse(raw), evaluationDate);
+    const entry = federal.scheduleE?.rentalProperties[0];
+    expect(entry?.allocatedExpenses?.insurance?.toFixed(2)).toBe("900.00");
+    expect(entry?.netRentalIncome.toFixed(2)).toBe("0.00");
+    expect(entry?.residenceWorksheet?.operatingCarryover.toFixed(2)).toBe("0.00");
+    expect(federal.scheduleE?.lines.some(line => line.form === "Pub 527 Worksheet 5-1")).toBe(false);
+    expect(federal.form8582?.activityRows).toEqual([]);
+  });
+
+  it("holds residence worksheet cases outside verified advertising and insurance", () => {
+    type Fixture = ReturnType<typeof verifiedResidence>;
+    const cases: Array<[(fixture: Fixture) => void, RegExp]> = [
+      [({ history }) => { history.propertyAddress = "Other dwelling"; }, /same dwelling/i],
+      [({ history }) => { history.confirmedCompletePriorYear = false; }, /confirmed.*2025/i],
+      [({ history }) => { history.priorOperatingCarryover = "0.01"; }, /zero prior/i],
+      [({ history }) => { history.priorDepreciationAndCasualtyCarryover = "0.01"; }, /zero prior/i],
+      [({ history }) => { history.currentCasualtyAndTheftLoss = "0.01"; }, /zero.*current casualty/i],
+      [({ raw }) => { raw.deductionElection = "automatic"; }, /explicit standard deduction/i],
+      [({ raw, residence }) => {
+        raw.rentalProperties[0].utilities = "10";
+        residence.expenseReceipts.push({ ...residence.expenseReceipts[1], sourceReference: "Additional utility bill", category: "utilities", amount: "10" });
+      }, /only.*advertising and.*insurance/i],
+      [({ raw, residence }) => { raw.rentalProperties[0].insurance = "1000"; residence.expenseReceipts[1].amount = "1000"; }, /positive residence income/i],
+      [({ raw, residence }) => { raw.rentalProperties[0].advertising = "1100"; residence.expenseReceipts[0].amount = "1100"; }, /advertising.*cannot exceed rent/i],
+      [({ residence }) => { residence.expenseReceipts[1].datePaid = "2026-10-02"; }, /as-of date/i],
+    ];
+    for (const [change, issue] of cases) {
+      const fixture = verifiedResidence();
+      change(fixture);
+      expect(() => calculateScheduleE(TaxYearInputSchema.parse(fixture.raw), undefined, evaluationDate)).toThrow(issue);
+    }
+    const { raw } = verifiedResidence();
+    raw.rentalProperties[0].rentalUseAllocationSources.expenseReceipts[1].datePaid = evaluationDate.asOfDate;
+    expect(calculateFederalTax(TaxYearInputSchema.parse(raw), evaluationDate).scheduleE?.totalRentalIncome.toFixed(2)).toBe("0.00");
   });
 
   it("holds unobserved 2026 rental receipts and periods at the explicit return as-of date", () => {

@@ -1,6 +1,7 @@
+import type Decimal from "decimal.js";
 import type { RentalProperty, TaxYearInput } from "@/models/inputs.js";
-import { RentalUseAllocation2026Schema, rentalAllocationCategories } from "@/models/rental-use-allocation-2026.js";
-import { d } from "@/utils/decimal.js";
+import { RentalUseAllocation2026Schema, rentalAllocationCategories, usesRentalDwellingAsHome, type RentalAllocationCategory } from "@/models/rental-use-allocation-2026.js";
+import { d, zeroFloor } from "@/utils/decimal.js";
 import { isActualDate } from "@/utils/civil-date.js";
 import { sumSourceMoneyValues } from "@/utils/sum-source-money.js";
 import { sumSourceMoneyRatios } from "@/utils/sum-source-money-ratios.js";
@@ -8,6 +9,22 @@ import { sumSourceMoneyRatios } from "@/utils/sum-source-money-ratios.js";
 const exclusiveRentalCategories = new Set(["advertising", "commissions", "managementFees"]);
 const unsupportedExpenses = ["autoTravel", "cleaning", "legalProfessional", "mortgageInterest", "otherInterest",
   "repairs", "supplies", "depreciation", "otherExpenses"] as const;
+
+export interface RentalResidenceWorksheet2026Result {
+  rentalInsuranceBeforeLimit: Decimal;
+  operatingCarryover: Decimal;
+  depreciationAndCasualtyCarryover: Decimal;
+}
+
+interface ActualRentalUseAllocation2026 {
+  grossRents: Decimal;
+  totalExpenses: Decimal;
+  netRentalIncome: Decimal;
+  rentalDays: number;
+  personalDays: number;
+  expensesByCategory: Record<RentalAllocationCategory, Decimal>;
+  residenceWorksheet?: RentalResidenceWorksheet2026Result;
+}
 
 export function rentalUseAllocationIssue(detail: string): never {
   throw new Error(`2026 Schedule E personal use requires actual dwelling-use records, a rental and personal expense allocation, and any applicable section 280A worksheet. ${detail}`);
@@ -21,7 +38,7 @@ function uniqueOriginals(rows: ReadonlyArray<{ sourceReference: string }>): bool
   return new Set(rows.map(row => sourceKey(row.sourceReference))).size === rows.length;
 }
 
-export function calculateRentalUseAllocation2026(property: RentalProperty, asOfDate?: string) {
+export function calculateRentalUseAllocation2026(property: RentalProperty, asOfDate?: string): ActualRentalUseAllocation2026 {
   const parsed = RentalUseAllocation2026Schema.safeParse(property.rentalUseAllocationSources);
   if (!parsed.success) return rentalUseAllocationIssue("Complete the original calendar, rent, expenses and asset records.");
   const source = parsed.data;
@@ -56,9 +73,16 @@ export function calculateRentalUseAllocation2026(property: RentalProperty, asOfD
     else personalDays += days;
     previousEnd = period.end;
   }
-  if (!rentalDays || !personalDays || rentalDays !== property.rentalDays || personalDays !== property.personalUseDays
-    || (personalDays > 14 && 10 * personalDays > rentalDays)) {
-    return rentalUseAllocationIssue("Original day counts must match and stay within the nonresidence method.");
+  if (!rentalDays || !personalDays || rentalDays !== property.rentalDays || personalDays !== property.personalUseDays) {
+    return rentalUseAllocationIssue("Original rental and personal-use day counts must match.");
+  }
+  const usedAsHome = usesRentalDwellingAsHome(rentalDays, personalDays);
+  const prior = source.residenceWorksheet;
+  if (usedAsHome && !prior) {
+    return rentalUseAllocationIssue("The dwelling exceeds the nonresidence method. Supply the original residence worksheet records.");
+  }
+  if (!usedAsHome && prior) {
+    return rentalUseAllocationIssue("Remove the residence worksheet records if the original use days qualify for the nonresidence method.");
   }
   const [lease] = leases;
   if (!lease || leases.length !== 1 || rentalDays <= 30) {
@@ -103,12 +127,44 @@ export function calculateRentalUseAllocation2026(property: RentalProperty, asOfD
   });
   const totalExpenses = sumSourceMoneyRatios(categorySources);
   const netRentalIncome = sumSourceMoneyRatios([{ amount: grossRents }, ...categorySources.map(source => ({ ...source, amount: source.amount.negated() }))]);
+  const expensesByCategory = Object.fromEntries(categorySources.map(source => [source.category, sumSourceMoneyRatios([source])])) as Record<RentalAllocationCategory, Decimal>;
+  const days = { rentalDays, personalDays };
+  if (prior) {
+    if (sourceKey(prior.propertyAddress) !== dwelling) {
+      return rentalUseAllocationIssue("The original carryover records must identify the same dwelling.");
+    }
+    if (!prior.confirmedCompletePriorYear) {
+      return rentalUseAllocationIssue("Use confirmed complete 2025 carryover records for this dwelling.");
+    }
+    if (!d(prior.priorOperatingCarryover).isZero() || !d(prior.priorDepreciationAndCasualtyCarryover).isZero()
+      || !d(prior.currentCasualtyAndTheftLoss).isZero()) {
+      return rentalUseAllocationIssue("This method requires verified zero prior carryovers and zero current casualty and theft loss.");
+    }
+    const { advertising, insurance } = expensesByCategory;
+    if (!advertising.gt(0) || !insurance.gt(0)
+      || categorySources.some(row => row.category !== "advertising" && row.category !== "insurance" && !row.amount.isZero())) {
+      return rentalUseAllocationIssue("This residence worksheet supports only rental-only advertising and shared insurance.");
+    }
+    if (advertising.gt(grossRents)) {
+      return rentalUseAllocationIssue("Rental-only advertising cannot exceed rent for this residence worksheet.");
+    }
+    if (netRentalIncome.gt(0)) {
+      return rentalUseAllocationIssue("Positive residence income requires its own investment income classification.");
+    }
+    const residenceWorksheet: RentalResidenceWorksheet2026Result = {
+      rentalInsuranceBeforeLimit: insurance,
+      operatingCarryover: zeroFloor(netRentalIncome.negated()),
+      depreciationAndCasualtyCarryover: d(0),
+    };
+    return { grossRents, totalExpenses: grossRents, netRentalIncome: d(0), ...days, residenceWorksheet,
+      expensesByCategory: { ...expensesByCategory, insurance: sumSourceMoneyValues([grossRents, advertising.negated()]) } };
+  }
   if (!netRentalIncome.gt(0)) return rentalUseAllocationIssue("Only a positive result after all allowable rental expenses is supported.");
-  return { totalExpenses, netRentalIncome, rentalDays, personalDays,
-    expensesByCategory: Object.fromEntries(categorySources.map(source => [source.category, sumSourceMoneyRatios([source])])) };
+  return { grossRents, totalExpenses, netRentalIncome, ...days, expensesByCategory };
 }
 
 export type RentalUseReturnContext = Partial<Pick<TaxYearInput, "deductionElection" | "form1098" | "scheduleC" | "scheduleF"
-  | "qbiLossSources" | "scheduleK1Form1041" | "royaltyPropertySources">> & {
-  priorYear?: Pick<NonNullable<TaxYearInput["priorYear"]>, "suspendedPassiveLosses" | "qbiLossCarryforward" | "reitPtpLossSource">;
+  | "qbiLossSources" | "scheduleK1Form1041" | "royaltyPropertySources" | "form4684">> & {
+  priorYear?: Pick<NonNullable<TaxYearInput["priorYear"]>, "suspendedPassiveLosses" | "qbiLossCarryforward" | "reitPtpLossSource">
+    & Partial<Pick<NonNullable<TaxYearInput["priorYear"]>, "suspendedPTPLosses">>;
 };

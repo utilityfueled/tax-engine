@@ -9,6 +9,10 @@ type DraftDepreciation = Partial<Pick<Sources["depreciation"], "propertyAddress"
   confirmedCompleteWithoutCurrentAssets?: boolean | null;
   assets?: RentalAssetDraft[];
 };
+type ResidenceWorksheet = NonNullable<Sources["residenceWorksheet"]>;
+export type RentalResidenceWorksheetDraft = Partial<Omit<ResidenceWorksheet, "confirmedCompletePriorYear">> & {
+  confirmedCompletePriorYear?: boolean | null;
+};
 export type RentalUseAllocationDraft = Partial<Pick<Sources, "taxYear" | "propertyAddress" | "occupancySourceReference" | "rentSourceReference" | "expenseSourceReference">> & {
   confirmedCompleteOrdinaryUse?: boolean | null;
   confirmedOrdinaryTenantRelationship?: boolean | null;
@@ -16,6 +20,7 @@ export type RentalUseAllocationDraft = Partial<Pick<Sources, "taxYear" | "proper
   rentReceipts?: RentalRentReceiptDraft[];
   expenseReceipts?: RentalExpenseReceiptDraft[];
   depreciation?: DraftDepreciation;
+  residenceWorksheet?: RentalResidenceWorksheetDraft;
 };
 
 export function rentalDecimalText(value?: string): string | undefined {
@@ -25,6 +30,7 @@ export function rentalDecimalText(value?: string): string | undefined {
 
 export function buildGuidedRentalUseAllocation(draft: RentalUseAllocationDraft | undefined) {
   if (!draft) return undefined;
+  const residence = draft.residenceWorksheet;
   return {
     ...draft,
     rentReceipts: draft.rentReceipts?.map(row => ({ ...row, amount: rentalDecimalText(row.amount) })),
@@ -34,5 +40,11 @@ export function buildGuidedRentalUseAllocation(draft: RentalUseAllocationDraft |
       assets: draft.depreciation.assets?.map(row => ({ ...row, depreciableBasis: rentalDecimalText(row.depreciableBasis),
         priorAllowableDepreciation: rentalDecimalText(row.priorAllowableDepreciation) })),
     },
+    ...(residence && { residenceWorksheet: {
+      ...residence,
+      priorOperatingCarryover: rentalDecimalText(residence.priorOperatingCarryover),
+      priorDepreciationAndCasualtyCarryover: rentalDecimalText(residence.priorDepreciationAndCasualtyCarryover),
+      currentCasualtyAndTheftLoss: rentalDecimalText(residence.currentCasualtyAndTheftLoss),
+    } }),
   };
 }

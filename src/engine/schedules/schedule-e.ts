@@ -19,7 +19,7 @@ import { calculateK1CharitableReturnSources, type K1CharitableReturnResult, type
 import { calculateRoyaltyPropertySources, type RoyaltyPropertyResult } from "@/engine/forms/royalty-property-sources.js";
 import { d, sum } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
-import { calculateRentalUseAllocation2026, rentalUseAllocationIssue, type RentalUseReturnContext } from "./rental-use-allocation-2026.js";
+import { calculateRentalUseAllocation2026, rentalUseAllocationIssue, type RentalResidenceWorksheet2026Result, type RentalUseReturnContext } from "./rental-use-allocation-2026.js";
 import type { RentalAllocationCategory } from "@/models/rental-use-allocation-2026.js";
 
 // ── Part I: Rental Property Entry ────────────────────────
@@ -31,7 +31,8 @@ export interface RentalPropertyEntry {
   totalExpenses: Decimal;
   netRentalIncome: Decimal; // Line 21 per property
   allocatedExpenses?: Partial<Record<RentalAllocationCategory, Decimal>>;
-  isPassive: true; // Rental is always passive unless real estate professional
+  residenceWorksheet?: RentalResidenceWorksheet2026Result;
+  isPassive: boolean;
   isActiveParticipant: boolean;
 }
 
@@ -310,6 +311,12 @@ export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'ren
     rentalUseAllocationIssue("This real estate tax allocation requires an explicit standard deduction election.");
   }
   const actualRentalUse = mixedUse && calculateRentalUseAllocation2026(mixedUse, context?.asOfDate);
+  if (actualRentalUse?.residenceWorksheet && input.deductionElection !== "standard") {
+    rentalUseAllocationIssue("This residence worksheet requires an explicit standard deduction election.");
+  }
+  if (actualRentalUse?.residenceWorksheet && (input.form4684 !== undefined || input.priorYear?.suspendedPTPLosses?.length)) {
+    rentalUseAllocationIssue("Separate casualty or prior PTP losses require their own residence worksheet coordination.");
+  }
   const scheduleK1SourceIssue = getFutureScheduleK1SourceIssue(input.taxpayer?.taxYear, input.scheduleK1);
   if (scheduleK1SourceIssue) throw new Error(scheduleK1SourceIssue);
   if (input.rentalProperties?.some(property => property.form4562?.passengerFirstYearSources !== undefined)) throw new Error('Passenger worksheet requires separate rental owner/activity linkage');
@@ -330,7 +337,7 @@ export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'ren
     const ownershipPct = prop.ownershipPercentage
       ? d(prop.ownershipPercentage).dividedBy(100)
       : new Decimal(1);
-    const rents = d(prop.rents).times(ownershipPct);
+    const rents = actualRentalUse?.grossRents ?? d(prop.rents).times(ownershipPct);
     const form4562 = prop.form4562 ? calculateForm4562(prop.form4562, input.taxpayer?.taxYear) : undefined;
     const supportedForm4562Depreciation = form4562
       ? sum(
@@ -378,10 +385,24 @@ export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'ren
     let totalExpenses: Decimal;
     if (actualRentalUse) {
       totalExpenses = actualRentalUse.totalExpenses;
-      audit.record("Sched E", "280A-2026", "Actual rental-use allocation", totalExpenses,
-        "Documented direct rental costs plus the fair-rental share of shared expenses", {
-          ...actualRentalUse.expensesByCategory, "Fair-rental days": String(actualRentalUse.rentalDays), "Personal-use days": String(actualRentalUse.personalDays),
-        });
+      const worksheet = actualRentalUse.residenceWorksheet;
+      if (worksheet?.operatingCarryover.gt(0)) {
+        const { advertising, insurance } = actualRentalUse.expensesByCategory;
+        audit.record("Pub 527 Worksheet 5-1", "2d", "Direct advertising expense", advertising, "Full documented rental-only advertising");
+        audit.record("Pub 527 Worksheet 5-1", "3", "Rents after direct expense", insurance, "Gross rents less allowed advertising");
+        audit.record("Pub 527 Worksheet 5-1", "4a", "Rental share of insurance", worksheet.rentalInsuranceBeforeLimit,
+          "Actual shared insurance allocated over fair-rental and personal-use days");
+        audit.record("Pub 527 Worksheet 5-1", "4f", "Allowed insurance", insurance, "Line 4a limited to rents after direct expense");
+        audit.record("Pub 527 Worksheet 5-1", "7a", "Operating expense carryover", worksheet.operatingCarryover,
+          "Unused rental insurance carried to the next year for this dwelling under section 280A");
+        audit.record("Pub 527 Worksheet 5-1", "7b", "Depreciation and casualty carryover", worksheet.depreciationAndCasualtyCarryover,
+          "Verified zero prior carryover and zero current-year expenses in this tier");
+      } else {
+        audit.record("Sched E", "280A-2026", "Actual rental-use allocation", totalExpenses,
+          "Documented direct rental costs plus the fair-rental share of shared expenses", {
+            ...actualRentalUse.expensesByCategory, "Fair-rental days": String(actualRentalUse.rentalDays), "Personal-use days": String(actualRentalUse.personalDays),
+          });
+      }
     } else if (isMixedUse && totalDays > 0) {
       const rentalRatio = new Decimal(rentalDays).dividedBy(totalDays);
       totalExpenses = grossExpenses.times(rentalRatio).toDecimalPlaces(0, Decimal.ROUND_DOWN);
@@ -401,7 +422,8 @@ export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'ren
       totalExpenses,
       netRentalIncome,
       ...(actualRentalUse ? { allocatedExpenses: actualRentalUse.expensesByCategory } : {}),
-      isPassive: true,
+      ...(actualRentalUse?.residenceWorksheet ? { residenceWorksheet: actualRentalUse.residenceWorksheet } : {}),
+      isPassive: actualRentalUse?.residenceWorksheet === undefined,
       isActiveParticipant: prop.isActiveParticipant ?? true,
     });
 

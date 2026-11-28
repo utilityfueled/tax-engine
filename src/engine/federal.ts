@@ -2458,8 +2458,9 @@ function calculateFederalTaxCore(sourceInput: TaxYearInput, marketplace?: Market
       ptpDispositionGainOrLoss: partnership.ptpDispositionGainOrLoss,
     }] : []);
 
-  // Add rental properties from Schedule E Part I as passive activities
-  for (const rental of schedE.rentalProperties) {
+  // A residence limited under section 280A(c)(5) stays outside Form 8582.
+  const passiveRentals = schedE.rentalProperties.flatMap((rental, propertyIndex) => rental.isPassive ? [{ rental, propertyIndex }] : []);
+  for (const { rental } of passiveRentals) {
     const net = rental.netRentalIncome;
     passiveActivities.push({
       name: rental.description,
@@ -2475,7 +2476,7 @@ function calculateFederalTaxCore(sourceInput: TaxYearInput, marketplace?: Market
   // loss. Replace the preliminary ScheduleE passive contribution before
   // adding back the specifically excluded deductions and taxable benefits.
   const k1PassiveCount = schedE.partnerships.filter(partnership => partnership.isPassive).length;
-  const preliminaryPassiveIncome = sum(...schedE.rentalProperties.map(rental => rental.netRentalIncome),
+  const preliminaryPassiveIncome = sum(...passiveRentals.map(({ rental }) => rental.netRentalIncome),
     zeroFloor(schedE.totalPassiveIncome.plus(schedE.totalPassiveLoss)));
   const regularPassiveNet = sum(...passiveActivities.filter(activity => !activity.isPubliclyTradedPartnership)
     .map(activity => roundDollar(activity.income).plus(roundDollar(activity.loss))))
@@ -3216,14 +3217,13 @@ function calculateFederalTaxCore(sourceInput: TaxYearInput, marketplace?: Market
     || k1QbiLosses.priorActiveQualifiedLoss === undefined ? undefined
     : k1QbiLosses.priorActiveQualifiedLoss.plus(eblQbi.currentActiveQualifiedDeduction ?? 0);
   for (const prior of input.priorYear?.suspendedPassiveLosses ?? []) {
-    if (prior.qbiLossTracking && !schedE.rentalProperties.some(rental => rental.description === prior.partnershipName)
+    if (prior.qbiLossTracking && !passiveRentals.some(({ rental }) => rental.description === prior.partnershipName)
       && !k1QbiLosses.activities.some(source => input.scheduleK1[source.k1Index].partnershipName === prior.partnershipName)) {
       throw new Error("Actual passive QBI tracking requires its supported rental source; partnership loss character needs its separate source method");
     }
   }
-  for (let ri = 0; ri < schedE.rentalProperties.length; ri++) {
-    const rental = schedE.rentalProperties[ri];
-    const prop = (input.rentalProperties ?? [])[ri];
+  for (const [ri, { rental, propertyIndex }] of passiveRentals.entries()) {
+    const prop = input.rentalProperties[propertyIndex];
     const row = form8582.activityRows.find(activity => activity.sourceIndex === k1PassiveCount + ri);
     const alloc = form8582.activityAllocations.find(activity => activity.sourceIndex === k1PassiveCount + ri);
     const priorSources = (input.priorYear?.suspendedPassiveLosses ?? []).filter(prior => prior.partnershipName === rental.description);
@@ -3459,7 +3459,8 @@ function calculateFederalTaxCore(sourceInput: TaxYearInput, marketplace?: Market
     Decimal.max(0, originatingQbiTaxableIncome.minus(constants.qbi.simplifiedThreshold[filingStatus]))
       .div(constants.qbi.phaseInRange[filingStatus]))));
   for (const [sourceIndex, tracked] of rentalLossQbi) {
-    const prop = input.rentalProperties[sourceIndex - k1PassiveCount];
+    const source = passiveRentals[sourceIndex - k1PassiveCount];
+    const prop = source && input.rentalProperties[source.propertyIndex];
     if (!prop?.qualifiesForQBI || !prop.qbiIsSST) continue;
     tracked.remainingVintages = tracked.remainingVintages.map(vintage => {
       if (vintage.taxYear !== year) return vintage;

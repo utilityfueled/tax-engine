@@ -7,6 +7,10 @@ const actualDate = z.iso.date();
 export const rentalAllocationCategories = ["advertising", "commissions", "managementFees", "insurance", "utilities", "taxes"] as const;
 export type RentalAllocationCategory = typeof rentalAllocationCategories[number];
 
+export function usesRentalDwellingAsHome(rentalDays: number, personalDays: number): boolean {
+  return personalDays > 14 && 10 * personalDays > rentalDays;
+}
+
 const receipt = {
   sourceReference: reference,
   propertyAddress: reference,
@@ -47,6 +51,15 @@ export const RentalUseAllocation2026Schema = z.strictObject({
       priorAllowableDepreciation: money,
     })).min(1),
   }),
+  residenceWorksheet: z.strictObject({
+    priorYear: z.literal(2025),
+    propertyAddress: reference,
+    sourceReference: reference,
+    confirmedCompletePriorYear: z.boolean(),
+    priorOperatingCarryover: money,
+    priorDepreciationAndCasualtyCarryover: money,
+    currentCasualtyAndTheftLoss: money,
+  }).optional(),
 });
 
 export type RentalUseAllocation2026Sources = z.infer<typeof RentalUseAllocation2026Schema>;

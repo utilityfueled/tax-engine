@@ -882,6 +882,10 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     standardMileage = readGuidedBusinessMileage(seData, state);
     professionalWagering = seData && readGuidedProfessionalWagering(seData, state);
     assertKnownFacts(rentalFactErrors(rentalData?.entries, segmentation.filingStatus, state.taxYear, segmentation.stateCode, personalInfo));
+    if (state.taxYear === 2026 && deductionData?.method !== "standard"
+      && rentalData?.entries.some(entry => entry.rentalUseAllocationSources?.residenceWorksheet)) {
+      throw new Error("This residence worksheet requires an explicit standard deduction election.");
+    }
     assertKnownFacts(nonitemizedElectionFactErrors(state));
     assertKnownFacts(deductionAmountYearErrors(deductionData, state.taxYear));
     const paidThroughDate = state.taxYear === 2026 ? currentLocalCivilDate() : undefined;

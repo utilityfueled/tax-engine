@@ -126,7 +126,7 @@ lines:
       asset records, including the building, proving the depreciable bases were
       fully recovered before 2026 and no current assets, basis changes, listed
       property or Form 4562 items. Use Decimal, retain the allocated expenses by
-      category, and require positive current-year line 21. Keep residence, losses,
+      category, and require positive current-year line 21. Keep other residence cases, losses,
       specialty worksheets and export qualification held. Keep a saved original
       allocation packet until the filer explicitly removes it after correcting
       use days or changing the return year, and then require reconfirmation.
@@ -141,6 +141,40 @@ lines:
       - "tests/apps/web/rental-source-interactions.test.tsx::reconciles edited 2026 dwelling originals through guided input"
       - "tests/apps/web/rental-source-interactions.test.tsx::clears saved 2026 allocation only on explicit removal after a correction"
       - "tests/engine/schedules/schedule-e-personal-use-2026.test.ts::holds unobserved 2026 rental receipts and periods at the explicit return as-of date"
+
+  - line: "280A-2026-actual-residence-worksheet"
+    description: "Limit one actual residence's shared insurance on Worksheet 5-1"
+    formula: >-
+      Reuse the actual one-dwelling calendar, linked lease and receipts, at-risk,
+      completed depreciation and trusted-date requirements. Personal days must
+      exceed both 14 and 10 percent of the documented rental days. Require the
+      standard election and same-dwelling, confirmed complete 2025 carryover
+      records with explicit zero operating and excess casualty/depreciation
+      carryovers. Confirm zero current casualty/theft loss against the current
+      complete expense records. Require zero for every other current category
+      and no separate casualty or prior passive loss sources. Support only
+      positive documented rental-only advertising that does not exceed rent and
+      one positive shared expense category, insurance, with allocated deductions
+      at least gross rent. Worksheet 5-1 Line 2d is the full advertising, Line 3
+      is gross rent less advertising, Line 4a is insurance times fair-rental days
+      divided by total used days, and Line 4f is the lesser of Line 3 and Line 4a.
+      Schedule E expenses are advertising plus allowed insurance, with Line 21
+      zero. Retain Line 7a as the same-dwelling Section 280A operating carryover
+      and Line 7b as zero after verified history. When all expenses exactly equal
+      rent, deduct them in full and retain zero carryover without audit lines for
+      an unneeded limitation worksheet. Hold positive net residence income until
+      its investment income classification is supported. Exclude this residence from
+      Form 8582 and its passive QBI allocation. Keep other residence, multi-category
+      deduction allocations, carryover utilization, and 2026 filing held.
+    sources:
+      - "https://uscode.house.gov/us/usc/119-124/t26/s280A/ (26 U.S.C. §280A(c)(5), (d), and (e))"
+      - "https://www.irs.gov/publications/p527 (chapter 5, Worksheet 5-1 lines 2d, 3, 4a, 4f, 7a and 7b)"
+      - "https://www.irs.gov/instructions/i8582 (Rental Activities and Exceptions)"
+    testRef: "tests/engine/schedules/schedule-e-personal-use-2026.test.ts::limits verified residence insurance and transfers no passive activity"
+    testRefs:
+      - "tests/engine/schedules/schedule-e-personal-use-2026.test.ts::transfers a verified break-even residence with no carryover"
+      - "tests/engine/schedules/schedule-e-personal-use-2026.test.ts::holds residence worksheet cases outside verified advertising and insurance"
+      - "tests/apps/web/rental-source-interactions.test.tsx::requires confirmed same-dwelling residence worksheet history before guided transfer"
 
   - line: "ownership"
     description: "Ownership percentage scaling for rental properties"
