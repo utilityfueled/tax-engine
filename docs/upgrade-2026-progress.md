@@ -13,7 +13,54 @@ the latest application revision, exact-source runs and open dependencies. The
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
-| Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. The ARM64 group and exact AMD64 jobs for `b56ed84a1` await runner assignment. The older ARM64 comparison failed nine strict browser cases after archive and recovery passed. Qualify both final runtime images before publishing. |
+| Self-host release | Exact local evidence includes encrypted backup, deletion and restoration. The ARM64 group and exact AMD64 jobs for `57b64cb23` await runner assignment. The older ARM64 comparison failed nine strict browser cases after archive and recovery passed. Qualify both final runtime images before publishing. |
+
+## November 28 combined-source native queue and form publications
+
+The exact `57b64cb23` CI, Web and Docker runs had zero assigned
+runners and no artifacts. ARM64 remains queued with the successor
+pending. Vercel canceled the automatic production targets for
+`c8ce1c0ff`, `07cb56a5a`, `4c75e49b5` and `57b64cb23`.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/46112070298) · [Web](https://github.com/utilityfueled/tax-engine/actions/runs/46112070248) · [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/46112070237) · [ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/46085907600)
+
+The checked final federal and Pennsylvania blanks are for 2025.
+The IRS 2026 Form 1040 and Ohio's 2026 booklet are drafts.
+[Final Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) · [Draft 2026 Form 1040](https://www.irs.gov/pub/irs-dft/f1040--dft.pdf) · [2025 PA-40](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40.pdf) · [Draft Ohio IT 1040 booklet](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf)
+
+## November 28 source-backed Schedule E allocation
+
+`57b64cb23` supports a private 2026 calculation for one profitable,
+wholly owned dwelling with one verified arm's-length lease longer than
+30 days. It checks actual occupied dates and paid receipts against the
+calculation date, matches rent to the lease, and requires original asset
+records proving zero allowable depreciation. Shared expenses use the
+actual rented share of occupied days. The synthetic case produced
+$1,319.95 Schedule E profit and $1,320 on the federal return. The guided
+flow reopens saved evidence and requires new confirmation after clearing
+or editing it. Independent engineering reviews passed 7 engine and 24
+guided tests. The exact package passed 943 focused tests and eight
+static checks. Used-as-a-home, loss and unsupported source cases remain
+held. [26 U.S.C. §280A](https://uscode.house.gov/us/usc/119-124/t26/s280A/) · [IRS Publication 527](https://www.irs.gov/publications/p527) · [Draft Schedule E instructions](https://www.irs.gov/pub/irs-dft/i1040se--dft.pdf#page=7)
+
+## November 28 offline AI evidence observation times
+
+`4c75e49b5` records provider probe availability and case outcomes when
+observed. Dated exact-cost reports use case observation times or
+reconciliation receipt times. If the clock fails before dispatch, the
+unused hold is released. If it fails after a reply, the journal retains
+the authoritative charge and dated reports exclude the undated result.
+All 232 exact focused tests and eight static checks passed.
+Independent engineering review repeated 19 tests and the original
+mock fault. Provider calls and promotion were disabled.
+
+## November 28 household validation test alignment
+
+`07cb56a5a` updates two tests exposed in the combined run. The Form 8889
+family fixture now uses two distinct fictional taxpayers and still checks
+the $8,750 limit and explicit zero distribution tax. Ohio tests both the
+specific canonical conflict and the privacy-safe state admission error.
+184 exact focused tests and eight static checks passed. Both repaired
+tests also passed in independent review.
 
 ## November 28 exact remote queue
 

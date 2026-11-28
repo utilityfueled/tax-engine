@@ -4,7 +4,7 @@
     "asOf": "2026-11-28",
     "branch": "main",
     "applicationCommit": "513fba11dad05e177a5cb12301b6adcf1f13d490",
-    "latestScopedApplicationCommit": "b56ed84a1d4c82da84b615df820d1f5671726ecb",
+    "latestScopedApplicationCommit": "57b64cb231e10a4de762e2966c6b5fdf234f5ee3",
     "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
     "latestSchedule8812PayrollActcEvidenceKey": "activeContinuation.nov27Schedule8812PayrollActc",
     "latestGuidedHsaCivilDatesEvidenceKey": "activeContinuation.nov27GuidedHsaCivilDates",
@@ -110,7 +110,7 @@
     "visitedOhioHeaderEvidenceKey": "activeContinuation.nov26VisitedOhioHeaderEdits",
     "ohioBankInterestResidencyEvidenceKey": "activeContinuation.nov26OhioBankInterestAllResidency",
     "latestExactLinuxResultsEvidenceKey": "activeContinuation.nov26LocalReturnReopening",
-    "latestLinuxQueueEvidenceKey": "activeContinuation.nov28ExactNativeQueue",
+    "latestLinuxQueueEvidenceKey": "activeContinuation.nov28CombinedNativeQueue",
     "latestSchedule8812AndNativeTimingEvidenceKey": "activeContinuation.nov26Schedule8812AndNativeTiming",
     "ohioUnemploymentEducatorHoursAndForm4137EvidenceKey": "activeContinuation.nov26OhioUnemploymentEducatorHoursAndForm4137",
     "latestFederalAnnualSourceEvidenceKey": "activeContinuation.nov25FederalAnnualSourceRefresh",
@@ -208,7 +208,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov27ExactFederalPaymentCombined",
     "remaining": [
-      "Both strict Linux browser gates and final image evidence remain open. The exact b56ed84a1 AMD64 CI 46110428404, Web 46110428431 and Docker 46110428369 were queued without runners. The ARM64 incumbent 46085907600 was queued for a runner and e32a4591e 46091464368 was pending in the same concurrency group. The separate older ARM64 comparison 46066052234 passed archive and Compose recovery and failed nine strict browser cases. Its worker diagnostic timed out with both settings. Earlier AMD64 46023825170 passed recovery and failed runtime browser and immutable image evidence.",
+      "Both strict Linux browser gates and final image evidence remain open. The exact 57b64cb23 AMD64 CI 46112070298, Web 46112070248 and Docker 46112070237 were queued without runners. The ARM64 incumbent 46085907600 was queued for a runner and e32a4591e 46091464368 was pending in the same concurrency group. The separate older ARM64 comparison 46066052234 passed archive and Compose recovery and failed nine strict browser cases. Its worker diagnostic timed out with both settings. Earlier AMD64 46023825170 passed recovery and failed runtime browser and immutable image evidence.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 27 public npm audits of the unchanged lockfile returned zero findings across 550 total and 457 production packages.",
@@ -216,6 +216,140 @@
     ]
   },
   "activeContinuation": {
+    "nov28CombinedNativeQueue": {
+      "commit": "57b64cb231e10a4de762e2966c6b5fdf234f5ee3",
+      "observedOn": "2026-11-28",
+      "ci": {
+        "runId": "46112070298",
+        "status": "queued",
+        "jobs": 7,
+        "assigned": 0,
+        "artifacts": 0
+      },
+      "web": {
+        "runId": "46112070248",
+        "status": "queued",
+        "jobs": 3,
+        "assigned": 0,
+        "artifacts": 0
+      },
+      "docker": {
+        "runId": "46112070237",
+        "status": "queued",
+        "jobs": 1,
+        "assigned": 0,
+        "artifacts": 0
+      },
+      "arm64Incumbent": {
+        "runId": "46085907600",
+        "jobId": "140799637560",
+        "status": "queued",
+        "assigned": 0,
+        "artifacts": 0
+      },
+      "arm64Successor": {
+        "runId": "46091464368",
+        "status": "pending",
+        "jobs": 0,
+        "artifacts": 0
+      },
+      "canceledAutomaticProductionTargets": [
+        "c8ce1c0ff",
+        "07cb56a5a",
+        "4c75e49b5",
+        "57b64cb23"
+      ],
+      "annualSourcesObserved": {
+        "federalCurrentFinal2025": "https://www.irs.gov/pub/irs-pdf/f1040.pdf",
+        "federal2026Draft": "https://www.irs.gov/pub/irs-dft/f1040--dft.pdf",
+        "pennsylvaniaFinal2025": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40.pdf",
+        "ohio2026DraftBooklet": "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf"
+      }
+    },
+    "nov28SourceBackedRentalAllocation": {
+      "commit": "57b64cb231e10a4de762e2966c6b5fdf234f5ee3",
+      "archiveSha256": "8b1eb2a352f63b9aa5bd96443511ba5fde8d6fc5f4e7c26a55b0111b180b4394",
+      "sourceTree": "5bc3075ec5f18e810e771211e1a5bd5aba796ce1",
+      "localEvidenceMarker": "nov27-rental-allocation-source-path",
+      "exactFocusedTestsPassed": 943,
+      "checksPassed": [
+        "focused",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
+      "implementationFocusedTestsPassed": 459,
+      "independentEngineRereviewTestsPassed": 7,
+      "independentGuidedRereviewTestsPassed": 24,
+      "boundedOneLeaseLongerThanDays": 30,
+      "fixtureScheduleEProfit": "1319.95",
+      "fixtureFederalOtherIncome": "1320",
+      "independentGuidedScheduleEProfit": "1500.13",
+      "sameDayAndFutureBoundariesVerified": true,
+      "savedDraftClearAndReconfirmationVerified": true,
+      "filingQualified": false,
+      "sources": [
+        "https://uscode.house.gov/us/usc/119-124/t26/s280A/",
+        "https://www.irs.gov/publications/p527",
+        "https://www.irs.gov/pub/irs-dft/i1040se--dft.pdf#page=7",
+        "https://www.irs.gov/instructions/i8582"
+      ]
+    },
+    "nov28EvalObservationCutoff": {
+      "commit": "4c75e49b5dcf75217826a2547a5a59e29332eaf1",
+      "archiveSha256": "8c9df3e1df17dc357725e87039a3d96fb18b7af27d63b0ba604f7905d42f2c18",
+      "sourceTree": "cce576895294a7d1e8125782fe13a59d9da979d6",
+      "localEvidenceMarker": "nov27-eval-observation-cutoff-path",
+      "exactFocusedTestsPassed": 232,
+      "checksPassed": [
+        "focused",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
+      "implementationFocusedTestsPassed": 131,
+      "independentExceptionTestsPassed": 19,
+      "sealedDatedObservationCutoff": true,
+      "exactKnownProbeChargeAfterClockFailure": "0.00006",
+      "exactKnownProbeAndCaseChargeAfterClockFailure": "0.00012",
+      "maskedUndatedUsageInDatedReport": true,
+      "liveProviderCalls": 0,
+      "promotionEnabled": false
+    },
+    "nov28HouseholdRegressionFixtures": {
+      "commit": "07cb56a5a64cb4d1344ff230f397b82ff7b46f30",
+      "archiveSha256": "efdb339c47359bdd58418584f77aa16819ea39c51fd7e8b39d866ad47baaec90",
+      "sourceTree": "708213e74fb4f3dcc0af920693ea2a3308b06209",
+      "localEvidenceMarker": "nov27-household-dependent-test-alignment-path",
+      "exactFocusedTestsPassed": 184,
+      "checksPassed": [
+        "focused",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
+      "independentFocusedRegressionsPassed": 2,
+      "fullSuitePreviouslyExposedTests": [
+        "Form 8889 family distribution explicit zero",
+        "Ohio source draft repeated joint owners"
+      ],
+      "productionLogicChanged": false
+    },
     "nov28ExactNativeQueue": {
       "commit": "b56ed84a1d4c82da84b615df820d1f5671726ecb",
       "observedOn": "2026-11-28",
