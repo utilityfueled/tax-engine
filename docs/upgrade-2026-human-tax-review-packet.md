@@ -202,6 +202,27 @@ by a qualified reviewer, or as merely missing credentials.
 
 ## Required independent expected results
 
+### 2026 Form 6198 simplified amount at risk
+
+Derive lines 1, 5, 6–10b, 20 and 21 from the source facts. Confirm the
+signed federal transfer, current suspended amount and the printed presentation
+on the November 2025 revision of the rolling blank. State the treatment of
+zero capacity, negative Part II results and the limits of the single-loss path.
+
+| Source facts | Engineering expectation pending independent review |
+| --- | --- |
+| A materially participating primary sole proprietor has one ordinary Schedule C loss of $6,000.57. Opening asset basis before liabilities is $12,000.12. Current capital contributions total $300.30. Withdrawals and amounts included in opening basis that are excluded from risk total $8,300.10. There is $85,000 in wages and no prior suspended activity loss. | Part II and line 20 show $4,000.32. The signed line 21 and Schedule C transfer are −$4,000.32. Current suspension is $2,000.25. AGI is $80,999.68. |
+| The same activity has $12,300.42 in withdrawals and excluded amounts. Also consider $12,300.43 as a separate case. | The exact-zero case transfers zero and suspends $6,000.57. One cent below zero requires review of the detailed computation and possible recapture before transfer. |
+| A materially participating primary partner has a $6,000 ordinary loss, $5,000 available outside basis before the loss, $3,000 verified Part II capacity and $85,000 in wages. There are no prior suspensions or competing losses. | Preserve $1,000 of outside-basis suspension and $2,000 of current at-risk suspension separately. The signed Schedule E transfer is −$3,000 and AGI is $82,000. |
+
+Determine which facts are needed to verify each category included in line 9.
+Confirm the ordering of outside-basis, at-risk and passive limitations and
+identify any additional records needed before allowing an official export.
+[IRS Form 6198 instructions](https://www.irs.gov/instructions/i6198) ·
+[IRS Schedule C instructions](https://www.irs.gov/instructions/i1040sc) ·
+[Official blank](https://www.irs.gov/pub/irs-pdf/f6198.pdf) ·
+[Engineering evidence](upgrade-2026-progress.md#november-28-form-6198-physical-candidate-and-linux-rehearsal).
+
 ### Capital loss carryover from 2025 into 2026
 
 Independently complete the IRS Capital Loss Carryover Worksheet for a single
