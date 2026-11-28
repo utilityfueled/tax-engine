@@ -15,8 +15,8 @@ import {calculatePassengerFirstYear} from "./form-4562-passenger-first-year.js";
 import type { Form4562Input, AmortizableAsset } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { AuditTrail } from "@/utils/audit.js";
-import { d, roundDollar } from "@/utils/decimal.js";
-import { sumSourceMoney } from "@/utils/sum-source-money.js";
+import { d } from "@/utils/decimal.js";
+import { sumSourceMoney, sumSourceMoneyValues } from "@/utils/sum-source-money.js";
 import { resolveMACRSAssetBasisSources, type MACRSBasisSourceAmounts } from "@/models/macrs-asset-basis-sources.js";
 import {
   computeAggregateDepreciation,
@@ -148,9 +148,19 @@ function computeAssetAmortization(
 
   if (months === 0) return null;
 
-  // Preserve exact half-dollar boundaries before final reporting round.
-  // Dividing first can turn 18015 / 180 * 6 into 600.49999999999999998.
-  const deduction = roundDollar(amount.times(months).dividedBy(periodMonths));
+  const eligibleMonths = new Decimal(months);
+  const recoveryMonths = new Decimal(periodMonths);
+  const precision = [amount, eligibleMonths, recoveryMonths].reduce(
+    (digits, value) => digits + value.precision(true) + value.decimalPlaces(), 4,
+  );
+  const ExactDecimal = Decimal.clone({ precision: Math.max(Decimal.precision, precision) });
+  const exactRecoveryMonths = new ExactDecimal(recoveryMonths);
+  const twiceProratedBasis = new ExactDecimal(amount).times(eligibleMonths).times(2);
+  // Round the positive ratio half up using its integer quotient with a half-period
+  // added before division, without first rounding a repeating quotient.
+  const deduction = new Decimal(
+    twiceProratedBasis.plus(exactRecoveryMonths).dividedToIntegerBy(exactRecoveryMonths.times(2)),
+  );
 
   return {
     description: asset.description || `§${section} intangible`,
@@ -310,30 +320,20 @@ export function calculateForm4562(input: Form4562Input, ownerTaxYear?: number): 
 
   if (input.amortizableAssets && input.amortizableAssets.length > 0) {
     // Per-asset computation path
-    let currentYearTotal = ZERO;
-    let priorYearTotal = ZERO;
-
     for (const asset of input.amortizableAssets) {
       const result = computeAssetAmortization(asset, taxYear);
-      if (result) {
-        amortizationResults.push(result);
-        if (result.isCurrentYear) {
-          currentYearTotal = currentYearTotal.plus(result.deduction);
-        } else {
-          priorYearTotal = priorYearTotal.plus(result.deduction);
-        }
-      }
+      if (result) amortizationResults.push(result);
     }
 
-    line42 = currentYearTotal;
-    line43 = priorYearTotal;
+    line42 = sumSourceMoneyValues(amortizationResults.filter(asset => asset.isCurrentYear).map(asset => asset.deduction));
+    line43 = sumSourceMoneyValues(amortizationResults.filter(asset => !asset.isCurrentYear).map(asset => asset.deduction));
   } else {
     // Summary bridge (backward-compatible)
     line42 = Decimal.max(ZERO, d(input.currentYearAmortization));
     line43 = Decimal.max(ZERO, d(input.priorYearAmortization));
   }
 
-  const line44 = line42.plus(line43);
+  const line44 = sumSourceMoney(line42, line43);
 
   // --- Audit trail ---
   audit.record(

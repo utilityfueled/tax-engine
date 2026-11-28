@@ -5,6 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 import { calculateForm4562 } from "@/engine/forms/form-4562.js";
+import { Form4562Schema } from "@/models/inputs.js";
 import {
   computeListedPropertyDepreciation,
   computeListedPropertyAggregation,
@@ -1034,6 +1035,49 @@ describe("Part V listed property — Form 4562 integration", () => {
 // ---------------------------------------------------------------------------
 
 describe("Form 4562 per-asset amortization", () => {
+  it.each([["2026-01", "line42"], ["2025-01", "line43"]] as const)(
+    "Form 4562 Part VI - exactly sums reported asset deductions by start year (%s)",
+    (dateAmortizationBegins, line) => {
+      const result = calculateForm4562(Form4562Schema.parse({
+        taxYear: 2026,
+        amortizableAssets: ["1500000000000000000000", "15"].map(amortizableAmount => ({
+          amortizableAmount, dateAmortizationBegins, codeSection: "197",
+        })),
+      }));
+
+      expect(result.amortizationResults.map(asset => asset.deduction.toFixed())).toEqual(["100000000000000000000", "1"]);
+      expect(result[line].toFixed()).toBe("100000000000000000001");
+    },
+  );
+
+  it("Form 4562 Line 44 - exactly transfers the combined amortization totals", () => {
+    const result = calculateForm4562(Form4562Schema.parse({
+      currentYearAmortization: "100000000000000000000",
+      priorYearAmortization: "0.01",
+    }));
+
+    expect(result.line42.toFixed()).toBe("100000000000000000000");
+    expect(result.line43.toFixed()).toBe("0.01");
+    expect(result.line44.toFixed()).toBe("100000000000000000000.01");
+    expect(result.lines.find(line => line.line === "44")?.value.toFixed()).toBe("100000000000000000000.01");
+    expect(result.line22.toFixed()).toBe("0");
+  });
+
+  it.each([
+    ["18014.9999999999999999", "600"],
+    ["18015", "601"],
+    ["3000000000000000000014.99", "100000000000000000000"],
+    ["3000000000000000000015", "100000000000000000001"],
+  ])("Form 4562 Part VI - rounds exact prorated amounts at the half-dollar boundary (%s)", (amortizableAmount, expected) => {
+    const result = calculateForm4562(Form4562Schema.parse({
+      taxYear: 2026,
+      amortizableAssets: [{ amortizableAmount, dateAmortizationBegins: "2026-07", codeSection: "197" }],
+    }));
+
+    expect(result.amortizationResults[0].monthsThisYear).toBe(6);
+    expect(result.amortizationResults[0].deduction.toFixed()).toBe(expected);
+  });
+
   it("Form 4562 Part VI - §197 intangible 15-year amortization placed in service mid-year", () => {
     // Goodwill of $180,000 acquired July 2025, amortized over 180 months
     // 2025: July–Dec = 6 months → $180,000 / 180 × 6 = $6,000

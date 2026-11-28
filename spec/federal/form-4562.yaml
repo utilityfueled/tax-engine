@@ -318,25 +318,25 @@ lines:
 
   - line: "42"
     description: "Amortization deductions for costs that began in the current tax year"
-    formula: "Sum of per-asset amortization for assets whose amortization began in the current tax year, or validated aggregate when no per-asset detail is provided"
+    formula: "Exact sum of the reported per-asset deductions for current-year starts, or validated aggregate when no per-asset detail is provided"
     irsRef: "Form 4562, Line 42"
     inputs:
       - "Per-asset amortization results for current-year starts"
       - "Validated current-year amortization deductions (fallback)"
-    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 per-asset amortization"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Part VI - exactly sums reported asset deductions by start year (%s)"
 
   - line: "43"
     description: "Amortization deductions for costs that began before the current tax year"
-    formula: "Sum of per-asset amortization for assets whose amortization began in a prior tax year, or validated aggregate when no per-asset detail is provided"
+    formula: "Exact sum of the reported per-asset deductions for prior-year starts, or validated aggregate when no per-asset detail is provided"
     irsRef: "Form 4562, Line 43"
     inputs:
       - "Per-asset amortization results for prior-year starts"
       - "Validated prior-year amortization deductions (fallback)"
-    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 per-asset amortization"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Part VI - exactly sums reported asset deductions by start year (%s)"
 
   - line: "44"
     description: "Total amortization deduction"
-    formula: "Line 42 + Line 43"
+    formula: "Add lines 42 and 43 exactly without intermediate rounding, including validated summary amounts"
     irsRef: "Form 4562, Line 44"
     inputs:
       - "Form 4562 Line 42"
@@ -346,7 +346,7 @@ lines:
       - "A return can have amortization on line 44 even when line 22 is $0 because amortization is routed outside the depreciation bridge"
       - "Line 44 remains the sum of line 42 and line 43 without changing line 22"
       - "Per-asset amortization correctly splits current-year and prior-year starts into Lines 42 and 43"
-    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Lines 42 through 44 - amortization totals stay separate from the line 22 depreciation bridge"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Line 44 - exactly transfers the combined amortization totals"
 
   - line: "mid-quarter-convention"
     description: "Mid-quarter convention test and application per IRC §168(d)(3)"
@@ -426,6 +426,6 @@ lines:
 
   - line: "PartVI-exact-rounding"
     description: "Preserve exact half-dollar amortization at final reported rounding"
-    formula: "Compute basis*eligibleMonths/periodMonths using Decimal, then round once to nearest whole dollar. Do not round a repeating monthly quotient before multiplication or let finite precision move an exact half-dollar below its boundary. Basis18015,period180,6months is exactly600.5 and reports601; basis18014 reports600."
+    formula: "Compute basis × eligible months ÷ recovery-period months, then round once to nearest whole dollar with ties rounded up. Preserve the exact half-dollar comparison regardless of basis size. A basis of 18,015 over 180 months with six eligible months reports 601, while any basis just below that threshold reports 600."
     irsRef: "Form4562 Instructions PartVI columnf; standard nearest-dollar reporting"
-    testRef: "tests/engine/schedules/schedule-c-amortization.test.ts::preserves explicit zero and exact statutory month and rounding boundaries"
+    testRef: "tests/engine/forms/form-4562.test.ts::Form 4562 Part VI - rounds exact prorated amounts at the half-dollar boundary (%s)"
