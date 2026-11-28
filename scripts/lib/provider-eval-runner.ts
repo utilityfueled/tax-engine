@@ -54,7 +54,7 @@ export type EvalJournalRecord =
   | { type: "preflight"; profileId: string; fixtureId: string; repeat: number; reason: "missing-verified-context" | "invalid-verified-context" | "cancelled"; at: string }
   | { type: "dispatch"; attemptId: string; kind: "capability" | "case"; profileId: string; fixtureId: string | null; repeat: number; startedAt: string; maximumUsd: string; clientRequestId?: string }
   | { type: "result"; attemptId: string; status: ProviderEvalTransportResult["status"]; httpStatus?: number; usage: AiTokenUsage | null;
-      elapsedMs: number; reportedModel: string | null; responseReference: string | null; capabilityPassed: boolean; evaluation: Evaluation | null }
+      elapsedMs: number; observedAt?: string; reportedModel: string | null; responseReference: string | null; capabilityPassed: boolean; evaluation: Evaluation | null }
   | { type: "not-sent"; attemptId: string; reason: z.infer<typeof notSentReason> }
   | { type: "reconcile"; attemptId: string; evidenceReference: string; billedModel?: string; usage: AiTokenUsage; at: string }
   | { type: "reconcile-correction"; attemptId: string; evidenceReference: string; billedModel: string; usage: AiTokenUsage; at: string; supersedesEvidenceDigest: string };
@@ -218,7 +218,8 @@ function validateReconciliationCorrection(records: readonly EvalJournalRecord[],
 }
 export function summarizeProviderEvalJournal(plan: ProviderEvalPlan, records: readonly EvalJournalRecord[]) {
   validatePlan(plan);
-  const template: ProviderModelLiveEvalTemplate = { version: 2, entries: [], availability: [], preflightEntries: records.flatMap(record => {
+  const capabilityAccounting: NonNullable<ProviderModelLiveEvalTemplate["capabilityAccounting"]> = [];
+  const template: ProviderModelLiveEvalTemplate = { version: 2, entries: [], availability: [], capabilityAccounting, preflightEntries: records.flatMap(record => {
     if (record.type !== "preflight") return [];
     const fixture = taxProviderModelEvalFixtures.find(item => item.id === record.fixtureId);
     if (!fixture) throw new Error("Journal fixture is unknown.");
@@ -245,6 +246,9 @@ export function summarizeProviderEvalJournal(plan: ProviderEvalPlan, records: re
     const results = records.filter((item): item is Extract<EvalJournalRecord, { type: "result" }> => item.type === "result" && item.attemptId === dispatch.attemptId);
     const reconciliations = records.filter((item): item is Extract<EvalJournalRecord, { type: "reconcile" }> => item.type === "reconcile" && item.attemptId === dispatch.attemptId);
     const [result] = results;
+    if (result?.observedAt && !timestampAtOrBefore(dispatch.startedAt, result.observedAt)) {
+      throw new Error("Journal result observation cannot precede dispatch.");
+    }
     const requestedModel = profile(dispatch.profileId).model;
     const modelMatches = matchesProviderEvalModel(requestedModel, result?.reportedModel);
     const resultUsage = modelMatches ? result?.usage ?? null : null;
@@ -282,6 +286,10 @@ export function summarizeProviderEvalJournal(plan: ProviderEvalPlan, records: re
     }
     if (dispatch.kind === "capability") {
       const capabilityPassed = !!resultUsage && result?.capabilityPassed === true;
+      capabilityAccounting.push({
+        profileId: dispatch.profileId, startedAt: dispatch.startedAt, maximumUsd: dispatch.maximumUsd,
+        settlement: usage ? { usage, recordedAt: resultUsage ? result?.observedAt ?? null : reconciliation.at } : null,
+      });
       template.availability?.push({ profileId: dispatch.profileId, status: capabilityPassed ? "available" : result?.status === "unavailable" ? "unavailable" : "failed",
         checkedAt: dispatch.startedAt, expiresAt: new Date(Date.parse(dispatch.startedAt) + PROVIDER_EVAL_CONTRACT.capabilityLifetimeMs).toISOString(),
         evidenceReference: `run:${plan.runId}:${dispatch.attemptId}`, structuredOutput: capabilityPassed,
@@ -398,6 +406,7 @@ export async function executeProviderEval(input: { plan: unknown; approval: unkn
       let result: ProviderEvalTransportResult;
       try { result = await input.transport(request, input.signal); }
       catch { result = { status: "failed", usage: null, elapsedMs: 0, reportedModel: null, responseReference: null, payload: null }; }
+      const observedAt = !fixture ? now() : null;
       const modelMatches = matchesProviderEvalModel(item.model, result.reportedModel);
       let usage: AiTokenUsage | null = null;
       try { if (modelMatches && result.usage) { usage = evalUsageSchema.parse(result.usage); calculateAiCost(item.model, startedAt, usage); } } catch { usage = null; }
@@ -410,6 +419,7 @@ export async function executeProviderEval(input: { plan: unknown; approval: unkn
       await persist({ type: "result", attemptId, status: result.status, usage,
         ...(httpStatus.success ? { httpStatus: httpStatus.data } : {}),
         elapsedMs: Number.isFinite(result.elapsedMs) && result.elapsedMs >= 0 ? result.elapsedMs : 0,
+        ...(observedAt && instant.safeParse(observedAt).success && timestampAtOrBefore(sendAt, observedAt) ? { observedAt } : {}),
         reportedModel: modelMatches ? result.reportedModel : null,
         responseReference: responseReference === null ? null : providerEvalDigest(responseReference), capabilityPassed, evaluation });
     }
@@ -463,7 +473,7 @@ const recordSchema = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("preflight"), profileId: z.string(), fixtureId: z.string(), repeat: z.number().int().min(1).max(3), reason: z.enum(["missing-verified-context", "invalid-verified-context", "cancelled"]), at: instant }),
   z.strictObject({ type: z.literal("dispatch"), attemptId: z.string(), kind: z.enum(["capability", "case"]), profileId: z.string(), fixtureId: z.string().nullable(), repeat: z.number().int().min(0).max(3), startedAt: instant, maximumUsd: usd, clientRequestId: z.string().regex(providerEvalClientTrace, "Invalid OpenAI client trace").optional() }),
   z.strictObject({ type: z.literal("result"), attemptId: z.string(), status: z.enum(["completed", "unavailable", "failed", "incomplete"]),
-    httpStatus: evalHttpStatusSchema.optional(), usage: evalUsageSchema.nullable(), elapsedMs: z.number().finite().nonnegative(), reportedModel: z.string().nullable(),
+    httpStatus: evalHttpStatusSchema.optional(), usage: evalUsageSchema.nullable(), elapsedMs: z.number().finite().nonnegative(), observedAt: instant.optional(), reportedModel: z.string().nullable(),
     responseReference: z.string().nullable(), capabilityPassed: z.boolean(), evaluation: evaluationSchema.nullable() }),
   z.strictObject({ type: z.literal("not-sent"), attemptId: z.string(), reason: notSentReason }),
   z.strictObject({ type: z.literal("reconcile"), ...reconciliationFields, billedModel: reconciliationFields.billedModel.optional() }),

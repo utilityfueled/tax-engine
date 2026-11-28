@@ -67,7 +67,16 @@ const availabilitySchema = z.strictObject({
 const preflightSchema = z.strictObject({ profileId: z.string(), fixtureId: z.string(), repeat: z.number().int().min(1).max(3),
   reason: z.enum(["missing-verified-context", "invalid-verified-context", "cancelled"]), at: z.iso.datetime(),
   runPurpose: z.enum(["smoke", "qualification"]), planDigest: z.string().min(1), corpusDigest: z.string().min(1), fixtureDigest: z.string().optional(), bindingVersion: z.string() });
-const templateSchema = z.strictObject({ version: z.literal(2), entries: z.array(entrySchema), availability: z.array(availabilitySchema).optional(), preflightEntries: z.array(preflightSchema).optional() });
+const capabilityAccountingSchema = z.strictObject({
+  profileId: z.string(), startedAt: z.iso.datetime(),
+  maximumUsd: z.string().regex(/^(?:0|[1-9]\d*)(?:\.\d+)?$/u),
+  settlement: z.strictObject({
+    usage: usageSchema,
+    recordedAt: z.iso.datetime({ offset: true }).nullable(),
+  }).nullable(),
+});
+const templateSchema = z.strictObject({ version: z.literal(2), entries: z.array(entrySchema), availability: z.array(availabilitySchema).optional(),
+  preflightEntries: z.array(preflightSchema).optional(), capabilityAccounting: z.array(capabilityAccountingSchema).optional() });
 export type ProviderModelLiveEvalEntry = z.infer<typeof entrySchema>;
 export type ProviderModelLiveEvalTemplate = z.infer<typeof templateSchema>;
 
@@ -282,6 +291,19 @@ export function parseProviderModelLiveEvalTemplate(value: unknown): ProviderMode
       throw new Error("Provider availability evidence must expire within 30 days.");
     }
   }
+  if (parsed.data.capabilityAccounting) {
+    const probeProfiles = new Set<string>();
+    for (const { profileId, startedAt, settlement } of parsed.data.capabilityAccounting) {
+      const probe = parsed.data.availability?.find(evidence => evidence.profileId === profileId);
+      if (!probe || probeProfiles.has(profileId) || probe.checkedAt !== startedAt
+        || probe.reportedUsage !== (settlement !== null)
+        || (settlement?.recordedAt && !timestampAtOrBefore(startedAt, settlement.recordedAt))) {
+        throw new Error("Invalid or duplicate capability accounting evidence.");
+      }
+      probeProfiles.add(profileId);
+    }
+    if (probeProfiles.size !== availableProfiles.size) throw new Error("Incomplete capability accounting evidence.");
+  }
   for (const entry of parsed.data.preflightEntries ?? []) {
     candidate(entry.profileId);
     const fixture = taxProviderModelEvalFixtures.find(item => item.id === entry.fixtureId);
@@ -332,6 +354,22 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
   const reportEntries = validated.entries.filter(entry => entry.attempts.every(attempt => timestampAtOrBefore(attempt.startedAt, reportCutoff)));
   const reportPreflights = (validated.preflightEntries ?? []).filter(entry => timestampAtOrBefore(entry.at, reportCutoff));
   const reportAvailability = (validated.availability ?? []).filter(evidence => timestampAtOrBefore(evidence.checkedAt, reportCutoff));
+  const capabilityAccounting = validated.capabilityAccounting
+    ?.filter(probe => timestampAtOrBefore(probe.startedAt, reportCutoff))
+    .map(({ profileId, startedAt, maximumUsd, settlement }) => {
+      const { model } = candidate(profileId);
+      const cost = settlement ? {
+        providerCostUsd: calculateAiCost(model, startedAt, settlement.usage).providerCostUsd,
+        filingSeasonCostUsd: calculateAiCost(model, providerModelPricingSnapshot.filingSeasonDate, settlement.usage).providerCostUsd,
+      } : null;
+      const settled = !!settlement?.recordedAt && timestampAtOrBefore(settlement.recordedAt, reportCutoff);
+      return { profileId, startedAt,
+        providerCostUsd: settled ? cost?.providerCostUsd ?? null : null,
+        filingSeasonCostUsd: settled ? cost?.filingSeasonCostUsd ?? null : null,
+        unknownMaximumUsd: settled ? "0" : maximumUsd,
+        ...(settlement?.recordedAt === null ? { undatedCost: cost } : {}),
+      };
+    }) ?? null;
   const fixtureIds = new Set<string>();
   const reviewTimes = new Map<string, string>();
   for (const fixture of fixtures) {
@@ -458,6 +496,7 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
       knownProviderCostUsd, knownFilingSeasonCostUsd, assumedProviderCostUsd, assumedFilingSeasonCostUsd,
       providerCostUsd: costKnown ? knownProviderCostUsd : null, filingSeasonCostUsd: costKnown ? knownFilingSeasonCostUsd : null,
       filingSeasonLifecycle, filingSeasonCostKind: filingSeasonLifecycle.status === "shutdown" ? "historical-price-projection-retired-model" : "published-price-projection",
+      providerCostPerAcceptedUsd: costKnown && accepted ? knownProviderCost.div(accepted).toFixed() : null,
       filingSeasonCostPerAcceptedUsd: costPerAccepted, blockers, eligibleForPromotionReview: false };
   }));
   for (const group of groups.filter(item => candidate(item.profileId).role === "candidate")) {
@@ -485,7 +524,7 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     group.eligibleForPromotionReview = group.blockers.length === 0;
   }
   return { version: 2, fixtureCount: fixtures.length, independentlyReviewedCases: reviewedCount,
-    entries: reportEntries.length, groups, productionPromotion: false,
+    entries: reportEntries.length, capabilityAccounting, groups, productionPromotion: false,
     limitation: "Eligibility supports a human promotion review only. Zero observed failures is not proof. No route is activated by this report." };
 }
 

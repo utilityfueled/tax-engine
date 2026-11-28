@@ -214,6 +214,14 @@ releases only the affected hold and keeps the missing response and capability
 status as recorded. Any other affected hold still requires its own evidence.
 Use a CLI that supports `--supersedes-reference` to reopen a corrected journal.
 
+New runner exports include capability probe usage or its unresolved maximum by
+profile. The comparison report lists these shared costs once and keeps them
+outside each task's total and cost per accepted run. Case groups report cost
+per accepted run at the actual and January rates. Older exports carry unknown
+probe overhead until regenerated from their journals. Regenerated historical
+journals can include an undated cost. A report with a time cutoff keeps its
+maximum separate because the journal lacks a response timestamp.
+
 The reporter validates the recorded plan’s request policy. For a historical
 plan whose policy has changed, use its pinned source revision in `report` mode
 with credentials absent from the environment. Keep the original plan and

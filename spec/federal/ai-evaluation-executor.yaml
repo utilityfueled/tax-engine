@@ -236,3 +236,19 @@ lines:
     testRefs:
       - "tests/engine/provider-eval-runner.test.ts::retains failed-output charges and resumes without additional requests"
       - "tests/engine/provider-eval-transport.test.ts::preserves a body-only provider reference when the response omits the model"
+  - line: "exported-capability-accounting"
+    description: "Account for capability requests once, outside individual task costs"
+    formula: >-
+      Export each sent probe once by profile with its exact maximum and, when
+      settled, its actual and filing-season prices from journal usage. Report
+      the maximum hold until the response or reconciliation is visible at the
+      cutoff. Identify historical charges with unknown timing outside the
+      settled amounts. Historical exports without probe accounting have unknown
+      overhead. Report actual and filing-season
+      task costs per accepted run without allocating the shared probe to tasks.
+    testRef: "tests/engine/provider-eval-runner.test.ts::reports shared capability spend once alongside all case attempts"
+    testRefs:
+      - "tests/engine/provider-eval-runner.test.ts::retains unknown usage and never repeats a dispatched request on resume"
+      - "tests/engine/provider-eval-runner.test.ts::holds a capability charge in reports preceding authoritative reconciliation"
+      - "tests/engine/provider-eval-runner.test.ts::reports directly measured probe costs only after observing the response"
+      - "tests/engine/provider-model-eval.test.ts::counts only dated response reviews that follow the measured result and meet the report cutoff"

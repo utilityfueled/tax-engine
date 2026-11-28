@@ -78,6 +78,56 @@ describe("guarded repeated provider executor", () => {
     expect(result.stoppedReason).toBe("budget");
     expect(result.template.availability?.[0]?.status).toBe("available");
   });
+  it("reports shared capability spend once alongside all case attempts", async () => {
+    const state = setup();
+    const result = await executeProviderEval({ ...state, transport: async () => good });
+    const template = JSON.parse(JSON.stringify(result.template));
+    const report = summarizeProviderModelLiveEvalTemplate(template, undefined, at);
+    expect(result.knownProviderCostUsd).toBe("0.00024");
+    expect(report.capabilityAccounting).toEqual([{ profileId: "luna-high", startedAt: at,
+      providerCostUsd: "0.00006", filingSeasonCostUsd: "0.00006", unknownMaximumUsd: "0" }]);
+    const fixture = taxProviderModelEvalFixtures.find(item => item.id === state.plan.fixtureIds[0]);
+    expect(report.groups.find(group => group.profileId === "luna-high" && group.task === fixture?.task)?.providerCostUsd)
+      .toBe("0.00018");
+    delete template.capabilityAccounting;
+    expect(summarizeProviderModelLiveEvalTemplate(template, undefined, at).capabilityAccounting).toBeNull();
+  });
+  it("holds a capability charge in reports preceding authoritative reconciliation", async () => {
+    const state = setup();
+    const first = await executeProviderEval({ ...state, transport: async () => ({ ...good, usage: null }) });
+    const settledAt = "2026-10-25T12:00:00.000001Z";
+    await state.append(reconcileProviderEvalAttempt(state.plan, state.records, {
+      attemptId: "luna-high:capability:0", evidenceReference: "synthetic-capability-receipt",
+      billedModel: "gpt-6-luna", usage: good.usage, at: settledAt,
+    }));
+    const { template } = summarizeProviderEvalJournal(state.plan, state.records);
+    const report = (cutoff: string) => summarizeProviderModelLiveEvalTemplate(template, undefined, cutoff);
+    expect(report(at).capabilityAccounting?.[0]).toMatchObject({ providerCostUsd: null, unknownMaximumUsd: first.unknownMaximumUsd });
+    expect(report(settledAt).capabilityAccounting?.[0]).toMatchObject({ providerCostUsd: "0.00006", unknownMaximumUsd: "0" });
+    expect(report(settledAt).productionPromotion).toBe(false);
+  });
+  it("reports directly measured probe costs only after observing the response", async () => {
+    const state = setup();
+    const observedAt = "2026-10-25T12:00:05.000Z";
+    let currentTime = at;
+    const result = await executeProviderEval({ ...state, now: () => currentTime, transport: async () => {
+      currentTime = observedAt;
+      return { ...good, elapsedMs: 5000 };
+    } });
+    const report = (cutoff: string) => summarizeProviderModelLiveEvalTemplate(result.template, undefined, cutoff);
+    expect(report(at).capabilityAccounting?.[0]).toMatchObject({ providerCostUsd: null, unknownMaximumUsd: "0.0016896" });
+    expect(report(observedAt).capabilityAccounting?.[0]).toMatchObject({ providerCostUsd: "0.00006", unknownMaximumUsd: "0" });
+    const legacyRecords = state.records.map(record => {
+      if (record.type !== "result") return record;
+      const { observedAt: _observedAt, ...legacy } = record;
+      return legacy;
+    });
+    const historical = summarizeProviderEvalJournal(state.plan, legacyRecords);
+    expect(historical.knownProviderCostUsd).toBe("0.00024");
+    expect(summarizeProviderModelLiveEvalTemplate(historical.template, undefined, observedAt).capabilityAccounting?.[0])
+      .toMatchObject({ providerCostUsd: null, unknownMaximumUsd: "0.0016896",
+        undatedCost: { providerCostUsd: "0.00006", filingSeasonCostUsd: "0.00006" } });
+  });
   it("retains unknown usage and never repeats a dispatched request on resume", async () => {
     const state = setup(); let calls = 0;
     const transport = async () => { calls++; throw new Error("secret raw provider error"); };
@@ -87,6 +137,10 @@ describe("guarded repeated provider executor", () => {
     expect(first.stoppedReason).toBe("unknown-usage");
     expect(second.stoppedReason).toBe("unknown-usage");
     expect(first.unknownMaximumUsd).not.toBe("0");
+    expect(summarizeProviderModelLiveEvalTemplate(first.template, undefined, at).capabilityAccounting).toEqual([
+      { profileId: "luna-high", startedAt: at, providerCostUsd: null, filingSeasonCostUsd: null,
+        unknownMaximumUsd: first.unknownMaximumUsd },
+    ]);
     expect(JSON.stringify(state.records)).not.toContain("secret raw");
   });
   it("journals an opaque OpenAI trace before each provider dispatch", async () => {
@@ -162,7 +216,11 @@ describe("guarded repeated provider executor", () => {
 
     // Isolate the completed capability probe from the later case attempts.
     const capabilityJournalAt = (startedAt: string) => state.records.slice(0, 3)
-      .map(record => record.type === "dispatch" ? { ...record, startedAt } : record);
+      .map(record => {
+        if (record.type === "dispatch") return { ...record, startedAt };
+        if (record.type === "result") return { ...record, observedAt: startedAt };
+        return record;
+      });
     for (const startedAt of [creation, "2026-10-25T12:00:00.0000010Z", beforeExpiry]) {
       const records = capabilityJournalAt(startedAt);
       validateProviderEvalJournal(state.plan, records);

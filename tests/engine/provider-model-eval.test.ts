@@ -466,6 +466,7 @@ describe("measured task model evaluation", () => {
     expect(summarize("2026-10-24T12:00:01.0001001Z")).toMatchObject(incomplete);
     expect(summarize("2026-10-24T12:00:01.0001002Z")).toMatchObject({
       completedRuns: 1, acceptedRuns: 1, providerCostUsd: "0.0006",
+      providerCostPerAcceptedUsd: "0.0006", filingSeasonCostPerAcceptedUsd: "0.0006",
     });
   });
   it("keeps submillisecond case reviews and capability windows in event order", () => {
