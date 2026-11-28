@@ -2,10 +2,13 @@
 import { createHash } from "node:crypto";
 import { StandardFonts, rgb, type PDFDocument } from "pdf-lib";
 import { calculateForm8829 } from "@/engine/forms/form-8829.js";
-import { Form8829Schema } from "@/models/inputs.js";
+import { Form8829Schema, type Form8829Input } from "@/models/inputs.js";
 import { REVIEW_PDF_NOTICE } from "../../export-policy.js";
 import { loadPdfDocumentQuietly } from "../../pdf-utils.js";
 import { removeTrustedTemplateLegacyFormData } from "../../trusted-review-template-cleanup.js";
+import { buildForm8829OwnedHomeReviewInput } from "./form-8829-owned-home-sources.js";
+
+export { buildForm8829OwnedHomeReviewInput } from "./form-8829-owned-home-sources.js";
 
 const page = "topmostSubform[0].Page1[0].";
 const firstExpenseTable = page + "Table_Lines9-12[0].";
@@ -119,10 +122,14 @@ interface Form8829RenterReviewSources {
   utilities: OriginalRenterAmount;
 }
 
-const renterMoneyLines = [
-  "line8", "line13", "line14", "line15", "line19Indirect", "line21Indirect", "line23Indirect",
+const commonMoneyLines = [
+  "line8", "line13", "line14", "line15", "line23Indirect",
   "line24", "line25", "line26", "line27", "line28", "line31", "line32", "line33", "line34",
   "line36", "line43", "line44",
+] as const;
+const renterMoneyLines = [...commonMoneyLines, "line19Indirect", "line21Indirect"] as const;
+const ownedHomeMoneyLines = [
+  ...commonMoneyLines, "line16Indirect", "line17Indirect", "line30", "line37", "line38", "line39", "line40", "line42",
 ] as const;
 const wholeDollarAmount = /^\d{1,12}(?:\.0{1,2})?$/;
 const percentageFontSize = 9;
@@ -132,7 +139,7 @@ export async function fillForm8829RenterReviewCandidate(
   sources: Form8829RenterReviewSources,
   template: Uint8Array,
 ): Promise<PDFDocument> {
-  const { taxYear, sha256, fields } = FORM_8829_2026_CANDIDATE;
+  const { taxYear } = FORM_8829_2026_CANDIDATE;
   const { floorArea, scheduleCLine29, rent, utilities } = sources;
   const { businessSquareFeet, totalSquareFeet } = floorArea;
   if (sources.taxYear !== taxYear || sources.completedActualExpenseCaseConfirmed !== true
@@ -149,22 +156,35 @@ export async function fillForm8829RenterReviewCandidate(
     || scheduleCLine29.allGrossIncomeFromBusinessUseOfHomeConfirmed !== true || !scheduleCLine29.incomeSourceNote?.trim()) {
     throw new Error("Form 8829 line 8 requires a source note confirming one Schedule C business uses the home and all its gross income is from that use.");
   }
-  if (createHash("sha256").update(template).digest("hex") !== sha256) {
-    throw new Error("Unreviewed Form 8829 template revision.");
-  }
-
   const input = Form8829Schema.parse({
     areaUsedForBusiness: businessSquareFeet,
     totalAreaOfHome: totalSquareFeet,
     grossIncomeLimit: scheduleCLine29.amount,
     indirectExpenses: { rent: rent.amount, utilities: utilities.amount },
   });
+  return renderForm8829ReviewCandidate(input, template, "renter");
+}
+
+/** Project one confirmed prior-use owned home for internal review. */
+export async function fillForm8829OwnedHomeReviewCandidate(sources: unknown, template: Uint8Array): Promise<PDFDocument> {
+  return renderForm8829ReviewCandidate(buildForm8829OwnedHomeReviewInput(sources), template, "owned-home");
+}
+
+async function renderForm8829ReviewCandidate(
+  input: Form8829Input,
+  template: Uint8Array,
+  mode: "renter" | "owned-home",
+): Promise<PDFDocument> {
+  const { sha256, fields } = FORM_8829_2026_CANDIDATE;
+  if (createHash("sha256").update(template).digest("hex") !== sha256) {
+    throw new Error("Unreviewed Form 8829 template revision.");
+  }
   const result = calculateForm8829(input);
   const percentage = result.line7.times(100).toFixed();
   const [whole, fractional = ""] = percentage.split(".");
   const displayedNumerator = BigInt(whole + fractional);
   const displayScale = 10n ** BigInt(fractional.length);
-  if (displayedNumerator * BigInt(totalSquareFeet) !== 100n * BigInt(businessSquareFeet) * displayScale) {
+  if (displayedNumerator * BigInt(input.totalAreaOfHome) !== 100n * BigInt(input.areaUsedForBusiness) * displayScale) {
     throw new Error("Form 8829 requires an exact decimal business percentage on lines 3 and 7.");
   }
 
@@ -183,8 +203,14 @@ export async function fillForm8829RenterReviewCandidate(
     field.setFontSize(percentageFontSize);
     field.setText(percentage);
   }
-  for (const line of ["line1", "line2", ...renterMoneyLines] as const) {
+  const moneyLines = mode === "owned-home" ? ownedHomeMoneyLines : renterMoneyLines;
+  for (const line of ["line1", "line2", ...moneyLines] as const) {
     form.getTextField(fields[line]).setText(result[line].toFixed());
+  }
+  if (mode === "owned-home") {
+    const depreciationPercentage = form.getTextField(fields.line41);
+    depreciationPercentage.setFontSize(percentageFontSize);
+    depreciationPercentage.setText(result.line41.times(100).toFixed());
   }
   // The IRS footer uses the bottom margin. Put the notice above the title.
   const font = await pdf.embedFont(StandardFonts.HelveticaBold);

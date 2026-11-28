@@ -28,6 +28,25 @@ const renterSources = {
   rent: { taxYear: 2026, amount: "3000", reference: "Synthetic rent ledger" },
   utilities: { taxYear: 2026, amount: "600.00", reference: "Synthetic utility statements" },
 };
+const propertyReference = "FICTIONAL-OWNED-HOME-PRIVATE-3917";
+const ownedHomeSources = {
+  taxYear: 2026,
+  propertyReference,
+  purchase: { propertyReference, reference: "Synthetic purchase record", date: "2015-06-17" },
+  firstBusinessUse: { propertyReference, reference: "Synthetic start-of-use workpaper", date: "2024-07-01" },
+  ownedAndQualifyingExclusiveUseAllYearUnchangedConfirmed: true,
+  continuouslyUsedForThisBusinessConfirmed: true,
+  standard39YearGdsRecoveryConfirmed: true,
+  noOtherDepreciationMethodsAllowancesOrImprovementsConfirmed: true,
+  noOtherExpensesAdjustmentsOrCarryoversConfirmed: true,
+  standardDeduction: { taxYear: 2026, reference: "Synthetic tax calculation", claimedConfirmed: true },
+  floorArea: { ...renterSources.floorArea, propertyReference },
+  scheduleCLine29: { ...renterSources.scheduleCLine29, propertyReference, amount: "2000" },
+  adjustedBasis: { propertyReference, reference: "Synthetic basis ledger", date: "2024-07-01", total: "400000", land: "80000" },
+  fairMarketValue: { propertyReference, reference: "Synthetic appraisal", date: "2024-07-01", total: "450000", land: "90000" },
+  mortgageInterest: { taxYear: 2026, propertyReference, reference: "Synthetic qualified Form 1098 interest", amount: "12000", qualifiedPaidOrKnownZeroNotDeductedElsewhereConfirmed: true },
+  realEstateTaxes: { taxYear: 2026, propertyReference, reference: "Synthetic paid county tax bill", amount: "4000", qualifiedPaidOrKnownZeroNotDeductedElsewhereConfirmed: true },
+};
 // IRS field ordinals in visual row order, with the direct field before the indirect field.
 const printedFields = [
   "proprietorName", "ssn", "line1", "line2", "line3", "line4", "line5", "line6", "line7", "line8",
@@ -46,6 +65,110 @@ async function mapping() {
 }
 
 describe("Final 2026 Form 8829 physical candidate", () => {
+  it("renders a prior-use owned home and reconciles the Schedule C transfer", async () => {
+    const { buildForm8829OwnedHomeReviewInput, fillForm8829OwnedHomeReviewCandidate, FORM_8829_2026_CANDIDATE } =
+      await import("@/pdf/mappings/2026/form-8829-candidate.js");
+    const { fields } = FORM_8829_2026_CANDIDATE;
+    const filled = await fillForm8829OwnedHomeReviewCandidate(ownedHomeSources, await readFile(blank));
+    const bytes = await filled.save();
+    const reopened = await PDFDocument.load(bytes);
+    const form = reopened.getForm();
+    expect(reopened.getSubject()).toBe(REVIEW_PDF_NOTICE);
+    expect(form.hasXFA()).toBe(false);
+    expect(Buffer.from(bytes).includes(propertyReference)).toBe(false);
+    const expected = {
+      line1: "150", line2: "1500", line3: "10", line7: "10", line8: "2000",
+      line16Indirect: "12000", line17Indirect: "4000", line23Indirect: "16000", line24: "1600",
+      line27: "1600", line28: "400", line30: "820", line33: "400", line36: "2000",
+      line37: "400000", line38: "80000", line39: "320000", line40: "32000", line41: "2.564", line42: "820",
+      line43: "0", line44: "420",
+    } as const;
+    for (const line of Object.keys(expected) as (keyof typeof expected)[]) {
+      const field = form.getTextField(fields[line]);
+      expect(field.getText(), line).toBe(expected[line]);
+      expect(field.acroField.getWidgets()[0].getAppearances()?.normal, line).toBeInstanceOf(PDFRawStream);
+    }
+    for (const line of ["proprietorName", "ssn", "line10Indirect", "line11Indirect", "line16Direct", "line17Direct", "line19Indirect"] as const) {
+      expect(form.getTextField(fields[line]).getText(), line).toBeUndefined();
+    }
+
+    const projection = buildForm8829OwnedHomeReviewInput(ownedHomeSources);
+    const originals = [ownedHomeSources.purchase, ownedHomeSources.firstBusinessUse,
+      ownedHomeSources.standardDeduction, ownedHomeSources.floorArea, ownedHomeSources.scheduleCLine29,
+      ownedHomeSources.adjustedBasis, ownedHomeSources.fairMarketValue, ownedHomeSources.mortgageInterest,
+      ownedHomeSources.realEstateTaxes];
+    const projectionJson = JSON.stringify(projection);
+    expect(projectionJson).not.toContain(propertyReference);
+    for (const { reference } of originals) expect(projectionJson).not.toContain(reference);
+    const schedule = calculateScheduleC({
+      ...simpleW2Fixture,
+      taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: 2026 },
+      form1099Nec: [{ payer: "Synthetic client", nonemployeeCompensation: "2000", taxYear: 2026, federalWithheld: "0" }],
+    }, {
+      homeOffice: { method: "actual", form8829: projection },
+    });
+    expect(schedule.lines.find(({ form, line }) => form === "Sched C" && line === "29")?.value.toFixed()).toBe(expected.line8);
+    expect(schedule.lines.find(({ form, line }) => form === "Sched C" && line === "30")?.value.toFixed()).toBe(expected.line36);
+    expect(schedule.netProfit.toFixed()).toBe("0");
+  });
+
+  it("uses the lower first-use market value and confirmed zero home expenses", async () => {
+    const { buildForm8829OwnedHomeReviewInput, fillForm8829OwnedHomeReviewCandidate, FORM_8829_2026_CANDIDATE } =
+      await import("@/pdf/mappings/2026/form-8829-candidate.js");
+    const date = "2025-12-31";
+    const sources = {
+      ...ownedHomeSources,
+      firstBusinessUse: { ...ownedHomeSources.firstBusinessUse, date },
+      adjustedBasis: { ...ownedHomeSources.adjustedBasis, date },
+      fairMarketValue: { ...ownedHomeSources.fairMarketValue, date, total: "375000", land: "75000" },
+      mortgageInterest: { ...ownedHomeSources.mortgageInterest, amount: "0.00" },
+      realEstateTaxes: { ...ownedHomeSources.realEstateTaxes, amount: "0" },
+    };
+    expect(buildForm8829OwnedHomeReviewInput(sources)).toMatchObject({
+      adjustedBasisOrFairMarketValue: "375000", landValue: "75000", depreciationPercentage: "0.02564",
+    });
+    const filled = await fillForm8829OwnedHomeReviewCandidate(sources, await readFile(blank));
+    const form = (await PDFDocument.load(await filled.save())).getForm();
+    const expected = { line16Indirect: "0", line17Indirect: "0", line36: "769", line39: "300000", line42: "769", line44: "0" };
+    for (const [line, amount] of Object.entries(expected)) {
+      expect(form.getTextField(FORM_8829_2026_CANDIDATE.fields[line as keyof typeof expected]).getText()).toBe(amount);
+    }
+  });
+
+  it("holds conflicting owned-home basis, land, dates, and expense originals", async () => {
+    const { buildForm8829OwnedHomeReviewInput } = await import("@/pdf/mappings/2026/form-8829-candidate.js");
+    const patched = (changes: Record<string, unknown>) => ({ ...ownedHomeSources, ...changes });
+    expect(() => buildForm8829OwnedHomeReviewInput(patched({
+      fairMarketValue: { ...ownedHomeSources.fairMarketValue, total: "400000" },
+    }))).toThrow(/basis.*land/i);
+    for (const fairMarketValue of [
+      { ...ownedHomeSources.fairMarketValue, land: "60000" },
+      { ...ownedHomeSources.fairMarketValue, land: "150000" },
+      { ...ownedHomeSources.fairMarketValue, land: "450000" },
+    ]) expect(() => buildForm8829OwnedHomeReviewInput(patched({ fairMarketValue }))).toThrow(/basis.*land/i);
+    for (const date of ["1993-12-31", "2015-06-16", "2026-01-01", "2024-02-30"]) {
+      expect(() => buildForm8829OwnedHomeReviewInput(patched({ firstBusinessUse: { ...ownedHomeSources.firstBusinessUse, date } }))).toThrow();
+    }
+    expect(() => buildForm8829OwnedHomeReviewInput(patched({
+      adjustedBasis: { ...ownedHomeSources.adjustedBasis, date: "2024-07-02" },
+    }))).toThrow(/first business use/i);
+    expect(() => buildForm8829OwnedHomeReviewInput(patched({
+      mortgageInterest: { ...ownedHomeSources.mortgageInterest, propertyReference: "Some other property" },
+    }))).toThrow(/same property/i);
+    expect(() => buildForm8829OwnedHomeReviewInput(patched({
+      realEstateTaxes: { ...ownedHomeSources.realEstateTaxes, taxYear: 2025 },
+    }))).toThrow();
+    for (const positiveRequirement of ["ownedAndQualifyingExclusiveUseAllYearUnchangedConfirmed", "standard39YearGdsRecoveryConfirmed", "noOtherDepreciationMethodsAllowancesOrImprovementsConfirmed", "noOtherExpensesAdjustmentsOrCarryoversConfirmed"]) {
+      expect(() => buildForm8829OwnedHomeReviewInput(patched({ [positiveRequirement]: false }))).toThrow();
+    }
+    expect(() => buildForm8829OwnedHomeReviewInput(patched({
+      standardDeduction: { ...ownedHomeSources.standardDeduction, claimedConfirmed: false },
+    }))).toThrow();
+    expect(() => buildForm8829OwnedHomeReviewInput(patched({
+      scheduleCLine29: { ...ownedHomeSources.scheduleCLine29, allGrossIncomeFromBusinessUseOfHomeConfirmed: false },
+    }))).toThrow();
+  });
+
   it("pins the exact final annual source", async () => {
     const [candidate, bytes] = await Promise.all([mapping(), readFile(blank)]);
     expect(bytes.length).toBe(78882);

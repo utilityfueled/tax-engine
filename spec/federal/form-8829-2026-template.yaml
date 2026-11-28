@@ -8,7 +8,7 @@ notes: |
   The regular IRS PDF is the final 2026 blank. The regular instructions
   still identify 2025. The 2026 instructions dated August 19 are a draft.
   This physical candidate covers printed locations, destinations, and the
-  confirmed one-home renter projection below. The existing 2025 output
+  confirmed one-home renter and owned-home projections below. The existing 2025 output
   is a calculated reference summary. Final annual instructions, actual
   financial review and independent qualification remain required before
   annual use. The review notice uses the empty top margin to preserve
@@ -90,6 +90,56 @@ lines:
       precision of the existing calculation. Hold repeating ratios and exact
       values that do not fit, pending a reviewed presentation convention.
     testRef: "tests/pdf/form-8829-2026-candidate.test.ts::saves a fitting exact percentage and holds repeating or oversized percentages"
+  - line: "ordinary-owned-home-projection"
+    description: "Project one owned home with prior-year business use and the standard deduction"
+    formula: >-
+      Require one property documented by purchase, first use and original
+      whole-dollar adjusted basis, fair market value, and their respective
+      land components as of first business use. The same property must bind
+      all originals and the measured whole-square-foot floor plan. Require
+      ownership and unchanged qualifying regular and exclusive business use
+      throughout 2026, the documented standard deduction, and one Schedule C
+      using this home for all its gross income. Use that activity's documented
+      nonnegative line 29 on line 8. Admit first use in 1994 through 2025 after
+      or on purchase, with uninterrupted business use through the end of
+      2026, continued full-year 39-year GDS straight-line recovery, and no
+      special depreciation, post-use improvements, other expenses, gains,
+      losses, or carryovers. Use original same-property qualified mortgage
+      interest and real estate taxes actually paid in 2026 (or documented
+      zero) once, as indirect lines 16 and 17. Leave lines 10 and 11 blank;
+      this taxpayer takes the standard deduction. Use the exact business
+      area proportion and the existing line 24 and Part II limits. Keep the
+      source records, taxpayer identifiers and unrelated fields out of the
+      private review copy.
+    sources:
+      - "https://www.irs.gov/pub/irs-prior/f8829--2026.pdf"
+      - "https://www.irs.gov/instructions/i8829 (2025 final, standard deduction and Lines 37 through 41)"
+      - "https://www.irs.gov/pub/irs-dft/i8829--dft.pdf (2026 draft, Part III)"
+      - "https://uscode.house.gov/us/usc/119-120/t26/s168/"
+    testRef: "tests/pdf/form-8829-2026-candidate.test.ts::renders a prior-use owned home and reconciles the Schedule C transfer"
+  - line: "ordinary-owned-home-depreciation-basis"
+    description: "Bind lines 37 through 42 to first-use building evidence"
+    formula: >-
+      Select the lower supported total amount for line 37 and its matching
+      land component for line 38. Admit only when that land value also equals
+      the lower supported land value and line 39 equals the lower of the two
+      separately computed building values. Hold inconsistent pairs, including
+      equal totals with different land components, and nonpositive building
+      values. Multiply line 39 by the exact business proportion and round
+      line 40 to whole dollars. Display the IRS full-year 2.564 percent on
+      line 41, and apply that exact table rate to line 40 for line 42, rounded
+      to whole dollars. Feed line 42 to Part II line 30, then apply the income
+      limit and report the separate operating and depreciation carryovers.
+      Confirm the saved depreciation, capped line 36, Schedule C line 30,
+      and distinct 2027 carryover values. This subset excludes year-of-first-
+      use, disposition, old-transition, and special-depreciation cases.
+    sources:
+      - "https://www.irs.gov/instructions/i8829 (2025 final, Lines 37 through 41)"
+      - "https://www.irs.gov/publications/p587 (2025, Depreciating Your Home)"
+      - "https://www.irs.gov/pub/irs-dft/i8829--dft.pdf (2026 draft, prior-use percentage)"
+    testRef: "tests/pdf/form-8829-2026-candidate.test.ts::holds conflicting owned-home basis, land, dates, and expense originals"
+    testRefs:
+      - "tests/pdf/form-8829-2026-candidate.test.ts::uses the lower first-use market value and confirmed zero home expenses"
   - line: "closed-exports"
     description: "Keep the candidate outside public review and filing"
     formula: "Keep the historical packet reference, review template registry and 2026 export policy in effect. The physical candidate has no export registration."
