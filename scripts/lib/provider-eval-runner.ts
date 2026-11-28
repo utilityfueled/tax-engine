@@ -168,8 +168,24 @@ export function maximumProviderAttemptUsd(request: ProviderEvalRequest, at: stri
 function requireMatchingBilledModel(requestedModel: string, billedModel: string | undefined) {
   if (!matchesProviderEvalModel(requestedModel, billedModel)) throw new Error("Reconciliation evidence must name a billed model that matches the approved profile.");
 }
-function verifiedReconciliationReference(record: EvalJournalRecord) {
-  return record.type === "reconcile" && record.billedModel !== undefined ? record.evidenceReference.trim() : undefined;
+export function normalizeProviderEvalReference(value: string | null | undefined) {
+  return value?.trim() || null;
+}
+function verifiedReconciliationDigest(record: Extract<EvalJournalRecord, { type: "reconcile" }>) {
+  const reference = normalizeProviderEvalReference(record.evidenceReference);
+  return record.billedModel === undefined || reference === null ? undefined : providerEvalDigest(reference);
+}
+function indexEvidenceAttempts(records: readonly EvalJournalRecord[]) {
+  const attemptsByDigest = new Map<string, Set<string>>();
+  for (const record of records) {
+    if (record.type !== "result" && record.type !== "reconcile") continue;
+    const digest = record.type === "result" ? record.responseReference : verifiedReconciliationDigest(record);
+    if (!digest) continue;
+    const attempts = attemptsByDigest.get(digest) ?? new Set<string>();
+    attempts.add(record.attemptId);
+    attemptsByDigest.set(digest, attempts);
+  }
+  return attemptsByDigest;
 }
 export function summarizeProviderEvalJournal(plan: ProviderEvalPlan, records: readonly EvalJournalRecord[]) {
   validatePlan(plan);
@@ -182,11 +198,7 @@ export function summarizeProviderEvalJournal(plan: ProviderEvalPlan, records: re
   const dispatches = records.filter((item): item is Extract<EvalJournalRecord, { type: "dispatch" }> => item.type === "dispatch");
   if (new Set(dispatches.map(item => item.attemptId)).size !== dispatches.length) throw new Error("Duplicate durable dispatch identity.");
   const notSent = new Set(records.flatMap(item => item.type === "not-sent" ? [item.attemptId] : []));
-  const receiptUses = new Map<string, number>();
-  for (const record of records) {
-    const reference = verifiedReconciliationReference(record);
-    if (reference !== undefined) receiptUses.set(reference, (receiptUses.get(reference) ?? 0) + 1);
-  }
+  const attemptsByDigest = indexEvidenceAttempts(records);
   let dispatchedRequests = 0;
   let known = new Money(0); let held = new Money(0); let legacyUnverified = new Money(0); let overrun = false;
   const bindingBlockers = new Set<string>();
@@ -209,13 +221,13 @@ export function summarizeProviderEvalJournal(plan: ProviderEvalPlan, records: re
     }
     dispatchedRequests++;
     const reconciliation = subsequentReconciliation ?? firstReconciliation;
-    const evidenceReference = reconciliation && verifiedReconciliationReference(reconciliation);
+    const evidenceDigest = reconciliation && verifiedReconciliationDigest(reconciliation);
     let usage = resultUsage;
-    if (reconciliation && evidenceReference !== undefined) {
+    if (reconciliation && evidenceDigest !== undefined) {
       requireMatchingBilledModel(requestedModel, reconciliation.billedModel);
       if (!timestampAtOrBefore(dispatch.startedAt, reconciliation.at)) {
         bindingBlockers.add("reconciliation-recorded-before-dispatch");
-      } else if ((receiptUses.get(evidenceReference) ?? 0) > 1) {
+      } else if ((attemptsByDigest.get(evidenceDigest)?.size ?? 0) > 1) {
         bindingBlockers.add("reconciliation-evidence-reference-reused");
       } else {
         usage = reconciliation.usage;
@@ -245,8 +257,8 @@ export function summarizeProviderEvalJournal(plan: ProviderEvalPlan, records: re
         elapsedMs: result?.elapsedMs ?? null, applicationSchemaValid: evaluation?.applicationSchemaValid ?? null,
         output: evaluation?.output ?? null, independentReview: null,
         attempts: [{ profileId: dispatch.profileId, startedAt: dispatch.startedAt, usage,
-          ...(reconciliation?.billedModel === undefined || evidenceReference === undefined ? {} : { billingEvidence: {
-            billedModel: reconciliation.billedModel, evidenceReference: providerEvalDigest(evidenceReference),
+          ...(reconciliation?.billedModel === undefined || evidenceDigest === undefined ? {} : { billingEvidence: {
+            billedModel: reconciliation.billedModel, evidenceReference: evidenceDigest,
             recordedAt: reconciliation.at, usageSource: "reconciliation" as const,
           } }) }],
         measurement: { runPurpose: plan.purpose === "qualification" ? "qualification" : "smoke", planDigest: providerEvalDigest(plan), corpusDigest: plan.corpusDigest, fixtureDigest: providerEvalFixtureDigest(fixture), bindingVersion: PROVIDER_EVAL_BINDING_VERSION, promptVersion: AI_TASKS[fixture.task].promptVersion,
@@ -355,11 +367,12 @@ export async function executeProviderEval(input: { plan: unknown; approval: unkn
         && z.strictObject({ probe: z.literal("ok") }).safeParse(result.payload).success;
       const evaluation = fixture && result.status === "completed" && withinBudget ? validateProviderEvalOutput(fixture, result.payload) : null;
       const httpStatus = evalHttpStatusSchema.safeParse(result.httpStatus);
+      const responseReference = normalizeProviderEvalReference(result.responseReference);
       await persist({ type: "result", attemptId, status: result.status, usage,
         ...(httpStatus.success ? { httpStatus: httpStatus.data } : {}),
         elapsedMs: Number.isFinite(result.elapsedMs) && result.elapsedMs >= 0 ? result.elapsedMs : 0,
         reportedModel: modelMatches ? result.reportedModel : null,
-        responseReference: result.responseReference ? providerEvalDigest(result.responseReference) : null, capabilityPassed, evaluation });
+        responseReference: responseReference === null ? null : providerEvalDigest(responseReference), capabilityPassed, evaluation });
     }
   }
   const final = summarizeProviderEvalJournal(plan, input.records);
@@ -378,11 +391,12 @@ export function reconcileProviderEvalAttempt(plan: ProviderEvalPlan, records: re
       || item.type === "not-sent" || (item.type === "reconcile" && item.billedModel !== undefined)))) {
     throw new Error("Only an unresolved dispatched attempt may be reconciled once.");
   }
-  const evidenceReference = input.evidenceReference.trim();
+  const evidenceReference = normalizeProviderEvalReference(input.evidenceReference);
   if (!evidenceReference || input.evidenceReference.length > 500 || !reconciliationInstant.safeParse(input.at).success) throw new Error("Authoritative reconciliation reference and time are required.");
   if (!timestampAtOrBefore(dispatch.startedAt, input.at)) throw new Error("Authoritative reconciliation cannot be recorded before dispatch.");
-  if (records.some(record => verifiedReconciliationReference(record) === evidenceReference)) {
-    throw new Error("Authoritative reconciliation reference already verifies another attempt.");
+  const referencedAttempts = indexEvidenceAttempts(records).get(providerEvalDigest(evidenceReference));
+  if (referencedAttempts && (referencedAttempts.size > 1 || !referencedAttempts.has(input.attemptId))) {
+    throw new Error("Authoritative reconciliation reference already identifies another attempt.");
   }
   requireMatchingBilledModel(requestedModel, input.billedModel);
   const usage = evalUsageSchema.parse(input.usage); calculateAiCost(requestedModel, dispatch.startedAt, usage);

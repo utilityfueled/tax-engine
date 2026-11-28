@@ -3,7 +3,8 @@ import { z } from "zod";
 import { geminiTextResponseSchema, readGeminiTextResponse } from "../../packages/engine/src/ai-gemini-text-response";
 import { assertOpenAiVisibleOutputUsage, openAiUsageSchema } from "../../packages/engine/src/ai-openai-usage";
 import { providerModelCandidates } from "../../packages/engine/src/provider-model-eval";
-import { evalHttpStatusSchema, evalUsageSchema, type ProviderEvalRequest, type ProviderEvalTransport, type ProviderEvalTransportResult } from "./provider-eval-runner";
+import { evalHttpStatusSchema, evalUsageSchema, normalizeProviderEvalReference,
+  type ProviderEvalRequest, type ProviderEvalTransport, type ProviderEvalTransportResult } from "./provider-eval-runner";
 import { PROVIDER_EVAL_CONTRACT as contract, providerEvalClientTrace } from "./provider-eval-contract";
 const openAiEnvelope = z.object({ model: z.string(), id: z.string().optional(), service_tier: z.string().optional(), status: z.string(),
   output_text: z.string().optional(), output: z.array(z.object({ type: z.string(), content: z.array(z.object({ type: z.string(), text: z.string().optional() })).optional() })).optional(),
@@ -56,13 +57,13 @@ export function createLiveProviderEvalTransport(options: { profileIds: string[];
       const response = await (options.fetchFn ?? fetch)(url, { method: contract.method, redirect: contract.redirect, signal,
         headers, body: JSON.stringify(body) });
       httpStatus = evalHttpStatusSchema.safeParse(response.status).data;
-      responseReference = response.headers.get("x-request-id");
+      responseReference = normalizeProviderEvalReference(response.headers.get("x-request-id"));
       if (!response.ok) return { status: [401, 403, 404].includes(response.status) ? "unavailable" : "failed", httpStatus, usage: null,
         elapsedMs: performance.now() - started, reportedModel: null, responseReference, payload: null };
       const payload = await readBounded(response);
       let outputText: string; let usage; let complete: boolean; let reportedModel: string;
       if (openai) {
-        responseReference ??= openAiBodyReference.safeParse(payload).data?.id ?? null;
+        responseReference ??= normalizeProviderEvalReference(openAiBodyReference.safeParse(payload).data?.id);
         const envelope = openAiEnvelope.parse(payload);
         if (envelope.service_tier !== undefined && envelope.service_tier !== "default") throw new Error("Unpriced tier.");
         const { input_tokens: inputTokens, output_tokens: outputTokens, total_tokens: totalTokens } = envelope.usage;
@@ -78,7 +79,7 @@ export function createLiveProviderEvalTransport(options: { profileIds: string[];
         if (complete) assertOpenAiVisibleOutputUsage(envelope.usage, outputText);
         reportedModel = envelope.model;
       } else {
-        responseReference = googleBodyReference.safeParse(payload).data?.responseId ?? responseReference;
+        responseReference = normalizeProviderEvalReference(googleBodyReference.safeParse(payload).data?.responseId) ?? responseReference;
         const envelope = googleEnvelope.parse(payload);
         ({ completed: complete, outputText, usage } = readGeminiTextResponse(envelope));
         reportedModel = envelope.modelVersion;

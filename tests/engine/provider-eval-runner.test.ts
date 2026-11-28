@@ -41,6 +41,26 @@ async function priorVerifiedReceiptAndNextHold() {
   return { state, transport, evidence, firstReceipt };
 }
 
+async function priorResponseAndNextHold() {
+  const state = setup();
+  const references = { capability: "synthetic-capability-response", case: "shared-id", own: "synthetic-timeout-response" };
+  const payload = { disposition: "answer", sourceIds: ["case-income-w2-zero-withholding:source"], facts: [],
+    label: "Statement", payer: "[organization-1]", documentPeriod: "2026", summary: "Unconfirmed extraction", suggestions: [] };
+  const transport = vi.fn()
+    .mockResolvedValueOnce({ ...good, responseReference: references.capability })
+    .mockResolvedValueOnce({ ...good, responseReference: ` \t${references.case}\n`, payload })
+    .mockResolvedValueOnce({ ...good, status: "failed", reportedModel: null, usage: null, responseReference: references.own, payload: null })
+    .mockResolvedValue({ ...good, payload });
+  const evidence = (evidenceReference: string) => ({
+    attemptId: "luna-high:case-income-w2-zero-withholding:2", evidenceReference,
+    billedModel: "gpt-6-luna", usage: good.usage, at,
+  });
+  expect(await executeProviderEval({ ...state, transport })).toMatchObject({
+    stoppedReason: "unknown-usage", knownProviderCostUsd: "0.00012", unknownMaximumUsd: "0.0111056",
+  });
+  return { state, transport, references, evidence };
+}
+
 describe("guarded repeated provider executor", () => {
   it("requires exact current approval before any paid dispatch", async () => {
     const state = setup(); let calls = 0;
@@ -281,6 +301,45 @@ describe("guarded repeated provider executor", () => {
       stoppedReason: "completed", unknownMaximumUsd: "0", knownProviderCostUsd: "0.00024", legacyUnverifiedProviderCostUsd: "0",
     });
     expect(transport).toHaveBeenCalledTimes(4);
+  });
+  it("rejects receipts that reuse another response and accepts the same attempt's reference", async () => {
+    const { state, transport, references, evidence } = await priorResponseAndNextHold();
+    for (const reference of [references.capability, references.case]) {
+      expect(() => reconcileProviderEvalAttempt(state.plan, state.records, evidence(reference))).toThrow(/reference.*another attempt/i);
+    }
+    expect(transport).toHaveBeenCalledTimes(3);
+    const ownReceipt = reconcileProviderEvalAttempt(state.plan, state.records, evidence(references.own));
+    await state.append(ownReceipt);
+    expect(await executeProviderEval({ ...state, transport })).toMatchObject({
+      stoppedReason: "completed", knownProviderCostUsd: "0.00024", unknownMaximumUsd: "0", bindingBlockers: [],
+    });
+    expect(transport).toHaveBeenCalledTimes(4);
+  });
+  it.each(["case", "capability"] as const)("preserves charges and holds when a historical receipt reuses a %s response", async kind => {
+    const { state, transport, references, evidence } = await priorResponseAndNextHold();
+    const dir = await mkdtemp(join(tmpdir(), "provider-eval-reused-response-"));
+    const file = join(dir, "run.jsonl");
+    try {
+      const journal = await openProviderEvalJournal(file);
+      try {
+        for (const record of state.records) await journal.append(record);
+        await journal.append({ type: "reconcile", ...evidence(references[kind]) });
+      } finally { await journal.close(); }
+      const original = await readFile(file, "utf8");
+      const reopened = await openProviderEvalJournal(file);
+      try {
+        validateProviderEvalJournal(state.plan, reopened.records);
+        const result = await executeProviderEval({ ...state, ...reopened, transport });
+        expect(result).toMatchObject({
+          stoppedReason: "unknown-usage", knownProviderCostUsd: "0.00012", unknownMaximumUsd: "0.0111056",
+          legacyUnverifiedProviderCostUsd: "0.00006", bindingBlockers: ["reconciliation-evidence-reference-reused"],
+        });
+        expect(result.template.entries.map(entry => entry.attempts[0]?.usage)).toEqual([good.usage, null]);
+        expect(result.template.entries[1]?.attempts[0]?.billingEvidence?.evidenceReference).toBe(providerEvalDigest(references[kind]));
+        expect(transport).toHaveBeenCalledTimes(3);
+        expect(await readFile(file, "utf8")).toBe(original);
+      } finally { await reopened.close(); }
+    } finally { await rm(dir, { recursive: true, force: true }); }
   });
   it("reconciles only at or after dispatch with exact fractional seconds and UTC offsets", async () => {
     const start = "2026-10-25T12:00:00.000001Z";
@@ -616,6 +675,13 @@ describe("guarded repeated provider executor", () => {
       status: "failed", httpStatus: 202, usage: null, responseReference: providerEvalDigest(reference) });
     expect(JSON.stringify(state.records)).not.toContain(reference);
     validateProviderEvalJournal(state.plan, state.records);
+  });
+  it("treats a blank provider reference as missing", async () => {
+    const state = setup();
+    const result = await executeProviderEval({ ...state, transport: async () => ({ ...good,
+      status: "failed", usage: null, responseReference: " \t\n", payload: null }) });
+    expect(result).toMatchObject({ stoppedReason: "unknown-usage", knownProviderCostUsd: "0", dispatchedRequests: 1 });
+    expect(state.records.at(-1)).toMatchObject({ type: "result", responseReference: null });
   });
   it("preserves overrun costs and stops cancellation and request ceilings", async () => {
     const overrun = await executeProviderEval({ ...setup(), transport: async () => ({ ...good, usage: { inputTokens: 100000, outputTokens: 100000 } }) });

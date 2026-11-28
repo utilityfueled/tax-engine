@@ -113,16 +113,24 @@ lines:
   - line: "reconciliation-reference-uniqueness"
     description: "Bind each authoritative reconciliation reference to one dispatched attempt"
     formula: >-
-      Trim surrounding whitespace from the opaque reference and compare it
-      case-sensitively throughout the journal. Reject a new verified receipt
-      whose reference already verifies a different attempt. Keep older journals
-      with reused verified references readable and leave every affected dispatch
-      held at its full reserved maximum. Preserve unrelated verified spend and
-      report implicated usage costs separately as unverified. Keep the recorded
-      evidence without projecting its usage as verified or resuming dispatch.
+      Trim surrounding whitespace from new opaque receipt and provider
+      references before hashing and compare their digests case-sensitively.
+      Treat blank provider references as absent when selecting a header or body
+      fallback. Keep recorded journal digests as written. Reject a new
+      verified receipt whose reference matches a verified receipt or provider
+      response on a different attempt, including a capability probe. A response
+      and receipt may identify the same attempt. Keep older journals with
+      conflicting references readable. Preserve verified response usage and
+      retain each conflicting reconciliation's full unresolved hold. Report
+      implicated reconciliation costs separately as unverified and stop further
+      dispatch.
     testRef: "tests/engine/provider-eval-runner.test.ts::refuses a reused reconciliation reference and resumes on distinct evidence"
     testRefs:
       - "tests/engine/provider-eval-runner.test.ts::retains every affected hold when a durable historical journal reuses a verified receipt"
+      - "tests/engine/provider-eval-runner.test.ts::rejects receipts that reuse another response and accepts the same attempt's reference"
+      - "tests/engine/provider-eval-runner.test.ts::preserves charges and holds when a historical receipt reuses a %s response"
+      - "tests/engine/provider-eval-runner.test.ts::treats a blank provider reference as missing"
+      - "tests/engine/provider-eval-transport.test.ts::normalizes provider references before choosing a fallback"
   - line: "reconciliation-time-order"
     description: "Release a usage reservation only with evidence recorded at or after dispatch"
     formula: >-

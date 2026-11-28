@@ -165,6 +165,22 @@ describe("official evaluation transport", () => {
       await expect(transport(request(profileId))).resolves.toMatchObject({ reportedModel: null, usage: null, responseReference });
     }
   });
+  it("normalizes provider references before choosing a fallback", async () => {
+    const google = { modelVersion: "gemini-3.8-flash", candidates: [{ finishReason: "STOP", content: { parts: [{ text: '{"probe":"ok"}' }] } }],
+      usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 50 } };
+    const cases = [
+      ["luna-high", { ...openai, id: " \topenai-body\n" }, " \t ", "openai-body"],
+      ["luna-high", { ...openai, id: " \t\n" }, " \t ", null],
+      ["luna-high", openai, "openai-header", "openai-header"],
+      ["gemini-flash-high", { ...google, responseId: " \t\n" }, "google-header", "google-header"],
+      ["gemini-flash-high", { ...google, responseId: " \tgoogle-body\n" }, "google-header", "google-body"],
+    ] as const;
+    for (const [profileId, body, header, responseReference] of cases) {
+      const transport = createLiveProviderEvalTransport({ profileIds: [profileId], apiKeys: { openai: "synthetic", google: "synthetic" },
+        fetchFn: async () => new Response(JSON.stringify(body), { headers: { "x-request-id": header } }) });
+      await expect.soft(transport(request(profileId))).resolves.toMatchObject({ status: "completed", responseReference });
+    }
+  });
   it("records unavailable or unknown usage without echoing raw service errors", async () => {
     for (const [payload, status] of [[{ secret: "sensitive provider error" }, 403], [{ ...openai, service_tier: "priority" }, 200], [{ ...openai, usage: { input_tokens: 10, output_tokens: 10, input_tokens_details: { cache_write_tokens: 5 } } }, 200]] as const) {
       const transport = createLiveProviderEvalTransport({ profileIds: ["luna-high"], apiKeys: { openai: "synthetic" }, fetchFn: async () => response(payload, status) });
