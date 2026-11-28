@@ -4,7 +4,7 @@
     "asOf": "2026-11-28",
     "branch": "main",
     "applicationCommit": "6aadaaeddc4931b13e4b14e387a93590224c6447",
-    "latestScopedApplicationCommit": "46810ff85f0d4836b37bcd79dddeddce9be61987",
+    "latestScopedApplicationCommit": "c545b7a761daa54655ceba5e3265460b7ed39816",
     "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
     "latestSchedule8812PayrollActcEvidenceKey": "activeContinuation.nov27Schedule8812PayrollActc",
     "latestGuidedHsaCivilDatesEvidenceKey": "activeContinuation.nov27GuidedHsaCivilDates",
@@ -217,6 +217,33 @@
     ]
   },
   "activeContinuation": {
+    "nov28CharitableActualRecipientCategory": {
+      "commit": "c545b7a761daa54655ceba5e3265460b7ed39816",
+      "archiveSha256": "148166a628d79a47d739efb6bee0567b6b5f1e9738e7ec922d963216240d12c4",
+      "sourceTree": "6a7b12c5fc768d1de1ef7867d9991db55b1a6d0a",
+      "localEvidenceMarker": "nov27-charitable-recipient-actual-path",
+      "exactFocusedTestsPassed": 1074,
+      "checksPassed": [
+        "focused",
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
+      "independentEngineeringTestsPassed": 33,
+      "authorFocusedTestsPassed": 39,
+      "actualRecipientRequiredForPositiveQualified2026Gifts": true,
+      "otherThirtyPercentCemeteryTestDeductionDollars": "0",
+      "fiftyPercentControlTestDeductionDollars": "500",
+      "knownZeroAndFullyOffsetGiftPathsVerified": true,
+      "originalCharitableCarryHistoryRequiredWhenApplicable": true,
+      "finalQualifiedTaxReviewComplete": false,
+      "filingPromoted": false
+    },
     "nov28AiAttemptAccountingCutoff": {
       "commit": "46810ff85f0d4836b37bcd79dddeddce9be61987",
       "archiveSha256": "f7f4d12b1ec154f9339f43bee0312199896c43fe978ac06ae0e60a0739d6bd7f",

@@ -23,6 +23,27 @@ jq '.resume | {latestScopedApplicationCommit, remaining}' docs/upgrade-2026-chec
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local Chromium and encrypted recovery passed. Current ARM64 and AMD64 workflows await runners. The earlier ARM64 image and Compose checks passed and the strict browser check failed nine cases. |
 
+## November 28 original 2026 charitable recipient classification
+
+`c545b7a76` requires the recipient's actual category for positive, qualified
+2026 gifts in saved interviews and the federal calculation. A legacy answer
+of “no” to private foundation status cannot establish the first percentage
+category. The synthetic nonprofit cemetery case has zero §170(p) deduction
+with the correct other 30% category. The statutory restriction is to
+§170(b)(1)(A) recipients and excludes supporting organizations and donor-advised
+funds. [26 USC §170](https://uscode.house.gov/us/usc/119-124/t26/s170/)
+[IRS Publication 526](https://www.irs.gov/publications/p526)
+
+Existing 2025 records retain their legacy classification path. Synthetic 2026
+fixtures that already identified public recipients now supply the corresponding
+explicit answer. A known zero, including cash fully offset by the value of the
+benefit received, requires no recipient category and does not change the
+federal deduction election or charitable carry history. Saved 2026 recipient
+answers are completed in Deductions. Navigation through Adjustments leaves
+those pending answers for the section where they are entered. The exact package
+passed 1074 tests and eight static checks. Independent engineering reviewed
+the result. Independent qualified tax review and filing approval remain open.
+
 ## November 28 AI evaluation attempt accounting at cutoff
 
 `46810ff85` counts each observed provider attempt at its own report cutoff.
