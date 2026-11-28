@@ -24,7 +24,7 @@ final three cents through Form 2210. Separate worksheet fixtures reject
 rounded mismatches and retain their exact subtotals. Statutory and source-effective dates
 retain their existing treatment. All 335 exact focused tests, eight static
 checks and 10,314 spec references passed. Independent engineering review
-reran 43 tests. The complete local checks are scheduled on this exact
+reran 43 tests. The complete local checks are running on this exact
 revision, and the current ARM64 rehearsal was dispatched.
 [IRS Form 1040 instructions](https://www.irs.gov/instructions/i1040gi) ·
 [IRS Form 2210 instructions](https://www.irs.gov/instructions/i2210) ·
@@ -54,8 +54,12 @@ H4/4H through the dated canonical path. Valid Code G IRA rollovers and
 undated saved inputs retain their existing behavior. All 346 exact focused
 tests, eight static checks and 10,313 spec references passed. Independent
 engineering review reran 115 tests and verified rejection before the gross
-split. Full local checks are running on this revision, and the separate native
-ARM64 run was dispatched.
+split. Its unit suite passed 31,443 tests with 83 skips, and the production
+web build passed. Coverage and browser testing encountered `ENOSPC`; standalone
+recovery did not start. Both test listeners closed. The failure logs and build
+IDs were preserved. Clearing six completed webpack caches reclaimed about
+9.6 GiB, and the full run resumed on the newer payment revision. The separate
+native ARM64 run was dispatched.
 [IRS Form 1099-R instructions](https://www.irs.gov/instructions/i1099r) ·
 [ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/46090231433).
 

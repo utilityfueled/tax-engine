@@ -315,7 +315,7 @@
       "independentEngineeringReviewPassed": true,
       "independentFocusedTestsPassed": 43,
       "exactSyntheticLine26AndOrdinaryForm2210": "1000000000000000123.03",
-      "localCombinedStatus": "scheduled after prior isolated tracks",
+      "localCombinedStatus": "running after disk recovery",
       "localEvidenceMarker": "nov27-form2210-exact-source-totals-path",
       "arm64NativeRun": "https://github.com/utilityfueled/tax-engine/actions/runs/46091464368",
       "filingQualified": false
@@ -351,7 +351,12 @@
       ],
       "independentEngineeringReviewPassed": true,
       "independentFocusedTestsPassed": 115,
-      "localCombinedStatus": "running",
+      "localCombinedStatus": "unit and build-web passed; coverage and browser interrupted by disk full; standalone did not start",
+      "localUnitTestsPassed": 31443,
+      "localUnitTestsSkipped": 83,
+      "localListenerCleanupVerified": true,
+      "localInterruptionEvidenceSha256": "3dfce8ed309a9a45c9c7291845dedec0f8975d8daef9d447c9aee396f27a2d0d",
+      "priorCompletedCacheCleanupEvidenceSha256": "d19d4c96a5bcf8af5caa3edfc3bbe4facb087e1d2c9d064f46d0c8dfcccf11a9",
       "localEvidenceMarker": "nov27-guided-retirement-rollover-path",
       "arm64NativeRun": "https://github.com/utilityfueled/tax-engine/actions/runs/46090231433",
       "filingQualified": false
