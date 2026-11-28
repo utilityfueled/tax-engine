@@ -212,7 +212,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov27ExactFederalPaymentCombined",
     "remaining": [
-      "Both strict Linux browser gates and final runtime image evidence remain open. GitHub CI 46136306545, Web 46136306506 and Docker 46136306571 were queued on bf76e9f24, including the tracked Form 6198 blank. ARM64 46136373270 is pending on the same revision behind 46120985997, which passed archive and Compose recovery before entering strict Chromium. The prior ARM64 run 46113946817 timed out in 11 browser cases after passing image and recovery checks.",
+      "Both strict Linux browser gates and final runtime image evidence remain open. GitHub CI 46136306545, Web 46136306506 and Docker 46136306571 were queued on bf76e9f24, including the tracked Form 6198 blank. ARM64 46136373270 is queued on that revision. ARM64 46120985997 passed image evidence, Compose recovery and cleanup, then reported 643 browser passes, 12 timeouts and five skips. The prior run timed out in 11 of the same browser cases.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 27 public npm audits of the unchanged lockfile returned zero findings across 550 total and 457 production packages.",
@@ -360,10 +360,13 @@
       "successorRun": 46120985997,
       "successorRevision": "0c594ea43f11970620c108a504a9c0fc1d23fc23",
       "successorContains": "42d8091d9e54c6429741c09629351a303a8ba1cc",
-      "successorStatus": "An ARM64 runner started it November 28, 2026 at 10:16 UTC and reached strict browser flows. Strict browser qualification remains open.",
+      "successorStatus": "Completed with strict Chromium failure. Native archive verification, Compose upgrade and recovery, immutable evidence, and cleanup passed.",
+      "successorBrowser": { "passed": 643, "timedOut": 12, "skipped": 5, "windows": 9, "deadlineMs": 30000, "retries": 0 },
+      "successorNewFailure": "The 212-day part-year Ohio business phone case timed out alongside all 11 previous Ohio cases.",
+      "successorTimingSha256": "14022b58efde5f240969aa5a8165bb74fe868c9c39316b1c9d85649adde67ed0",
       "latestSourceRun": 46136373270,
       "latestSourceRevision": "bf76e9f24a8d2de0074f1dae2497ccf4595f65ed",
-      "latestSourceStatus": "Pending on the standard public ARM64 runner. The running rehearsal was preserved."
+      "latestSourceStatus": "Queued on the standard public ARM64 runner. Its predecessor completed without interruption."
     },
     "nov28GuidedScheduleCForm6198Originals": {
       "applicationCommit": "77e1fe6f664633fa2397f3f22e484957f9259703",

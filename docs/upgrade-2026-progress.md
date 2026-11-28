@@ -21,7 +21,7 @@ jq '.resume | {latestScopedApplicationCommit, remaining}' docs/upgrade-2026-chec
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
-| Self-host release | Exact local Chromium and encrypted recovery passed on `95c43aef2`. The latest completed ARM64 run passed image verification and Compose recovery, then timed out in 11 Chromium cases. Its successor reached strict Chromium. Another run is pending on the revision with the tracked Form 6198 blank. |
+| Self-host release | Exact local Chromium and encrypted recovery passed on `95c43aef2`. ARM64 run `46120985997` passed archive verification, Compose recovery and cleanup. Its strict browser step timed out in 12 Ohio cases. The revision with the tracked Form 6198 blank is queued. |
 
 ## November 28 professional W-2G originals and AI evaluation
 
@@ -54,8 +54,14 @@ export. [Official IRS blank](https://www.irs.gov/pub/irs-pdf/f6198.pdf).
 ARM64 `9f8fcff52` passed image verification, isolated Compose upgrade and
 database recovery, immutable archive checks and listener cleanup. Chromium
 passed 644 cases, skipped five and timed out in 11 under the existing
-requirement. The successor on `0c594ea43` began strict browser flows on
-November 28. It includes `42d8091d9`, which removes the Ohio per-edit clone.
+requirement. The successor on `0c594ea43` includes `42d8091d9`, which removes
+the Ohio header and school-district per-edit clone. Its strict browser run
+passed 643 cases, skipped five and timed out in 12 across all nine windows.
+All 11 earlier timeouts repeated. The new timeout was the phone case for the
+212-day part-year Ohio business return. Native archive verification, Compose
+upgrade and recovery, immutable evidence and listener cleanup passed. Both
+runs retained the 30-second deadline and zero retries. The sanitized timing
+receipt SHA-256 is `14022b58efde5f240969aa5a8165bb74fe868c9c39316b1c9d85649adde67ed0`.
 [Completed ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/46113946817)
 · [ARM64 successor](https://github.com/utilityfueled/tax-engine/actions/runs/46120985997).
 
