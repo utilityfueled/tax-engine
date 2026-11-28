@@ -40,3 +40,12 @@ lines:
     formula: "Bind the owner's confirmed actual statements and event offsets to separate Form8889 and Form5329 inputs. A saved distribution record cannot disappear when its applicability answer changes. Preserve actual source year and recipient; obtain age only from the actual household date of birth."
     irsRef: "Form8889 separate spouse forms and PartII source records"
     testRef: "tests/guided-interview/guided-hsa-distribution-facts.test.ts::binds actual distributions to the owner return and preserves contradictory saved records"
+  - line: "statement-calendar-year"
+    description: "Retain the confirmed Form 1099-SA calendar year in the return input"
+    formula: >-
+      For each guided code 1 or code 3 statement in a supported return year,
+      pass the confirmed calendar year printed on the original to the canonical
+      Form 1099-SA input. A missing or different printed year blocks guided
+      projection. Undated historical return inputs may retain an unknown year.
+    irsRef: "Form 1099-SA (Rev. April 2025), For calendar year, https://www.irs.gov/pub/irs-pdf/f1099sa.pdf; 2026 instructions, https://www.irs.gov/instructions/i1099sa"
+    testRef: "tests/guided-interview/guided-hsa-distribution-facts.test.ts::preserves the confirmed calendar year for ordinary and disability statements"

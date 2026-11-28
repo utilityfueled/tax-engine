@@ -140,7 +140,22 @@ export function buildHsaDistributionInputs(records: HsaDistributionSource[], own
     else if (event.distributionDate >= birthday65) after65 = after65.plus(taxable);
   }
   return {
-    form1099SA: records.map(record => ({ ...(record.distributionCode === "2" ? { taxYear, sourceReference: record.sourceReference?.trim(), recipientSsn: record.recipientSsn, payerTin: record.payerTin, accountReference: record.accountReference.trim() } : {}), payer: record.payer.trim(), grossDistribution: parseGuidedCurrency(record.grossDistribution).toString(), earningsOnExcessContributions: parseGuidedCurrency(record.earningsOnExcessContributions).toString(), distributionCode: record.distributionCode as "1" | "2" | "3", accountType: "hsa", accountHolder: owner, trusteeToTrusteeTransfer: false })),
+    form1099SA: records.map(record => ({
+      taxYear: Number(record.sourceTaxYear),
+      ...(record.distributionCode === "2" ? {
+        sourceReference: record.sourceReference?.trim(),
+        recipientSsn: record.recipientSsn,
+        payerTin: record.payerTin,
+        accountReference: record.accountReference.trim(),
+      } : {}),
+      payer: record.payer.trim(),
+      grossDistribution: parseGuidedCurrency(record.grossDistribution).toString(),
+      earningsOnExcessContributions: parseGuidedCurrency(record.earningsOnExcessContributions).toString(),
+      distributionCode: record.distributionCode as "1" | "2" | "3",
+      accountType: "hsa",
+      accountHolder: owner,
+      trusteeToTrusteeTransfer: false,
+    })),
     form8889: { qualifiedMedicalExpenses: medical.toString(), rolloverDistributions: rollover.toString(), distributionsAfterAge65: after65.toString(), disabilityExceptionTaxableDistributions: disability.toString() },
   };
 }

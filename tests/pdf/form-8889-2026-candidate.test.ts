@@ -4,12 +4,15 @@ import { readFile } from "node:fs/promises";
 import { PDFCheckBox, PDFDict, PDFDocument, PDFName, PDFRawStream, PDFTextField, decodePDFRawStream } from "pdf-lib";
 import { describe, expect, it } from "vitest";
 import { calculateForm8889 } from "@/engine/forms/form-8889.js";
+import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
+import { emptyAdjustmentData } from "@/lib/guided-interview-flow";
 import { FEDERAL_2026_CONSTANTS } from "@/models/federal-2026-indexed.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import { assertPdfExportAllowed, markReviewPdf, PDF_MAPPING_PACKS, REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
 import { FORM_8889_2026_CANDIDATE as candidate, fillForm88892026OrdinaryCandidate } from "@/pdf/mappings/2026/form-8889-candidate.js";
 import { assertReviewTemplateBytes, REVIEW_TEMPLATE_PACKS } from "@/pdf/template-registry.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
+import { completeHsaSources, startCompleteInterview } from "../guided-interview/complete-facts";
 
 const blank = new URL("../../forms/blank/2026/f8889.pdf", import.meta.url);
 const historicalBlank = new URL("../../forms/blank/2025/f8889.pdf", import.meta.url);
@@ -221,6 +224,47 @@ describe("Final 2026 Form 8889 physical candidate", () => {
     expect(form.getCheckBox(candidate.fields.selfOnly).acroField.getValue().toString()).toBe("/1");
     expect(form.getCheckBox(candidate.fields.family).isChecked()).toBe(false);
     expect(form.getCheckBox(candidate.fields.line17a).isChecked()).toBe(false);
+    expect(saved.getSubject()).toBe(REVIEW_PDF_NOTICE);
+  });
+
+  it("renders a guided ordinary distribution using the confirmed original statement year", async () => {
+    const state = startCompleteInterview({ filingStatus: "single", incomeTypes: [], lifeEvents: ["hsa-contributions"], stateCode: null });
+    state.taxYear = 2026;
+    state.sectionData.adjustments = {
+      ...emptyAdjustmentData,
+      hsaAccounts: [{
+        ...completeHsaSources,
+        contributionTaxYear: "2026",
+        priorYearSourceTaxYear: "2025",
+        hasDistributions: true,
+        distributions: [{
+          id: "hsa-statement", sourceTaxYear: "2026", accountOwner: "primary", payer: "Fictional HSA trustee",
+          payerTin: "12-3456789", accountReference: "HSA-1234", accountType: "hsa", distributionCode: "1",
+          grossDistribution: "1000", earningsOnExcessContributions: "0", trusteeToTrusteeTransfer: false,
+          sourceFactsConfirmed: true,
+          events: [{
+            id: "hsa-distribution", distributionDate: "2026-04-01", grossDistribution: "1000",
+            medicalExpenses: "800", rolloverAmount: "0",
+            medicalEligibility: {
+              qualifiedExpense: true, beneficiaryEligible: true, incurredAfterHsaEstablished: true,
+              notReimbursedElsewhere: true, notDeductedOnScheduleA: true,
+            },
+          }],
+        }],
+      }],
+    };
+    const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
+    const rendered = await fillForm88892026OrdinaryCandidate(input, {
+      ...evidence, personalContributions: completeHsaSources.contributionsMade, employerContributions: "0",
+      grossDistributions: "1000", qualifiedMedicalExpenses: "800",
+    }, await readFile(blank));
+    const saved = await PDFDocument.load(await rendered.save());
+    const form = saved.getForm();
+    expect(form.getTextField(candidate.fields.line14a).getText()).toBe("1000");
+    expect(form.getTextField(candidate.fields.line15).getText()).toBe("800");
+    expect(form.getTextField(candidate.fields.line16).getText()).toBe("200");
+    expect(form.getTextField(candidate.fields.line17b).getText()).toBe("40");
+    expect(form.getTextField(candidate.fields.ssn).getText()).toBeUndefined();
     expect(saved.getSubject()).toBe(REVIEW_PDF_NOTICE);
   });
 

@@ -3,8 +3,9 @@ import { expect, it } from "vitest";
 import { buildHsaDistributionInputs, hsaDistributionFactErrors, type HsaDistributionSource } from "@/lib/guided-hsa-distribution-facts";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { emptyAdjustmentData } from "@/lib/guided-interview-flow";
-import { TaxYearInputSchema } from "@/models/inputs";
+import { Form1099SASchema, TaxYearInputSchema } from "@/models/inputs";
 import { calculateFederalTax } from "@/engine/federal";
+import { calculateForm1099SA } from "@/engine/forms/form-1099-sa";
 import { completeHsaSources, startCompleteInterview } from "./complete-facts";
 const medical = { qualifiedExpense: true, beneficiaryEligible: true, incurredAfterHsaEstablished: true, notReimbursedElsewhere: true, notDeductedOnScheduleA: true };
 const source: HsaDistributionSource = { id: "source1", sourceTaxYear: "2025", accountOwner: "primary", payer: "Actual HSA bank", payerTin: "12-3456789", accountReference: "actual-source-account", accountType: "hsa", distributionCode: "1", grossDistribution: "1000.10", earningsOnExcessContributions: "0", trusteeToTrusteeTransfer: false, sourceFactsConfirmed: true,
@@ -19,6 +20,48 @@ it("reconciles exact ordinary distribution events without guessing missing facts
   expect(Object.keys(errors([source, source])).length).toBeGreaterThan(0);
   expect(Object.keys(errors([{ ...source, grossDistribution: "1000.11" }])).length).toBeGreaterThan(0);
 });
+
+it("preserves the confirmed calendar year for ordinary and disability statements", () => {
+  for (const year of [2026, 2025]) {
+    const ordinary: HsaDistributionSource = {
+      ...source,
+      sourceTaxYear: String(year),
+      events: source.events.map(event => ({ ...event, distributionDate: `${year}-04-01` })),
+    };
+    const disability: HsaDistributionSource = {
+      ...ordinary,
+      id: "source2",
+      accountReference: "separate-hsa-account",
+      distributionCode: "3",
+      events: ordinary.events.map(event => ({ ...event, id: "event2" })),
+    };
+    const { form1099SA } = buildHsaDistributionInputs([ordinary, disability], "primary", year, "1990-02-15");
+    const reloaded = Form1099SASchema.array().parse(JSON.parse(JSON.stringify(form1099SA)));
+    expect(reloaded).toMatchObject([
+      { taxYear: year, distributionCode: "1", accountHolder: "primary" },
+      { taxYear: year, distributionCode: "3", accountHolder: "primary" },
+    ]);
+    expect(calculateForm1099SA(reloaded, year).accountOwnerSupport.primary.hsaGrossDistributions.toString()).toBe("2000.2");
+    expect(() => calculateForm1099SA(reloaded, year - 1)).toThrow(/source year .* must match/);
+    for (const sourceTaxYear of ["", String(year - 1)]) {
+      expect(() => buildHsaDistributionInputs([{ ...ordinary, sourceTaxYear }], "primary", year, "1990-02-15"))
+        .toThrow(/actual statement tax year/);
+    }
+  }
+});
+
+it("keeps the calendar year unknown for an undated historical return input", () => {
+  const legacy = Form1099SASchema.parse({
+    payer: source.payer,
+    accountHolder: source.accountOwner,
+    accountType: source.accountType,
+    distributionCode: source.distributionCode,
+    grossDistribution: source.grossDistribution,
+  });
+  expect(legacy.taxYear).toBeUndefined();
+  expect(calculateForm1099SA([legacy], 2025).accountOwnerSupport.primary.hsaGrossDistributions.toString()).toBe("1000.1");
+});
+
 it("preserves known medical ineligibility and prevents duplicate expense use", () => {
   const noExpense = { ...source, events: [{ ...source.events[0]!, medicalEligibility: { ...medical, notReimbursedElsewhere: false } }] };
   expect(buildHsaDistributionInputs([noExpense], "primary", 2025, "1990-02-15").form8889.qualifiedMedicalExpenses).toBe("0");
@@ -46,7 +89,7 @@ it("binds actual distributions to the owner return and preserves contradictory s
   const state = startCompleteInterview({ filingStatus: "single", incomeTypes: [], lifeEvents: ["hsa-contributions"], stateCode: null });
   state.sectionData.adjustments = { ...emptyAdjustmentData, hsaAccounts: [{ ...completeHsaSources, hasDistributions: true, distributions: [source] }] };
   const input = buildTaxInputFromGuidedData(state);
-  expect(input?.form1099SA?.[0]).toMatchObject({ accountHolder: "primary", grossDistribution: "1000.1" });
+  expect(input?.form1099SA?.[0]).toMatchObject({ taxYear: 2025, accountHolder: "primary", grossDistribution: "1000.1" });
   const result = calculateFederalTax(TaxYearInputSchema.parse(input));
   expect(result.form8889ByOwner?.primary).toMatchObject({});
   expect(result.form8889ByOwner?.primary?.line16.toString()).toBe("200.05");

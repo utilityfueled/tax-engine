@@ -321,7 +321,7 @@
     "apps/web/src/lib/guided-government-payment-inputs.ts": "3b1f6625a50d914e3874e4a38d9897aafca8aee353c829da7007c732a9d63d2f",
     "apps/web/src/lib/guided-health-business-gross.ts": "e1b2f4553b79ac5e9a3035a723dd49741a6c755c336f941c0f09af4fb704f0f9",
     "apps/web/src/lib/guided-health-insurance-facts.ts": "08c785a3a31d07d96932840afba8cb23c914c22a4213abafc2ac6531b811ae4b",
-    "apps/web/src/lib/guided-hsa-distribution-facts.ts": "26e3d8583b75803c1ef3b6a896eda6ae80764c471378a6739f38dccf0594667a",
+    "apps/web/src/lib/guided-hsa-distribution-facts.ts": "44230f97be430b56948588c012b30c3bd450dc38e817132d8480c3449c738410",
     "apps/web/src/lib/guided-hsa-excess-correction-facts.ts": "a68794230e0e56d4dd1cd0ab629475b9a6d75e77979d455892add7f6aeb92b61",
     "apps/web/src/lib/guided-hsa-facts.ts": "48f37fa703ed00705b0c50893ccf7f9a0f40021696953b3b018038619ecbfa86",
     "apps/web/src/lib/guided-interest-originals.ts": "105f06ec3c31e2405ea430e9e1e614aee8b3ef443ce3e88ebf92471d9108420b",
