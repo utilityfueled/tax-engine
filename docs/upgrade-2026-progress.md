@@ -23,6 +23,20 @@ jq '.resume | {latestScopedApplicationCommit, remaining}' docs/upgrade-2026-chec
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local Chromium and encrypted recovery passed on `95c43aef2`. ARM64 run `46120985997` passed archive verification, Compose recovery and cleanup. Its strict browser step timed out in 12 Ohio cases. The revision with the tracked Form 6198 blank is queued. |
 
+## November 28 pending AI attempts and quality evidence
+
+`7068c4f4a` distinguishes a durable evaluation dispatch from an observed
+response. A pending case contributes no observed quality measurement, and a
+pending probe contributes no availability result. The exact outstanding hold
+and dated reconciliation remain visible. Results in older journals that lack
+an observation field retain their existing treatment.
+
+Two pre-fix regressions reproduced with in-memory transport. All 153 tests in
+the nine offline provider-evaluation files passed afterward. The 28 scoped spec
+references, pinned baseline synchronization, lint, staged typecheck and inventory
+passed. No provider was called. Independent human labels and comparable live
+provider evidence remain required for promotion.
+
 ## November 28 final form availability
 
 The IRS final Form 1040, instructions and Schedule 1-A still carry tax year

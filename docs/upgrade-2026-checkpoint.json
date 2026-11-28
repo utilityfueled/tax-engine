@@ -10,6 +10,7 @@
     "latestFinalFormAvailabilityEvidenceKey": "activeContinuation.nov28FinalFormAvailability",
     "latestW2GObservationEvidenceKey": "activeContinuation.nov28ProfessionalW2GObservationDate",
     "latestAiExactBenefitEvidenceKey": "activeContinuation.nov28AiExactBenefitThreshold",
+    "latestAiPendingObservationEvidenceKey": "activeContinuation.nov28AiPendingObservation",
     "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
     "latestSchedule8812PayrollActcEvidenceKey": "activeContinuation.nov27Schedule8812PayrollActc",
     "latestGuidedHsaCivilDatesEvidenceKey": "activeContinuation.nov27GuidedHsaCivilDates",
@@ -222,6 +223,15 @@
     ]
   },
   "activeContinuation": {
+    "nov28AiPendingObservation": {
+      "commit": "7068c4f4aacfc1977c2b7a69736ace6682079380",
+      "scope": "Offline journal reporting of dispatched cases and probes without a result. Recorded billing reconciliation is independent of result observation. Preserve legacy results with no observation field.",
+      "checks": "Two spec-first red failures with one passing legacy control. All 153 tests across nine offline evaluation files and 28 scoped spec references passed. Pinned baseline synchronization, lint, staged typecheck, source audit and inventory passed.",
+      "redLogSha256": "989115d4a1f0b665adbd239ea8a9b7633b161f98083bd56b7d18f362b2e249fe",
+      "offlineLogSha256": "49adafa6ab680cd21e8f2a28786ce6f3f6c03cd63f08dba645ced8a6f47c1e68",
+      "specLogSha256": "ed5cfaa654369bc2be2a622af87164c230252e186a60fb02097109bcdcaea601",
+      "boundary": "No live calls or independent human labels. Promotion remains gated."
+    },
     "nov28FinalFormAvailability": {
       "observedOn": "2026-11-28",
       "status": "Final 2026 outputs remain open for the federal, Pennsylvania and Ohio groups reviewed.",
