@@ -96,6 +96,16 @@ lines:
     testRef: "tests/guided-interview/guided-retirement-source-facts.test.ts::carries either printed Code 3 and D order through the reopened 2026 retirement interview"
     testRefs:
       - "tests/guided-interview/guided-retirement-source-facts.test.ts::retains the guided Code D classifications and standalone Code 3 payment-period requirement"
+  - line: "retirement-2026-code-h-source-classification"
+    description: "Reconcile Code H and the IRA source checkbox before projecting a guided original"
+    formula: >-
+      Hold a 2026 Code H original with a checked Box 7b for source review.
+      Retain the saved code and checkbox. A confirmed Code H rollover with
+      Box 7b unchecked and Box 2a zero reports its gross amount with pension
+      distributions. Keep the checked Box 7b admission for an otherwise
+      supported Code G direct payment from an IRA to an accepting employer plan.
+    irsRef: "2026 Instructions for Forms 1099-R and 5498, Designated Roth accounts, Box 7b and Table 1 (https://www.irs.gov/instructions/i1099r)"
+    testRef: "tests/guided-interview/guided-retirement-source-facts.test.ts::holds a 2026 guided Code H original with a checked IRA source box"
   - line: "retirement-source-identity"
     description: "Distinguish original statements by source year, recipient, payer and account reference"
     formula: "Compare actual same-year and same-recipient retirement statements using the payer's nine-digit TIN without hyphens and the trimmed case-insensitive local account reference. Repeated identities stay unresolved until the original or correction is reconciled. Each joint-return recipient may have their own statement with the same payer and local account label. Preserve the source-entered TIN and account reference for the other original-source checks. When the interview updates a statement, a change of recipient, normalized payer TIN, normalized account reference or normalized annuity contract reference clears this original's Simplified Method Box 1 coverage confirmation. A change to the taxpayer in the selected recipient role also requires fresh coverage. Preserve the worksheet facts for review, subject to the existing statement-year reset for annual facts. Equivalent formatting, row order, independently added statements and edits to unrelated worksheet details on an individually retained original preserve coverage. If a replacement cannot be distinguished from a copied or reassigned confirmation, require fresh coverage on the affected statements. This includes a simultaneous removal of a reviewed original and a substantive worksheet change under a retained identity whose previous review cannot establish those facts. General source review alone cannot establish coverage for the edited original, including after reopening. A saved draft without prior versions does not identify past changes."

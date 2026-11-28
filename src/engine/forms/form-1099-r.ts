@@ -367,6 +367,14 @@ export function calculateForm1099R(
   for (const form of forms) {
     if ((options.taxYear ?? form.taxYear) !== 2026) continue;
     const code = getUpperDistributionCode(form).replace(/\s+/gu, "");
+    if (form.taxYear === 2026 && code.includes("H")) {
+      if (!/^(?:H4?|4H)$/u.test(code)) {
+        throw new Error("2026 Form 1099-R Box 7a Code H can only be paired with Code 4");
+      }
+      if (form.iraSepSimple === true) {
+        throw new Error("2026 Form 1099-R Box 7a Code H requires a designated Roth employer-plan source and an unchecked Box 7b");
+      }
+    }
     if (!code.includes("3") || code === "3") continue;
     if (code !== "3D" && code !== "D3") {
       throw new Error("2026 Form 1099-R Box 7a Code 3 can only be paired with Code D");

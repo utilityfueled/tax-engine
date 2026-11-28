@@ -434,6 +434,21 @@ lines:
       - "tests/engine/federal-pension-sources-2026.test.ts::validates a dated Code 3 pairing in direct aggregation without requiring a return year"
       - "tests/engine/federal-pension-sources-2026.test.ts::rejects a Code 3 and D pair with a checked IRA box (%s)"
 
+  - line: "2026-code-h-source-classification"
+    description: "Validate Code H pairing and source before retirement classification"
+    formula: >-
+      Before classifying a dated 2026 Form 1099-R with Code H, accept Code H
+      alone or with Code 4 in either order. Reject all other Code H pairings
+      regardless of Box 7b and reject a checked Box 7b for permitted codes.
+      Code H identifies a designated Roth employer-plan source. The IRA
+      destination does not determine the Box 7b source classification. Keep
+      valid Code G sources and the treatment of undated legacy inputs.
+    irsRef: "2026 Instructions for Forms 1099-R and 5498, Designated Roth accounts, Box 7b and Table 1 (https://www.irs.gov/instructions/i1099r)"
+    testRef: "tests/engine/federal-pension-sources-2026.test.ts::rejects a checked IRA box on a dated Code H rollover (%s)"
+    testRefs:
+      - "tests/engine/federal-pension-sources-2026.test.ts::rejects an invalid dated Code H pair regardless of Box 7b (%s)"
+      - "tests/engine/federal-pension-sources-2026.test.ts::keeps the undated legacy Code H interpretation"
+
   - line: "2026-copy-b-upload-review"
     description: "Retain literal source evidence from a standalone 2026 Form 1099-R Copy B for review"
     formula: >-

@@ -219,6 +219,31 @@ describe("2026 original pension source facts", () => {
     expect(result.pensionDistributionsGross.eq("12000.12")).toBe(true);
   });
 
+  it.each(["H", " 4 h ", "H4"])("rejects a checked IRA box on a dated Code H rollover (%s)", (distributionCode) => {
+    const source = Form1099RSchema.parse({ ...pension, distributionCode, iraSepSimple: true, taxableAmount: "0" });
+    expect(() => calculateForm1099R([source])).toThrow(/Code H.*Box 7b/);
+    expect(() => calculateForm1099R([source], { taxYear: 2026 })).toThrow(/Code H.*Box 7b/);
+    const valid = calculateForm1099R([{ ...source, iraSepSimple: false }], { taxYear: 2026 });
+    expect(valid.iraGrossReported.isZero()).toBe(true);
+    expect(valid.pensionGrossReported.eq("12000.12")).toBe(true);
+    expect(valid.pensionTaxable.isZero()).toBe(true);
+  });
+
+  it.each(["H7", "BH"])("rejects an invalid dated Code H pair regardless of Box 7b (%s)", (distributionCode) => {
+    for (const iraSepSimple of [true, false]) {
+      const source = Form1099RSchema.parse({ ...pension, distributionCode, iraSepSimple, taxableAmount: "0" });
+      expect.soft(() => calculateForm1099R([source])).toThrow(/Box 7a.*Code H.*Code 4/);
+      expect.soft(() => calculateForm1099R([source], { taxYear: 2026 })).toThrow(/Box 7a.*Code H.*Code 4/);
+    }
+  });
+
+  it("keeps the undated legacy Code H interpretation", () => {
+    const source = Form1099RSchema.parse({ ...pension, taxYear: undefined, distributionCode: "H", iraSepSimple: true, taxableAmount: "0" });
+    const historical = calculateForm1099R([source]);
+    expect(historical.iraGrossReported.eq("12000.12")).toBe(true);
+    expect(historical.iraTaxable.isZero()).toBe(true);
+  });
+
   it.each(["6", "H", "4H", "4P", "7B"])("keeps the Code %s no-current-tax branch with withholding", (distributionCode) => {
     const result = calculate({ distributionCode, qualifiedRothDistribution: distributionCode === "7B" });
     expect(result.pensionDistributionsTaxable.isZero()).toBe(true);

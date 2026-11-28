@@ -475,6 +475,34 @@ it("retains the guided Code D classifications and standalone Code 3 payment-peri
   expect(buildTaxInputFromGuidedData(state)).toBeNull();
 });
 
+it("holds a 2026 guided Code H original with a checked IRA source box", () => {
+  const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
+  state.taxYear = 2026;
+  const original = {
+    ...completeRetirementSource, sourceTaxYear: "2026", distributionCode: "H",
+    grossDistribution: "1000.50", taxableAmount: "0", directRolloverConfirmed: true,
+  };
+  state.sectionData["income-retirement"] = { entries: [{ ...original, isIraSepSimple: true }] };
+  const validation = validateSection(state, "income-retirement");
+  expect(validation.status).toBe("partial");
+  expect(validation.fieldErrors["retirement-0-code-h-ira-source"]).toMatch(/Code H.*Box 7b/);
+  expect(buildTaxInputFromGuidedData(state)).toBeNull();
+  expect(state.sectionData["income-retirement"].entries[0]).toMatchObject({ distributionCode: "H", isIraSepSimple: true });
+
+  for (const [code, isIraSepSimple, iraGross, pensionGross] of [
+    ["H", false, "0.00", "1000.50"], ["G", true, "1000.50", "0.00"],
+  ] as const) {
+    state.sectionData["income-retirement"] = { entries: [{ ...original, distributionCode: code, isIraSepSimple }] };
+    expect(validateSection(state, "income-retirement").status).toBe("complete");
+    const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
+    expect(input.form1099R?.[0]).toMatchObject({ taxYear: 2026, distributionCode: code, taxableAmount: "0", iraSepSimple: isIraSepSimple });
+    const result = calculateForm1099R(input.form1099R, { taxYear: 2026 });
+    expect(result.iraGrossReported.toFixed(2)).toBe(iraGross);
+    expect(result.pensionGrossReported.toFixed(2)).toBe(pensionGross);
+    expect(result.iraTaxable.plus(result.pensionTaxable).isZero()).toBe(true);
+  }
+});
+
 it("keeps the 2026 qualified lump-sum reporting decision for a spaced Code A pair", () => {
   const statement = { ...completeRetirementSource, sourceTaxYear: "2026", distributionCode: "4 A" };
   expect(() => buildRetirementInputs([statement], "single", 2026)).toThrow(/actual reporting method/i);

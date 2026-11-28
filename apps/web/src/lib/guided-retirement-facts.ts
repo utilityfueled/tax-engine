@@ -400,6 +400,9 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
     }
     for (const field of ["netUnrealizedAppreciation", "otherSourceAmount", "inPlanRothRolloverAmount"] as const) if (!amountError(entry[field], field) && parseGuidedCurrency(entry[field]).gt(0)) fail(field, "Preserve this actual source amount; it needs its additional retirement worksheet before calculation.");
     if (entry.isIraSepSimple === true && !amountError(entry.employeeContributions, "employee contributions") && parseGuidedCurrency(entry.employeeContributions).gt(0)) fail("ira-employee-contributions", "Positive IRA contribution/basis amounts need their actual Form 8606 history.");
+    if (entry.sourceTaxYear === "2026" && code === "H" && entry.isIraSepSimple === true) {
+      fail("code-h-ira-source", "Code H requires a designated Roth employer-plan source and an unchecked Box 7b. Reconcile these facts with the original statement.");
+    }
     if (["G", "H"].includes(code)) {
       if (entry.directRolloverConfirmed !== true) fail("rollover", "Confirm the actual direct rollover destination and completion from source records.");
       if (!amountError(entry.taxableAmount, "taxable amount") && !parseGuidedCurrency(entry.taxableAmount).isZero()) fail("rollover-taxable", "Taxable rollover or conversion amounts need the actual conversion and basis worksheet.");
