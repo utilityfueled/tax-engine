@@ -19,6 +19,10 @@ export const Form6198PartII2026Schema = z.object({
   noQbiOrSelfEmploymentAmountsConfirmed: z.literal(true),
   box1Loss: z.string().regex(/^-\d+(?:\.\d{1,2})?$/),
   openingAdjustedBasis: nonnegativeAmount,
+  currentOutsideBasis: z.object({
+    reference: sourceText,
+    availableForLosses: nonnegativeAmount,
+  }).strict().optional(),
   increases: nonnegativeAmount,
   decreases: nonnegativeAmount,
 }).strict();

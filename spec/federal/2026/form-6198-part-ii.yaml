@@ -4,6 +4,7 @@ irsReference: "https://www.irs.gov/instructions/i6198"
 references:
   - "https://www.irs.gov/pub/irs-pdf/f6198.pdf"
   - "https://www.irs.gov/instructions/i6198"
+  - "https://www.irs.gov/instructions/i1065sk1"
   - "https://uscode.house.gov/us/usc/t26/s465"
 lines:
   - line: "6-7-9-originals"
@@ -16,14 +17,30 @@ lines:
       input. Require explicit known amounts, including zero, for the opening
       adjusted basis on the first day of the year and Part II increases and
       decreases. Confirm one ordinary nonpassive activity with no prior
-      at-risk losses, recapture or Part III method. Require the full Box 1
-      loss to survive the separate partnership basis calculation and known
-      zero for the unsupported QBI and self-employment amounts. Hold
+      at-risk losses, recapture or Part III method. Require known zero for
+      the unsupported QBI and self-employment amounts. Hold
       competing sources or unsupported activity composition and never fill
       in missing evidence.
     testRef: "tests/engine/forms/form-6198-part-ii-2026.test.ts::requires actual same-owner K-1, basis and complete Part II records"
     testRefs:
       - "tests/engine/forms/form-6198-part-ii-2026.test.ts::holds duplicate original sources and standalone legacy calculation"
+  - line: "outside-basis-first"
+    description: "Separate the ordinary partnership outside-basis carry from the at-risk carry"
+    formula: >-
+      Apply the partnership outside-basis limitation before the at-risk
+      limitation. If any Box 1 loss is limited at the basis step, require the
+      actual current outside-basis workpaper reference and its basis available
+      for losses. Reconcile the original amount to the independently computed
+      basis available for losses, including verified zero. Apply the Part II
+      amount at risk only to the admitted ordinary loss. Preserve basis-disallowed
+      loss solely in the outside-basis carry; at-risk suspension comprises only
+      basis-admitted loss that exceeds the amount at risk. An entirely basis-
+      disallowed loss creates no at-risk suspension. A supplied current workpaper
+      must reconcile even when the full loss passes the basis limitation.
+    testRef: "tests/engine/forms/form-6198-part-ii-2026.test.ts::separates original outside-basis and at-risk suspended amounts"
+    testRefs:
+      - "tests/engine/forms/form-6198-part-ii-2026.test.ts::requires matching current outside-basis proof when any ordinary loss is basis-limited"
+      - "tests/engine/forms/form-6198-part-ii-2026.test.ts::keeps an entirely basis-disallowed loss out of the at-risk carry"
   - line: "8-10a-10b-20-21"
     description: "Compute the current Form 6198 limit before the ordinary loss transfer"
     formula: >-

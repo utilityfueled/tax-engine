@@ -25,6 +25,7 @@ function normalizedName(value: string): string {
 export function calculateForm6198PartII2026(
   k1: ScheduleK1,
   basisAdjustedLoss: Decimal,
+  basisAvailableForLosses: Decimal | undefined,
   taxpayer: K1CharitableReturnInput["taxpayer"] | undefined,
 ) {
   if (taxpayer?.taxYear !== 2026) throw new Error("Form 6198 Part II original sources require a 2026 return.");
@@ -61,9 +62,17 @@ export function calculateForm6198PartII2026(
     || Object.values(k1.priorSuspendedLosses ?? {}).some(value => !d(value).isZero())
     || !d(k1.section199AQBI).isZero() || k1.selfEmploymentFactsConfirmed !== true
     || k1.selfEmploymentEarnings === undefined || !d(k1.selfEmploymentEarnings).isZero()
-    || k1.selfEmploymentNetEarningsAfterAdjustments === undefined || !d(k1.selfEmploymentNetEarningsAfterAdjustments).isZero()
-    || !basisAdjustedLoss.eq(box1Loss)) {
-    throw new Error("Form 6198 Part II requires the full basis-allowed ordinary nonpassive loss and no other activity amounts.");
+    || k1.selfEmploymentNetEarningsAfterAdjustments === undefined || !d(k1.selfEmploymentNetEarningsAfterAdjustments).isZero()) {
+    throw new Error("Form 6198 Part II requires the ordinary nonpassive loss and no other activity amounts.");
+  }
+
+  if (basisAvailableForLosses === undefined
+    || !basisAdjustedLoss.eq(Decimal.min(box1Loss.abs(), basisAvailableForLosses).negated())) {
+    throw new Error("Form 6198 Part II requires the independently calculated ordinary partnership basis limit.");
+  }
+  const outsideBasis = source.currentOutsideBasis;
+  if (outsideBasis ? !basisAvailableForLosses.eq(d(outsideBasis.availableForLosses)) : !basisAdjustedLoss.eq(box1Loss)) {
+    throw new Error("Form 6198 Part II requires a matching current outside-basis workpaper for the ordinary loss.");
   }
 
   const line7 = d(source.increases);
@@ -82,7 +91,9 @@ export function calculateForm6198PartII2026(
   audit.record("Form 6198", "10a", "Part II net amount", line10a, "Line 8 minus line 9");
   audit.record("Form 6198", "10b", "Part II amount at risk", line10b, "Greater of line 10a or zero");
   audit.record("Form 6198", "20", "Amount at risk", line10b, "Part II amount from line 10b");
-  audit.record("Form 6198", "21", "Deductible loss", deductibleLoss, "Lesser of the basis-allowed Box 1 loss or line 20");
+  audit.record("Form 6198", "21", "Deductible loss", deductibleLoss, "Lesser of the basis-allowed Box 1 loss or line 20", {
+    "Basis-admitted Box 1 loss": basisAdjustedLoss.abs(),
+  });
   return {
     netAmount: deductibleLoss.negated(),
     atRiskAmount: line10b,

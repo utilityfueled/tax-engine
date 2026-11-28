@@ -213,6 +213,7 @@ function applyAtRiskLimitation(
   audit: AuditTrail,
   input: AtRiskReturnContext,
   k1Index: number,
+  basisAvailableForLosses: Decimal | undefined,
 ): {
   netAmount: Decimal;
   atRiskAmount?: Decimal;
@@ -234,7 +235,7 @@ function applyAtRiskLimitation(
       if (linkedSource || duplicateActivity) {
         throw new Error("Form 6198 Part II requires a single original Schedule K-1 without a competing activity source.");
       }
-      const result = calculateForm6198PartII2026(k1, rawNetAmount, input.taxpayer);
+      const result = calculateForm6198PartII2026(k1, rawNetAmount, basisAvailableForLosses, input.taxpayer);
       audit.merge(result.lines);
       return result;
     }
@@ -604,7 +605,7 @@ export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'ren
     } = charitableRisk && k1.form6198?.partII2026 === undefined
       ? { netAmount: charitableRisk.ordinaryAmount, atRiskAmount: charitableRisk.worksheet.amountAtRisk,
         suspendedAtRiskLoss: charitableRisk.ordinarySuspended.negated() }
-      : applyAtRiskLimitation(k1, basisAdjustedAmount, audit, input, k1Index);
+      : applyAtRiskLimitation(k1, basisAdjustedAmount, audit, input, k1Index, basisResult?.basisAvailableForLosses);
 
     let nonpassiveIncome = new Decimal(0);
     let nonpassiveLoss = new Decimal(0);

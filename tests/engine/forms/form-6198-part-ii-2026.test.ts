@@ -115,6 +115,52 @@ it("holds negative Part II capacity for separate review before the worksheet flo
   expect(() => calculateFederalTax(canonical)).toThrow(/Form 6198.*Part III.*recapture/i);
 });
 
+it("separates original outside-basis and at-risk suspended amounts", () => {
+  const canonical = input({ partII2026: { ...partII2026, openingAdjustedBasis: "5000.00", decreases: "2000.00",
+    currentOutsideBasis: { reference: "Completed adjusted outside-basis worksheet", availableForLosses: "5000.00" },
+  } }, 2026, { beginningBasis: "5000.00" });
+  const result = calculateScheduleE(canonical);
+  const partnership = result.partnerships[0];
+  expect.soft(partnership.basisAdjustedNetAmount.toFixed(2)).toBe("-5000.00");
+  expect.soft(partnership.basisResult?.suspendedLossCarryforward.ordinary.toFixed(2)).toBe("1000.00");
+  expect.soft(partnership.atRiskAmount?.toFixed(2)).toBe("3000.00");
+  expect.soft(partnership.suspendedAtRiskLoss.toFixed(2)).toBe("-2000.00");
+  expect.soft(partnership.nonpassiveLoss.toFixed(2)).toBe("-3000.00");
+  expect.soft(result.lines.find(line => line.form === "Form 6198" && line.line === "21")?.value.toFixed(2)).toBe("3000.00");
+  const federal = calculateFederalTax(canonical);
+  expect.soft(federal.otherIncome.toFixed()).toBe("-3000");
+  expect(federal.agi.toFixed()).toBe("82000");
+});
+
+it("requires matching current outside-basis proof when any ordinary loss is basis-limited", () => {
+  const original = { ...partII2026, openingAdjustedBasis: "5000.01", decreases: "2000.00" };
+  expect.soft(() => calculateScheduleE(input({ partII2026: original }, 2026, { beginningBasis: "5000.01" })))
+    .toThrow(/Form 6198.*current outside.basis/i);
+  const proof = { reference: "Completed adjusted outside-basis worksheet", availableForLosses: "5000.00" };
+  const mismatched = input({ partII2026: { ...original, currentOutsideBasis: proof } }, 2026, { beginningBasis: "5000.01" });
+  expect.soft(() => calculateScheduleE(mismatched)).toThrow(/Form 6198.*current outside.basis/i);
+  const matching = input({ partII2026: { ...original, currentOutsideBasis: { ...proof, availableForLosses: "5000.01" } } },
+    2026, { beginningBasis: "5000.01" });
+  const partnership = calculateScheduleE(matching).partnerships[0];
+  expect.soft(partnership.basisResult?.suspendedLossCarryforward.ordinary.toFixed(2)).toBe("999.99");
+  expect.soft(partnership.nonpassiveLoss.toFixed(2)).toBe("-3000.01");
+  expect.soft(partnership.suspendedAtRiskLoss.toFixed(2)).toBe("-2000.00");
+  expect.soft(() => input({ partII2026: { ...partII2026, currentOutsideBasis: { ...proof, reference: "" } } })).toThrow();
+  expect(() => calculateScheduleE(input({ partII2026: { ...partII2026, currentOutsideBasis: proof } })))
+    .toThrow(/Form 6198.*current outside.basis/i);
+});
+
+it("keeps an entirely basis-disallowed loss out of the at-risk carry", () => {
+  const canonical = input({ partII2026: { ...partII2026, openingAdjustedBasis: "0", decreases: "0",
+    currentOutsideBasis: { reference: "Completed adjusted outside-basis worksheet", availableForLosses: "0" },
+  } }, 2026, { beginningBasis: "0" });
+  const partnership = calculateScheduleE(canonical).partnerships[0];
+  expect.soft(partnership.basisResult?.suspendedLossCarryforward.ordinary.toFixed()).toBe("6000");
+  expect.soft(partnership.suspendedAtRiskLoss.toFixed()).toBe("0");
+  expect.soft(partnership.nonpassiveLoss.toFixed()).toBe("0");
+  expect(calculateFederalTax(canonical).agi.toFixed()).toBe("85000");
+});
+
 it("holds duplicate original sources and standalone legacy calculation", () => {
   const canonical = input({ partII2026 });
   const original = canonical.scheduleK1[0];
