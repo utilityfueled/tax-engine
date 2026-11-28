@@ -18,7 +18,7 @@ vi.mock("@/models/constants.js", async (importOriginal) => {
 });
 
 const context = {
-  taxYear: 2026, filingStatus: "single", personal: {
+  taxYear: 2026, asOfDate: "2027-04-14", filingStatus: "single", personal: {
     dateOfBirth: "1990-01-15", standardDeductionFacts: { primaryCanBeClaimedAsDependent: false },
   },
   iraContributions: {
@@ -46,7 +46,7 @@ const historicalRow = {
   },
 };
 
-function historicalInterview(row: GuidedSaversCreditDistribution = historicalRow, ...otherRows: GuidedSaversCreditDistribution[]) {
+function guidedSaversInterview(credit: GuidedSaversCreditData) {
   const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null });
   state.taxYear = 2026;
   const personal = state.sectionData["personal-info"];
@@ -54,9 +54,13 @@ function historicalInterview(row: GuidedSaversCreditDistribution = historicalRow
   state.sectionData["personal-info"] = { ...personal, dateOfBirth: "1960-01-15" };
   state.sectionData["income-w2"] = { entries: [{ ...completeW2Entry, wages: "30000", federalWithheld: "2000", socialSecurityWages: "30000", socialSecurityWithheld: "1860", medicareWages: "30000", medicareWithheld: "435" }] };
   state.sectionData.adjustments = { ...emptyAdjustmentData, iraContributions: { ...completeIraSources, ...context.iraContributions } };
-  return updateSectionData(state, "credits", { ...emptyCreditsData, saversCredit: {
+  return updateSectionData(state, "credits", { ...emptyCreditsData, saversCredit: credit });
+}
+
+function historicalInterview(row: GuidedSaversCreditDistribution = historicalRow, ...otherRows: GuidedSaversCreditDistribution[]) {
+  return guidedSaversInterview({
     ...draft, testingPeriod: { ...draft.testingPeriod, distributions: [row, ...otherRows] },
-  } });
+  });
 }
 
 function reopenHistoricalInterview(state: ReturnType<typeof historicalInterview>) {
@@ -304,6 +308,44 @@ it("transfers the ordinary Roth contribution into Form 8880 and Schedule 3", asy
   expect(result.form8880?.line9.toFixed()).toBe("0.1");
   expect(result.form8880?.line12.toFixed()).toBe("200");
   expect(result.schedule3?.retirementSavingsCredit.toFixed()).toBe("200");
+});
+
+it.each([
+  ["2027-02-10", "2026-11-27", "2027-04-15", /already received/i],
+  ["2027-02-10", "2027-02-09", "2027-04-15", /already received/i],
+  ["2027-02-10", "2027-02-10", "2027-04-15", "500.25"],
+  ["2027-04-14", "2027-04-14", "2027-04-15", "500.25"],
+  ["2027-04-15", "2027-04-15", "2027-04-15", /testing period/i],
+  ["2027-04-15", "2027-04-15", "2027-10-15", "500.25"],
+  ["2027-10-14", "2027-10-13", "2027-10-15", /already received/i],
+  ["2027-10-14", "2027-10-14", "2027-10-15", "500.25"],
+  ["2027-10-15", "2027-10-15", "2027-10-15", /testing period/i],
+  [null, "2026-11-27", "2027-04-15", "0"],
+] as const)("reopens a 2026 testing-period receipt on %s with observation date %s and due date %s", (receivedDate, asOf, dueDate, expected) => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  try {
+    vi.setSystemTime(new Date(`${asOf}T12:00:00`));
+    const distributions = receivedDate === null ? [] : [
+      { sourceReference: "Synthetic issuer receipt", accountHolder: "primary" as const, receivedDate, amount: "500.25" },
+    ];
+    const credit = { ...draft, testingPeriod: { ...draft.testingPeriod, dueDate, distributions } };
+    const reopened = reopenHistoricalInterview(guidedSaversInterview(credit));
+    expect(reopened.sectionData.credits?.saversCredit?.testingPeriod).toEqual(credit.testingPeriod);
+    const validation = validateSection(reopened, "credits");
+    const canonical = buildTaxInputFromGuidedData(reopened);
+    if (typeof expected === "string") {
+      expect(validation.status).toBe("complete");
+      const input = TaxYearInputSchema.parse(canonical);
+      expect(input.form8880?.sourceFacts2026?.primary.testingPeriodDistributionReduction).toBe(expected);
+      expect(calculateFederalTax(input).form8880?.line4a.toFixed()).toBe(expected);
+    } else {
+      expect.soft(validation.status).toBe("partial");
+      expect.soft(validation.fieldErrors?.saversCredit).toMatch(expected);
+      expect.soft(canonical).toBeNull();
+    }
+  } finally {
+    vi.useRealTimers();
+  }
 });
 
 it("sums distinct actual testing-period distributions without rounding cents", () => {

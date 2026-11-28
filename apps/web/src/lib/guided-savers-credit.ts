@@ -1,10 +1,11 @@
 import Decimal from "decimal.js";
 import type { z } from "zod";
 import { Form8880AnnualSchema, getForm8880HistoricalIraPaymentYear, readForm8880AnnualSources } from "@/models/form-8880-sources";
+import { currentLocalCivilDate, isActualDate } from "@/utils/civil-date";
 import { sumSourceMoney } from "@/utils/sum-source-money";
 import type { AdjustmentData, FilingStatus, GuidedFlowState, RetirementEntryData, W2EntryData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
-import { hasEnteredAmount, isActualDate } from "./guided-required-facts";
+import { hasEnteredAmount } from "./guided-required-facts";
 import { isStartedRetirement } from "./guided-retirement-source-inputs";
 
 const electiveDeferralFields = ["box12CodeD", "box12CodeE", "box12CodeF", "box12CodeG", "box12CodeH", "box12CodeS", "box12CodeAA", "box12CodeBB", "box12CodeEE"] as const;
@@ -50,6 +51,7 @@ export interface GuidedSaversCreditData {
 
 export interface GuidedSaversCreditContext {
   taxYear: number | null | undefined;
+  asOfDate: string;
   filingStatus: FilingStatus | null | undefined;
   iraContributions: Pick<NonNullable<AdjustmentData["iraContributions"]>,
     "contributionTaxYear" | "contributionTimingConfirmed" | "specialContributionRulesRequired" | "sourceFactsConfirmed"
@@ -84,6 +86,7 @@ export function guidedSaversCreditContext(state: GuidedFlowState): GuidedSaversC
   });
   return {
     taxYear: state.taxYear,
+    asOfDate: currentLocalCivilDate(),
     filingStatus: state.segmentation.filingStatus,
     iraContributions: sections.adjustments?.iraContributions,
     personal,
@@ -132,7 +135,7 @@ function actualAmount(value: string | undefined, label: string): Decimal {
   return amount;
 }
 
-function distributionReduction(period: GuidedSaversCreditData["testingPeriod"]): string {
+function distributionReduction(period: GuidedSaversCreditData["testingPeriod"], asOfDate: string): string {
   if (period.distributionsConfirmed !== true || !["2027-04-15", "2027-10-15"].includes(period.dueDate) || !Array.isArray(period.distributions)) {
     throw new Error("Confirm the actual testing-period distributions and the applicable ordinary or extended return due date.");
   }
@@ -146,6 +149,7 @@ function distributionReduction(period: GuidedSaversCreditData["testingPeriod"]):
     if (!isActualDate(row.receivedDate) || row.receivedDate < "2024-01-01" || row.receivedDate >= period.dueDate) {
       throw new Error("The distribution must have been received during the Form 8880 testing period.");
     }
+    if (row.receivedDate > asOfDate) throw new Error("Enter only distributions you have already received for Form 8880.");
     if (row.receivedDate.startsWith("2026-")) throw new Error("A 2026 distribution needs separate reconciliation with the current return's retirement sources.");
     const amount = actualAmount(row.amount, "distribution amount");
     if (amount.isZero()) throw new Error("Each included distribution requires a positive amount from its actual record.");
@@ -265,7 +269,7 @@ export function buildGuidedSaversCredit(data: GuidedSaversCreditData | undefined
       primary: {
         qualifyingStudentMonths: Number(data.qualifyingStudentMonths),
         dependentDeductionAllowedToAnotherTaxpayer: dependency,
-        testingPeriodDistributionReduction: distributionReduction(data.testingPeriod),
+        testingPeriodDistributionReduction: distributionReduction(data.testingPeriod, context.asOfDate),
       },
       americanSamoaAgiRestoration: "0",
       puertoRicoAgiRestoration: "0",

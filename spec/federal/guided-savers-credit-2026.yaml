@@ -26,6 +26,17 @@ lines:
       empty list supplies zero. Distributions received in 2026 or positive
       current-return Form 1099-R originals require separate source reconciliation.
     testRef: "tests/guided-interview/guided-savers-credit-2026.test.ts::sums distinct actual testing-period distributions without rounding cents"
+  - line: "4, observed receipt"
+    description: Hold a guided distribution until it has been received
+    formula: >-
+      For the confirmed 2026 worksheet, the receipt date must be on or before
+      the current local civil date and strictly before the applicable ordinary
+      or extended return due date. Preserve entered source facts when a future
+      receipt is held. A confirmed empty list still supplies zero. The canonical
+      aggregate and optional dated 2024 or 2025 proof retain their existing
+      contracts.
+    irsRef: "Final 2026 Form 8880, line 4 instructions (https://www.irs.gov/pub/irs-prior/f8880--2026.pdf#page=2)"
+    testRef: "tests/guided-interview/guided-savers-credit-2026.test.ts::reopens a 2026 testing-period receipt on %s with observation date %s and due date %s"
   - line: "4, historical original proof"
     description: Reconcile a single fully taxable 2024 or 2025 traditional IRA payment from two historical issuer records
     formula: >-

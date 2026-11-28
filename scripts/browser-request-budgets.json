@@ -409,7 +409,7 @@
     "apps/web/src/lib/guided-rrta-paper-sources.ts": "6f3df196cbe44799e95b69459330d28e5d81ab527fd257419388eaac03bbd04b",
     "apps/web/src/lib/guided-rrta-payroll-sources.ts": "d3d581734afe870c5aa317bde17fe3ec8830e69a628278b182cf52a14ce6a60e",
     "apps/web/src/lib/guided-salt-facts.ts": "8d0f002ba230e852608f81834b244df77f26e204f136001102da8d40165dc80a",
-    "apps/web/src/lib/guided-savers-credit.ts": "4e0928fb40f492c2188539190ace2623705306d251b433ed8be59b2c64e03d84",
+    "apps/web/src/lib/guided-savers-credit.ts": "1f335148e7c977af6ca8124ad3fae58584cf1c560bddeab4042c11e0aff06754",
     "apps/web/src/lib/guided-savings-bond-facts.ts": "b294042f2ca4d1b77520c95616a66f596cc06e0d766080ad3e82fd721c2e47e3",
     "apps/web/src/lib/guided-savings-bond-reissues.ts": "930c90b3b17c0929c972bfdc6ebb04bc72738d183fa71b7f79c008b2e0b5a80b",
     "apps/web/src/lib/guided-schedule-1-a-facts.ts": "525ff7008a20be2e88da5cadb979d0a5bbb6ec6ae151b27a1cd41bcc447ea333",
