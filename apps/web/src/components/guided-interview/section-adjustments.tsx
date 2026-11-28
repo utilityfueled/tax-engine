@@ -6,6 +6,7 @@ import { CurrentLossOriginDetails } from "./current-loss-origin-details";
 import { CodNolDetails } from "./cod-nol-details";
 import { CodPrincipalResidenceDetails } from "./cod-principal-residence-details";
 import { K1LossSourceDetails } from "./k1-loss-source-details";
+import { Form6198PartIIDetails } from "./form-6198-part-ii-details";
 import { ReitPtpLossDetails } from "./reit-ptp-loss-details";
 import { HealthInsuranceSourceDetails } from "./health-insurance-source-details";
 import type { HealthInsuranceSourceOption } from "@/lib/guided-health-insurance-facts";
@@ -38,6 +39,7 @@ export function SectionAdjustments({
   marketplacePolicies,
   hasHealthInsurance,
   hasMovingExpenses,
+  hasK1LossSources,
   hasSpouse = false,
   investments,
   onClearReitPtpLossSelection,
@@ -55,6 +57,7 @@ export function SectionAdjustments({
   marketplacePolicies?: MarketplacePolicyOption[];
   hasHealthInsurance?: boolean;
   hasMovingExpenses?: boolean;
+  hasK1LossSources?: boolean;
   hasSpouse?: boolean;
   investments?: InvestmentData;
   onClearReitPtpLossSelection?: () => void;
@@ -115,6 +118,9 @@ export function SectionAdjustments({
         <ReitPtpLossDetails data={current.reitPtpLossSource} taxYear={taxYear} onClearSelection={onClearReitPtpLossSelection}
           onChange={reitPtpLossSource => onDataChange({ ...current, reitPtpLossSource })} />
         <K1LossSourceDetails data={current.k1LossSources} nol={current.netOperatingLossSources} onChange={k1LossSources => onDataChange({ ...current, k1LossSources })} />
+        {((taxYear === 2026 && hasK1LossSources) || current.form6198PartII !== undefined) && <Form6198PartIIDetails
+          data={current.form6198PartII} taxYear={taxYear} spouseEligible={filingStatus === 'mfj' && hasSpouse}
+          onChange={form6198PartII => onDataChange({ ...current, form6198PartII })} />}
         <CodNolDetails data={current.codNolSources} onChange={codNolSources => onDataChange({ ...current, codNolSources })} />
         <CodPrincipalResidenceDetails data={current.codPrincipalResidenceSources} taxYear={taxYear} onChange={codPrincipalResidenceSources => onDataChange({ ...current, codPrincipalResidenceSources })} />
         <CurrentLossOriginDetails data={current.currentLossOrigin} investments={investments} k1Sources={current.k1LossSources?.activities?.map((source, index) => [`scheduleK1:${index}`, `K-1 ${index + 1}: ${source.entityName?.trim() || "Original entity name required"}`])} onChange={currentLossOrigin => onDataChange({ ...(data ?? emptyAdjustmentData), currentLossOrigin })} />

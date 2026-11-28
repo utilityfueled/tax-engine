@@ -32,6 +32,7 @@ import { buildMovingExpenses } from './guided-moving-expenses';
 import { buildGuidedNetOperatingLoss, netOperatingLossFactErrors } from "./guided-net-operating-loss";
 import { buildCurrentLossOrigin, currentLossOriginFactErrors } from "./guided-current-loss-origin";
 import { k1LossSourceFactErrors } from "./guided-k1-qbi-sources";
+import { buildGuidedForm6198PartII } from "./guided-form-6198-part-ii";
 import { buildGuidedK1CharitableSources, k1CharitableSourceFactErrors } from "./guided-k1-charitable-sources";
 import { buildGuidedCodNol, codNolFactErrors } from "./guided-cod-nol";
 import { buildGuidedCharitableCarryover, charitableCarryoverFactErrors } from "./guided-charitable-carryover";
@@ -863,6 +864,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   let form8919Sources: ReturnType<typeof buildGuidedForm8919ReasonA>;
   let paymentFacts: ReturnType<typeof allPaymentFacts>;
   let reitPtpLossSource: ReturnType<typeof buildGuidedReitPtpLossSource>;
+  let ordinaryAtRiskK1: ReturnType<typeof buildGuidedForm6198PartII>;
   try {
     reitPtpLossSource = buildGuidedReitPtpLossSource(state);
     form8919Sources = buildGuidedForm8919ReasonA(state);
@@ -910,6 +912,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     assertKnownFacts(healthInsuranceSourceErrors(state));
     assertKnownFacts(foreignIncomeFactErrors(state));
     assertKnownFacts(netOperatingLossFactErrors(adjustmentData?.netOperatingLossSources, state.taxYear, segmentation.filingStatus, personalInfo, segmentation.lifeEvents.includes("net-operating-loss"), deductionData, adjustmentData?.k1LossSources, adjustmentData?.codNolSources?.attributeSources));
+    ordinaryAtRiskK1 = buildGuidedForm6198PartII(state);
     assertKnownFacts(k1LossSourceFactErrors(state));
     assertKnownFacts(k1CharitableSourceFactErrors(state));
     assertKnownFacts(cryptoDonationFactErrors(deductionData?.cryptoDonations, state.taxYear));
@@ -1062,6 +1065,8 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const codSources = buildGuidedCodNol(adjustmentData?.codNolSources, state);
   const residenceCodSources = buildGuidedCodPrincipalResidence(adjustmentData?.codPrincipalResidenceSources, state);
   const k1Sources = buildGuidedK1CharitableSources(state);
+  const originalK1s = k1Sources?.scheduleK1 ?? (ordinaryAtRiskK1 ? [ordinaryAtRiskK1]
+    : otherTaxesData?.foreignTaxElection?.qualifiedK3Statements?.length ? buildGuidedForeignTaxK3Sources(state) : undefined);
   const cryptoDonations = buildGuidedCryptoDonations(deductionData?.cryptoDonations, state.taxYear);
   const currentCapitalCarry = form172?.capitalSources?.priorCapitalLosses;
 
@@ -1102,7 +1107,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     ...(form3903 === undefined ? {} : { form3903 }),
     netOperatingLoss: buildGuidedNetOperatingLoss(adjustmentData?.netOperatingLossSources, state.taxYear, segmentation.filingStatus, personalInfo, deductionData, adjustmentData?.k1LossSources, adjustmentData?.codNolSources?.attributeSources),
     ...(cryptoDonations !== undefined ? { cryptoIncome: { donations: cryptoDonations } } : {}),
-    scheduleK1: buildGuidedCurrentMtcOriginals(codSources?.form982AttributeSources?.currentMinimumTaxCredit?.sourceYearCalculation, k1Sources?.scheduleK1 ?? (otherTaxesData?.foreignTaxElection?.qualifiedK3Statements?.length ? buildGuidedForeignTaxK3Sources(state) : undefined)),
+    scheduleK1: buildGuidedCurrentMtcOriginals(codSources?.form982AttributeSources?.currentMinimumTaxCredit?.sourceYearCalculation, originalK1s),
     qbiLossSources: k1Sources?.qbiLossSources,
     k1CharitableSources: k1Sources?.k1CharitableSources,
     form172,

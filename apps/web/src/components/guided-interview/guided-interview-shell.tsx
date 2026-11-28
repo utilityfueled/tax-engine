@@ -709,6 +709,7 @@ function SectionContent({
           hasHsa={state.segmentation.lifeEvents.includes("hsa-contributions")}
           hasHealthInsurance={state.segmentation.lifeEvents.includes("self-employed-health-insurance")}
           hasMovingExpenses={state.segmentation.lifeEvents.includes('moving-expenses') || hasMovingW2Source(state)}
+          hasK1LossSources={state.segmentation.lifeEvents.includes('k1-loss-sources')}
           hasSpouse={!!getSectionData(state, 'personal-info')?.spouse}
           filingStatus={state.segmentation.filingStatus}
           onClearReitPtpLossSelection={state.segmentation.lifeEvents.includes("reit-ptp-loss-carryforward")

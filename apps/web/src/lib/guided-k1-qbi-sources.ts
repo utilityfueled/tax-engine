@@ -145,7 +145,7 @@ export function buildGuidedK1Sources(data: K1LossSourcesData | undefined, state:
 export function k1LossSourceFactErrors(state: GuidedFlowState): Record<string, string> {
   try {
     const data = state.sectionData.adjustments?.k1LossSources;
-    if (!data && state.segmentation.lifeEvents.includes('k1-loss-sources')) {
+    if (!data && state.sectionData.adjustments?.form6198PartII === undefined && state.segmentation.lifeEvents.includes('k1-loss-sources')) {
       throw new Error('Enter the actual K-1 and qualified loss sources, or remove that setup choice.');
     }
     if (!data && state.sectionData.adjustments?.netOperatingLossSources?.vintages?.some(row => row.originKind === 'excess_business_loss')) {

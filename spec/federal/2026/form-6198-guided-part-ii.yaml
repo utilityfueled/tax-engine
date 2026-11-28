@@ -1,0 +1,60 @@
+form: "Guided Form 6198 Part II original records"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i6198"
+references:
+  - "https://www.irs.gov/pub/irs-pdf/f6198.pdf (Rev. November 2025, Parts I, II and IV)"
+  - "https://www.irs.gov/instructions/i6198 (Lines 6, 7, 9, 10b and 21)"
+  - "https://www.irs.gov/instructions/i1065sk1 (basis, at-risk and passive activity loss order)"
+  - "https://uscode.house.gov/us/usc/t26/s704/ (partner's adjusted basis loss limitation)"
+  - "spec/federal/2026/form-6198-part-ii.yaml"
+lines:
+  - line: "ordinary-guided-original"
+    description: "Collect the actual ordinary nonpassive partnership loss and Part II workpaper"
+    formula: >-
+      In Adjustments, collect one actual current domestic non-PTP partnership
+      Schedule K-1, bind its independently reported owner, name, TIN suffix,
+      EIN and year to the return, and retain the original statement reference,
+      opening adjusted basis workpaper reference and current Part II worksheet
+      reference. Require the original Box 1 loss and a separate opening-basis
+      calculation before applying coverage. Require explicit known values for
+      lines 6, 7 and 9; keep blanks and unanswered confirmations unresolved.
+      Require independently confirmed zero other K-1 amounts, no prior
+      suspended basis, passive or at-risk losses, and known zero original
+      Section 199A amount, Box 14 amount and adjusted self-employment earnings,
+      with the actual farm or nonfarm classification required by Schedule SE.
+      A basis-allowed loss of $6,000, line 6 of $12,000, line 7 of $0 and line 9
+      of $8,000 gives at-risk capacity of $4,000, a $4,000 nonpassive loss and
+      $2,000 suspended at risk. With $85,000 wages, AGI is $81,000. Use the
+      canonical calculation once without creating a QBI or prior-loss packet.
+    testRef: "tests/guided-interview/guided-form-6198-part-ii.test.ts::reopens ordinary 2026 Form 6198 records and transfers the limited loss once"
+  - line: "saved-source-admission"
+    description: "Preserve independently confirmed identity and original amounts in saved workspaces"
+    formula: >-
+      A missing or contradictory owner, amount, confirmation, annual source,
+      insufficient independent basis or competing K-1 source holds calculation.
+      Retain recorded facts when the year changes and revoke stale confirmation
+      when original amounts or the owning taxpayer's full return identity change,
+      including a change that leaves the entered last-four suffix unchanged.
+      Simple formatting and edits to the other taxpayer preserve confirmation.
+      Only explicit removal clears this draft.
+      Preserve existing specialized K-1 methods and filing gates.
+    testRef: "tests/guided-interview/guided-form-6198-part-ii.test.ts::holds missing, contradictory and competing Form 6198 sources without losing saved facts"
+    testRefs:
+      - "tests/apps/web/guided-form-6198-part-ii-interactions.test.tsx::collects ordinary Part II facts in 2026 and exposes retained drafts for removal"
+      - "tests/guided-interview/guided-form-6198-part-ii.test.ts::rechecks a saved Form 6198 original when the owning taxpayer changes without changing the suffix"
+  - line: "current-outside-basis"
+    description: "Reconcile the original current outside-basis workpaper before at-risk limits"
+    formula: >-
+      Add the original current outside-basis reference and complete available-for-losses
+      amount together. Require both when the independently calculated basis does not
+      admit the whole Box 1 loss, and reconcile them whenever supplied. In the
+      ordinary-only cohort, the current available basis equals the actual opening
+      basis after confirming no other basis-affecting items. If the originals show
+      different amounts, retain the facts and hold the case. At $5,000 of proven
+      basis, a $6,000 Box 1 loss and $3,000 of at-risk capacity produce separate
+      $1,000 basis and $2,000 at-risk suspensions, with a $3,000 loss transfer and
+      AGI of $82,000 with $85,000 wages. A proven zero basis with a $6,000 Box 1 loss
+      suspends all $6,000 at basis and transfers zero. Unknown basis remains blank.
+    testRef: "tests/guided-interview/guided-form-6198-part-ii.test.ts::reopens current outside-basis proof and separates the basis and at-risk losses"
+    testRefs:
+      - "tests/apps/web/guided-form-6198-part-ii-interactions.test.tsx::collects ordinary Part II facts in 2026 and exposes retained drafts for removal"
