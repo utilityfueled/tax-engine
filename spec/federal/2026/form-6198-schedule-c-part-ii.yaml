@@ -1,0 +1,68 @@
+form: "Form 6198 Part II ordinary sole-proprietor workpaper"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i6198"
+references:
+  - "https://www.irs.gov/pub/irs-pdf/f6198.pdf"
+  - "https://www.irs.gov/instructions/i1040sc"
+  - "https://uscode.house.gov/us/usc/t26/s465"
+lines:
+  - line: "1-5-originals"
+    description: "Bind one ordinary Schedule C loss to the same actual activity"
+    formula: >-
+      Require a confirmed 2026 original-only simplified Part II packet for one
+      continuing domestic sole proprietorship of the primary owner. Bind the
+      owner's name and original identity, activity description and original
+      Schedule C reference to the separately supplied current return context.
+      Require known material participation and some investment not at risk.
+      Use an exactly matching negative pre-limit ordinary Schedule C loss on
+      lines 1 and 5. The supported packet confirms that no other income, gains,
+      deductions, separately allocated losses, or prior at-risk loss enter the
+      computation. Hold other activities or methods, absent or conflicting
+      evidence, prior suspended amounts and recapture.
+    testRef: "tests/engine/forms/form-6198-schedule-c-part-ii-2026.test.ts::requires the same 2026 primary owner, business and exact Schedule C loss"
+  - line: "6-10b"
+    description: "Compute the simplified amount at risk from actual opening basis and current changes"
+    formula: >-
+      Line 6 uses verified first-day adjusted activity asset basis before any
+      liabilities. Require separate complete original references and known
+      amounts, including zero, for current line 7 increases and line 9
+      decreases. Exclude current Part I income and deductions from those
+      changes and account for all amounts in opening basis for which the owner
+      is not at risk. Line 8 adds 6 and 7. Line 10a subtracts 9 from 8, using
+      exact Decimal arithmetic. An independently proven nonnegative line 10a
+      is supported, including exact zero. Hold a negative for separate
+      Part III and potential section 465(e) recapture review before the
+      printed floor at line 10b can be used.
+    testRef: "tests/engine/forms/form-6198-schedule-c-part-ii-2026.test.ts::distinguishes exact zero capacity from a one-cent negative amount"
+  - line: "20-21"
+    description: "Keep the allowed loss and current at-risk suspension separate"
+    formula: >-
+      Line 20 carries the confirmed nonnegative line 10b. Compare the absolute
+      line 5 loss to line 20, then enter the lesser on line 21 as a negative
+      loss or an exact zero. Return the signed allowed
+      ordinary loss, the positive magnitude of this year's suspended loss,
+      and the line audit.
+    testRef: "tests/engine/forms/form-6198-schedule-c-part-ii-2026.test.ts::returns the signed allowed loss and current suspension with an exact line audit"
+  - line: "schedule-c-31"
+    description: "Transfer the independently verified allowed sole-proprietor loss once"
+    formula: >-
+      Admit the retained 2026 worksheet only for the confirmed primary owner's
+      materially participating cash business with box 32b, the verified current
+      ordinary Schedule C source packet and the same source reference and
+      activity as the Part II original. Preserve the full pre-limit loss and
+      Form 6198 audit. Carry only its signed allowed amount through Schedule C
+      line 31 and the ensuing federal income calculation, retaining the
+      current suspension separately. Hold missing or contradictory evidence,
+      nonloss packets, manual overrides, and independently reported or special
+      activity allocations. If nonzero 1099-NEC statements exist, require the
+      same current year and primary owner, with exact compensation total no
+      greater than the confirmed gross receipts. Hold unreconciled payment
+      settlement or employee reclassification overlays. Preserve the no-packet outcomes for profits, zero,
+      historical and all-at-risk cases. This does not qualify a state transfer,
+      carry consumption, filing or export.
+    testRef: "tests/engine/forms/form-6198-schedule-c-part-ii-2026.test.ts::uses the exact allowed Schedule C loss once in federal income"
+    testRefs:
+      - "tests/engine/forms/form-6198-schedule-c-part-ii-2026.test.ts::keeps original and allowed losses distinct in canonical Schedule C"
+      - "tests/engine/forms/form-6198-schedule-c-part-ii-2026.test.ts::holds missing or conflicting canonical original provenance and special allocations"
+      - "tests/engine/forms/form-6198-schedule-c-part-ii-2026.test.ts::suspends the full canonical loss when the original proves zero capacity"
+      - "tests/engine/forms/form-6198-schedule-c-part-ii-2026.test.ts::holds incompatible receipt statements without posting a second receipt"

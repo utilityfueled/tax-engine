@@ -30,6 +30,8 @@ import { reconcileScheduleCStandardMileage } from "@/utils/schedule-c-standard-m
 import type { Form4562Result } from "@/engine/forms/form-4562.js";
 import { calculateForm4562 } from "@/engine/forms/form-4562.js";
 import { calculateForm8829 } from "@/engine/forms/form-8829.js";
+import { calculateForm6198ScheduleCPartII2026 } from "@/engine/forms/form-6198-schedule-c-part-ii-2026.js";
+import type { Form6198ScheduleCPartII2026Input } from "@/models/form-6198-schedule-c-part-ii-2026.js";
 
 /** Business expense categories matching Schedule C line items */
 export interface BusinessExpenses {
@@ -71,6 +73,7 @@ export interface HomeOfficeDeduction {
 export interface ScheduleCInput {
   accountHolder?: "primary"|"spouse";
   sourceFacts?: ScheduleCSourceFacts;
+  form6198PartII2026?: Form6198ScheduleCPartII2026Input;
   professionalWagering?: ScheduleCProfessionalWagering;
   standardMileage?: ScheduleCStandardMileage;
   businessName?: string;
@@ -105,6 +108,7 @@ export interface ScheduleCResult {
   homeOfficeDeduction: Decimal; // Line 30
   netProfit: Decimal; // Line 31
   form4562?: Form4562Result;
+  form6198PartII2026?: ReturnType<typeof calculateForm6198ScheduleCPartII2026>;
   professionalW2GWithholding?: Decimal;
 
   lines: CalculatedLine[];
@@ -186,15 +190,45 @@ function calculateStandardMileage(input: TaxYearInput, business: ScheduleCInput 
   return reconcileScheduleCStandardMileage(facts);
 }
 
+function readScheduleCAtRiskOriginal(input: TaxYearInput, business: ScheduleCInput | undefined, careAdjustment?: Decimal) {
+  const canonical = input.scheduleC;
+  if (canonical?.form6198PartII2026 === undefined && business?.form6198PartII2026 === undefined) return undefined;
+  if (!canonical || business !== canonical) throw new Error("Form 6198 Part II requires the retained canonical Schedule C source without overrides.");
+  const proof = canonical.sourceFacts;
+  if (canonical.accountingMethod !== "cash" || canonical.grossReceipts === undefined || !proof?.ordinaryExpenses) {
+    throw new Error("Form 6198 Part II requires verified ordinary Schedule C source records and actual cash gross receipts.");
+  }
+
+  const ordinaryCategories = new Set(proof.ordinaryExpenses.rows?.map(row => row.category));
+  const unsupportedExpense = Object.entries(canonical.expenses ?? {}).some(([category, amount]) =>
+    category !== "otherExpenses" && !ordinaryCategories.has(category) && !legacyAmount(amount).isZero());
+  const necReceipts = input.form1099Nec.map(statement => ({ statement, amount: legacyAmount(statement.nonemployeeCompensation) }))
+    .filter(({ amount }) => !amount.isZero());
+  const incompatibleReceipts = necReceipts.some(({ statement, amount }) =>
+    statement.taxYear !== 2026 || statement.accountHolder !== "primary" || amount.lt(0))
+    || sumSourceMoneyValues(necReceipts.map(({ amount }) => amount)).gt(canonical.grossReceipts)
+    || input.form1099K?.some(form => !legacyAmount(form.grossAmount).isZero());
+  if (unsupportedExpense || proof.interest || proof.depreciation || proof.amortization || proof.passengerFirstYear
+    || proof.section45WFirstYear || proof.section45WSecondYear || canonical.professionalWagering || canonical.standardMileage
+    || canonical.homeOffice || input.form4562 || input.form4797 || input.form2555 || input.cryptoIncome || input.form8824?.length
+    || input.form8919 || incompatibleReceipts || (careAdjustment && !careAdjustment.isZero())
+    || [canonical.returnsAndAllowances, canonical.costOfGoodsSold, canonical.otherIncome].some(amount => !legacyAmount(amount).isZero())) {
+    throw new Error("Form 6198 Part II holds separate Schedule C allocation methods or activity amounts outside the verified ordinary loss.");
+  }
+  return { canonical, proof };
+}
+
 export function calculateScheduleC(
   input: TaxYearInput,
   scheduleCInput: ScheduleCInput | undefined = input.scheduleC?.professionalWagering !== undefined
     || input.scheduleC?.standardMileage !== undefined || input.scheduleC?.sourceFacts?.section45WFirstYear !== undefined
     || input.scheduleC?.sourceFacts?.section45WSecondYear !== undefined
+    || input.scheduleC?.form6198PartII2026 !== undefined
     || (input.taxpayer.taxYear === 2026 && input.scheduleC?.allInvestmentAtRisk === false) ? input.scheduleC : undefined,
   options: { dependentCareBenefitsAdjustment?: Decimal; section45WSecondYearAsOfDate?: string } = {},
 ): ScheduleCResult {
   assertStatementYear("Form 1099-NEC", input.form1099Nec, input.taxpayer.taxYear);
+  const atRiskOriginal = readScheduleCAtRiskOriginal(input, scheduleCInput, options.dependentCareBenefitsAdjustment);
   const audit = new AuditTrail();
   const secondYearSection45W = calculateScheduleCSection45WSecondYear(input, scheduleCInput, {
     asOfDate: options.section45WSecondYearAsOfDate,
@@ -367,12 +401,28 @@ export function calculateScheduleC(
       : "Form 8829 or simplified method");
 
   // Line 31: Net profit or loss
-  const netProfit = add(tentativeProfit, homeOfficeDeduction.negated());
-  if (section45W && netProfit.lt(0)) throw new Error("Section 45W Schedule C loss requires a separate loss attribution method.");
-  if (checkAtRiskLoss && netProfit.lt(0)) {
+  const preAtRiskNetProfit = add(tentativeProfit, homeOfficeDeduction.negated());
+  if (section45W && preAtRiskNetProfit.lt(0)) throw new Error("Section 45W Schedule C loss requires a separate loss attribution method.");
+  const form6198PartII2026 = atRiskOriginal && calculateForm6198ScheduleCPartII2026(
+    atRiskOriginal.canonical.form6198PartII2026, preAtRiskNetProfit, {
+      taxYear: input.taxpayer.taxYear,
+      primaryOwner: input.taxpayer.primary,
+      business: {
+        accountHolder: atRiskOriginal.canonical.accountHolder,
+        activityDescription: atRiskOriginal.canonical.principalBusinessActivity,
+        originalScheduleCReference: atRiskOriginal.proof.sourceReference,
+        materiallyParticipated: atRiskOriginal.canonical.qbiMateriallyParticipated,
+        allInvestmentAtRisk: atRiskOriginal.canonical.allInvestmentAtRisk,
+      },
+    },
+  );
+  if (!form6198PartII2026 && checkAtRiskLoss && preAtRiskNetProfit.lt(0)) {
     throw new Error("2026 Schedule C loss requires actual Form 6198 records when some investment is not at risk.");
   }
-  audit.record("Sched C", "31", "Net profit or loss", netProfit, "Line 29 - Line 30");
+  if (form6198PartII2026) audit.merge(form6198PartII2026.lines);
+  const netProfit = form6198PartII2026?.allowedLoss ?? preAtRiskNetProfit;
+  audit.record("Sched C", "31", "Net profit or loss", netProfit,
+    form6198PartII2026 ? "Ordinary loss allowed by Form 6198 line 21" : "Line 29 - Line 30");
 
   const result:ScheduleCResult = {
     grossReceipts,
@@ -389,6 +439,7 @@ export function calculateScheduleC(
     homeOfficeDeduction,
     netProfit,
     form4562,
+    ...(form6198PartII2026 ? { form6198PartII2026 } : {}),
     ...(wagering?.withholding !== undefined ? { professionalW2GWithholding: wagering.withholding } : {}),
     lines: audit.getLines(),
   };

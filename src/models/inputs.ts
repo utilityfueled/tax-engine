@@ -17,6 +17,7 @@ import { OhioSchoolDistrictFactsSchema } from './ohio-school-district.js';
 import {PAMarriedOrdinarySourcesSchema} from './pa-married-ordinary-sources.js';
 import { RentalUseAllocation2026Schema } from './rental-use-allocation-2026.js';
 import { Form6198PartII2026Schema } from './form-6198-part-ii-2026.js';
+import { Form6198ScheduleCPartII2026Schema } from './form-6198-schedule-c-part-ii-2026.js';
 /**
  * Zod schemas for all tax input documents.
  * Each schema validates the JSON input files in data/input/.
@@ -3835,6 +3836,7 @@ export type ScheduleCStandardMileage = z.infer<typeof ScheduleCStandardMileageSc
 
 export const ScheduleCInputSchema = z.object({
   sourceFacts:ScheduleCSourceFactsSchema.optional(),
+  form6198PartII2026: Form6198ScheduleCPartII2026Schema.optional(),
   professionalWagering: ScheduleCProfessionalWageringSchema.optional(),
   standardMileage: ScheduleCStandardMileageSchema.optional(),
   qbiMateriallyParticipated: z.boolean().optional(),
@@ -7246,6 +7248,9 @@ export const TaxYearInputSchema = z.object({
     illinois: IllinoisStateReturnInputSchema.optional(),
   }).optional(),
 }).superRefine((value, ctx) => {
+  if (value.scheduleC?.form6198PartII2026 !== undefined && value.taxpayer.taxYear !== 2026) {
+    ctx.addIssue({ code: "custom", path: ["scheduleC", "form6198PartII2026"], message: "Schedule C Form 6198 Part II requires a 2026 return" });
+  }
   value.form1099R?.forEach((form, index) => {
     if (form.disabilityPensionSource !== undefined && !code3DisabilityPensionOwnerMatches(form, value.taxpayer)) {
       ctx.addIssue({
