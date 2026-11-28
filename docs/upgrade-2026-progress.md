@@ -23,6 +23,32 @@ jq '.resume | {latestScopedApplicationCommit, remaining}' docs/upgrade-2026-chec
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local Chromium and encrypted recovery passed. [Exact Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/46127803042), [CI](https://github.com/utilityfueled/tax-engine/actions/runs/46127803068) and [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/46127803025) remained queued. [ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/46120985997) remained pending on the earlier revision. [Active ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/46113946817) reached the strict browser step. The previous ARM64 image and Compose checks passed and the strict browser check failed nine cases. |
 
+## November 28 guided sole-proprietor Form 6198 records
+
+The guide in `1b131cf5d` separately collects the original Form 6198 and
+independently checked ordinary Schedule C workpaper. A synthetic saved and
+encrypted-restored return allowed $3,500.05 of the $6,000.57 loss and kept
+$2,500.52 as current at-risk suspension. A change to the controlling owner,
+source or business amount requires fresh confirmation.
+
+There were 351 focused passes and exact-source type, lint, spec, inventory and
+web-build passes on `77e1fe6f6`. The exact production-mode build passed the
+desktop and phone browser smoke. The tests reopened documented capacity of
+$74.50 and $0, then cleared confirmation after editing gross receipts. The
+owned test listener closed. Initial inventory generation was reconciled through
+the two scoped implementation links. Existing unrelated inventory edits were
+preserved. Both entries are partial and require human review and qualification.
+
+The November 28 source check verified the final IRS 2026 Schedule C blank,
+the 2025-labeled separate Schedule C instructions and the rolling November 2025
+Form 6198 blank. Pennsylvania still lists its 2025 PA-40 and annual instructions.
+Ohio's 2026 instruction booklet remains draft and contains residency and IT NRC
+guidance. The final 2026 state return and instruction packs were unseen in the
+official listings checked. [IRS Schedule C](https://www.irs.gov/pub/irs-pdf/f1040sc.pdf)
+· [IRS Form 6198](https://www.irs.gov/pub/irs-pdf/f6198.pdf)
+· [PA personal income tax](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax)
+· [Ohio 2026 draft instructions](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf).
+
 ## November 28 sole-proprietor Form 6198 originals for federal calculation
 
 The canonical federal calculator in `00d07b0b5` accepts one

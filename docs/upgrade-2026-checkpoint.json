@@ -4,7 +4,7 @@
     "asOf": "2026-11-28",
     "branch": "main",
     "applicationCommit": "19fc8c5e60bf082465b9e5cb2952742d5a522f93",
-    "latestScopedApplicationCommit": "00d07b0b51e610ba189f786f578de5d4f919bf4c",
+    "latestScopedApplicationCommit": "77e1fe6f664633fa2397f3f22e484957f9259703",
     "latestForm8863JointPrimaryEvidenceKey": "activeContinuation.nov27Form8863JointPrimary",
     "latestSchedule8812PayrollActcEvidenceKey": "activeContinuation.nov27Schedule8812PayrollActc",
     "latestGuidedHsaCivilDatesEvidenceKey": "activeContinuation.nov27GuidedHsaCivilDates",
@@ -217,6 +217,72 @@
     ]
   },
   "activeContinuation": {
+    "nov28GuidedScheduleCForm6198Originals": {
+      "applicationCommit": "77e1fe6f664633fa2397f3f22e484957f9259703",
+      "guidedCommit": "1b131cf5dccdf3f7ddc09775dcad572dcaffe4eb",
+      "localEvidenceMarker": "nov28-guided-schedule-c-form6198-path",
+      "trackedArchiveSha256": "398c8c4935aa603d8fb7a4f1233ae4168fcbb085369221db271713c732a3c2cc",
+      "focusedTestsPassed": 351,
+      "exactCheckExits": {
+        "auditedSource": 0,
+        "install": 0,
+        "build": 0,
+        "build-web": 0,
+        "typecheck": 0,
+        "contracts": 0,
+        "webTypes": 0,
+        "spec": 0,
+        "inventory": 0,
+        "lint": 0,
+        "focused": 0
+      },
+      "browserSmoke": {
+        "buildId": "HEireDo0sBKy3VRTsc04A",
+        "desktopAndPhonePassed": 2,
+        "explicitZeroReopened": true,
+        "grossReceiptsEditClearedConfirmation": true,
+        "loopbackListenerClosed": true,
+        "browserLogSha256": "81d174a04e3c9cd4c794414a603c6717eb17f7a772e67ddb8c9770bebcb72e02"
+      },
+      "previousInventoryFailurePreserved": true,
+      "currentWorksheetCarry": {
+        "originalLoss": "-6000.57",
+        "signedAllowedLoss": "-3500.05",
+        "currentAtRiskSuspendedLoss": "2500.52"
+      },
+      "formAndStateFilingQualified": false,
+      "independentHumanReviewPending": true
+    },
+    "nov28SelectedTaxSourceRefresh": {
+      "checkedOn": "2026-11-28",
+      "federalScheduleC": {
+        "finalTaxYear": 2026,
+        "revision": "Created 5/15/26",
+        "url": "https://www.irs.gov/pub/irs-pdf/f1040sc.pdf",
+        "instructionLabelYear": 2025
+      },
+      "federalForm6198": {
+        "revision": "November 2025",
+        "rollingRevision": true,
+        "url": "https://www.irs.gov/pub/irs-pdf/f6198.pdf",
+        "sha256": "8ae169186ad9f62910e73205ebaeb02a73bc74bb1a47954074ec14e4645a6389",
+        "pageWidgets": 34
+      },
+      "pennsylvania": {
+        "latestAnnualFinalVerified": 2025,
+        "2026FinalSeen": false,
+        "url": "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax"
+      },
+      "ohio": {
+        "2026DraftInstructionPacket": "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf",
+        "residentScopePages": [
+          15,
+          16
+        ],
+        "itNrcInstructionsStartPage": 41,
+        "2026FinalSeen": false
+      }
+    },
     "nov28CanonicalSoleProprietorForm6198PartII": {
       "commit": "00d07b0b51e610ba189f786f578de5d4f919bf4c",
       "localEvidenceDirectory": "nov28-form6198-schedule-c",
