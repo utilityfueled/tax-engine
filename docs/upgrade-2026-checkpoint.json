@@ -4,7 +4,8 @@
     "branch": "main",
     "applicationCommit": "183535fb25e1559d4acbb62d208e32c4b30e1a4d",
     "latestScopedApplicationCommit": "b5efb12bcbde7e18468202e7f983984e92e973b8",
-    "latestCombinedCandidateCommit": "b5efb12bcbde7e18468202e7f983984e92e973b8",
+    "latestCombinedCandidateCommit": "dcfd227f5febe42d318ac8f4ebf1f7fd048caa53",
+    "nov27FullBrowserCollectionEvidenceKey": "activeContinuation.nov27FullBrowserCollection",
     "latestScopedChecksEvidenceKey": "activeContinuation.nov27Form8863PrivateTransfer",
     "nov27GuidedCommercialWorkpaperEvidenceKey": "activeContinuation.nov27GuidedCommercialWorkpaper",
     "nov27DeductionBrowserYearEvidenceKey": "activeContinuation.nov27DeductionBrowserYear",
@@ -198,6 +199,36 @@
     ]
   },
   "activeContinuation": {
+    "nov27FullBrowserCollection": {
+      "commit": "dcfd227f5febe42d318ac8f4ebf1f7fd048caa53",
+      "verifiedTree": "1b12a6e6cea4f010c66815fe117de05bbb664b7b",
+      "exactArchiveSha256": "6ce832aa75e43c864fda5cdc677053c00f80f317dba505f01327c93fcc53e1df",
+      "repositorySpecReferencesValidated": 10308,
+      "exactFocusedTestsPassed": 166,
+      "exactTreeChecksPassed": [
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
+      "collectedCases": 660,
+      "plannedWindows": 9,
+      "unchangedOriginalSkips": 5,
+      "unchangedDiagnosticTargets": 14,
+      "previousDeductionsCount": 35,
+      "actualDeductionsCount": 36,
+      "arm64Workflow": {
+        "correctedRun": 46085907600,
+        "correctedRunStatus": "pending",
+        "supersededRun": 46084566024,
+        "supersededRunConclusion": "cancelled"
+      },
+      "combinedLocalChecks": "running"
+    },
     "nov27Form8863PrivateTransfer": {
       "commit": "b5efb12bcbde7e18468202e7f983984e92e973b8",
       "verifiedTree": "b9a77153528bb5fd0eccd4d415dba012da21a6f0",
@@ -229,7 +260,13 @@
       "independentEngineeringReviewPassed": true,
       "publicReviewQualified": false,
       "filingQualified": false,
-      "combinedLocalChecks": "running"
+      "combinedLocalChecks": "unit, coverage, build and standalone passed; browser stopped during collection before launch",
+      "exactUnitTestsPassed": 31424,
+      "exactUnitTestsSkipped": 83,
+      "exactBranchCoveragePercent": "88.74",
+      "exactProductionWebBuildPassed": true,
+      "standaloneEncryptedRecoveryPassed": true,
+      "standaloneOwnedListenerClosed": true
     },
     "nov27GuidedCommercialWorkpaper": {
       "commit": "8ed5027281dfb29d6b435d7d1648650d0da162b2",
@@ -282,8 +319,14 @@
         "offline-eval"
       ],
       "repositorySpecReferencesValidated": 10306,
-      "combinedLocalChecks": "running",
-      "filingQualified": false
+      "combinedLocalChecks": "unit, coverage, build and standalone passed; browser stopped during collection before launch",
+      "filingQualified": false,
+      "exactUnitTestsPassed": 31422,
+      "exactUnitTestsSkipped": 83,
+      "exactBranchCoveragePercent": "88.74",
+      "exactProductionWebBuildPassed": true,
+      "standaloneEncryptedRecoveryPassed": true,
+      "standaloneOwnedListenerClosed": true
     },
     "nov27PrivateScheduleRPhysicalProof": {
       "commit": "29100a24a250697f9c874f1ce357d119f629900e",
@@ -329,22 +372,44 @@
     "nov27Form2210ActualChronology": {
       "commit": "f5493bdc88a186d51d08b194881d685aef10cddf",
       "verifiedTree": "c396ad048c201d1a9a0c10ab33d75e5af1fd5fbf",
-      "primarySources": ["https://www.irs.gov/instructions/i2210", "https://uscode.house.gov/us/usc/119-134/t26/s6654/"],
+      "primarySources": [
+        "https://www.irs.gov/instructions/i2210",
+        "https://uscode.house.gov/us/usc/119-134/t26/s6654/"
+      ],
       "targetedRedFailuresBeforeFix": 3,
       "exactFocusedTestsPassed": 308,
       "repositorySpecReferencesValidated": 10302,
-      "exactTreeChecksPassed": ["typecheck", "contracts", "web-types", "spec", "inventory", "lint", "build", "offline-eval"],
+      "exactTreeChecksPassed": [
+        "typecheck",
+        "contracts",
+        "web-types",
+        "spec",
+        "inventory",
+        "lint",
+        "build",
+        "offline-eval"
+      ],
       "independentEngineeringReviewPassed": true,
       "projectedMinusVerifiedEarlyExceptionPenalty": "2.191781",
       "observedDateBoundEnforced": true,
-      "runnerlessRemoteChecks": {"ci": 46081627667, "amd64Web": 46081627592, "docker": 46081627726},
+      "runnerlessRemoteChecks": {
+        "ci": 46081627667,
+        "amd64Web": 46081627592,
+        "docker": 46081627726
+      },
       "exactUnitTestsPassed": 31414,
       "exactUnitTestsSkipped": 83,
       "exactBranchCoveragePercent": "88.73",
       "browserStaleDeductionAssertionFailures": 3,
       "combinedLocalChecks": "unit and coverage passed; combined browser had three stale assertions",
       "qualifiedHumanReviewPassed": false,
-      "filingQualified": false
+      "filingQualified": false,
+      "completeBrowserWindows": 9,
+      "browserPassed": 651,
+      "browserOriginalSkips": 5,
+      "browserOwnedListenerClosed": true,
+      "standaloneEncryptedRecoveryPassed": true,
+      "standaloneOwnedListenerClosed": true
     },
     "nov27PennsylvaniaScheduleAReaderReliability": {
       "commit": "58333f258416bd03053b7534bb862c649d5103ed",
