@@ -9,7 +9,7 @@ import { REVIEW_TEMPLATE_PACKS } from "@/pdf/template-registry.js";
 
 const prefix = "topmostSubform[0].Page1[0].";
 const sha256 = "8ae169186ad9f62910e73205ebaeb02a73bc74bb1a47954074ec14e4645a6389";
-const blank = process.env.TAX_ENGINE_FORM_6198_BLANK;
+const blank = new URL("../../forms/blank/2026/f6198.pdf", import.meta.url);
 
 // Transcribed against the printed labels and checked against the original PDF's page annotations.
 const printedCells = {
@@ -118,8 +118,7 @@ describe("Form 6198 current IRS physical candidate for 2026", () => {
     expect(printedParentheses).toEqual(["line4", "line21"]);
   });
 
-  it.skipIf(!blank)("matches the supplied official AcroForm and printed layout", async () => {
-    if (!blank) throw new Error("Set TAX_ENGINE_FORM_6198_BLANK to the original IRS PDF");
+  it("matches the supplied official AcroForm and printed layout", async () => {
     const bytes = await readFile(blank);
     const candidate = FORM_6198_2026_CANDIDATE;
     expect(bytes.byteLength).toBe(candidate.byteLength);

@@ -12,12 +12,12 @@ notes: |
   2025) and its printed footer says Created 9/9/25. The instructions apply to
   that revision or later. The candidate describes physical fields for tax
   year 2026, with no calculation, rendering, or qualification of any return.
-  The layout can be checked against a separately supplied original blank by
-  setting TAX_ENGINE_FORM_6198_BLANK to its path. The blank stays local.
+  The byte-for-byte official blank is pinned at forms/blank/2026/f6198.pdf.
+  The layout check uses this tracked blank and runs in the ordinary test suite.
 lines:
   - line: "source"
     description: "Pin the IRS blank retrieved November 28, 2026"
-    formula: "Record SHA-256 8ae169186ad9f62910e73205ebaeb02a73bc74bb1a47954074ec14e4645a6389, 82547 bytes, one page, the exact title, revision and footer."
+    formula: "Record SHA-256 8ae169186ad9f62910e73205ebaeb02a73bc74bb1a47954074ec14e4645a6389, 82547 bytes, one page, the exact title, revision and footer for forms/blank/2026/f6198.pdf."
     testRef: "tests/pdf/form-6198-2026-candidate.test.ts::pins the current official revision"
     testRefs:
       - "tests/pdf/form-6198-2026-candidate.test.ts::matches the supplied official AcroForm and printed layout"
